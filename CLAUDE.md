@@ -18,8 +18,6 @@ Layout:
 
 Keep `README.md` (English) and `README.es.md` (Spanish) in sync. Use Mermaid for diagrams (validate them before committing).
 
-Full project context, decisions and open questions: [docs/HANDOFF.md](docs/HANDOFF.md). Update it when a decision changes.
-
 Versioning: [Changesets](https://github.com/changesets/changesets). Any user-facing change (feature, fix, breaking config change) needs a changeset: `bun changeset`. Docs-only, test-only and internal chores don't.
 
 Commits: follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`…). No `Co-Authored-By` or other attribution trailers.
