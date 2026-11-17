@@ -15,14 +15,46 @@ Deputy is a [Claude Code channel](https://code.claude.com/docs/en/channels): an 
 
 ## How it works
 
+```mermaid
+flowchart LR
+  C([Customer]) -- WhatsApp --> P["Meta Cloud API<br/>or Kapso"]
+  O([You]) -- WhatsApp --> P
+  P -- signed webhook --> T[Tunnel]
+  T --> D["Deputy<br/>MCP channel + HTTP"]
+  D -- channel event --> CC["Claude Code session<br/>your subscription"]
+  CC -- tool calls --> D
+  D <--> S[("CSV or<br/>Google Sheets")]
+  D -- reply --> P
 ```
-Customer ─WhatsApp─▶ Meta / Kapso ─webhook─▶ tunnel ─▶ Deputy (your box)
-                                                          │ notifications/claude/channel
-                                                          ▼
-                                                Claude Code (your subscription)
-                                                          │ deputy tools
-                ◀─────────── reply / notify_owner ────────┘
-                             get_catalog / create_order ──▶ CSV or Google Sheets
+
+A typical conversation, from first message to recorded order:
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor C as Customer
+  participant W as WhatsApp provider
+  participant D as Deputy
+  participant CC as Claude Code
+  participant S as Store
+  actor O as You
+  C->>W: How much for 10 tamales?
+  W->>D: webhook (signed)
+  D->>D: verify, de-duplicate, save to history
+  D->>CC: channel event (role=customer)
+  CC->>D: history + get_catalog
+  D->>S: read catalog
+  S-->>D: products and prices
+  CC->>D: reply(chat_id, text)
+  D->>W: send message
+  W->>C: answer
+  C->>W: Yes, deliver on the 24th
+  W->>D: webhook
+  D->>CC: channel event
+  CC->>D: create_order + notify_owner
+  D->>S: append order
+  D->>W: message to the owner
+  W->>O: New order: 10 tamales, Dec 24
 ```
 
 Each message reaches Claude as `<channel source="deputy" chat_id="1555…" role="customer">text</channel>`. Claude can only act through these tools:
@@ -42,7 +74,7 @@ Each message reaches Claude as `<channel source="deputy" chat_id="1555…" role=
 
 | Piece | Cost |
 |---|---|
-| Claude | Your Pro/Max subscription through Claude Code. Counts toward your usage limits. |
+| Claude | Your Pro, Max or Ultra plan through Claude Code. Counts toward your usage limits. |
 | WhatsApp Cloud API (Meta direct) | No platform fee. Meta charges per message according to its current rate card (as of Oct 2026, replies inside the 24-hour window are free up to 1,000 per number per month, and everything is free for 72 hours when the customer comes from a Click-to-WhatsApp ad). |
 | Kapso (optional) | Their plan, plus Meta's fees. |
 | Tunnel (e.g. Cloudflare Tunnel) | Free |
@@ -91,7 +123,36 @@ Then make it yours: edit `business/business.md` (tone, delivery, payment, rules)
 
 ### Another provider
 
-Implement `Provider` from `src/types.ts` (`handleWebhook` + `sendText`) and register it in `src/providers/index.ts`. If your provider exposes a Graph-API-compatible proxy (like Kapso does), `GraphSender` already handles sending.
+Implement `Provider` from `src/types.ts` (`handleWebhook` + `sendText`) and register it in `src/providers/index.ts`. If your provider exposes a Graph-API-compatible proxy (like Kapso does), `GraphSender` already handles sending. Stores work the same way.
+
+```mermaid
+classDiagram
+  class Provider {
+    <<interface>>
+    +name
+    +handleWebhook(req) WebhookResult
+    +sendText(to, text)
+    +markRead(messageId)
+  }
+  class Store {
+    <<interface>>
+    +name
+    +catalog() Product[]
+    +createOrder(order)
+    +orders() Order[]
+  }
+  class GraphSender {
+    +sendText(to, text)
+    +markRead(messageId)
+  }
+  Provider <|.. MetaProvider
+  Provider <|.. KapsoProvider
+  Provider <|.. DevProvider
+  MetaProvider --> GraphSender
+  KapsoProvider --> GraphSender
+  Store <|.. LocalStore
+  Store <|.. SheetsStore
+```
 
 ## Catalog and orders in Google Sheets
 
@@ -118,6 +179,23 @@ tmux attach -t deputy     # first run only, to accept the prompts; detach with C
 
 Health check from anywhere you have SSH: `ssh pi 'curl -s localhost:8788/health'`.
 
+```mermaid
+flowchart TB
+  subgraph net["Internet"]
+    M["Meta / Kapso"]
+    CF["Cloudflare edge"]
+    A["Anthropic"]
+  end
+  subgraph pi["Raspberry Pi, inside tmux"]
+    CFD["cloudflared"] --> D["Deputy :8788"]
+    D <-->|stdio| CC["claude, started in operator/"]
+    D --- data[("data/: history, state, orders")]
+  end
+  M -- HTTPS webhook --> CF --> CFD
+  CC -- HTTPS --> A
+  L(["Your laptop"]) -. SSH .-> pi
+```
+
 ## Modes
 
 - **Autopilot (default):** `operator/.claude/settings.json` allows `mcp__deputy__reply`, so Claude answers on its own.
@@ -125,9 +203,54 @@ Health check from anywhere you have SSH: `ssh pi 'curl -s localhost:8788/health'
 
 Your own messages to the business number reach Claude with `role="owner"`. Try "how many orders for the 24th?", "pause 15557654321" or "tell her we do have it in stock".
 
+In approve mode, Claude Code's permission prompt is relayed to your phone:
+
+```mermaid
+sequenceDiagram
+  participant CC as Claude Code
+  participant D as Deputy
+  actor O as You
+  actor C as Customer
+  CC->>D: permission request (reply, preview, id abcde)
+  D->>O: Claude wants to use reply ... yes abcde / no abcde
+  O->>D: yes abcde
+  D->>CC: verdict: allow
+  CC->>D: reply(chat_id, text)
+  D->>C: message
+```
+
+Every chat moves between three states:
+
+```mermaid
+stateDiagram-v2
+  [*] --> Active
+  Active --> Paused: handoff
+  Paused --> Active: resume, when you ask
+  Active --> Quiet: you reply by hand from the app
+  Quiet --> Active: after DEPUTY_ECHO_PAUSE_MIN
+  note right of Paused
+    New messages are saved to history
+    but not passed to Claude
+  end note
+```
+
 ## Security
 
 A channel that any customer can write to is a **prompt-injection** surface: anyone can put text in front of your session. Deputy mitigates this in layers:
+
+```mermaid
+flowchart LR
+  msg["Inbound message<br/>untrusted"] --> sig{"Valid<br/>signature?"}
+  sig -- no --> d1["401, dropped"]
+  sig -- yes --> dup{"Seen<br/>before?"}
+  dup -- yes --> d2["ignored"]
+  dup -- no --> role{"Sender in<br/>DEPUTY_OWNERS?"}
+  role -- yes --> own["role=owner<br/>can instruct and approve"]
+  role -- no --> cus["role=customer<br/>name sanitized, text truncated"]
+  own --> cc["Claude Code<br/>only deputy tools"]
+  cus --> cc
+  cc -. denied .-> blk["Bash, Read, Write,<br/>WebFetch, Agent and more"]
+```
 
 1. **Blocked tools.** The operator profile (`operator/.claude/settings.json`) denies `Bash`, `Read`, `Write`, `Edit`, `WebFetch`, `WebSearch`, `Task`/`Agent` and more. Even if a message talks Claude into something, it can't touch your machine or read your `.env`.
 2. **Roles.** Only `DEPUTY_OWNERS` arrive as `role="owner"` and can approve permissions. The server's instructions tell Claude that customer text is never an order.

@@ -15,14 +15,46 @@ Deputy es un [channel de Claude Code](https://code.claude.com/docs/en/channels):
 
 ## Cómo funciona
 
+```mermaid
+flowchart LR
+  C([Cliente]) -- WhatsApp --> P["Cloud API de Meta<br/>o Kapso"]
+  O([Vos]) -- WhatsApp --> P
+  P -- webhook firmado --> T[Túnel]
+  T --> D["Deputy<br/>channel MCP + HTTP"]
+  D -- evento del channel --> CC["Sesión de Claude Code<br/>tu suscripción"]
+  CC -- llamadas a herramientas --> D
+  D <--> S[("CSV o<br/>Google Sheets")]
+  D -- respuesta --> P
 ```
-Cliente ─WhatsApp─▶ Meta / Kapso ─webhook─▶ túnel ─▶ Deputy (tu equipo)
-                                                       │ notifications/claude/channel
-                                                       ▼
-                                             Claude Code (tu suscripción)
-                                                       │ herramientas de deputy
-               ◀─────────── reply / notify_owner ──────┘
-                            get_catalog / create_order ──▶ CSV o Google Sheets
+
+Una conversación típica, del primer mensaje al pedido registrado:
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor C as Cliente
+  participant W as Proveedor de WhatsApp
+  participant D as Deputy
+  participant CC as Claude Code
+  participant S as Store
+  actor O as Vos
+  C->>W: ¿A cómo los 10 nacatamales?
+  W->>D: webhook (firmado)
+  D->>D: verifica, descarta duplicados, guarda en el historial
+  D->>CC: evento del channel (role=customer)
+  CC->>D: history + get_catalog
+  D->>S: lee el catálogo
+  S-->>D: productos y precios
+  CC->>D: reply(chat_id, texto)
+  D->>W: envía el mensaje
+  W->>C: respuesta
+  C->>W: Sí, para el 24 a domicilio
+  W->>D: webhook
+  D->>CC: evento del channel
+  CC->>D: create_order + notify_owner
+  D->>S: agrega el pedido
+  D->>W: mensaje para el dueño
+  W->>O: Pedido nuevo: 10 nacatamales, 24 dic
 ```
 
 Cada mensaje le llega a Claude como `<channel source="deputy" chat_id="505…" role="customer">texto</channel>`. Claude solo puede actuar con estas herramientas:
@@ -42,7 +74,7 @@ Cada mensaje le llega a Claude como `<channel source="deputy" chat_id="505…" r
 
 | Pieza | Costo |
 |---|---|
-| Claude | Tu suscripción Pro/Max vía Claude Code. Cuenta contra tus límites de uso. |
+| Claude | Tu plan Pro, Max o Ultra vía Claude Code. Cuenta contra tus límites de uso. |
 | WhatsApp Cloud API (Meta directo) | Sin tarifa de plataforma. Meta cobra por mensaje según su tabla vigente (desde oct. 2026, las respuestas dentro de la ventana de 24 h son gratis hasta 1,000 por número al mes, y todo es gratis por 72 h si el cliente llega por un anuncio Click-to-WhatsApp). |
 | Kapso (opcional) | Según su plan, más las tarifas de Meta. |
 | Túnel (p. ej. Cloudflare Tunnel) | Gratis |
@@ -91,7 +123,36 @@ Después adaptalo a tu negocio: editá `business/business.md` (tono, entregas, p
 
 ### Otro proveedor
 
-Implementá `Provider` de `src/types.ts` (`handleWebhook` + `sendText`) y registralo en `src/providers/index.ts`. Si tu proveedor ofrece un proxy compatible con la Graph API (como Kapso), `GraphSender` ya resuelve el envío.
+Implementá `Provider` de `src/types.ts` (`handleWebhook` + `sendText`) y registralo en `src/providers/index.ts`. Si tu proveedor ofrece un proxy compatible con la Graph API (como Kapso), `GraphSender` ya resuelve el envío. Los stores funcionan igual.
+
+```mermaid
+classDiagram
+  class Provider {
+    <<interface>>
+    +name
+    +handleWebhook(req) WebhookResult
+    +sendText(to, text)
+    +markRead(messageId)
+  }
+  class Store {
+    <<interface>>
+    +name
+    +catalog() Product[]
+    +createOrder(order)
+    +orders() Order[]
+  }
+  class GraphSender {
+    +sendText(to, text)
+    +markRead(messageId)
+  }
+  Provider <|.. MetaProvider
+  Provider <|.. KapsoProvider
+  Provider <|.. DevProvider
+  MetaProvider --> GraphSender
+  KapsoProvider --> GraphSender
+  Store <|.. LocalStore
+  Store <|.. SheetsStore
+```
 
 ## Catálogo y pedidos en Google Sheets
 
@@ -118,6 +179,23 @@ tmux attach -t deputy     # solo la primera vez, para aceptar los avisos; salí 
 
 Para revisar el estado desde cualquier lugar con SSH: `ssh pi 'curl -s localhost:8788/health'`.
 
+```mermaid
+flowchart TB
+  subgraph net["Internet"]
+    M["Meta / Kapso"]
+    CF["Borde de Cloudflare"]
+    A["Anthropic"]
+  end
+  subgraph pi["Raspberry Pi, dentro de tmux"]
+    CFD["cloudflared"] --> D["Deputy :8788"]
+    D <-->|stdio| CC["claude, iniciado en operator/"]
+    D --- data[("data/: historial, estado, pedidos")]
+  end
+  M -- webhook HTTPS --> CF --> CFD
+  CC -- HTTPS --> A
+  L(["Tu laptop"]) -. SSH .-> pi
+```
+
 ## Modos
 
 - **Piloto automático (por defecto):** `operator/.claude/settings.json` permite `mcp__deputy__reply`, así que Claude contesta solo.
@@ -125,9 +203,54 @@ Para revisar el estado desde cualquier lugar con SSH: `ssh pi 'curl -s localhost
 
 Tus mensajes al número del negocio le llegan a Claude con `role="owner"`. Probá con "¿cuántos pedidos van para el 24?", "pausá al 50581112222" o "decile que sí hay rompope".
 
+En el modo con aprobación, el pedido de permiso de Claude Code te llega al teléfono:
+
+```mermaid
+sequenceDiagram
+  participant CC as Claude Code
+  participant D as Deputy
+  actor O as Vos
+  actor C as Cliente
+  CC->>D: pedido de permiso (reply, vista previa, id abcde)
+  D->>O: Claude quiere usar reply ... si abcde / no abcde
+  O->>D: si abcde
+  D->>CC: veredicto: permitir
+  CC->>D: reply(chat_id, texto)
+  D->>C: mensaje
+```
+
+Cada chat pasa por tres estados:
+
+```mermaid
+stateDiagram-v2
+  [*] --> Activo
+  Activo --> Pausado: handoff
+  Pausado --> Activo: resume, cuando vos lo pedís
+  Activo --> Silencio: respondés a mano desde la app
+  Silencio --> Activo: después de DEPUTY_ECHO_PAUSE_MIN
+  note right of Pausado
+    Los mensajes nuevos se guardan en el historial
+    pero no le llegan a Claude
+  end note
+```
+
 ## Seguridad
 
 Un channel al que puede escribir cualquier cliente es una vía de **inyección de prompts**: cualquiera puede ponerle texto a tu sesión. Deputy lo mitiga en capas:
+
+```mermaid
+flowchart LR
+  msg["Mensaje entrante<br/>no confiable"] --> sig{"¿Firma<br/>válida?"}
+  sig -- no --> d1["401, descartado"]
+  sig -- sí --> dup{"¿Ya<br/>visto?"}
+  dup -- sí --> d2["ignorado"]
+  dup -- no --> role{"¿Remitente en<br/>DEPUTY_OWNERS?"}
+  role -- sí --> own["role=owner<br/>puede dar órdenes y aprobar"]
+  role -- no --> cus["role=customer<br/>nombre saneado, texto truncado"]
+  own --> cc["Claude Code<br/>solo herramientas de deputy"]
+  cus --> cc
+  cc -. bloqueado .-> blk["Bash, Read, Write,<br/>WebFetch, Agent y más"]
+```
 
 1. **Herramientas bloqueadas.** El perfil del operador (`operator/.claude/settings.json`) niega `Bash`, `Read`, `Write`, `Edit`, `WebFetch`, `WebSearch`, `Task`/`Agent` y otras. Aunque un mensaje convenza a Claude, no puede tocar tu equipo ni leer tu `.env`.
 2. **Roles.** Solo los números de `DEPUTY_OWNERS` llegan como `role="owner"` y pueden aprobar permisos. Las instrucciones del servidor le dicen a Claude que el texto de un cliente nunca es una orden.
