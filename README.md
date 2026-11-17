@@ -90,10 +90,10 @@ Requirements: [Bun](https://bun.sh) 1.2+ and Claude Code signed in with your cla
 git clone https://github.com/antonygiomarxdev/deputy && cd deputy
 bun install
 cp .env.example .env        # keep DEPUTY_PROVIDER=dev
-cd operator && claude --dangerously-load-development-channels server:deputy
+scripts/operator.sh         # on Windows, run it from Git Bash
 ```
 
-Accept the prompts (development channel, project MCP server). In another terminal:
+Accept the development channel prompt. In another terminal:
 
 ```bash
 curl -N localhost:8788/dev/events                    # Deputy's replies show up here
@@ -252,7 +252,7 @@ flowchart LR
   cc -. denied .-> blk["Bash, Read, Write,<br/>WebFetch, Agent and more"]
 ```
 
-1. **Blocked tools.** The operator profile (`operator/.claude/settings.json`) denies `Bash`, `Read`, `Write`, `Edit`, `WebFetch`, `WebSearch`, `Task`/`Agent` and more. Even if a message talks Claude into something, it can't touch your machine or read your `.env`.
+1. **Blocked tools.** The operator profile (`operator/.claude/settings.json`) denies `Bash`, `Read`, `Write`, `Edit`, `WebFetch`, `WebSearch`, `Task`/`Agent` and more. Even if a message talks Claude into something, it can't touch your machine or read your `.env`. `scripts/operator.sh` also starts Claude Code with only Deputy's MCP server and none of your own setup: no claude.ai connectors (Gmail, Drive…), no Claude in Chrome, no built-in tools, no user-level settings, hooks or plugins, and permission prompts instead of auto mode. Always start the operator with it.
 2. **Roles.** Only `DEPUTY_OWNERS` arrive as `role="owner"` and can approve permissions. The server's instructions tell Claude that customer text is never an order.
 3. **Sanitized metadata.** Profile names are stripped of special characters and texts are truncated.
 4. **Verified webhooks.** Meta (`X-Hub-Signature-256`) and Kapso (`X-Webhook-Signature`) signatures are checked; duplicates are dropped.

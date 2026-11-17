@@ -16,7 +16,6 @@
       "Read",
       "Write",
       "Edit",
-      "MultiEdit",
       "NotebookEdit",
       "Glob",
       "Grep",

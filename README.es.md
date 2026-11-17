@@ -90,10 +90,10 @@ Requisitos: [Bun](https://bun.sh) 1.2+ y Claude Code con sesión iniciada en tu 
 git clone https://github.com/antonygiomarxdev/deputy && cd deputy
 bun install
 cp .env.example .env        # dejá DEPUTY_PROVIDER=dev
-cd operator && claude --dangerously-load-development-channels server:deputy
+scripts/operator.sh         # en Windows, corrélo desde Git Bash
 ```
 
-Aceptá los avisos (canal de desarrollo y servidor MCP del proyecto). En otra terminal:
+Aceptá el aviso del canal de desarrollo. En otra terminal:
 
 ```bash
 curl -N localhost:8788/dev/events                     # aquí ves lo que responde Deputy
@@ -252,7 +252,7 @@ flowchart LR
   cc -. bloqueado .-> blk["Bash, Read, Write,<br/>WebFetch, Agent y más"]
 ```
 
-1. **Herramientas bloqueadas.** El perfil del operador (`operator/.claude/settings.json`) niega `Bash`, `Read`, `Write`, `Edit`, `WebFetch`, `WebSearch`, `Task`/`Agent` y otras. Aunque un mensaje convenza a Claude, no puede tocar tu equipo ni leer tu `.env`.
+1. **Herramientas bloqueadas.** El perfil del operador (`operator/.claude/settings.json`) niega `Bash`, `Read`, `Write`, `Edit`, `WebFetch`, `WebSearch`, `Task`/`Agent` y otras. Aunque un mensaje convenza a Claude, no puede tocar tu equipo ni leer tu `.env`. Además, `scripts/operator.sh` arranca Claude Code solo con el servidor MCP de Deputy y nada de tu configuración: sin conectores de claude.ai (Gmail, Drive…), sin Claude in Chrome, sin herramientas integradas, sin ajustes, hooks ni plugins de usuario, y con avisos de permiso en vez del modo auto. Arrancá siempre el operador con ese script.
 2. **Roles.** Solo los números de `DEPUTY_OWNERS` llegan como `role="owner"` y pueden aprobar permisos. Las instrucciones del servidor le dicen a Claude que el texto de un cliente nunca es una orden.
 3. **Metadatos saneados.** El nombre de perfil se limpia de caracteres especiales y los textos se truncan.
 4. **Webhooks verificados.** Se validan las firmas de Meta (`X-Hub-Signature-256`) y de Kapso (`X-Webhook-Signature`), y se descartan los duplicados.

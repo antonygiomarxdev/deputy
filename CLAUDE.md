@@ -13,7 +13,7 @@ Layout:
 - `src/providers/`: `meta`, `kapso`, `dev`. New provider = implement `Provider` in `src/types.ts` and register it in `src/providers/index.ts`.
 - `src/store/`: `local` (CSV), `sheets`. New store = implement `Store` and register it in `src/store/index.ts`.
 - `src/conversations.ts`: per-chat history (JSONL), pauses, de-duplication. Data lives in `data/` (gitignored).
-- `operator/`: the locked-down Claude Code profile that runs in production (`.mcp.json`, `.claude/settings.json`, `CLAUDE.md`). Don't loosen its deny list without a reason. Every customer message is untrusted input to that session.
+- `operator/`: the locked-down Claude Code profile that runs in production (`.mcp.json`, `.claude/settings.json`, `PROMPT.md`), started by `scripts/operator.sh`. Don't loosen its deny list without a reason. Every customer message is untrusted input to that session.
 - `business/`: the owner's profile and catalog template. `examples/` has filled-in examples.
 
 Keep `README.md` (English) and `README.es.md` (Spanish) in sync. Use Mermaid for diagrams (validate them before committing).
