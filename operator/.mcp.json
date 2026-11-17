@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "deputy": {
-      "command": "node",
-      "args": ["../dist/server.js"]
+      "command": "bun",
+      "args": ["../src/server.ts"]
     }
   }
 }

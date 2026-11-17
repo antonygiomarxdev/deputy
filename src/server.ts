@@ -1,7 +1,7 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 /**
  * Deputy: a Claude Code channel that answers a WhatsApp number on your behalf.
- * Claude Code launches it over stdio (see .mcp.json). This process also listens
+ * Claude Code launches it over stdio with Bun (see operator/.mcp.json). This process also listens
  * for provider webhooks over HTTP (Meta, Kapso or dev) and pushes them into the session.
  */
 import { createServer } from "node:http";
@@ -17,6 +17,7 @@ import { Conversations } from "./conversations.js";
 import { createProvider } from "./providers/index.js";
 import { createStore } from "./store/index.js";
 import type { Inbound, IncomingRequest, Order } from "./types.js";
+import pkg from "../package.json" with { type: "json" };
 
 const log = (...a: unknown[]) => console.error("[deputy]", ...a); // stdout belongs to the MCP protocol
 
@@ -64,7 +65,7 @@ BUSINESS PROFILE (written by the owner):
 ${business}`;
 
 const mcp = new Server(
-  { name: "deputy", version: "0.1.0" },
+  { name: "deputy", version: pkg.version },
   {
     capabilities: {
       experimental: {
