@@ -47,5 +47,6 @@
     "examples",
     "scripts",
     ".env.example"
-  ]
+  ],
+  "private": true
 }
