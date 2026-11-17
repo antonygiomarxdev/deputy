@@ -38,6 +38,7 @@ Product decisions, in order:
 5. **Global tool:** English code and docs, Spanish README kept in sync, multilingual replies.
 6. **Name:** *Deputy*, "someone who acts on your behalf, within limits you set, and whom you can relieve at any time". Customer service is the first use case, not the identity.
 7. **Runtime:** Bun. **Versioning:** Changesets. **Commits:** Conventional Commits, no attribution trailers.
+8. **Audience (2026-11-17):** anyone, not only developers. The goal is a public launch (e.g. Product Hunt) that any small seller can try. Setup, docs and packaging must work for a non-technical owner.
 
 ## Research that shaped the design
 
@@ -169,8 +170,8 @@ First run in a real Claude Code session (v2.1.326, Windows 11, Git Bash), dev pr
 
 ## Open questions
 
-1. **Anthropic terms:** confirm that running an always-on, customer-facing agent on a consumer plan (Pro/Max/Ultra) through Claude Code is allowed. If not, document the Claude API or Agent SDK as the supported path for businesses.
-2. **npm name:** `deputy` is taken on npm (an unrelated package). Options: publish as `@antonygiomarxdev/deputy`, pick another name, or don't publish (clone-and-run). Until then the package is private.
+1. **Anthropic terms (blocks a public launch):** confirm that running an always-on, customer-facing agent on a consumer plan (Pro/Max/Ultra) through Claude Code is allowed. If not, document the Claude API or Agent SDK as the supported path for businesses.
+2. **npm name:** `deputy` is taken on npm (an unrelated package). Since the audience is anyone (decision 8), clone-and-run is out: it must be published. Options: `@antonygiomarxdev/deputy` or another name. Until then the package is private.
 3. **Coexistence without a BSP:** does registering as a Tech Provider make sense for the owner, or should the docs recommend a second number?
 4. **Kapso + Coexistence:** does Kapso support it for Nicaraguan (+505) numbers? How do owner echoes show up in Kapso webhooks (so Kapso gets auto-pause too)?
 5. ~~**Real-world channel behavior**~~ Confirmed on 2026-11-17 (see *Live test findings*). Still to check: the same on Linux/tmux, and with the Meta provider.
