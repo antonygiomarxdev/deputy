@@ -1,6 +1,6 @@
 // End-to-end tests: spawn the server the way Claude Code does (stdio)
-// and simulate each provider's webhooks. Run: npm test
-import { test } from "node:test";
+// and simulate each provider's webhooks. Run: bun test
+import { test } from "bun:test";
 import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
 import { mkdtempSync, readFileSync } from "node:fs";
@@ -12,19 +12,19 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 const OWNER = "50588887777";
 const CLIENTE = "50581112222";
 let nextPort = 18800 + Math.floor(Math.random() * 500);
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-async function start(extraEnv = {}) {
+async function start(extraEnv: Record<string, string> = {}) {
   const port = nextPort++;
   const dataDir = mkdtempSync(join(tmpdir(), "deputy-"));
   const transport = new StdioClientTransport({
-    command: "node",
-    args: ["dist/server.js"],
-    env: { ...process.env, DEPUTY_PORT: String(port), DEPUTY_DATA_DIR: dataDir, DEPUTY_OWNERS: OWNER, DEPUTY_PROVIDER: "dev", DEPUTY_STORE: "local", DEPUTY_BUSINESS_DIR: "examples/christmas-food-sale-es", ...extraEnv },
+    command: "bun",
+    args: ["src/server.ts"],
+    env: { ...(process.env as Record<string, string>), DEPUTY_PORT: String(port), DEPUTY_DATA_DIR: dataDir, DEPUTY_OWNERS: OWNER, DEPUTY_PROVIDER: "dev", DEPUTY_STORE: "local", DEPUTY_BUSINESS_DIR: "examples/christmas-food-sale-es", ...extraEnv },
     stderr: "pipe",
   });
   const client = new Client({ name: "test", version: "0" }, { capabilities: { experimental: { "claude/channel": {} } } });
-  const events = [];
+  const events: any[] = [];
   client.fallbackNotificationHandler = async (n) => { events.push(n); };
   await client.connect(transport);
   // wait for the HTTP listener
@@ -36,14 +36,14 @@ async function start(extraEnv = {}) {
   return { client, events, base, dataDir, close: () => client.close() };
 }
 
-async function sseCollector(url) {
-  const out = [];
+async function sseCollector(url: string) {
+  const out: any[] = [];
   const ctrl = new AbortController();
   const res = await fetch(url, { signal: ctrl.signal });
   (async () => {
     const dec = new TextDecoder();
     try {
-      for await (const chunk of res.body) {
+      for await (const chunk of res.body!) {
         for (const line of dec.decode(chunk).split("\n")) if (line.startsWith("data: ")) out.push(JSON.parse(line.slice(6)));
       }
     } catch {}
@@ -51,13 +51,13 @@ async function sseCollector(url) {
   return { out, stop: () => ctrl.abort() };
 }
 
-const call = async (client, name, args = {}) => {
-  const r = await client.callTool({ name, arguments: args });
-  return { text: r.content?.[0]?.text ?? "", isError: !!r.isError };
+const call = async (client: Client, name: string, args: Record<string, unknown> = {}) => {
+  const r: any = await client.callTool({ name, arguments: args });
+  return { text: (r.content?.[0]?.text ?? "") as string, isError: !!r.isError };
 };
-const post = (base, body, headers = {}) =>
+const post = (base: string, body: unknown, headers: Record<string, string> = {}) =>
   fetch(`${base}/webhook`, { method: "POST", headers: { "content-type": "application/json", ...headers }, body: typeof body === "string" ? body : JSON.stringify(body) });
-const channelEvents = (events) => events.filter((e) => e.method === "notifications/claude/channel");
+const channelEvents = (events: any[]) => events.filter((e) => e.method === "notifications/claude/channel");
 
 test("dev: customer → Claude → reply → order → handoff → owner", async () => {
   const s = await start();
@@ -95,7 +95,7 @@ test("dev: customer → Claude → reply → order → handoff → owner", async
     assert.deepEqual(sse.out.at(-1), { to: CLIENTE, text: "¡Hola! El precio está por confirmar.", id: sse.out.at(-1).id });
 
     const hist = JSON.parse((await call(s.client, "history", { chat_id: CLIENTE })).text);
-    assert.deepEqual(hist.map((h) => h.from), ["customer", "deputy"]);
+    assert.deepEqual(hist.map((h: any) => h.from), ["customer", "deputy"]);
 
     // 3. order
     const ped = JSON.parse((await call(s.client, "create_order", { chat_id: CLIENTE, customer: "Ana", items: [{ product: "nacatamal", quantity: 10 }], fulfillment: "delivery", address: "Bello Horizonte, casa 5", due: "Dec 24" })).text);
@@ -192,7 +192,7 @@ test("meta: verification, signature, messages and echoes", async () => {
     const ev = channelEvents(s.events);
     assert.equal(ev.length, 1);
     assert.equal(ev[0].params.meta.name, "Ana");
-    const health = await (await fetch(`${s.base}/health`)).json();
+    const health: any = await (await fetch(`${s.base}/health`)).json();
     assert.equal(health.paused, 1, "echo pauses chat 50583334444");
   } finally {
     await s.close();

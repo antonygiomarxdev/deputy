@@ -1,7 +1,7 @@
-import { test } from "node:test";
+import { test } from "bun:test";
 import assert from "node:assert/strict";
-import { parseCsv, rowsToCatalog, orderToRow, rowToOrder } from "../dist/store/csv.js";
-import { splitText } from "../dist/providers/graph.js";
+import { parseCsv, rowsToCatalog, orderToRow, rowToOrder } from "../src/store/csv.ts";
+import { splitText } from "../src/providers/graph.ts";
 
 test("catalog accepts English headers, quoted fields and currency prices", () => {
   const cat = rowsToCatalog(parseCsv('Name,Unit,Price,Available\n"Tamale, large",Each,$ 4.50,yes\nCider,Bottle,,sold out\n'));
