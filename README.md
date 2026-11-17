@@ -52,11 +52,11 @@ Always check [Meta's pricing page](https://developers.facebook.com/docs/whatsapp
 
 ## Quick start (no WhatsApp needed, 5 minutes)
 
-Requirements: Node 20.11+ and Claude Code signed in with your claude.ai account.
+Requirements: [Bun](https://bun.sh) 1.2+ and Claude Code signed in with your claude.ai account.
 
 ```bash
 git clone https://github.com/antonygiomarxdev/deputy && cd deputy
-npm install && npm run build
+bun install
 cp .env.example .env        # keep DEPUTY_PROVIDER=dev
 cd operator && claude --dangerously-load-development-channels server:deputy
 ```
@@ -104,7 +104,7 @@ Change a price in the sheet and Claude uses it on the next message.
 
 ## Always on (Raspberry Pi or any server)
 
-On a Pi, use the 64-bit OS.
+On a Pi, use the 64-bit OS (Bun runs on Linux arm64).
 
 ```bash
 # 1. A free public tunnel to the local port
@@ -149,8 +149,12 @@ Residual risk: a customer could still manipulate Claude into saying something wr
 ## Development
 
 ```bash
-npm test     # builds, then runs end-to-end tests (stdio + simulated dev, Meta and Kapso webhooks) and unit tests
+bun test             # end-to-end tests (stdio + simulated dev, Meta and Kapso webhooks) and unit tests
+bun run typecheck    # TypeScript, no emit (Bun runs the sources directly)
+bun changeset        # describe your change for the changelog
 ```
+
+Releases use [Changesets](https://github.com/changesets/changesets): every user-facing change ships with a changeset, and `bun run version` bumps the version and writes `CHANGELOG.md`.
 
 The repo root is a normal dev workspace. The locked-down profile that answers customers lives in `operator/`. See [CLAUDE.md](CLAUDE.md) for the layout.
 

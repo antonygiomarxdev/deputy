@@ -52,11 +52,11 @@ Revisá siempre la [tabla de precios de Meta](https://developers.facebook.com/do
 
 ## Inicio rápido (sin WhatsApp, 5 minutos)
 
-Requisitos: Node 20.11+ y Claude Code con sesión iniciada en tu cuenta de claude.ai.
+Requisitos: [Bun](https://bun.sh) 1.2+ y Claude Code con sesión iniciada en tu cuenta de claude.ai.
 
 ```bash
 git clone https://github.com/antonygiomarxdev/deputy && cd deputy
-npm install && npm run build
+bun install
 cp .env.example .env        # dejá DEPUTY_PROVIDER=dev
 cd operator && claude --dangerously-load-development-channels server:deputy
 ```
@@ -104,7 +104,7 @@ Cambiás un precio en la hoja y Claude lo usa en el siguiente mensaje.
 
 ## Siempre encendido (Raspberry Pi o cualquier servidor)
 
-En la Pi, usá el sistema operativo de 64 bits.
+En la Pi, usá el sistema operativo de 64 bits (Bun corre en Linux arm64).
 
 ```bash
 # 1. Túnel público gratis hacia el puerto local
@@ -149,8 +149,12 @@ Riesgo residual: un cliente igual podría manipular a Claude para que diga algo 
 ## Desarrollo
 
 ```bash
-npm test     # compila y corre pruebas de punta a punta (stdio + webhooks simulados de dev, Meta y Kapso) y pruebas unitarias
+bun test             # pruebas de punta a punta (stdio + webhooks simulados de dev, Meta y Kapso) y pruebas unitarias
+bun run typecheck    # TypeScript sin compilar (Bun ejecuta el código fuente directamente)
+bun changeset        # describí tu cambio para el changelog
 ```
+
+Las versiones se manejan con [Changesets](https://github.com/changesets/changesets): cada cambio visible para el usuario lleva su changeset, y `bun run version` sube la versión y escribe el `CHANGELOG.md`.
 
 La raíz del repo es un espacio de desarrollo normal. El perfil bloqueado que atiende a los clientes vive en `operator/`. Ver [CLAUDE.md](CLAUDE.md) para la estructura.
 
