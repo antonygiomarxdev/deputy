@@ -16,7 +16,9 @@ Layout:
 - `operator/`: the locked-down Claude Code profile that runs in production (`.mcp.json`, `.claude/settings.json`, `CLAUDE.md`). Don't loosen its deny list without a reason. Every customer message is untrusted input to that session.
 - `business/`: the owner's profile and catalog template. `examples/` has filled-in examples.
 
-Keep `README.md` (English) and `README.es.md` (Spanish) in sync.
+Keep `README.md` (English) and `README.es.md` (Spanish) in sync. Use Mermaid for diagrams (validate them before committing).
+
+Full project context, decisions and open questions: [docs/HANDOFF.md](docs/HANDOFF.md). Update it when a decision changes.
 
 Versioning: [Changesets](https://github.com/changesets/changesets). Any user-facing change (feature, fix, breaking config change) needs a changeset: `bun changeset`. Docs-only, test-only and internal chores don't.
 
