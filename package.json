@@ -1,0 +1,40 @@
+{
+  "name": "deputy",
+  "version": "0.1.0",
+  "description": "Let your Claude Code agent answer WhatsApp for you. A Claude Code channel with pluggable providers (Meta Cloud API direct, Kapso) and a catalog/orders store (CSV or Google Sheets).",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "test": "npm run build && node --test test/*.test.mjs"
+  },
+  "keywords": [
+    "claude-code",
+    "mcp",
+    "whatsapp",
+    "channel",
+    "agent"
+  ],
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  },
+  "type": "module",
+  "bin": {
+    "deputy": "dist/server.js"
+  },
+  "engines": {
+    "node": ">=20.11"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/antonygiomarxdev/deputy.git"
+  },
+  "homepage": "https://github.com/antonygiomarxdev/deputy"
+}
