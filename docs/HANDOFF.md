@@ -32,13 +32,15 @@ flowchart TD
 Product decisions, in order:
 
 1. **Official API only.** No unofficial WhatsApp Web bridges.
-2. **The brain is Claude Code on the owner's plan**, not the Claude API.
+2. **The brain is the owner's own coding agent**, starting with Claude Code on the owner's plan, not a paid API. See decision 9.
 3. **Push, not poll:** a channel wakes the session when a webhook arrives.
 4. **Bring your own provider:** Meta direct (free) or a BSP like Kapso. The owner wanted this to be a reusable open-source service, not a one-off bot.
 5. **Global tool:** English code and docs, Spanish README kept in sync, multilingual replies.
 6. **Name:** *Deputy*, "someone who acts on your behalf, within limits you set, and whom you can relieve at any time". Customer service is the first use case, not the identity.
 7. **Runtime:** Bun. **Versioning:** Changesets. **Commits:** Conventional Commits, no attribution trailers.
-8. **Audience (2026-11-17):** anyone, not only developers. The goal is a public launch (e.g. Product Hunt) that any small seller can try. Setup, docs and packaging must work for a non-technical owner.
+8. **Audience (2026-11-17):** anyone who runs their own small business and can't always answer messages. Not companies: a business with high volume should hire a customer-service platform (Atomchat or similar). The goal is a public launch (e.g. Product Hunt) that any small seller can try, so setup, docs and packaging must work for a non-technical owner.
+9. **Agent-agnostic (2026-11-17):** Deputy must not be tied to Claude. Claude Code comes first, but Codex or any other agent that speaks MCP should be able to run it. Keep the core (webhook, providers, store, conversations, tools) neutral; Claude-specific pieces (the `claude/channel` push, permission relay, `operator/` profile) are one adapter.
+10. **Not always on, and fair use (2026-11-17):** Deputy is the owner's assistant while the owner has a session open, helping with what the owner knows; it is not a 24/7 unattended bot. This keeps usage within what each agent's plan allows. Don't design around stretching any provider's terms.
 
 ## Research that shaped the design
 
@@ -170,18 +172,20 @@ First run in a real Claude Code session (v2.1.326, Windows 11, Git Bash), dev pr
 
 ## Open questions
 
-1. **Anthropic terms (blocks a public launch):** confirm that running an always-on, customer-facing agent on a consumer plan (Pro/Max/Ultra) through Claude Code is allowed. If not, document the Claude API or Agent SDK as the supported path for businesses.
+1. **Agent terms:** with decision 10 (owner-attended, low volume, own business), check that Anthropic's consumer terms (Pro/Max/Ultra) and OpenAI's for Codex allow it, and say plainly in the README what Deputy is not for.
 2. **npm name:** `deputy` is taken on npm (an unrelated package). Since the audience is anyone (decision 8), clone-and-run is out: it must be published. Options: `@antonygiomarxdev/deputy` or another name. Until then the package is private.
 3. **Coexistence without a BSP:** does registering as a Tech Provider make sense for the owner, or should the docs recommend a second number?
 4. **Kapso + Coexistence:** does Kapso support it for Nicaraguan (+505) numbers? How do owner echoes show up in Kapso webhooks (so Kapso gets auto-pause too)?
 5. ~~**Real-world channel behavior**~~ Confirmed on 2026-11-17 (see *Live test findings*). Still to check: the same on Linux/tmux, and with the Meta provider.
 6. **Owner's 24 h window:** notifications to the owner fail if the owner hasn't messaged the number in 24 h. Needs an approved utility template.
+7. **Messages while no session is open:** Deputy's server only runs while the agent session runs (the agent spawns it over stdio), so webhooks fail when the owner is offline. Options: rely on the provider's retries or inbox API, or a tiny always-on receiver that only queues messages (no agent). Either way, add a `pending` tool and catch up on unanswered chats when a session starts. That same tool is how agents without push (Codex and others) would work.
+8. **Agent adapters:** which agents support MCP push or an equivalent? Without push, the fallback is the owner asking the agent to check `pending`.
 
 ## Next steps (suggested order)
 
 1. ~~Run the dev provider in a real Claude Code session~~ Done 2026-11-17, see *Live test findings*.
 2. Connect Meta's free test number end to end through a Cloudflare tunnel.
-3. Deploy on the Raspberry Pi with `scripts/start.sh`; dogfood with the food sale.
+3. Dogfood with the food sale from the owner's laptop (an always-on box is optional, not the default).
 4. CI: GitHub Action with `bun install`, `bun run typecheck`, `bun test`, and the Changesets release action.
 5. Templates for owner notifications and order confirmations.
 6. Voice-note transcription, interactive buttons, more providers (Twilio, 360dialog), other channels (Telegram, Instagram), packaging as a Claude Code plugin.
