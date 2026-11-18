@@ -7,7 +7,6 @@ const kapsoExtension = z.object({
   origin: z.string().nullable().optional(),
   transcript: z.object({ text: z.string() }).nullable().optional(),
   whatsapp_conversation_id: z.string().nullable().optional(),
-  contact_name: z.string().nullable().optional(),
 });
 
 export const messageSchema = z.object({
