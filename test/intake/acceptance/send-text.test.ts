@@ -151,8 +151,10 @@ describe("SendText", () => {
       expect(await send.execute({ sendId: sid("b"), chat, text: "Hello" })).toEqual({ kind: "rate_limited", retryAt: NOW + 60_000 });
       await clock.advance(5_000);
       const before = provider.sent.length;
-      // the repeat answers with the time the first call finished, in the past, so the caller retries at once with a new send id
-      expect(await send.execute({ sendId: sid("a"), chat, text: "Hello" })).toEqual({ kind: "rate_limited", retryAt: NOW });
+      // the repeat answers with the retry time the first call computed, not the time it finished
+      expect(await send.execute({ sendId: sid("a"), chat, text: "Hello" })).toEqual({ kind: "rate_limited", retryAt: NOW + 40_000 });
+      expect(await send.execute({ sendId: sid("b"), chat, text: "Hello" })).toEqual({ kind: "rate_limited", retryAt: NOW + 60_000 });
+      expect((await store.repos.outgoing.find(sid("a")))?.props).toMatchObject({ finishedAt: NOW, retryAt: NOW + 40_000 });
       expect(provider.sent).toHaveLength(before);
     });
 

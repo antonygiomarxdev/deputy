@@ -188,6 +188,20 @@ describe("FindOutgoing", () => {
     expect(store.sourceChanges()).toEqual([]);
   });
 
+  test("two parts with identical text cannot both claim the one echo: none, and nothing changes", async () => {
+    const part = "a".repeat(MAX_PART);
+    const text = part + part;
+    await unknownSend("s1", text);
+    await put(staff("only", part, SINCE + 1_000));
+    expect(await find.execute({ sendId: sid("s1"), chat, since: SINCE, text })).toEqual({ kind: "none" });
+    expect(await sourceOf("only")).toBe("owner_app");
+    expect(store.sourceChanges()).toEqual([]);
+    expect((await store.repos.outgoing.find(sid("s1")))?.props.state).toBe("unknown");
+    // two echoes of that text are ambiguous instead
+    await put(staff("second", part, SINCE + 2_000));
+    expect(await find.execute({ sendId: sid("s1"), chat, since: SINCE, text })).toEqual({ kind: "ambiguous", candidates: 2 });
+  });
+
   test("without the lease it is refused, and no transaction is even opened", async () => {
     await unknownSend("s1", "Hello");
     holder.token = "someone else";
