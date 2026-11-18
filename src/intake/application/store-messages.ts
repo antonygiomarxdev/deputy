@@ -70,9 +70,8 @@ export class StoreMessages {
         else await r.messages.markDeleted(id);
       } else {
         const p = event.message;
-        const matchesSend =
-          p.providerMessageId !== null &&
-          (await r.outgoing.findByProviderId(i.provider, p.providerMessageId)) !== null;
+        const send = p.providerMessageId === null ? null : await r.outgoing.findByProviderId(i.provider, p.providerMessageId);
+        const matchesSend = send !== null;
         const message = Message.receive(p, { provider: i.provider, owners, matchesSend, connectedAt, now });
         if (!(message instanceof Message)) {
           await r.rejections.add(now, "no_identifier", true);
@@ -81,6 +80,16 @@ export class StoreMessages {
         }
         if ((await r.messages.insertIfNew(message)) === "duplicate") {
           const known = await r.messages.find(message.props.id);
+          // a report that arrived before the send was recorded: it was stored as owner_app, and now it is known to be ours
+          if (known !== null && send !== null && known.props.source === "owner_app") {
+            const changed = known.reclassifyAsDeputySend(send.sendId, now);
+            if (changed.ok) {
+              await r.messages.reclassify(known.props.id, changed.change);
+              touched.set(known.props.chat, touched.get(known.props.chat) ?? { providerId: null, conversationRef: null });
+            }
+            duplicates++;
+            continue;
+          }
           if (known !== null && p.edited && p.text !== null && p.text !== known.props.text) {
             await r.messages.saveEdit(known.props.id, known.applyEdit(p.text, now), p.text);
             edits++;
