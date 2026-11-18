@@ -8,7 +8,18 @@ test("boots over stdio, serves instructions and tools, and exits fast on stdin c
   try {
     const instructions = h.client.getInstructions();
     expect(instructions).toContain("approve_draft");
-    expect((await h.client.listTools()).tools.map((t) => t.name)).toEqual(["status", "get_chat", "rejected_deliveries", "list_owner_numbers", "create_draft", "change_draft", "reject_draft", "approve_draft", "list_drafts"]);
+    expect((await h.client.listTools()).tools.map((t) => t.name)).toEqual([
+      "status",
+      "get_chat",
+      "rejected_deliveries",
+      "list_owner_numbers",
+      "check_messages",
+      "create_draft",
+      "change_draft",
+      "reject_draft",
+      "approve_draft",
+      "list_drafts",
+    ]);
     expect(h.protocolErrors).toEqual([]);
 
     const ms = await h.close();

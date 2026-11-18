@@ -3,6 +3,8 @@ import { customerText } from "../../../adapters/mcp/customer-text";
 import { defineTool, type ToolDefinition } from "../../../adapters/mcp/tool";
 import { parseChatId } from "../../../shared/chat-id";
 import type { GetOwnerNumbers } from "../../ports/get-owner-numbers";
+import type { CatchUp } from "../../ports/catch-up";
+import type { SyncStatusView } from "../../ports/get-sync-status";
 import type { ListRejections } from "../../ports/list-rejections";
 import type { ReadChat } from "../../ports/read-chat";
 import type { MessageView } from "../../ports/views";
@@ -27,7 +29,18 @@ function marksOf(m: MessageView): string[] {
 
 const iso = (at: number): string => new Date(at).toISOString();
 
-export function intakeTools(u: { readChat: ReadChat; listRejections: ListRejections; getOwnerNumbers: GetOwnerNumbers }): ToolDefinition[] {
+/** The sync status as lines of plain text. It carries times, counts and Deputy's own wording, never customer or provider text. */
+export function formatSyncStatus(view: SyncStatusView): string {
+  const lines: string[] = [];
+  if (view.reasonText !== "") lines.push(view.reasonText);
+  if (view.lastSuccessAt !== null) lines.push(`up to date as of ${iso(view.lastSuccessAt)}`);
+  if (view.oldestStoredAt !== null) lines.push(`history reaches back to ${iso(view.oldestStoredAt)}`);
+  if (view.storageFailureAt !== null) lines.push(`last storage failure at ${iso(view.storageFailureAt)}`);
+  if (view.lastLiveDeliveryVerifiedAt !== null) lines.push(`last verified live delivery at ${iso(view.lastLiveDeliveryVerifiedAt)}`);
+  return lines.join("\n");
+}
+
+export function intakeTools(u: { readChat: ReadChat; listRejections: ListRejections; catchUp: CatchUp; getOwnerNumbers: GetOwnerNumbers }): ToolDefinition[] {
   const getChat = defineTool({
     name: "get_chat",
     description:
@@ -94,5 +107,25 @@ export function intakeTools(u: { readChat: ReadChat; listRejections: ListRejecti
     },
   });
 
-  return [getChat, rejected, ownerNumbers];
+  const checkMessages = defineTool({
+    name: "check_messages",
+    description:
+      "Ask Deputy to check the WhatsApp provider for messages now and say how up to date its inbox is. It takes no input: nothing the caller passes is stored.",
+    input: {},
+    async run() {
+      const result = await u.catchUp.execute({ trigger: "asked" });
+      if (result.kind === "refused") return { text: "not_owner", structured: { code: "not_owner" }, isError: true };
+      const status = formatSyncStatus(result.status);
+      if (result.kind === "still_running") {
+        return { text: `${status}\nStill checking; ask again in a moment.`, structured: { running: true }, isError: false };
+      }
+      return {
+        text: `${status}\nStored ${result.stored} new message${result.stored === 1 ? "" : "s"}.`,
+        structured: { stored: result.stored, status: result.status.status, reason: result.status.reason },
+        isError: false,
+      };
+    },
+  });
+
+  return [getChat, rejected, ownerNumbers, checkMessages];
 }

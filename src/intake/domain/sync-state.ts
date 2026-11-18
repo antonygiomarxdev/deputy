@@ -132,7 +132,8 @@ export class SyncState {
       reason,
       failedSince: this.p.failedSince ?? now,
       rateLimitedSince: usageLimit ? (this.p.rateLimitedSince ?? now) : this.p.rateLimitedSince,
-      retryAt: usageLimit ? now + (retryAfterMs ?? RATE_LIMIT_DEFAULT_WAIT_MS) : null,
+      // a retry wait of 0 or less is no wait at all: it counts as absent, or the scheduler would loop
+      retryAt: usageLimit ? now + (retryAfterMs !== undefined && retryAfterMs !== null && retryAfterMs > 0 ? retryAfterMs : RATE_LIMIT_DEFAULT_WAIT_MS) : null,
     };
   }
 
