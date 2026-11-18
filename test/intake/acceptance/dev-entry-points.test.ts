@@ -41,3 +41,15 @@ test("a held body without an id gets dev-in-<seq>; an owner body gets dev-out-<s
   expect((await provider.hold({ chat: "c", from: "1555", text: "a" })).providerMessageId).toMatch(/^dev-in-\d+$/);
   expect((await provider.hold({ chat: "c", from: "1555", text: "b", owner: true })).providerMessageId).toMatch(/^dev-out-\d+$/);
 });
+
+test("only a duplicate id is ignored: another constraint failure surfaces", async () => {
+  const provider = await dev();
+  await expect(provider.hold({ chat: "c", from: "1555", text: "x", sentAt: Number.NaN })).rejects.toThrow();
+});
+
+test("a limit below 1 is refused at the port", async () => {
+  const provider = await dev();
+  const signal = new AbortController().signal;
+  await expect(port(provider).listMessages({ scope: { outbound: true }, cursor: null, limit: 0 }, signal)).rejects.toThrow(RangeError);
+  await expect(port(provider).listConversations({ activeAfter: null, cursor: null, limit: -1 }, signal)).rejects.toThrow(RangeError);
+});
