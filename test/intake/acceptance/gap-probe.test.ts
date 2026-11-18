@@ -1,0 +1,155 @@
+import { beforeEach, describe, expect, test } from "bun:test";
+import { InMemoryIntakeSettingsRepository } from "../../../src/intake/adapters/memory/in-memory-intake-settings-repository";
+import { InMemoryIntakeStore } from "../../../src/intake/adapters/memory/in-memory-intake-store";
+import { RecordingEventPublisher } from "../../../src/intake/adapters/memory/recording-event-publisher";
+import { CatchUpUseCase, type RunResult } from "../../../src/intake/application/catch-up";
+import { GetSyncStatusUseCase } from "../../../src/intake/application/get-sync-status";
+import { RunCoordinator } from "../../../src/intake/application/run-coordinator";
+import { StorageFailureLog } from "../../../src/intake/application/storage-failure-log";
+import { StoreMessages } from "../../../src/intake/application/store-messages";
+import { OwnerNumbers } from "../../../src/intake/domain/owner-numbers";
+import type { ProviderMessage } from "../../../src/intake/ports/provider";
+import { PhoneNumber } from "../../../src/shared/phone-number";
+import { FakeClock } from "../../support/fake-clock";
+import { FakeProvider } from "../../support/fake-provider";
+import { providerMessage } from "../../support/intake-fixtures";
+
+const DAY = 86_400_000;
+const NOW = 100 * DAY;
+const OWNER = "+5491100000000";
+const msg = (id: string, sentAt: number, ref = "c1", counterpart = "5491123456789"): ProviderMessage =>
+  providerMessage({ providerMessageId: id, sentAt, conversationRef: ref, counterpart, from: counterpart });
+const echo = (id: string, sentAt: number): ProviderMessage =>
+  providerMessage({ providerMessageId: id, sentAt, conversationRef: "c1", direction: "outbound", from: OWNER });
+
+describe("the gap probe", () => {
+  let store: InMemoryIntakeStore;
+  let provider: FakeProvider;
+  let clock: FakeClock;
+  let publisher: RecordingEventPublisher;
+
+  beforeEach(async () => {
+    store = new InMemoryIntakeStore();
+    provider = new FakeProvider("kapso");
+    clock = new FakeClock(1_000_000);
+    publisher = new RecordingEventPublisher();
+    provider.serverTime = NOW;
+    const owner = PhoneNumber.fromInternational(OWNER);
+    if (!owner) throw new Error("owner");
+    await store.owners.save(OwnerNumbers.of([{ number: owner, kind: "business", label: "", addedAt: 1 }]), []);
+  });
+
+  const build = () => {
+    const coordinator = new RunCoordinator<RunResult>(clock);
+    const failures = new StorageFailureLog();
+    return new CatchUpUseCase({
+      provider,
+      clock,
+      lease: { isOwner: async () => true },
+      uow: store.unitOfWork,
+      reads: store.repos,
+      store: new StoreMessages({ clock }),
+      publisher,
+      coordinator,
+      status: new GetSyncStatusUseCase({
+        provider: "kapso",
+        reads: store.repos,
+        settings: new InMemoryIntakeSettingsRepository(),
+        coordinator,
+        failures,
+        clock,
+      }),
+      failures,
+    });
+  };
+  const run = async () => {
+    const result = await build().execute({ trigger: "timer" });
+    if (result.kind !== "finished") throw new Error(`expected finished, got ${result.kind}`);
+    return result.status;
+  };
+  const storeDirectly = (...messages: ProviderMessage[]) =>
+    store.unitOfWork.run((r) =>
+      new StoreMessages({ clock }).store(r, { provider: "kapso", events: messages.map((message) => ({ kind: "message" as const, message })) }),
+    );
+
+  test("FR-INTAKE-03-15: the newest stored message is 10 days old and the exhausted listing starts 3 days ago: possible_gap", async () => {
+    await storeDirectly(msg("old", NOW - 10 * DAY));
+    provider.hold("c1", "5491123456789", [msg("recent", NOW - 3 * DAY)]);
+    const status = await run();
+    expect(status).toMatchObject({
+      status: "failed",
+      reason: "possible_gap",
+      gap: { storedAt: NOW - 10 * DAY, returnedAt: NOW - 3 * DAY },
+    });
+    expect(status.reasonText).toContain("WhatsApp Business app");
+    expect(status.reasonText).toContain(new Date(NOW - 10 * DAY).toISOString());
+    expect(status.reasonText).toContain(new Date(NOW - 3 * DAY).toISOString());
+    const done = publisher.published.find((e) => e.name === "CatchUpFinished");
+    expect(done?.name === "CatchUpFinished" && [done.status, done.reason]).toEqual(["failed", "possible_gap"]);
+  });
+
+  test("FR-INTAKE-03-13: the provider holds 3 days while 10 are stored: the view exposes how far back Deputy goes", async () => {
+    await storeDirectly(msg("old", NOW - 10 * DAY));
+    provider.hold("c1", "5491123456789", [msg("recent", NOW - 3 * DAY)]);
+    const status = await run();
+    expect(status).toMatchObject({ reason: "possible_gap", oldestStoredAt: NOW - 10 * DAY, newestStoredAt: NOW - 3 * DAY });
+  });
+
+  test("a quiet shop: nothing new, run after run, is never a gap", async () => {
+    provider.hold("c1", "5491123456789", [msg("a", NOW - 3 * DAY), msg("b", NOW - 2 * DAY)]);
+    expect(await run()).toMatchObject({ status: "complete", gap: null });
+    provider.serverTime = NOW + DAY;
+    expect(await run()).toMatchObject({ status: "complete", gap: null });
+  });
+
+  test("a new conversation whose listing is exhausted, with nothing older stored, is not a gap", async () => {
+    await storeDirectly(msg("other", NOW - 10 * DAY, "c2", "5491100000001"));
+    provider.hold("c2", "5491100000001", [msg("other", NOW - 10 * DAY, "c2", "5491100000001")]);
+    provider.hold("c1", "5491123456789", [msg("fresh", NOW - 1 * DAY)]);
+    expect(await run()).toMatchObject({ status: "complete", gap: null });
+  });
+
+  test("the first reply the owner ever sends is not a gap: customer messages are not owner messages", async () => {
+    await storeDirectly(msg("c1", NOW - 5 * DAY));
+    provider.hold("c1", "5491123456789", [msg("c1", NOW - 5 * DAY)]);
+    provider.outbound = [echo("first-reply", NOW - 1 * DAY)];
+    expect(await run()).toMatchObject({ status: "complete", gap: null });
+  });
+
+  test("an empty exhausted listing (no oldest item) is not a gap, even with older messages stored", async () => {
+    await storeDirectly(echo("old-reply", NOW - 10 * DAY));
+    provider.outbound = [];
+    expect(await run()).toMatchObject({ status: "complete", gap: null });
+  });
+
+  test("a listing that stopped at the window (not read to its end) is not a gap", async () => {
+    provider.serverTime = 2_000_000;
+    await run(); // marks 2,000,000: the next window starts at 1,400,000
+    provider.serverTime = 3_000_000;
+    provider.pageSize = 2;
+    await storeDirectly(msg("ancient", 500_000));
+    provider.hold("c1", "5491123456789", [
+      msg("n1", 2_900_000),
+      msg("n2", 2_800_000),
+      msg("mid", 2_000_000),
+      msg("old", 1_000_000), // page 2 holds this item, older than the window: the read stops with the listing not exhausted
+      msg("never-read", 400_000),
+    ]);
+    expect(await run()).toMatchObject({ status: "complete", gap: null });
+  });
+
+  test("the first gap found is the one reported", async () => {
+    await storeDirectly(msg("a-old", NOW - 20 * DAY, "c1", "5491123456789"), msg("b-old", NOW - 9 * DAY, "c2", "5491100000001"));
+    provider.hold("c1", "5491123456789", [msg("a-new", NOW - 4 * DAY)]); // less recently active: swept first
+    provider.hold("c2", "5491100000001", [msg("b-new", NOW - 2 * DAY, "c2", "5491100000001")]);
+    expect((await run()).gap).toEqual({ storedAt: NOW - 20 * DAY, returnedAt: NOW - 4 * DAY });
+  });
+
+  test("a gap does not resolve the recoverable rejection notes", async () => {
+    await store.unitOfWork.run((r) => r.rejections.add(clock.now() - 10, "no_identifier", true));
+    await storeDirectly(msg("old", NOW - 10 * DAY));
+    provider.hold("c1", "5491123456789", [msg("recent", NOW - 3 * DAY)]);
+    await run();
+    expect((await store.repos.rejections.list()).unrecovered).toBe(1);
+  });
+});
