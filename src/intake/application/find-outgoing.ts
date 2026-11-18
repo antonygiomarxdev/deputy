@@ -5,6 +5,7 @@ import type { MessageId } from "../../shared/message-id";
 import type { OwnerLease } from "../../shared/owner-lease";
 import type { SendId } from "../../shared/send-id";
 import { OUTGOING_SKEW_MS } from "../domain/constants";
+import type { SourceChange } from "../domain/message";
 import { splitText } from "../domain/split-text";
 import type { FindOutgoing, FindOutgoingResult } from "../ports/find-outgoing";
 import { LeaseLostError, type IntakeUnitOfWork } from "../ports/intake-unit-of-work";
@@ -40,21 +41,24 @@ export class FindOutgoingUseCase implements FindOutgoing {
         if (found === 0) return { kind: "none" };
         if (found < parts.length) return { kind: "partial", found, expected: parts.length };
 
+        // check every message first: nothing is written unless all of them can be reclassified
         const now = this.d.clock.now();
-        const ids: string[] = [];
-        let dev = false;
-        for (const [i, list] of candidates.entries()) {
+        const plan: { id: MessageId; change: SourceChange; dev: boolean }[] = [];
+        for (const list of candidates) {
           const id = list[0];
-          if (id === undefined) continue;
-          const message = await r.messages.find(id);
+          const message = id === undefined ? null : await r.messages.find(id);
           const changed = message?.reclassifyAsDeputySend(q.sendId, now);
-          if (message === null || changed === undefined || !changed.ok) return { kind: "none" };
-          await r.messages.reclassify(id, changed.change);
-          send.linkPart(i + 1, id.providerMessageId, now);
-          await r.outgoing.savePart(send, i + 1, id.provider);
-          ids.push(id.providerMessageId);
-          dev = message.props.dev;
+          if (id === undefined || message === null || changed === undefined || !changed.ok) return { kind: "none" };
+          plan.push({ id, change: changed.change, dev: message.props.dev });
         }
+        const ids: string[] = [];
+        for (const [i, p] of plan.entries()) {
+          await r.messages.reclassify(p.id, p.change);
+          send.linkPart(i + 1, p.id.providerMessageId, now);
+          await r.outgoing.savePart(send, i + 1, p.id.provider);
+          ids.push(p.id.providerMessageId);
+        }
+        const dev = plan[0]?.dev ?? false;
         await r.outgoing.saveSend(send);
         await r.chats.recompute(q.chat, dev, now, { providerId: null, conversationRef: null });
         return { kind: "found", providerMessageIds: ids };
