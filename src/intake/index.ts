@@ -38,6 +38,8 @@ export type { EventPublisher } from "./ports/event-publisher";
 export type { ReceiveLiveDelivery } from "./ports/receive-live-delivery";
 export type { ListRejections } from "./ports/list-rejections";
 export type { ReadChat } from "./ports/read-chat";
+export type { SendText, SendTextResult } from "./ports/send-text";
+export type { FindOutgoing, FindOutgoingResult } from "./ports/find-outgoing";
 export type { ChatExists } from "./ports/chat-exists";
 export type { IsCustomerText } from "./ports/is-customer-text";
 export type { ListChats } from "./ports/list-chats";
