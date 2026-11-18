@@ -1,20 +1,24 @@
 # Developing Deputy
 
-Deputy is a Claude Code channel (an MCP server over stdio + an HTTP webhook listener) that lets a Claude Code session answer WhatsApp for its owner.
+Deputy is an MCP server over stdio that gives an agent (Claude Code first) the owner's WhatsApp Business inbox: it receives and stores customer messages and lets the agent draft answers that go out only after the owner's go.
 
 - Runtime and package manager: Bun. No build step: Bun runs `src/` directly.
 - `bun install`: install dependencies (`bun.lock` is committed).
-- `bun test`: end-to-end tests (spawns the server over stdio, simulates dev/Meta/Kapso webhooks) and unit tests.
+- `bun test`: unit, adapter-contract, architecture and end-to-end tests (the end-to-end tests spawn `bun src/main.ts serve` over stdio).
 - `bun run typecheck`: `tsc --noEmit`. Run it with the tests before committing.
+- `bun src/main.ts serve`: start the server. Data lives in `DEPUTY_DATA_DIR` (default `data/`, gitignored) as `deputy.db`; config in `DEPUTY_CONFIG_DIR` (default `~/.deputy`).
 - Never write to stdout from the server: it is the MCP transport. Log with `console.error`.
 
-Layout:
-- `src/server.ts`: channel capabilities, instructions, tools, permission relay, HTTP routes.
-- `src/providers/`: `meta`, `kapso`, `dev`. New provider = implement `Provider` in `src/types.ts` and register it in `src/providers/index.ts`.
-- `src/store/`: `local` (CSV), `sheets`. New store = implement `Store` and register it in `src/store/index.ts`.
-- `src/conversations.ts`: per-chat history (JSONL), pauses, de-duplication. Data lives in `data/` (gitignored).
-- `operator/`: the locked-down Claude Code profile that runs in production (`.mcp.json`, `.claude/settings.json`, `PROMPT.md`), started by `scripts/operator.sh`. Don't loosen its deny list without a reason. Every customer message is untrusted input to that session.
+Layout (ports and adapters; ADR-000 in `docs/adr/`):
+- `src/shared/`: the shared kernel (value objects, `Clock`, `OwnerLease`, `SqlDatabase`, text functions, signals). No package and no `bun:` or `node:` import.
+- `src/<slice>/`: one folder per slice (today `intake`, with `drafts` and others following) holding `domain/`, `application/`, `ports/`, `adapters/` and an `index.ts` that is the only file other slices may import.
+- `src/adapters/`: adapters shared by slices (SQLite, clock, supervisor, config, secrets, MCP tool helpers, event bus).
+- `src/composition/`: the MCP server, its `instructions` and the tools that span slices. Only `src/main.ts` imports it.
+- `src/main.ts`: the composition root, and the only place an adapter is built.
+- `test/architecture/` enforces those import rules; `test/support/` holds fakes and the end-to-end harness.
 - `business/`: the owner's profile and catalog template. `examples/` has filled-in examples.
+
+New provider = implement `Provider` in `src/intake/ports/provider.ts`, put the adapter in `src/intake/adapters/<name>/` and build it in `src/main.ts`. New SQL migrations are numbered files under an `adapters/sqlite/migrations/` folder, appended to the list in `src/main.ts` (a file's position is its `user_version`).
 
 Product docs: [docs/PRODUCT.md](docs/PRODUCT.md) holds the problem, principles, v1 scope and slice map. Each slice keeps its chain (PRD → FRDs → TPs per FRD → ADRs → specs) in `src/<slice>/docs/`; the cross-cutting TP is `docs/tp/TP.md`. Implementation is ATDD: acceptance tests from the FRD first. Product decisions: [docs/DECISIONS.md](docs/DECISIONS.md); terms: [docs/GLOSSARY.md](docs/GLOSSARY.md); cross-slice ADRs: `docs/adr/`.
 
