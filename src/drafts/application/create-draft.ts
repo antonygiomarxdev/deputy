@@ -87,7 +87,7 @@ export class CreateDraftUseCase implements CreateDraft {
         return {
           ok: true,
           value: {
-            number, kind: input.kind, state: "waiting", text,
+            number, kind: input.kind, state: "waiting", chat, madeAt: now, text,
             answers: answered ? view(answered) : null,
             replaced: before && replacedState ? { number: before.number, state: replacedState } : null,
           },
