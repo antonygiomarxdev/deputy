@@ -3,7 +3,7 @@ import { KapsoProvider } from "../../../src/intake/adapters/kapso/kapso-provider
 import { LibphonenumberParser } from "../../../src/intake/adapters/phone/libphonenumber-parser";
 import { Secret } from "../../../src/intake/domain/secret";
 import { closedPort, startFakeKapso } from "../../support/fake-kapso-server";
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, spyOn, test } from "bun:test";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -345,4 +345,54 @@ test("KapsoProvider refuses a limit below 1 at the port", async () => {
   const { provider } = kapso();
   await expect(provider.listConversations({ activeAfter: null, cursor: null, limit: 0 }, signal)).rejects.toThrow(RangeError);
   await expect(provider.listMessages({ scope: { outbound: true }, cursor: null, limit: 0 }, signal)).rejects.toThrow(RangeError);
+});
+
+describe("KapsoProvider review findings", () => {
+  test("a last page whose paging.cursors.after is set but paging.next is null has no next cursor", async () => {
+    const { server, provider } = kapso();
+    server.force("messages", {
+      status: 200,
+      body: { data: [fixture("text-message")], paging: { cursors: { after: "AAA" }, next: null } },
+    });
+    const page = await provider.listMessages({ scope: { conversationRef: "conv-1" }, cursor: null, limit: 1 }, signal);
+    expect(page.items).toHaveLength(1);
+    expect(page.next).toBeNull();
+  });
+
+  test("the sender profile name is null until a Kapso path is confirmed", async () => {
+    const withName = { ...fixture("text-message"), kapso: { ...(fixture("text-message")["kapso"] as object), contact_name: "Ana" } };
+    const { provider } = kapso({ messages: [withName] });
+    const page = await provider.listMessages({ scope: { conversationRef: "conv-1" }, cursor: null, limit: 1 }, signal);
+    expect(page.items[0]?.profileName).toBeNull();
+  });
+
+  test("an unknown event is ignored and logged by name and count only; receipts are silent", () => {
+    const log = spyOn(console, "error").mockImplementation(() => {});
+    const { provider } = kapso();
+    const secret = "hook-secret";
+    const raw = new TextEncoder().encode('{"private":"customer text"}');
+    const headers = (event: string) =>
+      new Map([
+        ["x-webhook-signature", signHmacSha256Hex(secret, raw)],
+        ["x-webhook-event", event],
+      ]);
+    for (const event of ["whatsapp.conversation.created", "whatsapp.conversation.created", "whatsapp.message.read"]) {
+      expect(provider.verifyAndParse({ rawBody: raw, headers: headers(event), secret })).toEqual({
+        kind: "ok",
+        events: [{ kind: "ignored", reason: "receipt" }],
+      });
+    }
+    expect(log.mock.calls.map((c) => String(c[0]))).toEqual([
+      "deputy: ignored Kapso event whatsapp.conversation.created (1 so far)",
+      "deputy: ignored Kapso event whatsapp.conversation.created (2 so far)",
+    ]);
+    log.mockRestore();
+  });
+
+  test("429 without Retry-After leaves the wait to the caller (null)", async () => {
+    const { server, provider } = kapso();
+    server.force("conversations", { status: 429 });
+    const e = await failure(provider.listConversations({ activeAfter: null, cursor: null, limit: 1 }, signal));
+    expect(e).toMatchObject({ kind: "rate_limited", retryAfterMs: null });
+  });
 });

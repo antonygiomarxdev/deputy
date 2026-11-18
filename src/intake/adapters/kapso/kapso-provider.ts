@@ -42,7 +42,6 @@ type Raw = z.infer<typeof messageSchema>;
 const SIGNATURE_HEADER = "x-webhook-signature";
 const EVENT_HEADER = "x-webhook-event";
 // shortcut: no pacing (TP-03 TD-2); a 429 ends the run through ProviderError. Upgrade when catch-up pages enough to hit the limit.
-const DEFAULT_RETRY_AFTER_MS = 60_000;
 
 function toMessage(m: Raw, conversationRef: string | null): ProviderMessage {
   const outbound = m.kapso.direction === "outbound";
@@ -59,7 +58,7 @@ function toMessage(m: Raw, conversationRef: string | null): ProviderMessage {
     origin: m.kapso.origin ?? null,
     group: false, // launch gate: Kapso documents no group marker
     edited: false, // launch gate: Kapso documents no edit flag
-    profileName: outbound ? null : (m.kapso.contact_name ?? null),
+    profileName: null, // launch gate: no confirmed Kapso path for the sender profile name
     devOwnerMark: false,
   };
 }
@@ -67,6 +66,7 @@ function toMessage(m: Raw, conversationRef: string | null): ProviderMessage {
 export class KapsoProvider implements Provider {
   readonly name = "kapso";
   private readonly timeoutMs: number;
+  private readonly ignoredEvents = new Map<string, number>();
 
   constructor(private readonly o: KapsoProviderOptions) {
     this.timeoutMs = o.requestTimeoutMs ?? REQUEST_TIMEOUT_MS;
@@ -136,6 +136,7 @@ export class KapsoProvider implements Provider {
 
     const event = req.headers.get(EVENT_HEADER);
     if (event !== undefined && event !== "whatsapp.message.received" && event !== "whatsapp.message.sent") {
+      this.noteIgnored(event);
       return { kind: "ok", events: [{ kind: "ignored", reason: "receipt" }] };
     }
     let json: unknown;
@@ -160,6 +161,15 @@ export class KapsoProvider implements Provider {
     if (shown === null || shown === undefined) return null;
     const parsed = this.o.parser.parse(shown, null);
     return parsed.ok ? parsed.number : null;
+  }
+
+  /** Delivered and read receipts are expected noise; any other event name is logged with a count, never its payload. */
+  private noteIgnored(event: string): void {
+    if (event === "whatsapp.message.delivered" || event === "whatsapp.message.read") return;
+    const name = event.slice(0, 80).replace(/[^ -~]/g, "?");
+    const n = (this.ignoredEvents.get(name) ?? 0) + 1;
+    this.ignoredEvents.set(name, n);
+    console.error(`deputy: ignored Kapso event ${name} (${n} so far)`);
   }
 
   private params(base: Record<string, string>, cursor: Cursor | null): URLSearchParams {
@@ -212,7 +222,7 @@ export class KapsoProvider implements Provider {
     if (res.status === 402) throw new ProviderError("quota", null, false);
     if (res.status === 429) {
       const seconds = Number(res.headers.get("retry-after"));
-      throw new ProviderError("rate_limited", Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : DEFAULT_RETRY_AFTER_MS, false);
+      throw new ProviderError("rate_limited", Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : null, false);
     }
     if (res.status >= 500) throw new ProviderError("unreachable", null, isSend);
     if (!res.ok) throw new ProviderError("bad_response", null, false);
