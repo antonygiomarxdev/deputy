@@ -5,6 +5,7 @@ import { isHistory } from "../../../src/intake/domain/history";
 import { cutProfileName } from "../../../src/intake/domain/profile-name";
 import { Message, type ReceiveContext } from "../../../src/intake/domain/message";
 import { OwnerNumbers } from "../../../src/intake/domain/owner-numbers";
+import type { IncomingMessage } from "../../../src/intake/domain/incoming-message";
 import type { ProviderMessage } from "../../../src/intake/ports/provider";
 
 const num = (s: string): PhoneNumber => {
@@ -161,4 +162,9 @@ test("cutProfileName keeps 80 graphemes", () => {
   expect(cutProfileName("Ana")).toBe("Ana");
   const family = "👨‍👩‍👧";
   expect([...new Intl.Segmenter().segment(cutProfileName(family.repeat(100)))]).toHaveLength(80);
+});
+
+test("ProviderMessage satisfies the domain input type", () => {
+  const incoming: IncomingMessage = pm();
+  expect(incoming.providerMessageId).toBe("m1");
 });

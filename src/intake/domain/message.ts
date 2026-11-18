@@ -5,7 +5,7 @@ import { PhoneNumber } from "../../shared/phone-number";
 import type { ProviderName } from "../../shared/provider-name";
 import type { Source } from "../../shared/source";
 import { normalizeText } from "../../shared/text";
-import type { ProviderMessage } from "../ports/provider";
+import type { IncomingMessage } from "./incoming-message";
 import { chatOf, markOf } from "./chat-of";
 import { isHistory } from "./history";
 import type { OwnerNumbers } from "./owner-numbers";
@@ -54,7 +54,7 @@ export class Message {
     private history: readonly MessageVersion[],
   ) {}
 
-  static receive(p: ProviderMessage, ctx: ReceiveContext): Message | { rejected: "no_identifier" } {
+  static receive(p: IncomingMessage, ctx: ReceiveContext): Message | { rejected: "no_identifier" } {
     if (p.providerMessageId === null || p.providerMessageId === "") return { rejected: "no_identifier" };
     const sender = p.from === null ? null : PhoneNumber.fromInternational(p.from);
     const chat = chatOf(p);

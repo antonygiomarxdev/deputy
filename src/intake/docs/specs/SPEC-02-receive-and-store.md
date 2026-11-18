@@ -25,6 +25,7 @@ Points the TPs left open, settled by the lead in L8 (`docs/DECISIONS.md`, 2026-1
 | Path | Change | Holds |
 |---|---|---|
 | `src/intake/domain/message.ts` | create | `Message`, `MessageProps`, `MessageVersion`, `ReceiveContext`, `Mark`, `readerText` |
+| `src/intake/domain/incoming-message.ts` | create | `IncomingMessage`: the fields of a provider message that `Message.receive`, `chatOf` and `markOf` read; `ProviderMessage` satisfies it (the domain owns its input, ADR-000) |
 | `src/intake/domain/source-classifier.ts` | create | `classifySource` (the three rules of TP-04 TD-1; imported only by `message.ts`) |
 | `src/intake/domain/history.ts` | create | `isHistory`: the history rule of TP-03 TD-3 |
 | `src/intake/domain/chat-of.ts` | create | `chatOf(p)`, `markOf(...)`: which chat and which mark a provider message gets |
@@ -57,7 +58,7 @@ Points the TPs left open, settled by the lead in L8 (`docs/DECISIONS.md`, 2026-1
 
 ## Interfaces
 
-Shared types come from `src/shared` (SPEC-01). `ProviderMessage`, `ProviderEvent`, `Provider` come from `src/intake/ports/provider.ts` (SPEC-01).
+Shared types come from `src/shared` (SPEC-01). `ProviderMessage`, `ProviderEvent`, `Provider` come from `src/intake/ports/provider.ts` (SPEC-01). The domain does not import it: `Message.receive`, `chatOf` and `markOf` take `IncomingMessage` (`domain/incoming-message.ts`), which `ProviderMessage` satisfies.
 
 ### Domain
 
@@ -97,7 +98,7 @@ export interface ReceiveContext {
 }
 
 export class Message {
-  static receive(p: ProviderMessage, ctx: ReceiveContext): Message | { rejected: "no_identifier" };
+  static receive(p: IncomingMessage, ctx: ReceiveContext): Message | { rejected: "no_identifier" };
   static rehydrate(props: MessageProps, versions: readonly MessageVersion[]): Message;
   readonly props: MessageProps;
   readonly versions: readonly MessageVersion[];
@@ -131,10 +132,10 @@ export function isHistory(i: { provider: ProviderName; connectedAt: Instant | nu
 // kapso: (connectedAt !== null && sentAt < connectedAt) || (origin === "history_sync" && source === "customer"). An owner or Deputy message after connectedAt is never history.
 
 // domain/chat-of.ts
-export function chatOf(p: ProviderMessage): ChatId;
+export function chatOf(p: IncomingMessage): ChatId;
 // group: groupChatId(counterpart ?? conversationRef ?? "unknown"); else the counterpart (for an inbound message with no counterpart, the sender)
 // parsed with PhoneNumber.fromInternational and turned by lineChatId; no counterpart or an unparseable one: UNATTRIBUTED_CHAT.
-export function markOf(p: ProviderMessage, sender: PhoneNumber | null, chat: ChatId, matchesSend: boolean): Mark;
+export function markOf(p: IncomingMessage, sender: PhoneNumber | null, chat: ChatId, matchesSend: boolean): Mark;
 // order: group_chat (p.group); not_attributable (outbound with no sender, or chat is UNATTRIBUTED_CHAT); sender_unknown (inbound with no sender); else normal.
 
 // domain/chat-state.ts
