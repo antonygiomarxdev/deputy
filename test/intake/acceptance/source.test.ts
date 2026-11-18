@@ -1,3 +1,4 @@
+import { Secret } from "../../../src/intake/domain/secret";
 import { beforeEach, describe, expect, test } from "bun:test";
 import { InMemoryIntakeStore } from "../../../src/intake/adapters/memory/in-memory-intake-store";
 import { RecordingEventPublisher } from "../../../src/intake/adapters/memory/recording-event-publisher";
@@ -51,7 +52,7 @@ async function live(provider: ProviderName, ...messages: ProviderMessage[]) {
   const fake = new FakeProvider(provider);
   fake.deliver(...messages);
   const useCase = new ReceiveLiveDeliveryUseCase({
-    lease: { isOwner: async () => true }, provider: fake, receiving: "live", webhookSecret: "s",
+    lease: { isOwner: async () => true }, provider: fake, receiving: "live", webhookSecret: new Secret("s"),
     unitOfWork: store.unitOfWork, store: service, events, clock, failures: new StorageFailureLog(),
   });
   return useCase.execute(request);

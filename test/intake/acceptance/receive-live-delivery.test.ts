@@ -1,3 +1,4 @@
+import { Secret } from "../../../src/intake/domain/secret";
 import { beforeEach, describe, expect, test } from "bun:test";
 import { InMemoryIntakeStore } from "../../../src/intake/adapters/memory/in-memory-intake-store";
 import { RecordingEventPublisher } from "../../../src/intake/adapters/memory/recording-event-publisher";
@@ -43,12 +44,12 @@ describe("ReceiveLiveDelivery", () => {
     await store.owners.save(OwnerNumbers.of([{ number: owner, kind: "business", label: "", addedAt: 1 }]), []);
   });
 
-  const build = (over: { receiving?: "catch_up" | "live"; unitOfWork?: IntakeUnitOfWork; publisher?: EventPublisher; webhookSecret?: string | null } = {}) =>
+  const build = (over: { receiving?: "catch_up" | "live"; unitOfWork?: IntakeUnitOfWork; publisher?: EventPublisher; webhookSecret?: Secret | null } = {}) =>
     new ReceiveLiveDeliveryUseCase({
       lease: { isOwner: async () => isOwner },
       provider,
       receiving: over.receiving ?? "live",
-      webhookSecret: over.webhookSecret === undefined ? "secret" : over.webhookSecret,
+      webhookSecret: over.webhookSecret === undefined ? new Secret("secret") : over.webhookSecret,
       unitOfWork: over.unitOfWork ?? store.unitOfWork,
       store: new StoreMessages({ clock }),
       events: over.publisher ?? events,

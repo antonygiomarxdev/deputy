@@ -21,7 +21,7 @@ export class ResolveProviderSettingsUseCase implements ResolveProviderSettings {
 
     const mode = c.receivingMode || null;
     const live = mode === "live" && provider === "kapso";
-    const blank = (v: string | null | { reveal(): string }) => v === null || (typeof v === "string" ? v : v.reveal()).trim() === "";
+    const blank = (v: string | null | { isBlank(): boolean }) => v === null || (typeof v === "string" ? v.trim() === "" : v.isBlank());
 
     if (provider === "kapso") {
       const missing = [
