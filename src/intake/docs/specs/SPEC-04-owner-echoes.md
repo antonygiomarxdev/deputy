@@ -109,7 +109,7 @@ export interface SourceChange { readonly at: Instant; readonly id: MessageId; re
 export interface OutgoingRepository {
   find(sendId: SendId): Promise<OutgoingSend | null>;
   insert(s: OutgoingSend): Promise<void>;                      // the send and its parts
-  savePart(s: OutgoingSend, part: number): Promise<void>;      // one part row
+  savePart(s: OutgoingSend, part: number, provider: ProviderName): Promise<void>; // one part row; the provider fills outgoing_parts.provider, which findByProviderId and the unique key need
   saveSend(s: OutgoingSend): Promise<void>;                    // state, failure_reason, finished_at
   findByProviderId(provider: ProviderName, providerMessageId: string): Promise<{ sendId: SendId; part: number } | null>;
   /** Every outgoing row and part left pending becomes unknown. Returns the number of sends changed. */
