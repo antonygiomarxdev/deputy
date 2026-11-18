@@ -1,4 +1,4 @@
-import { num } from "../../src/adapters/sqlite/row";
+import { num, str } from "../../src/adapters/sqlite/row";
 import { InMemoryIntakeSettingsRepository } from "../../src/intake/adapters/memory/in-memory-intake-settings-repository";
 import { SqliteIntakeSettingsRepository } from "../../src/intake/adapters/sqlite/sqlite-intake-settings-repository";
 import type { IntakeSettingsRepository } from "../../src/intake/ports/intake-settings-repository";
@@ -15,6 +15,15 @@ import type { OwnerLease } from "../../src/shared/owner-lease";
 import type { ProviderName } from "../../src/shared/provider-name";
 import type { SendId } from "../../src/shared/send-id";
 
+export interface SourceChangeRow {
+  at: number;
+  provider: ProviderName;
+  providerMessageId: string;
+  from: string;
+  to: string;
+  sendId: string;
+}
+
 export interface IntakeSubject {
   name: string;
   repos: IntakeRepos;
@@ -23,6 +32,8 @@ export interface IntakeSubject {
   /** When a settings key last changed, or null. */
   settingChangedAt(key: string): Promise<number | null>;
   addOutgoingPart(provider: ProviderName, providerMessageId: string, sendId: SendId, part: number): Promise<void>;
+  /** The source_changes rows written so far. */
+  sourceChanges(): Promise<readonly SourceChangeRow[]>;
   cleanup(): void;
 }
 
@@ -62,6 +73,17 @@ export async function openSqliteSubject(lease: OwnerLease = ownsLease): Promise<
         [sendId, part, provider, providerMessageId],
       );
     },
+    async sourceChanges() {
+      const rows = await db.query("SELECT at, provider, provider_message_id, from_source, to_source, send_id FROM source_changes ORDER BY id");
+      return rows.map((r) => ({
+        at: num(r, "at"),
+        provider: str(r, "provider") === "dev" ? ("dev" as const) : ("kapso" as const),
+        providerMessageId: str(r, "provider_message_id"),
+        from: str(r, "from_source"),
+        to: str(r, "to_source"),
+        sendId: str(r, "send_id"),
+      }));
+    },
     cleanup() {
       db.close();
       rmSync(dir, { recursive: true, force: true });
@@ -82,6 +104,16 @@ export function openMemorySubject(): IntakeSubject {
     },
     async addOutgoingPart(provider, providerMessageId, sendId, part) {
       store.addOutgoingPart(provider, providerMessageId, sendId, part);
+    },
+    async sourceChanges() {
+      return store.sourceChanges().map((c) => ({
+        at: c.at,
+        provider: c.id.provider,
+        providerMessageId: c.id.providerMessageId,
+        from: c.from,
+        to: c.to,
+        sendId: c.sendId,
+      }));
     },
     cleanup() {},
   };
