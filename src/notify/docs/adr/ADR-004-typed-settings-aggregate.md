@@ -1,7 +1,7 @@
 # ADR-004: Notify settings are a typed aggregate that validates itself
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 The owner changes batching, reminder, quiet periods, time zone and on/off by talking (FR-NOTIFY-02-1, FR-NOTIFY-02-4, FR-NOTIFY-02-5, FR-NOTIFY-02-9). A bad value is refused and the old one kept. From TP-02 TD-1; cross-cutting TD-8 (settings routed by key to the owning slice).

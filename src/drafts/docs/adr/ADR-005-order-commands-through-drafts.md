@@ -1,7 +1,7 @@
 # ADR-005: Order commands get their go in Drafts, which then calls Orders
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-DRAFTS-02-9 and FR-DRAFTS-02-10: an order, and the owner's own command about an order ("mark Juan's order delivered"), count as a go with the same checks as a reply. FR-DRAFTS-04-8: such commands appear in the drafts log with the owner's words. A log write that fails must stop the action (FRD-04 edge cases). From TP-02 TD-3. Drafts already calls Orders (`OrderPreparer`, `OrderRecorder`), so Orders must not call Drafts: that would be a dependency cycle between slices.

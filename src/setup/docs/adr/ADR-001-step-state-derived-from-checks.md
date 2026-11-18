@@ -1,7 +1,7 @@
 # ADR-001: The current step is derived from checks, not stored as a pointer
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 Setup must show the current step, the remaining count and whose action it is (FR-SETUP-01-1). It must resume by re-checking finished steps (FR-SETUP-01-7), and the check wins over what the agent says (FRD-01 edge cases). From Setup TP-01, TD-1.

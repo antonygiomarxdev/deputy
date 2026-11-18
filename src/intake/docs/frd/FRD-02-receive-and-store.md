@@ -1,5 +1,7 @@
 # FRD-02: Receive, verify and store
 
+Status: Approved (2026-11-18)
+
 ## Summary
 
 Every message that reaches Deputy live is checked first, then stored once, in order, with its source marked. Messages Deputy cannot read are kept and marked. Each stored message raises a signal so the owner can be told. See the [Intake PRD](../PRD.md).

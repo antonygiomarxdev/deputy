@@ -1,7 +1,7 @@
 # ADR-004: The sync warning is confirmed by the owner's own words, recorded after it was shown
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 R-SETUP-10 and FR-SETUP-02-2: before connecting, the owner must confirm they understood that connecting copies up to 180 days of chat history and contacts to the provider. Silence or an earlier confirmation does not count. Deputy ships no language catalogs (D20), so it cannot read the owner's reply. From Setup TP-02, TD-1.

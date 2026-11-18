@@ -1,7 +1,7 @@
 # ADR-009: Setup shows a deny rule for the agent and never writes it
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-SETUP-03-2: the agent must not read the secrets, and with an agent other than the locked-down profile (removed by the cross-cutting TD-9) the owner must restrict the path. FR-SETUP-03-7: Setup changes no setting of the agent that loosens approval. From Setup TP-03, TD-2.

@@ -1,7 +1,7 @@
 # ADR-002: Dev and real messages are kept apart by a dev flag on the message and on the chat key
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-INTAKE-01-7 keeps stored messages across a provider switch. FR-INTAKE-01-10 and L3 say dev messages are never pending, notified or drafted once the provider is not dev. Inbox, Notify and Drafts must not need to know which provider produced a message. From the Intake TP-01, TD-2.

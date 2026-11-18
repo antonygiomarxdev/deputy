@@ -1,5 +1,7 @@
 # FRD-02: The owner's go
 
+Status: Approved (2026-11-18)
+
 ## Summary
 
 A reply, or an order, goes ahead only after the owner's go: a sentence in the conversation that names the draft or drafts it approves. There is no other way to send. See [the slice PRD](../PRD.md).

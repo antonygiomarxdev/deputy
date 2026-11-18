@@ -1,6 +1,6 @@
 # FRD-02: Costs, warnings and connecting the number
 
-Status: draft · Slice: Setup · Part of [Setup PRD](../PRD.md)
+Status: Approved (2026-11-18) · Slice: Setup · Part of [Setup PRD](../PRD.md)
 
 ## Summary
 

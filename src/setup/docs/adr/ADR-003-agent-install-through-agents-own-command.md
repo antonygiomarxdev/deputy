@@ -1,7 +1,7 @@
 # ADR-003: Install into the agent with the agent's own add command
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 Step 1 puts Deputy into the owner's agent in test mode (L1, FR-SETUP-01-11), for Claude Code, Codex, Cursor and Gemini CLI (cross-cutting TD-1). The commands were checked on 2026-11-17: `claude mcp add --transport stdio --scope user <name> -- <cmd>` (https://code.claude.com/docs/en/mcp), `codex mcp add <name> -- <cmd>` (https://learn.chatgpt.com/docs/extend/mcp?surface=cli), `gemini mcp add [-s user|project] <name> <cmd>` (https://geminicli.com/docs/tools/mcp-server/). Cursor has no command; it reads `~/.cursor/mcp.json` (https://cursor.com/docs/context/mcp). From Setup TP-01, TD-3.

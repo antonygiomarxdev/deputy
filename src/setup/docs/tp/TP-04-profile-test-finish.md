@@ -1,6 +1,6 @@
 # Technical Proposal: Profile, catalog, test and finish (Setup FRD-04)
 
-Status: Draft
+Status: Approved (2026-11-18)
 
 Follows the cross-cutting TP (`docs/tp/TP.md`) and Setup TP-01 to TP-03. "Cross-cutting TD-n" means a decision there.
 

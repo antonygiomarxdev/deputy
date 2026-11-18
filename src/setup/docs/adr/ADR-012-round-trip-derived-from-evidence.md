@@ -1,7 +1,7 @@
 # ADR-012: The round trip is derived from evidence, with only the arrival as the owner's word
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-SETUP-04-4: Setup is complete only when the test message is in the inbox, a draft exists, the owner approved it, the provider accepted the send, and the owner states the reply arrived. FR-SETUP-04-5: the test reply is an ordinary draft. FR-SETUP-04-6: a failure names the part. From Setup TP-04, TD-2.

@@ -1,7 +1,7 @@
 # ADR-010: The scrub exception is guarded in the trigger
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 D15 and L6: deleting an order replaces the owner's words in its log entries with "deleted". FR-DRAFTS-04-7: entries are never changed or removed. Cross-cutting TD-3 allows one narrow, tested exception. From TP-04 TD-3.

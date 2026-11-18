@@ -1,7 +1,7 @@
 # ADR-013: Switching from test mode to the real provider starts a new run
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-SETUP-04-8: after test mode the owner can switch to the real provider. The profile and catalog stay, steps 2 to 4 run again, and there is a new round trip. The 30-minute measure (FR-SETUP-01-9, FR-SETUP-01-10) is about the real setup. From Setup TP-04, TD-3.

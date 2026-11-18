@@ -1,7 +1,7 @@
 # ADR-011: The profile and catalog draft waits in Setup until the owner confirms
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-SETUP-04-2: Setup hands the profile and catalog to Knowledge only after the owner confirms them, and the owner can change their mind and confirm again. The cross-cutting TP gives Setup one write into Knowledge, `SeedProfileAndCatalog`. From Setup TP-04, TD-1.

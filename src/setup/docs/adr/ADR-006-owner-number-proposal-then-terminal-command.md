@@ -1,7 +1,7 @@
 # ADR-006: Owner numbers are proposed in Setup and applied by the owner's terminal command
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 L4 and FR-SETUP-02-8: owner numbers change only by an explicit owner command, shown back for confirmation, with a second confirmation when the number already has stored customer messages. D19: no agent tool changes a trust boundary. From Setup TP-02, TD-3.

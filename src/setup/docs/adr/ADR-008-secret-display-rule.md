@@ -1,7 +1,7 @@
 # ADR-008: A secret shows its last four characters only when it has 20 or more
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-SETUP-03-4: Setup shows secrets back only in part, the last four characters for long secrets and only present or absent for short ones. The FRD does not say where "long" starts. A fragment of a short secret helps a guess. From Setup TP-03, TD-1.

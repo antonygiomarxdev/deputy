@@ -1,7 +1,7 @@
 # ADR-007: Live delivery passes only on a signature-verified delivery seen by Intake
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-SETUP-02-12: the optional live-delivery step passes when the provider's test delivery was received and verified. Until then Deputy keeps checking periodically and Setup still completes. A mismatched secret is the likeliest failure (FRD-03 edge case). From Setup TP-02, TD-4.

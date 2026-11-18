@@ -1,7 +1,7 @@
 # ADR-011: The export is one JSON file in the data folder
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-KNOWLEDGE-03-3: one export holds the profile, the catalog and the lessons, in a form the owner can read and keep. The FRD's information also lists the lessons' links and the confirmation log, and an export must not look whole when a part failed. From TP-03 TD-1.

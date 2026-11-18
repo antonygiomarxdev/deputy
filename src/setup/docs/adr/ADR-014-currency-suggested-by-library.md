@@ -1,7 +1,7 @@
 # ADR-014: The currency is suggested from the country by a maintained package behind a port
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 D21: Setup suggests the currency from the owner's country and the owner confirms it; it is stored as Knowledge's `currency`. Deputy serves owners in many countries. Libraries stay behind ports (cross-cutting ADR-000). From Setup TP-04, TD-4.

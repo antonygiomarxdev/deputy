@@ -1,6 +1,6 @@
 # Notify: slice PRD
 
-Status: draft · Part of [Deputy product overview](../../../docs/PRODUCT.md)
+Status: Approved (2026-11-18) · Part of [Deputy product overview](../../../docs/PRODUCT.md)
 
 ## Purpose
 

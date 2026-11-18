@@ -1,6 +1,6 @@
 # FRD-03: Credentials and safety
 
-Status: draft · Slice: Setup · Part of [Setup PRD](../PRD.md)
+Status: Approved (2026-11-18) · Slice: Setup · Part of [Setup PRD](../PRD.md)
 
 ## Summary
 

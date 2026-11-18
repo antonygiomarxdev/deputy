@@ -1,6 +1,6 @@
 # Technical Proposal: Credentials and safety (Setup FRD-03)
 
-Status: Draft
+Status: Approved (2026-11-18)
 
 Follows the cross-cutting TP (`docs/tp/TP.md`) and Setup TP-01 and TP-02. "Cross-cutting TD-n" means a decision there.
 

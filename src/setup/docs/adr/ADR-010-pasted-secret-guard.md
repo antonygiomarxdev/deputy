@@ -1,7 +1,7 @@
 # ADR-010: Owner words that contain a stored secret are refused
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-SETUP-03-3: if the owner pastes a secret into the conversation, the agent tells the owner not to, and the pasted value is not used. The FRD says Deputy cannot detect it, so it is the agent's behavior. From Setup TP-03, TD-3.

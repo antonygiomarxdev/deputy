@@ -1,7 +1,7 @@
 # ADR-002: Time is recorded as events and computed on read
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 The v1 target is under 30 minutes from the first instruction to a passing round trip, with the provider's own waits reported apart (PRD, FR-SETUP-01-9, FR-SETUP-01-10). The owner can stop for days. The optional live-delivery step is timed apart. From Setup TP-01, TD-2.

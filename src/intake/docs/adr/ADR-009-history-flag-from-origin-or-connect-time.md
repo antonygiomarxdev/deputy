@@ -1,7 +1,7 @@
 # ADR-009: A message is history when its origin says so or it was sent before Deputy connected
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-INTAKE-03-11 and 03-12 flag history and keep it out of signals. FR-INTAKE-04-11 says origin `history_sync` sets the flag, but only `business_app` was seen live (`docs/research/kapso.md`); the other origins are documented, not tested. A first catch-up also holds real messages from the same day. From the Intake TP-03, TD-3.
