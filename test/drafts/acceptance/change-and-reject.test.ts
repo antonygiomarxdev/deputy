@@ -29,6 +29,7 @@ const liveApproval: Approval = {
 /** Approvals are stored by SPEC-02; until then a unit of work can hand one to a loaded draft. */
 function withApproval(inner: UnitOfWork, approval: Approval): UnitOfWork {
   return {
+    read: (work) => inner.read(work),
     run: (work, options) =>
       inner.run(
         (tx) =>
