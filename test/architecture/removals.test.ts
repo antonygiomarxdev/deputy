@@ -32,3 +32,19 @@ describe("removals (ADR-009, ADR-010)", () => {
     expect(deps).not.toHaveProperty("@types/node");
   });
 });
+
+describe("documentation matches the new code (ADR-009, TD-9)", () => {
+  const docs = ["README.md", "README.es.md", "CLAUDE.md"];
+  const banned = ["operator/", "`reply`", "create_order", "handoff", "notify_owner", "permission relay", "DEPUTY_PROVIDER=meta", "npm run build", "node dist"];
+  const read = (p: string) => readFileSync(join(root, p), "utf8");
+
+  test.each(docs)("%s mentions none of the removed behavior", (path) => {
+    const text = read(path).toLowerCase();
+    for (const word of banned) expect(text).not.toContain(word.toLowerCase());
+  });
+
+  test("both READMEs have the same number of second-level headings", () => {
+    const count = (p: string) => read(p).split("\n").filter((l) => l.startsWith("## ")).length;
+    expect(count("README.md")).toBe(count("README.es.md"));
+  });
+});
