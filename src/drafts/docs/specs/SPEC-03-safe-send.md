@@ -90,12 +90,20 @@ export function reasonText(code: Reason, fill?: { time?: string; part?: number; 
 `src/drafts/domain/freshness-policy.ts`:
 
 ```ts
-import type { ChatMessage } from "../ports/outbound";
+import type { Instant } from "../../shared/instant";
+import type { MessageId } from "../../shared/message-id";
 import type { Mark } from "./draft";
 
-export type Freshness = {
-  readonly ownerAnswered: readonly ChatMessage[];
-  readonly customerWrote: readonly ChatMessage[];
+/** What the policy reads of a message. The domain owns it (ADR-000: domain imports only domain and src/shared); the port's `ChatMessage` satisfies it structurally, and `freshness-policy.test.ts` checks that at type level. */
+export type SeenMessage = {
+  readonly id: MessageId; readonly sentAt: Instant; readonly storedAt: Instant;
+  readonly source: "customer" | "owner_app" | "sent_through_deputy";
+  readonly dev: boolean; readonly history: boolean;
+};
+
+export type Freshness<M extends SeenMessage = SeenMessage> = {
+  readonly ownerAnswered: readonly M[];
+  readonly customerWrote: readonly M[];
   readonly newestSeen: Mark;
 };
 export const FreshnessPolicy = {
@@ -103,7 +111,7 @@ export const FreshnessPolicy = {
    *  A message is new when its sentAt is after marks.sentAt, or its storedAt is after marks.storedAt and it is not flagged history.
    *  The history flag never hides a message sent after the draft. Source "owner_app" is an owner answer; "customer" is a customer message.
    *  newestSeen is the maximum of the marks and of every message of the draft's world that was returned. */
-  evaluate(input: { messages: readonly ChatMessage[]; marks: Mark; draftDev: boolean }): Freshness;
+  evaluate<M extends SeenMessage>(input: { messages: readonly M[]; marks: Mark; draftDev: boolean }): Freshness<M>;
 };
 ```
 
