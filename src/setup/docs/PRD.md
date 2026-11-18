@@ -52,6 +52,7 @@ Completion
 
 - **R-SETUP-19.** At the end, Setup shows the owner what is connected, which numbers are treated as the owner's, where their data lives, and how to ask the agent what is pending.
 - **R-SETUP-20.** Setup records the start time and the time of each step, reports the provider's waits separately, and shows the total from the first instruction to the passing round trip.
+- **R-SETUP-21.** After the number is connected, Setup asks the owner how Deputy should receive messages: periodic checking (default, nothing else to set up, a message can arrive a few minutes late) or live delivery (instant, needs an extra advanced step outside the 30-minute path). Setup explains the difference in plain words, records the choice, and the owner can change it later.
 
 ## Principles honored
 
@@ -65,7 +66,7 @@ Completion
 Safety requirements from the product overview:
 
 - **Owner identity from configuration:** R-SETUP-9.
-- **Webhooks are verified before anything is stored:** Setup collects what is needed to verify them (R-SETUP-14) and checks it works (R-SETUP-2, R-SETUP-17).
+- **Webhooks are verified before anything is stored:** when the owner turns on live delivery, Setup collects what is needed to verify them (R-SETUP-14) and checks it works (R-SETUP-2, R-SETUP-17).
 
 ## Out of scope
 
