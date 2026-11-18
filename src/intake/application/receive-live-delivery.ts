@@ -1,5 +1,6 @@
 import type { Clock } from "../../shared/clock";
 import type { OwnerLease } from "../../shared/owner-lease";
+import type { IntakeEvent } from "../domain/events";
 import type { RejectionReason } from "../domain/rejection-note";
 import type { EventPublisher } from "../ports/event-publisher";
 import { LeaseLostError, type IntakeUnitOfWork } from "../ports/intake-unit-of-work";
@@ -52,14 +53,19 @@ export class ReceiveLiveDeliveryUseCase implements ReceiveLiveDelivery {
     }
   }
 
-  // The commit is done: a subscriber that throws must not undo or fail the store.
+  // The commit is done: a subscriber that throws must not undo or fail the store, and must not
+  // skip the next event (D30 holds every send on OwnerReplyUnlinked).
   private publish(items: readonly StoredSummary[], unlinked: number): void {
     const at = this.d.clock.now();
-    try {
-      if (items.length > 0) this.d.events.publish({ name: "MessageStored", origin: "live", items, at });
-      if (unlinked > 0) this.d.events.publish({ name: "OwnerReplyUnlinked", at });
-    } catch (e) {
-      console.error(`deputy: an event subscriber failed (${e instanceof Error ? e.name : "unknown error"})`);
+    const events: IntakeEvent[] = [];
+    if (items.length > 0) events.push({ name: "MessageStored", origin: "live", items, at });
+    if (unlinked > 0) events.push({ name: "OwnerReplyUnlinked", at });
+    for (const e of events) {
+      try {
+        this.d.events.publish(e);
+      } catch (err) {
+        console.error(`deputy: an event subscriber failed (${err instanceof Error ? err.name : "unknown error"})`);
+      }
     }
   }
 }
