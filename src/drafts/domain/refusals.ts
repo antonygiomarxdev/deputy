@@ -14,7 +14,13 @@ export type Refusal =
   | { readonly code: "wrong_kind"; readonly number: number }
   | { readonly code: "words_empty" }
   | { readonly code: "log_unavailable" }
-  | { readonly code: "stale_draft"; readonly number: number };
+  | { readonly code: "stale_draft"; readonly number: number }
+  | { readonly code: "not_approvable"; readonly number: number; readonly state: DraftState }
+  | { readonly code: "text_differs"; readonly number: number }
+  | { readonly code: "not_shown"; readonly number: number }
+  | { readonly code: "words_missing_number"; readonly number: number }
+  | { readonly code: "words_copied"; readonly copied: "customer" | "draft" }
+  | { readonly code: "order_command_refused"; readonly reason: string };
 
 /** English default text for each code (D20). No customer or provider text. */
 export function refusalText(r: Refusal): string {
@@ -47,5 +53,19 @@ export function refusalText(r: Refusal): string {
       return "the drafts log cannot be written, so nothing was done";
     case "stale_draft":
       return `draft ${r.number} changed while this ran; list the drafts and try again`;
+    case "not_approvable":
+      return `draft ${r.number} is closed (${r.state})`;
+    case "text_differs":
+      return "the text you showed differs from the draft";
+    case "not_shown":
+      return "list the drafts and show the owner this text first";
+    case "words_missing_number":
+      return `draft ${r.number} has not been approved: the owner's words do not name draft ${r.number} by its number`;
+    case "order_command_refused":
+      return `the order change was refused: ${r.reason}`;
+    case "words_copied":
+      return r.copied === "customer"
+        ? "those words are a customer message; ask the owner to say it in their own words"
+        : "those words are the text of a draft; ask the owner to say it in their own words";
   }
 }

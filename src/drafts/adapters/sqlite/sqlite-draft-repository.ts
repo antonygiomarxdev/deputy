@@ -37,6 +37,11 @@ export class SqliteDraftRepository implements DraftRepository {
     return rows.map((r) => Draft.rehydrate(fromRow(r)));
   }
 
+  async hasDraftText(normalized: string): Promise<boolean> {
+    const [row] = await this.db.query("SELECT 1 AS found FROM drafts WHERE proposed_norm = ? OR current_norm = ? LIMIT 1", [normalized, normalized]);
+    return row !== undefined;
+  }
+
   async save(draft: Draft): Promise<void> {
     const s = draft.snapshot();
     const values = toValues(s);

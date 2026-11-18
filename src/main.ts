@@ -16,6 +16,7 @@ import outgoingSql from "./intake/adapters/sqlite/migrations/0004-outgoing.sql" 
 import catchupStatusSql from "./intake/adapters/sqlite/migrations/0005-catchup-status.sql" with { type: "text" };
 import draftsSql from "./drafts/adapters/sqlite/migrations/0001-drafts.sql" with { type: "text" };
 import draftsLogSql from "./drafts/adapters/sqlite/migrations/0002-log.sql" with { type: "text" };
+import draftsApprovalsSql from "./drafts/adapters/sqlite/migrations/0003-approvals.sql" with { type: "text" };
 import { FileConnectionConfig } from "./intake/adapters/config/file-connection-config";
 import { DevProvider } from "./intake/adapters/dev/dev-provider";
 import { LiveListener } from "./intake/adapters/http/listener";
@@ -26,6 +27,12 @@ import { SqliteIntakeUnitOfWork } from "./intake/adapters/sqlite/sqlite-intake-u
 import { createSqliteIntakeRepos } from "./intake/adapters/sqlite/sqlite-intake-repos";
 import { SqliteOwnerNumbersRepository } from "./intake/adapters/sqlite/sqlite-owner-numbers-repository";
 import { createIntake, createIntakeRuntime, type IntakeEvent, type Provider } from "./intake/index";
+import { IntakeChatReader } from "./drafts/adapters/intake/intake-chat-reader";
+import { draftsTools } from "./drafts/adapters/mcp/drafts-tools";
+import { UnavailableOrderPreparer } from "./drafts/adapters/orders/unavailable-order-preparer";
+import { SqliteUnitOfWork } from "./drafts/adapters/sqlite/sqlite-unit-of-work";
+import { createDrafts } from "./drafts/index";
+import { listDraftsTool } from "./composition/mcp/list-drafts-tool";
 import { INSTRUCTIONS } from "./composition/mcp/instructions";
 import { compositionTools } from "./composition/mcp/composition-tools";
 import { createMcpServer } from "./composition/mcp/server";
@@ -59,6 +66,7 @@ async function serve(): Promise<number> {
     { name: "0005-catchup-status", sql: catchupStatusSql },
     { name: "0001-drafts", sql: draftsSql },
     { name: "0002-log", sql: draftsLogSql },
+    { name: "0003-approvals", sql: draftsApprovalsSql },
   ], {
     basePath: dbPath,
     copyTo: (p) => copyFile(dbPath, p),
@@ -118,6 +126,15 @@ async function serve(): Promise<number> {
     webhookSecret: connection.kapso.webhookSecret?.reveal() ?? null,
   });
 
+  const drafts = createDrafts({
+    clock,
+    lease,
+    sessionStartedAt: clock.now(),
+    unitOfWork: new SqliteUnitOfWork(db, lease),
+    chats: new IntakeChatReader({ chatExists: intake.chatExists, readChat: intake.readChat }),
+    orders: new UnavailableOrderPreparer(),
+  });
+
   const listener = new LiveListener({
     receive: intake.receiveLiveDelivery,
     port,
@@ -145,6 +162,9 @@ async function serve(): Promise<number> {
     tools: [
       ...compositionTools({ isOwner: () => supervisor.isOwner, sections: [] }),
       ...intakeTools({ readChat: intake.readChat, listRejections: intake.listRejections }),
+      ...draftsTools(drafts),
+      // Knowledge is not wired yet: no catalog is known, so every check is "unknown"
+      listDraftsTool({ listDrafts: drafts.listDrafts, catalogChangedSince: async (since) => since.map(() => "unknown" as const) }),
     ],
     claudeChannel: false,
   });

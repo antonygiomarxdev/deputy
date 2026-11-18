@@ -25,6 +25,7 @@ async function sqliteDrafts() {
       { name: "0001-shared", sql: sql("src/adapters/sqlite/migrations/0001-shared.sql") },
       { name: "0001-drafts", sql: sql("src/drafts/adapters/sqlite/migrations/0001-drafts.sql") },
       { name: "0002-log", sql: sql("src/drafts/adapters/sqlite/migrations/0002-log.sql") },
+      { name: "0003-approvals", sql: sql("src/drafts/adapters/sqlite/migrations/0003-approvals.sql") },
     ],
     { basePath: ":memory:", copyTo: async () => {} },
   );

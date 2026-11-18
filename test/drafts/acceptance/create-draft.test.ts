@@ -112,7 +112,7 @@ describe("FR-DRAFTS-01-1", () => {
     });
     const h = makeDrafts({
       ...base,
-      unitOfWork: (store) => ({ read: (work) => store.unitOfWork.read(work), run: (work, o) => store.unitOfWork.run((tx) => work({ drafts: tx.drafts, log: failingLog(tx.log) }), o) }),
+      unitOfWork: (store) => ({ read: (work) => store.unitOfWork.read(work), run: (work, o) => store.unitOfWork.run((tx) => work({ drafts: tx.drafts, approvals: tx.approvals, log: failingLog(tx.log) }), o) }),
     });
     const r = await h.createDraft.run({ kind: "reply", chat: "chat-a", text: "x" });
     expect(r).toEqual({ ok: false, refusal: { code: "log_unavailable" } });
@@ -156,6 +156,25 @@ describe("FR-DRAFTS-01-7", () => {
     expect(again.replaced?.number).toBe(reply.number);
     const open = await h.store.unitOfWork.run((tx) => tx.drafts.listOpen());
     expect(open.map((d) => d.snapshot().number).sort()).toEqual([order.number, again.number].sort());
+  });
+
+  test("a replace voids the live approval of the old draft and the entry points to its approved entry", async () => {
+    const h = makeDrafts(base);
+    const first = await value(h.createDraft.run({ kind: "reply", chat: "chat-a", text: "one" }));
+    await h.store.unitOfWork.run((tx) =>
+      tx.approvals.insert({
+        id: "ap-1", draftNumber: first.number, textVersion: 1, text: "one", textHash: "h", ownerWords: "go 1",
+        approvedAt: 1_000, usedAt: 1_000, sendId: "send-1", voidedAt: null, voidReason: null,
+      }),
+    );
+    const [approvedId] = await h.store.log.append([
+      { at: 1_000, kind: "approved", draft: first.number, draftKind: "reply", chat, proposedText: "one", finalText: "one", reason: null, ownerWords: "go 1", approvalEntryId: null, sendId: "send-1", orderRef: null },
+    ]);
+    await value(h.createDraft.run({ kind: "reply", chat: "chat-a", text: "two" }));
+    const voided = (await h.store.log.page({ after: 0, limit: 10 })).find((e) => e.kind === "approval_voided");
+    expect(voided).toMatchObject({ reason: "replaced", approvalEntryId: approvedId, sendId: "send-1" });
+    const [row] = await h.store.unitOfWork.run((tx) => tx.approvals.forDraft(first.number));
+    expect(row).toMatchObject({ voidReason: "replaced" });
   });
 
   test.each([["sending", "send_in_progress"], ["recording", "send_in_progress"], ["unknown", "outcome_unknown_open"]] as const)(

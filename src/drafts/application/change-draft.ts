@@ -7,6 +7,7 @@ import type { Refusal } from "../domain/refusals";
 import type { ChangeDraft, ChangeDraftResult, Outcome } from "../ports/inbound";
 import type { OrderPreparer, UnitOfWork } from "../ports/outbound";
 import { refusalOfChange } from "./draft-change-refusal";
+import { voidApprovals, withLiveApproval } from "./live-approval";
 
 const refuse = (refusal: Refusal): Outcome<never> => ({ ok: false, refusal });
 
@@ -36,14 +37,16 @@ export class ChangeDraftUseCase implements ChangeDraft {
       }
 
       return await unitOfWork.run(async (tx): Promise<Outcome<ChangeDraftResult>> => {
-        const draft = await tx.drafts.get(number);
-        if (draft === null) return refuse({ code: "draft_not_found", number });
+        const loaded = await tx.drafts.get(number);
+        if (loaded === null) return refuse({ code: "draft_not_found", number });
+        const draft = await withLiveApproval(tx, loaded);
         const before = draft.snapshot();
-        const changed = draft.changeText({ text, orderPayload, ownerWords: words, now: clock.now() });
+        const now = clock.now();
+        const changed = draft.changeText({ text, orderPayload, ownerWords: words, now });
         if (!changed.ok) return refuse(refusalOfChange(number, before.state, changed.reason));
         await tx.drafts.save(draft);
-        // approvals arrive with SPEC-02, so no approval entry exists to point an ApprovalVoided at yet
-        await tx.log.append(toLogEntries(changed.events, { approvalEntryId: null }));
+        const approvalEntryId = await voidApprovals(tx, changed.events, number, now);
+        await tx.log.append(toLogEntries(changed.events, { approvalEntryId }));
         return {
           ok: true,
           value: { number, state: "waiting", approvalVoided: changed.events.some((e) => e.type === "ApprovalVoided") },

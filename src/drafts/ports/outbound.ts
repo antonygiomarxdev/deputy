@@ -1,6 +1,7 @@
 import type { ChatId } from "../../shared/chat-id";
 import type { Instant } from "../../shared/instant";
 import type { MessageId } from "../../shared/message-id";
+import type { Approval } from "../domain/approval";
 import type { Draft, DraftKind, DraftNumber } from "../domain/draft";
 import type { DraftLogRepository } from "./log";
 
@@ -17,17 +18,27 @@ export interface DraftRepository {
    * The object passed is not changed. Throws StaleDraft when the stored revision differs.
    */
   save(draft: Draft): Promise<void>;
+  /** The normalized text equals the proposed or the current normalized text of any draft, in any state. */
+  hasDraftText(normalized: string): Promise<boolean>;
 }
 
-// SPEC-02 adds `approvals: ApprovalRepository`.
+export interface ApprovalRepository {
+  /** An approval is born used (usedAt is set). Throws on a repeated id or sendId. */
+  insert(approval: Approval): Promise<void>;
+  /** Voids every live (not yet voided) approval of the draft; the rows stay. */
+  void(draft: DraftNumber, reason: string, at: Instant): Promise<void>;
+  forDraft(draft: DraftNumber): Promise<Approval[]>;
+}
+
 export interface Transaction {
   readonly drafts: DraftRepository;
+  readonly approvals: ApprovalRepository;
   readonly log: DraftLogRepository;
 }
 
 /** What a pure read may use: no write method, and no transaction (so no write lock). */
 export interface ReadTransaction {
-  readonly drafts: Pick<DraftRepository, "get" | "openFor" | "listOpen">;
+  readonly drafts: Pick<DraftRepository, "get" | "openFor" | "listOpen" | "hasDraftText">;
 }
 
 export interface UnitOfWork {
@@ -69,4 +80,46 @@ export interface OrderPreparer {
     order: OrderInput,
   ): Promise<{ ok: true; payload: string; summary: string } | { ok: false; reasons: string[] }>;
   revalidate(payload: string): Promise<{ catalogChanged: boolean }>;
+}
+
+/** Intake's IsCustomerText: does the text equal a stored customer message, in any chat? */
+export interface CustomerTextCheck {
+  isCustomerText(words: string): Promise<boolean>;
+}
+
+export interface TextDigest {
+  sha256(text: string): string;
+}
+
+export interface Ids {
+  next(): string;
+}
+
+/** Drafts owns this port; the adapter calls Orders' RecordOrder. Idempotent on draftNumber. */
+export interface OrderRecorder {
+  record(input: { draftNumber: number; payload: string; ownerWords: string }): Promise<
+    | { ok: true; orderId: string }
+    | { ok: false; kind: "outcome_unknown" }
+    | { ok: false; kind: "refused"; reason: string }
+  >;
+}
+
+/** The fields Orders accepts in a change (Orders ADR-008). Keys outside this list are refused, so a key can never carry customer text into the log. */
+export const ORDER_FIELDS = ["status", "customer_name", "fulfillment", "address", "wanted_date", "wanted_time", "notes", "items"] as const;
+export type OrderField = (typeof ORDER_FIELDS)[number];
+export type OrderChangeInput = Readonly<Partial<Record<OrderField, unknown>>>;
+
+/** Drafts owns this port; the adapter calls Orders' ChangeOrder and DeleteOrder. */
+export interface OrderChanger {
+  /**
+   * The chat id of the order, and nothing else (no name, no address, no customer text): it goes into the log entry,
+   * which is written before the command is called. null when the order is unknown.
+   */
+  chatOf(orderRef: string): Promise<string | null>;
+  change(orderRef: string, change: OrderChangeInput, ownerWords: string): Promise<{ ok: true; detail: string } | { ok: false; reason: string }>;
+  delete(
+    orderRef: string,
+    ownerWords: string,
+    confirm: boolean,
+  ): Promise<{ ok: true; detail: string } | { ok: false; reason: string } | { pending: string }>;
 }

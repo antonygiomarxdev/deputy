@@ -5,7 +5,8 @@ import { LeaseLost, LogUnavailable, StaleDraft } from "../../domain/errors";
 import type { LogEntry, NewLogEntry } from "../../domain/log-entry";
 import { toIso } from "../../domain/time";
 import type { DraftLogRepository } from "../../ports/log";
-import type { DraftRepository, Transaction, UnitOfWork } from "../../ports/outbound";
+import type { Approval } from "../../domain/approval";
+import type { ApprovalRepository, DraftRepository, Transaction, UnitOfWork } from "../../ports/outbound";
 
 const SCRUBBABLE_KINDS = new Set(["order_command", "order_deleted"]);
 
@@ -87,12 +88,40 @@ export class InMemoryDraftLog implements DraftLogRepository {
   }
 }
 
-/** One shared store: drafts, the number counter and the log. */
+/** Born used, unique id and sendId, as the SQLite table enforces. */
+class InMemoryApprovals implements ApprovalRepository {
+  private rows: Approval[] = [];
+
+  save(): Approval[] {
+    return [...this.rows];
+  }
+
+  restore(rows: Approval[]): void {
+    this.rows = rows;
+  }
+
+  async insert(a: Approval): Promise<void> {
+    if (a.usedAt === null) throw new Error("an approval is born used");
+    if (this.rows.some((r) => r.id === a.id || r.sendId === a.sendId)) throw new Error("approval id or send id already exists");
+    this.rows.push(a);
+  }
+
+  async void(draft: number, reason: string, at: number): Promise<void> {
+    this.rows = this.rows.map((r) => (r.draftNumber === draft && r.voidedAt === null ? { ...r, voidedAt: at, voidReason: reason } : r));
+  }
+
+  async forDraft(draft: number): Promise<Approval[]> {
+    return this.rows.filter((r) => r.draftNumber === draft);
+  }
+}
+
+/** One shared store: drafts, approvals, the number counter and the log. */
 export class InMemoryDrafts {
   private drafts = new Map<DraftNumber, DraftSnapshot>();
   private counter = 0;
   private tail: Promise<unknown> = Promise.resolve();
   readonly log = new InMemoryDraftLog(() => this.drafts.values());
+  private readonly approvals = new InMemoryApprovals();
   readonly unitOfWork: UnitOfWork;
 
   constructor(private readonly lease: OwnerLease) {
@@ -113,9 +142,9 @@ export class InMemoryDrafts {
     options?: { requireLease?: boolean },
   ): Promise<T> {
     if ((options?.requireLease ?? true) && !(await this.lease.isOwner())) throw new LeaseLost();
-    const before = { drafts: new Map(this.drafts), counter: this.counter, log: this.log.save() };
+    const before = { drafts: new Map(this.drafts), counter: this.counter, log: this.log.save(), approvals: this.approvals.save() };
     try {
-      const result = await work({ drafts: this.repository(), log: this.log });
+      const result = await work({ drafts: this.repository(), approvals: this.approvals, log: this.log });
       // the SQLite foreign key on replaced_by is deferred to commit; so is this check
       for (const d of this.drafts.values()) {
         if (d.replacedBy !== null && !this.drafts.has(d.replacedBy)) {
@@ -127,6 +156,7 @@ export class InMemoryDrafts {
       this.drafts = before.drafts;
       this.counter = before.counter;
       this.log.restore(before.log);
+      this.approvals.restore(before.approvals);
       throw e;
     }
   }
@@ -149,6 +179,8 @@ export class InMemoryDrafts {
           .filter((s) => OPEN_STATES.includes(s.state) && (filter?.chat === undefined || s.chat === filter.chat))
           .sort((a, b) => a.number - b.number)
           .map((s) => Draft.rehydrate(s)),
+      hasDraftText: async (normalized) =>
+        [...this.drafts.values()].some((s) => s.proposedNorm === normalized || s.currentNorm === normalized),
       save: async (draft) => {
         const s = draft.snapshot();
         const stored = this.drafts.get(s.number);

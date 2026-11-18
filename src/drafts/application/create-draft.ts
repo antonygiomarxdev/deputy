@@ -8,6 +8,7 @@ import { LeaseLost, LogUnavailable, StaleDraft } from "../domain/errors";
 import { toLogEntries } from "../domain/log-mapper";
 import type { Refusal } from "../domain/refusals";
 import { toIso } from "../domain/time";
+import { voidApprovals, withLiveApproval } from "./live-approval";
 import type { CreateDraft, CreateDraftResult, MessageView, Outcome } from "../ports/inbound";
 import type { ChatMessage, ChatReader, OrderPreparer, UnitOfWork } from "../ports/outbound";
 
@@ -30,8 +31,8 @@ export class CreateDraftUseCase implements CreateDraft {
     const checkedStoredAt = clock.now(); // before describe: anything stored after this is "new since the draft"
     const info = await chats.describe(chat);
     if (info === null) return refuse({ code: "chat_not_found" });
-    if (!info.hasCustomerMessage || info.latest === null) return refuse({ code: "no_customer_message" });
     if (!info.activeWorldIsDev && !info.hasNonDevMessage) return refuse({ code: "dev_messages_only" });
+    if (!info.hasCustomerMessage || info.latest === null) return refuse({ code: "no_customer_message" });
 
     let text: string;
     let orderPayload: string | null = null;
@@ -48,7 +49,8 @@ export class CreateDraftUseCase implements CreateDraft {
 
     try {
       return await unitOfWork.run(async (tx): Promise<Outcome<CreateDraftResult>> => {
-        const existing = await tx.drafts.openFor(chat, input.kind);
+        const open = await tx.drafts.openFor(chat, input.kind);
+        const existing = open === null ? null : await withLiveApproval(tx, open);
         const before = existing?.snapshot();
         if (before?.state === "sending" || before?.state === "recording") {
           return refuse({ code: "send_in_progress", number: before.number });
@@ -72,17 +74,18 @@ export class CreateDraftUseCase implements CreateDraft {
         if (!("draft" in proposed)) return refuse({ code: "empty_text" });
 
         const events: DraftEvent[] = [];
+        let approvalEntryId: number | null = null;
         if (existing && before) {
           const replaced = existing.replaceBy({ number, now });
           if (!replaced.ok) return refuse({ code: "stale_draft", number: before.number });
           // the old draft is saved first: it leaves the one-open-draft index before the new one enters it
           await tx.drafts.save(existing);
           events.push(...replaced.events);
+          approvalEntryId = await voidApprovals(tx, replaced.events, before.number, now);
         }
         await tx.drafts.save(proposed.draft);
         events.push(...proposed.events);
-        // approvals arrive with SPEC-02, so no approval entry exists to point an ApprovalVoided at yet
-        await tx.log.append(toLogEntries(events, { approvalEntryId: null }));
+        await tx.log.append(toLogEntries(events, { approvalEntryId }));
 
         return {
           ok: true,
