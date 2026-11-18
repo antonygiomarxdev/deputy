@@ -1,0 +1,12 @@
+{
+  "id": "wamid.IMAGE1",
+  "timestamp": "1700000300",
+  "type": "image",
+  "from": "15557654321",
+  "kapso": {
+    "direction": "inbound",
+    "origin": "cloud_api",
+    "has_media": true,
+    "whatsapp_conversation_id": "conv-1"
+  }
+}
