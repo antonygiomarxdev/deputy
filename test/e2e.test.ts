@@ -20,7 +20,7 @@ async function start(extraEnv: Record<string, string> = {}) {
   const transport = new StdioClientTransport({
     command: "bun",
     args: ["src/server.ts"],
-    env: { ...(process.env as Record<string, string>), DEPUTY_PORT: String(port), DEPUTY_DATA_DIR: dataDir, DEPUTY_OWNERS: OWNER, DEPUTY_PROVIDER: "dev", DEPUTY_STORE: "local", DEPUTY_BUSINESS_DIR: "examples/christmas-food-sale-es", ...extraEnv },
+    env: { ...(process.env as Record<string, string>), DEPUTY_PORT: String(port), DEPUTY_DATA_DIR: dataDir, DEPUTY_OWNERS: OWNER, DEPUTY_PROVIDER: "dev", DEPUTY_STORE: "local", DEPUTY_LANG: "en", DEPUTY_BUSINESS_DIR: "examples/christmas-food-sale-es", ...extraEnv },
     stderr: "pipe",
   });
   const client = new Client({ name: "test", version: "0" }, { capabilities: { experimental: { "claude/channel": {} } } });
