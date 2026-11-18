@@ -8,7 +8,7 @@ import { RunCoordinator } from "../../../src/intake/application/run-coordinator"
 import { StorageFailureLog } from "../../../src/intake/application/storage-failure-log";
 import { StoreMessages } from "../../../src/intake/application/store-messages";
 import { MAX_PAGES, RUN_BUDGET_MS, TELL_OWNER_AFTER_MS } from "../../../src/intake/domain/constants";
-import type { IntakeUnitOfWork } from "../../../src/intake/ports/intake-unit-of-work";
+import type { IntakeRepos, IntakeUnitOfWork } from "../../../src/intake/ports/intake-unit-of-work";
 import { ProviderError, toCursor, type Page, type ProviderConversation, type ProviderMessage } from "../../../src/intake/ports/provider";
 import { parseChatId } from "../../../src/shared/chat-id";
 import { FakeClock } from "../../support/fake-clock";
@@ -51,12 +51,12 @@ describe("CatchUp failures", () => {
     provider.serverTime = 10_000;
   });
 
-  const build = (over: { provider?: FakeProvider; uow?: IntakeUnitOfWork } = {}) => {
+  const build = (over: { provider?: FakeProvider; uow?: IntakeUnitOfWork; reads?: IntakeRepos } = {}) => {
     const coordinator = new RunCoordinator<RunResult>(clock);
     const prov = over.provider ?? provider;
     const status = new GetSyncStatusUseCase({
       provider: prov.name,
-      reads: store.repos,
+      reads: over.reads ?? store.repos,
       settings: new InMemoryIntakeSettingsRepository(),
       coordinator,
       failures,
@@ -67,7 +67,7 @@ describe("CatchUp failures", () => {
       clock,
       lease: { isOwner: async () => true },
       uow: over.uow ?? store.unitOfWork,
-      reads: store.repos,
+      reads: over.reads ?? store.repos,
       store: new StoreMessages({ clock }),
       publisher,
       coordinator,
@@ -190,6 +190,20 @@ describe("CatchUp failures", () => {
       expect(await rows()).toEqual(["a", "b"]);
     });
 
+    test("a stored page is progress even when no mark moved", async () => {
+      provider.pageSize = 1;
+      provider.hold("c1", "5491123456789", [msg("a", 100), msg("b", 200), msg("c", 300)]);
+      let reads = 0;
+      provider.onCall = async (c) => {
+        if (c.kind === "messages" && ++reads === 2) await clock.sleep(RUN_BUDGET_MS + 1_000);
+      };
+      const status = await run();
+      expect(status).toMatchObject({ status: "failed", reason: "catching_up" });
+      // the conversation was not finished, so its mark did not move: the stored page alone is the progress
+      expect((await store.repos.syncState.load("kapso"))?.props.markConversations).toBeNull();
+      expect(await rows()).toEqual(["b", "c"]);
+    });
+
     test("a run that ends on the budget with no progress is timeout", async () => {
       provider.hold("c1", "5491123456789", [msg("a", 100)]);
       provider.onCall = async (c) => {
@@ -218,6 +232,22 @@ describe("CatchUp failures", () => {
       expect(status).toMatchObject({ status: "failed", reason: "bad_response" });
       expect(provider.calls.filter((c) => c.kind === "conversations")).toHaveLength(MAX_PAGES);
     });
+  });
+
+  test("a failed read of the stored state leaves that state untouched", async () => {
+    provider.serverTime = 10_000;
+    provider.hold("c1", "5491123456789", [msg("a", 100)]);
+    expect((await run()).status).toBe("complete");
+    const before = (await store.repos.syncState.load("kapso"))?.props;
+    expect(before?.lastSuccessAt).not.toBeNull();
+
+    const unreadable: IntakeRepos = {
+      ...store.repos,
+      syncState: { ...store.repos.syncState, load: () => Promise.reject(new Error("disk unreadable")) },
+    };
+    const status = await run(build({ reads: unreadable }));
+    expect(status).toMatchObject({ status: "failed", reason: "storage" });
+    expect((await store.repos.syncState.load("kapso"))?.props).toEqual(before);
   });
 
   test("a storage error maps to storage, is logged by time, and publishes the failure", async () => {
