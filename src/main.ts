@@ -21,7 +21,9 @@ import { FileConnectionConfig } from "./intake/adapters/config/file-connection-c
 import { DevProvider } from "./intake/adapters/dev/dev-provider";
 import { LiveListener } from "./intake/adapters/http/listener";
 import { KapsoProvider } from "./intake/adapters/kapso/kapso-provider";
-import { intakeTools } from "./intake/adapters/mcp/intake-tools";
+import { formatSyncStatus, intakeTools } from "./intake/adapters/mcp/intake-tools";
+import { CatchUpScheduler } from "./intake/adapters/scheduler/catch-up-scheduler";
+import { SqliteIntakeSettingsRepository } from "./intake/adapters/sqlite/sqlite-intake-settings-repository";
 import { LibphonenumberParser } from "./intake/adapters/phone/libphonenumber-parser";
 import { SqliteIntakeUnitOfWork } from "./intake/adapters/sqlite/sqlite-intake-unit-of-work";
 import { createSqliteIntakeRepos } from "./intake/adapters/sqlite/sqlite-intake-repos";
@@ -118,7 +120,9 @@ async function serve(): Promise<number> {
     provider,
     receiving: resolved.receiving,
     webhookSecret: connection.kapso.webhookSecret?.reveal() ?? null,
+    settings: new SqliteIntakeSettingsRepository(db),
   });
+  const scheduler = new CatchUpScheduler({ catchUp: intake.catchUp, settings: intake.getIntakeSettings, clock });
 
   const listener = new LiveListener({
     receive: intake.receiveLiveDelivery,
@@ -132,9 +136,11 @@ async function serve(): Promise<number> {
     clock,
     onAcquired: async () => {
       if (listens) await listener.start();
+      scheduler.start();
       console.error(`deputy: owner of ${dataDir} (config ${configDir}, provider ${resolved.provider})`);
     },
     onLost: async () => {
+      scheduler.stop();
       await listener.stop();
       console.error("deputy: lost the owner lease");
     },
@@ -145,8 +151,11 @@ async function serve(): Promise<number> {
     version: pkg.version,
     instructions: INSTRUCTIONS,
     tools: [
-      ...compositionTools({ isOwner: () => supervisor.isOwner, sections: [] }),
-      ...intakeTools({ readChat: intake.readChat, listRejections: intake.listRejections }),
+      ...compositionTools({
+        isOwner: () => supervisor.isOwner,
+        sections: [async () => formatSyncStatus(await intake.getSyncStatus.execute())],
+      }),
+      ...intakeTools({ readChat: intake.readChat, listRejections: intake.listRejections, catchUp: intake.catchUp }),
     ],
     claudeChannel: false,
   });

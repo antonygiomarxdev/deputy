@@ -6,7 +6,8 @@ import type { SetIntakeSettings } from "./ports/set-intake-settings";
 import type { Clock } from "../shared/clock";
 import type { OwnerLease } from "../shared/owner-lease";
 import { ChatExistsUseCase } from "./application/chat-exists";
-import { CatchUpUseCase, type CatchUpDeps } from "./application/catch-up";
+import { CatchUpUseCase, type CatchUpDeps, type RunResult } from "./application/catch-up";
+import { RunCoordinator } from "./application/run-coordinator";
 import { GetSyncStatusUseCase, type GetSyncStatusDeps } from "./application/get-sync-status";
 import type { CatchUp } from "./ports/catch-up";
 import type { GetSyncStatus } from "./ports/get-sync-status";
@@ -74,6 +75,7 @@ export interface IntakeRuntimeDeps {
   provider: Provider;
   receiving: "catch_up" | "live";
   webhookSecret: string | null;
+  settings: IntakeSettingsRepository;
 }
 
 export interface IntakeRuntime {
@@ -84,11 +86,25 @@ export interface IntakeRuntime {
   listChats: ListChats;
   getMessages: GetMessages;
   listRejections: ListRejections;
+  catchUp: CatchUp;
+  getSyncStatus: GetSyncStatus;
+  getIntakeSettings: GetIntakeSettings;
 }
 
 /** Every use case that needs the resolved provider. SPEC-03 and SPEC-04 add theirs. */
 export function createIntakeRuntime(d: IntakeRuntimeDeps): IntakeRuntime {
   const store = new StoreMessages({ clock: d.clock });
+  // one failure log and one coordinator: the status view reads what live delivery and catch-up record
+  const failures = new StorageFailureLog();
+  const coordinator = new RunCoordinator<RunResult>(d.clock);
+  const getSyncStatus = new GetSyncStatusUseCase({
+    provider: d.provider.name,
+    reads: d.repos,
+    settings: d.settings,
+    coordinator,
+    failures,
+    clock: d.clock,
+  });
   return {
     receiveLiveDelivery: new ReceiveLiveDeliveryUseCase({
       lease: d.lease,
@@ -99,7 +115,7 @@ export function createIntakeRuntime(d: IntakeRuntimeDeps): IntakeRuntime {
       store,
       events: d.events,
       clock: d.clock,
-      failures: new StorageFailureLog(),
+      failures,
     }),
     readChat: new ReadChatUseCase(d.repos),
     chatExists: new ChatExistsUseCase({ repos: d.repos, provider: d.provider.name }),
@@ -107,6 +123,20 @@ export function createIntakeRuntime(d: IntakeRuntimeDeps): IntakeRuntime {
     listChats: new ListChatsUseCase({ repos: d.repos, provider: d.provider.name }),
     getMessages: new GetMessagesUseCase(d.repos),
     listRejections: new ListRejectionsUseCase(d.repos),
+    catchUp: new CatchUpUseCase({
+      provider: d.provider,
+      clock: d.clock,
+      lease: d.lease,
+      uow: d.unitOfWork,
+      reads: d.repos,
+      store,
+      publisher: d.events,
+      coordinator,
+      status: getSyncStatus,
+      failures,
+    }),
+    getSyncStatus,
+    getIntakeSettings: new GetIntakeSettingsUseCase(d.settings),
   };
 }
 
