@@ -15,5 +15,6 @@ export interface ChatState {
   readonly lastAnswerSource: "owner_app" | "sent_through_deputy" | null;
   readonly lastUnattributedAt: Instant | null;
   readonly profileName: string | null;
+  readonly profileNameAt: Instant | null;
   readonly updatedAt: Instant;
 }

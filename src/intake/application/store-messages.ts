@@ -51,7 +51,7 @@ export class StoreMessages {
     let unlinkedOwnerReplies = 0;
     const counts = new Map<string, StoredSummary>();
     const touched = new Map<ChatId, ChatSeen>();
-    const names = new Map<ChatId, string>();
+    const names = new Map<ChatId, { name: string; at: number }>();
 
     for (const event of i.events) {
       if (event.kind === "ignored") {
@@ -102,13 +102,14 @@ export class StoreMessages {
         counts.set(key, { chat: props.chat, source: props.source, count: (item?.count ?? 0) + 1 });
         if (props.mark === "not_attributable") unlinkedOwnerReplies++;
         if (props.source === "customer" && p.profileName !== null && p.profileName !== "") {
-          names.set(props.chat, cutProfileName(p.profileName));
+          // a newest-first page must not leave its oldest name: keep the name of the latest sent message
+          if (p.sentAt > (names.get(props.chat)?.at ?? -1)) names.set(props.chat, { name: cutProfileName(p.profileName), at: p.sentAt });
         }
       }
     }
 
     for (const [chat, seen] of touched) await r.chats.recompute(chat, dev, now, seen);
-    for (const [chat, name] of names) await r.chats.setProfileName(chat, dev, name);
+    for (const [chat, n] of names) await r.chats.setProfileName(chat, dev, n.name, n.at);
 
     return { stored, duplicates, ignored, edits, rejected, summaries: [...counts.values()], unlinkedOwnerReplies };
   }
