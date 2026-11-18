@@ -175,12 +175,15 @@ export class InMemoryIntakeStore {
           lastAnswerSource: source === "owner_app" || source === "sent_through_deputy" ? source : null,
           lastUnattributedAt: unattributed.length === 0 ? null : Math.max(...unattributed),
           profileName: old?.profileName ?? null,
+          profileNameAt: old?.profileNameAt ?? null,
           updatedAt: now,
         });
       },
-      async setProfileName(chat, dev, name) {
+      async setProfileName(chat, dev, name, sentAt) {
         const old = s().chats.get(key(chat, dev));
-        if (old !== undefined) s().chats.set(key(chat, dev), { ...old, profileName: name });
+        if (old !== undefined && (old.profileNameAt === null || old.profileNameAt < sentAt)) {
+          s().chats.set(key(chat, dev), { ...old, profileName: name, profileNameAt: sentAt });
+        }
       },
       async list(q) {
         return [...s().chats.values()]

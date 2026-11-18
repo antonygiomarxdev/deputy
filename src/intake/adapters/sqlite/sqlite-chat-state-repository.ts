@@ -30,6 +30,7 @@ function toState(r: SqlRow): ChatState {
     lastAnswerSource: answer,
     lastUnattributedAt: numOrNull(r, "last_unattributed_at"),
     profileName: strOrNull(r, "profile_name"),
+    profileNameAt: numOrNull(r, "profile_name_at"),
     updatedAt: numOrNull(r, "updated_at") ?? 0,
   };
 }
@@ -68,8 +69,11 @@ export class SqliteChatStateRepository implements ChatStateRepository {
     );
   }
 
-  async setProfileName(chat: ChatId, dev: boolean, name: string): Promise<void> {
-    await this.ex.run("UPDATE chats SET profile_name = ? WHERE chat_id = ? AND dev = ?", [name, chat, dev ? 1 : 0]);
+  async setProfileName(chat: ChatId, dev: boolean, name: string, sentAt: Instant): Promise<void> {
+    await this.ex.run(
+      "UPDATE chats SET profile_name = ?, profile_name_at = ? WHERE chat_id = ? AND dev = ? AND (profile_name_at IS NULL OR profile_name_at < ?)",
+      [name, sentAt, chat, dev ? 1 : 0, sentAt],
+    );
   }
 
   async list(q: { dev: boolean; customerMessageSince?: Instant }): Promise<ChatState[]> {
