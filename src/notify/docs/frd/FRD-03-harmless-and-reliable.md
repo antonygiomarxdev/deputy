@@ -1,6 +1,6 @@
 # FRD-03: Harmless and reliable
 
-Status: Draft
+Status: Approved (2026-11-18)
 
 ## Summary
 

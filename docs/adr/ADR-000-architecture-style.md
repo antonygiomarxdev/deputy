@@ -1,7 +1,7 @@
 # ADR-000: Ports and adapters with DDD; one bounded context per slice
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 Owner decision D14: Deputy is rebuilt with hexagonal architecture, DDD and clean architecture. The old structure (`server.ts`, `conversations.ts`, `providers/`, `store/`) is not kept. The provider, the storage, the agent and the push channel all change or vary, and the FRDs' Given/When/Then lines are rules that should run without them. From TP TD-0.

@@ -1,6 +1,6 @@
 # Technical Proposal: Deputy v1 (cross-cutting)
 
-Status: Draft, for owner review (amended 2026-11-18 for L7 and L8). Written 2026-11-17 after the FRDs. Each decision (TD) has one ADR in `docs/adr/`. Per-FRD TPs and specs follow this one.
+Status: Approved (2026-11-18)., for owner review (amended 2026-11-18 for L7 and L8). Written 2026-11-17 after the FRDs. Each decision (TD) has one ADR in `docs/adr/`. Per-FRD TPs and specs follow this one.
 
 ## Context
 
