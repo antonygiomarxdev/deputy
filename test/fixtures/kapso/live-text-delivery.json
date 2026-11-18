@@ -1,0 +1,13 @@
+{
+  "message": {
+    "id": "wamid.LIVE1",
+    "timestamp": "1700000500",
+    "type": "text",
+    "from": "15557654321",
+    "text": { "body": "Hello live" },
+    "kapso": { "direction": "inbound", "origin": "cloud_api", "has_media": false }
+  },
+  "conversation": { "id": "conv-1", "phone_number": "+15557654321" },
+  "is_new_conversation": false,
+  "phone_number_id": "pn-1"
+}

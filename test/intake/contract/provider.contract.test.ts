@@ -1,3 +1,8 @@
+import { signHmacSha256Hex } from "../../../src/intake/adapters/hmac";
+import { KapsoProvider } from "../../../src/intake/adapters/kapso/kapso-provider";
+import { LibphonenumberParser } from "../../../src/intake/adapters/phone/libphonenumber-parser";
+import { Secret } from "../../../src/intake/domain/secret";
+import { closedPort, startFakeKapso } from "../../support/fake-kapso-server";
 import { afterEach, describe, expect, test } from "bun:test";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -109,5 +114,229 @@ describe("DevProvider", () => {
     const { provider } = await dev();
     const p = port(provider);
     expect(await p.businessNumber(signal)).toBeNull();
+  });
+});
+
+const fixture = (name: string): Record<string, unknown> =>
+  JSON.parse(readFileSync(join(root, "test", "fixtures", "kapso", `${name}.json`), "utf8"));
+
+function kapso(opts: Partial<Parameters<typeof startFakeKapso>[0]> = {}, timeoutMs?: number) {
+  const server = startFakeKapso({ apiKey: "key-1", phoneNumberId: "pn-1", ...opts });
+  cleanups.push(() => server.stop());
+  const provider = new KapsoProvider({
+    baseUrl: server.url,
+    graphVersion: "v24.0",
+    apiKey: new Secret("key-1"),
+    phoneNumberId: "pn-1",
+    clock: new FakeClock(5_000_000),
+    parser: new LibphonenumberParser(),
+    ...(timeoutMs === undefined ? {} : { requestTimeoutMs: timeoutMs }),
+  });
+  return { server, provider: port(provider) };
+}
+
+const failure = (p: Promise<unknown>) =>
+  p.then(
+    () => "no error",
+    (e: unknown) => e,
+  );
+
+const SERVER_TIME = Date.parse("Tue, 14 Nov 2023 22:20:00 GMT");
+
+describe("KapsoProvider", () => {
+  test("FR-INTAKE-01-2: listings carry the item, serverTime, remaining and a cursor while paging.next is set", async () => {
+    const { server, provider } = kapso({
+      conversations: [fixture("conversation")],
+      messages: [fixture("text-message"), fixture("audio-message"), fixture("image-message")],
+    });
+    const convs = await provider.listConversations({ activeAfter: null, cursor: null, limit: 10 }, signal);
+    expect(convs.items).toEqual([
+      { ref: "conv-1", counterpart: "+15557654321", group: false, lastActiveAt: Date.parse("2023-11-14T22:15:00.000Z") },
+    ]);
+    expect(convs.serverTime).toBe(SERVER_TIME);
+    expect(convs.remaining).toBe(98);
+    expect(convs.next).toBeNull();
+
+    const first = await provider.listMessages({ scope: { conversationRef: "conv-1" }, cursor: null, limit: 2 }, signal);
+    expect(first.items.map((m) => m.providerMessageId)).toEqual(["wamid.TEXT1", "wamid.AUDIO1"]);
+    expect(first.next).not.toBeNull();
+    const last = await provider.listMessages({ scope: { conversationRef: "conv-1" }, cursor: first.next, limit: 2 }, signal);
+    expect(last.items.map((m) => m.type)).toEqual(["image"]);
+    expect(last.next).toBeNull();
+    expect(server.state.requests[0]).toContain("phone_number_id=pn-1");
+  });
+
+  test("activeAfter is sent as last_active_after", async () => {
+    const { server, provider } = kapso({ conversations: [fixture("conversation")] });
+    const after = Date.parse("2023-11-15T00:00:00Z");
+    const page = await provider.listConversations({ activeAfter: after, cursor: null, limit: 5 }, signal);
+    expect(page.items).toEqual([]);
+    expect(server.state.requests[0]).toContain("last_active_after=2023-11-15T00%3A00%3A00.000Z");
+  });
+
+  test("mapping: origin as received, transcript, direction, counterpart, unknown type", async () => {
+    const noType: Record<string, unknown> = { ...fixture("text-message"), id: "wamid.NOTYPE" };
+    delete noType["type"];
+    const { provider } = kapso({
+      messages: [fixture("owner-echo-message"), fixture("audio-message"), fixture("history-message"), noType],
+    });
+    const out = await provider.listMessages({ scope: { outbound: true }, cursor: null, limit: 10 }, signal);
+    expect(out.items).toHaveLength(1);
+    expect(out.items[0]).toMatchObject({
+      origin: "business_app",
+      direction: "outbound",
+      counterpart: "15557654321",
+      from: "15550001111",
+      sentAt: 1_700_000_400_000,
+    });
+    const all = await provider.listMessages({ scope: { conversationRef: "conv-1" }, cursor: null, limit: 10 }, signal);
+    const byId = (id: string) => all.items.find((m) => m.providerMessageId === id);
+    expect(byId("wamid.AUDIO1")).toMatchObject({
+      transcript: "Do you deliver on Sundays?",
+      text: null,
+      type: "audio",
+      counterpart: "15557654321",
+    });
+    expect(byId("wamid.HIST1")?.origin).toBe("history_sync");
+    expect(byId("wamid.NOTYPE")?.type).toBe("unknown");
+  });
+
+  test("FR-INTAKE-01-4: a Kapso and a dev message have the same keys and value kinds", async () => {
+    const { provider } = kapso({ messages: [fixture("text-message")] });
+    const k = (await provider.listMessages({ scope: { conversationRef: "conv-1" }, cursor: null, limit: 1 }, signal)).items[0];
+    const { provider: devProvider } = await dev();
+    await devProvider.hold({ chat: "conv-1", from: "15557654321", text: "How much is the cake?" });
+    const d = (await port(devProvider).listMessages({ scope: { conversationRef: "conv-1" }, cursor: null, limit: 1 }, signal)).items[0];
+    if (k === undefined || d === undefined) throw new Error("no message");
+    expect(Object.keys(k).sort()).toEqual(Object.keys(d).sort());
+    for (const key of Object.keys(k) as (keyof ProviderMessage)[]) {
+      if (k[key] !== null && d[key] !== null) expect(typeof k[key]).toBe(typeof d[key]);
+    }
+  });
+
+  test("sendText posts the documented request with X-API-Key and returns id and serverTime", async () => {
+    const { server, provider } = kapso({ sendResponse: fixture("send-response") });
+    const to = PhoneNumber.fromInternational("+15557654321");
+    if (to === null) throw new Error("bad number");
+    const sent = await provider.sendText({ to, text: "hello" }, signal);
+    expect(sent).toEqual({ providerMessageId: "wamid.SENT1", serverTime: SERVER_TIME });
+    const req = server.state.sent[0];
+    expect(req?.path).toBe("/meta/whatsapp/v24.0/pn-1/messages");
+    expect(req?.headers.get("x-api-key")).toBe("key-1");
+    expect(req?.body).toEqual({
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to: "15557654321",
+      type: "text",
+      text: { body: "hello", preview_url: false },
+    });
+  });
+
+  describe("verifyAndParse", () => {
+    const secret = "hook-secret";
+    const body = new TextEncoder().encode(JSON.stringify(fixture("live-text-delivery")));
+    const headers = (extra: Record<string, string> = {}) =>
+      new Map([["x-webhook-signature", `sha256=${signHmacSha256Hex(secret, body)}`], ...Object.entries(extra)]);
+
+    test("a signed delivery maps to one message event", () => {
+      const { provider } = kapso();
+      const r = provider.verifyAndParse({ rawBody: body, headers: headers({ "x-webhook-event": "whatsapp.message.received" }), secret });
+      expect(r.kind).toBe("ok");
+      if (r.kind === "ok") {
+        expect(r.events).toHaveLength(1);
+        expect(r.events[0]).toMatchObject({
+          kind: "message",
+          message: { providerMessageId: "wamid.LIVE1", conversationRef: "conv-1", text: "Hello live", direction: "inbound" },
+        });
+      }
+    });
+
+    test("secret and signature failures", () => {
+      const { provider } = kapso();
+      expect(provider.verifyAndParse({ rawBody: body, headers: headers(), secret: "wrong" }).kind).toBe("bad_signature");
+      expect(provider.verifyAndParse({ rawBody: body, headers: new Map(), secret }).kind).toBe("missing_signature");
+      expect(provider.verifyAndParse({ rawBody: body, headers: headers(), secret: null }).kind).toBe("no_secret");
+    });
+
+    test("a body that is not the expected JSON is malformed", () => {
+      const { provider } = kapso();
+      const junk = new TextEncoder().encode('{"nope":1}');
+      const h = new Map([["x-webhook-signature", signHmacSha256Hex(secret, junk)]]);
+      expect(provider.verifyAndParse({ rawBody: junk, headers: h, secret }).kind).toBe("malformed");
+    });
+
+    test("delivered and read events and reactions are ignored", () => {
+      const { provider } = kapso();
+      for (const event of ["whatsapp.message.delivered", "whatsapp.message.read"]) {
+        const r = provider.verifyAndParse({ rawBody: body, headers: headers({ "x-webhook-event": event }), secret });
+        expect(r).toEqual({ kind: "ok", events: [{ kind: "ignored", reason: "receipt" }] });
+      }
+      const raw = new TextEncoder().encode(JSON.stringify(fixture("live-text-delivery")).replace('"type":"text"', '"type":"reaction"'));
+      const h = new Map([["x-webhook-signature", signHmacSha256Hex(secret, raw)]]);
+      expect(provider.verifyAndParse({ rawBody: raw, headers: h, secret })).toEqual({
+        kind: "ok",
+        events: [{ kind: "ignored", reason: "reaction" }],
+      });
+    });
+  });
+
+  describe("errors", () => {
+    test("429 with Retry-After is rate_limited with the wait in ms", async () => {
+      const { server, provider } = kapso();
+      server.force("conversations", { status: 429, headers: { "Retry-After": "30" } });
+      const e = await failure(provider.listConversations({ activeAfter: null, cursor: null, limit: 1 }, signal));
+      expect(e).toMatchObject({ kind: "rate_limited", retryAfterMs: 30_000, mayHaveBeenAccepted: false });
+    });
+
+    test.each([
+      [401, "credentials"],
+      [403, "credentials"],
+      [402, "quota"],
+    ] as const)("%d is %s and the message holds no response text", async (status, kind) => {
+      const { server, provider } = kapso();
+      server.force("conversations", { status, body: status === 402 ? fixture("quota-response") : {} });
+      const e = await failure(provider.listConversations({ activeAfter: null, cursor: null, limit: 1 }, signal));
+      expect(e).toMatchObject({ kind, message: kind });
+    });
+
+    test("a body of the wrong shape is bad_response", async () => {
+      const { server, provider } = kapso();
+      server.force("conversations", { status: 200, body: { data: "nope" } });
+      const e = await failure(provider.listConversations({ activeAfter: null, cursor: null, limit: 1 }, signal));
+      expect(e).toMatchObject({ kind: "bad_response" });
+    });
+
+    test("connection refused is unreachable", async () => {
+      const provider = port(
+        new KapsoProvider({
+          baseUrl: `http://127.0.0.1:${await closedPort()}`,
+          graphVersion: "v24.0",
+          apiKey: new Secret("key-1"),
+          phoneNumberId: "pn-1",
+          clock: new FakeClock(0),
+          parser: new LibphonenumberParser(),
+        }),
+      );
+      const e = await failure(provider.listConversations({ activeAfter: null, cursor: null, limit: 1 }, signal));
+      expect(e).toMatchObject({ kind: "unreachable" });
+    });
+
+    test("a slow response is timeout; on a send it may have been accepted, a 401 on a send was not", async () => {
+      const { server, provider } = kapso({}, 100);
+      const to = PhoneNumber.fromInternational("+15557654321");
+      if (to === null) throw new Error("bad number");
+      server.delay("send", 400);
+      expect(await failure(provider.sendText({ to, text: "x" }, signal))).toMatchObject({ kind: "timeout", mayHaveBeenAccepted: true });
+      server.delay("send", 0);
+      server.force("send", { status: 401 });
+      expect(await failure(provider.sendText({ to, text: "x" }, signal))).toMatchObject({ kind: "credentials", mayHaveBeenAccepted: false });
+    });
+  });
+
+  test("businessNumber parses the display number; no number is null", async () => {
+    const withNumber = kapso({ phoneNumberRecord: fixture("phone-number") });
+    expect((await withNumber.provider.businessNumber(signal))?.e164).toBe("+50588881111");
+    const without = kapso({ phoneNumberRecord: { data: {} } });
+    expect(await without.provider.businessNumber(signal)).toBeNull();
   });
 });
