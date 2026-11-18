@@ -27,6 +27,21 @@ export function compositionMcpImportsOutsideMain(files: Sources): string[] {
     );
 }
 
+/** FR-DRAFTS-02-7: of the use cases, only approve-draft.ts may import the Sender port. */
+export function senderImportsInDraftsApplication(files: Sources): string[] {
+  return [...files]
+    .filter(([file]) => file.startsWith("src/drafts/application/") && file !== "src/drafts/application/approve-draft.ts")
+    .flatMap(([file, src]) => listImports(src).filter((s) => /(^|\/)ports\/sender$/.test(s)).map((s) => `${file} imports ${s}`));
+}
+
+/** FR-DRAFTS-02-7: Intake's SendText is reached only through src/drafts/adapters/intake/intake-sender.ts. */
+export function sendTextOutsideIntakeSender(files: Sources): string[] {
+  return [...files]
+    .filter(([file]) => file.startsWith("src/drafts/") && file !== "src/drafts/adapters/intake/intake-sender.ts")
+    .filter(([, src]) => /\bSendText\b/.test(src))
+    .map(([file]) => `${file} mentions SendText`);
+}
+
 function realSources(): Sources {
   const root = join(import.meta.dir, "..", "..");
   const files = (readdirSync(join(root, "src"), { recursive: true }) as string[])
@@ -61,9 +76,35 @@ describe("drafts rules, on inline sources", () => {
   });
 });
 
+describe("send-path rules, on inline sources", () => {
+  test("a use case other than approve-draft that imports the Sender port is found", () => {
+    const files = new Map([
+      ["src/drafts/application/approve-draft.ts", 'import type { Sender } from "../ports/sender";'],
+      ["src/drafts/application/create-draft.ts", 'import type { Sender } from "../ports/sender";'],
+      ["src/drafts/application/list-drafts.ts", 'import type { X } from "../ports/outbound";'],
+      ["src/drafts/adapters/memory/fake-sender.ts", 'import type { Sender } from "../../ports/sender";'],
+    ]);
+    expect(senderImportsInDraftsApplication(files)).toEqual(["src/drafts/application/create-draft.ts imports ../ports/sender"]);
+  });
+
+  test("a mention of SendText outside intake-sender.ts is found", () => {
+    const files = new Map([
+      ["src/drafts/adapters/intake/intake-sender.ts", 'import type { SendText } from "../../../intake/index";'],
+      ["src/drafts/adapters/mcp/drafts-tools.ts", 'import type { SendText } from "../../../intake/index";'],
+      ["src/drafts/application/ok.ts", "export const x = 1; // only SendTextResult is named here"],
+    ]);
+    expect(sendTextOutsideIntakeSender(files)).toEqual(["src/drafts/adapters/mcp/drafts-tools.ts mentions SendText"]);
+  });
+});
+
 describe("drafts rules, on the real src/", () => {
   test("drafts/application imports nothing of Knowledge", () => {
     expect(knowledgeImportsInDraftsApplication(realSources())).toEqual([]);
+  });
+
+  test("only approve-draft.ts imports the Sender port, and only intake-sender.ts reaches SendText", () => {
+    expect(senderImportsInDraftsApplication(realSources())).toEqual([]);
+    expect(sendTextOutsideIntakeSender(realSources())).toEqual([]);
   });
 
   test("only src/main.ts imports src/composition/mcp/", () => {

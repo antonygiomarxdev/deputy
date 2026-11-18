@@ -44,6 +44,7 @@ const MIGRATIONS = [
   "intake/adapters/sqlite/migrations/0003-messages.sql",
   "intake/adapters/sqlite/migrations/0004-outgoing.sql",
   "intake/adapters/sqlite/migrations/0005-catchup-status.sql",
+  "intake/adapters/sqlite/migrations/0006-outgoing-retry.sql",
 ];
 
 export const ownsLease: OwnerLease = { isOwner: async () => true };

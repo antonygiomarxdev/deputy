@@ -14,6 +14,7 @@ const TABLES_BY_MIGRATION = [
   ["draft_counter", "drafts"],
   ["drafts_log"],
   ["approvals"],
+  [], // 0006-outgoing-retry adds a column to outgoing
 ];
 
 test("booting migrates every slice, in order, and creates each table", async () => {

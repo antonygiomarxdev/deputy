@@ -1,4 +1,6 @@
 export interface OwnerHooksDeps {
+  /** First thing an owner does: a send cut off by a stop or a crash becomes unknown before anything can send or report. */
+  markInterruptedSends(): Promise<{ marked: number }>;
   /** Started only when the provider receives live deliveries. */
   listener: { start(): Promise<void>; stop(): Promise<void> };
   listens: boolean;
@@ -8,10 +10,12 @@ export interface OwnerHooksDeps {
   log(line: string): void;
 }
 
-/** What a process starts when it becomes the owner and stops when it loses the lease. */
+/** What a process does when it becomes the owner and when it loses the lease. */
 export function ownerHooks(d: OwnerHooksDeps): { onAcquired(): Promise<void>; onLost(): Promise<void> } {
   return {
     async onAcquired() {
+      const { marked } = await d.markInterruptedSends();
+      if (marked > 0) d.log(`deputy: ${marked} interrupted send(s) are now unknown`);
       if (d.listens) await d.listener.start();
       d.scheduler.start();
       d.log(d.ownerLine);
