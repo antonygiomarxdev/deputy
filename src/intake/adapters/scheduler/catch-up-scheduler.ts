@@ -13,7 +13,8 @@ type Trigger = "start" | "timer" | "asked" | "retry";
  */
 export class CatchUpScheduler {
   private stopped = true;
-  private loop: Promise<void> | null = null;
+  /** Each start() takes a new number; a loop runs only while its number is current, so a loop that slept through stop and start ends. */
+  private generation = 0;
 
   constructor(
     private readonly d: {
@@ -24,9 +25,9 @@ export class CatchUpScheduler {
   ) {}
 
   start(): void {
-    if (this.loop !== null && !this.stopped) return;
+    if (!this.stopped) return;
     this.stopped = false;
-    this.loop = this.run();
+    void this.run(++this.generation);
   }
 
   /** Returns at once; the loop ends at its next wake. A run in flight is guarded by the lease check at every page. */
@@ -34,9 +35,9 @@ export class CatchUpScheduler {
     this.stopped = true;
   }
 
-  private async run(): Promise<void> {
+  private async run(generation: number): Promise<void> {
     let trigger: Trigger = "start";
-    while (!this.stopped) {
+    while (!this.stopped && this.generation === generation) {
       let wait: { ms: number; next: Trigger };
       try {
         wait = await this.afterRun(await this.d.catchUp.execute({ trigger }));

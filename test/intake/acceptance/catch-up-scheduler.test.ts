@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test } from "bun:test";
 import { InMemoryIntakeSettingsRepository } from "../../../src/intake/adapters/memory/in-memory-intake-settings-repository";
 import { InMemoryIntakeStore } from "../../../src/intake/adapters/memory/in-memory-intake-store";
 import { RecordingEventPublisher } from "../../../src/intake/adapters/memory/recording-event-publisher";
+import { createIntakeRuntime } from "../../../src/intake/index";
 import { CatchUpScheduler } from "../../../src/intake/adapters/scheduler/catch-up-scheduler";
 import { CatchUpUseCase, type RunResult } from "../../../src/intake/application/catch-up";
 import { GetIntakeSettingsUseCase } from "../../../src/intake/application/get-intake-settings";
@@ -98,6 +99,47 @@ describe("CatchUpScheduler with the real use case", () => {
     s.stop();
     // the run at 2 reads 5 before it waits: the next run is at 7, not 4
     expect(runs).toEqual([0, 2, 7].map((m) => m * MIN));
+  });
+
+  test("a 429 with a Retry-After of 0 waits the default minute and does not spin", async () => {
+    let limited = true;
+    provider.onCall = (c) => {
+      if (c.kind === "conversations" && c.cursor === null) runs.push(clock.now() - START);
+      if (limited) {
+        limited = false;
+        throw new ProviderError("rate_limited", 0, false);
+      }
+    };
+    const s = scheduler();
+    s.start();
+    await flush();
+    await clock.advance(59_000);
+    await flush();
+    expect(runs).toEqual([0]);
+    await clock.advance(1_000);
+    await flush();
+    s.stop();
+    expect(runs).toEqual([0, MIN]);
+  });
+
+  test("FR-INTAKE-03-16: with live delivery on, the scheduler still runs periodically", async () => {
+    const runtime = createIntakeRuntime({
+      repos: store.repos,
+      unitOfWork: store.unitOfWork,
+      events: new RecordingEventPublisher(),
+      clock,
+      lease: { isOwner: async () => true },
+      provider,
+      receiving: "live",
+      webhookSecret: "hook",
+      settings,
+    });
+    const s = new CatchUpScheduler({ catchUp: runtime.catchUp, settings: runtime.getIntakeSettings, clock });
+    s.start();
+    await flush();
+    await minutes(4);
+    s.stop();
+    expect(runs).toEqual([0, 2, 4].map((m) => m * MIN));
   });
 
   test("FR-INTAKE-03-20: a 429 with a Retry-After of 30 s makes the next run start at retryAt, not at the period", async () => {
@@ -206,6 +248,31 @@ describe("CatchUpScheduler with scripted results", () => {
     await run(scripted([finished(view({ status: "failed", reason: "credentials" })), () => ({ kind: "refused", reason: "not_owner" }), finished(view())]), 7 * MIN);
     expect(triggers.slice(0, 3)).toEqual(["start", "timer", "timer"]);
     expect(times.slice(0, 3)).toEqual([0, 2 * MIN, 4 * MIN]);
+  });
+
+  test("stop then start while the old loop sleeps leaves one loop: one run per period", async () => {
+    const s = new CatchUpScheduler({
+      catchUp: scripted([finished(view())]),
+      settings: new GetIntakeSettingsUseCase(new InMemoryIntakeSettingsRepository()),
+      clock,
+    });
+    s.start();
+    await flush();
+    s.stop();
+    s.start(); // the first loop is still asleep for its 2 minutes
+    await flush();
+    s.stop();
+    s.start(); // and again: a re-acquired lease starts the scheduler once more
+    await flush();
+    await clock.advance(MIN);
+    await flush();
+    await clock.advance(MIN);
+    await flush();
+    await clock.advance(2 * MIN);
+    await flush();
+    s.stop();
+    // three starts at 0, then exactly one run at 2 minutes and one at 4: the stopped loops ended at their wake
+    expect(times).toEqual([0, 0, 0, 2 * MIN, 4 * MIN]);
   });
 
   test("starting twice starts one loop", async () => {

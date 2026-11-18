@@ -116,3 +116,21 @@ test("not the owner: a second server on the same data folder answers check_messa
   expect(answer.isError).toBe(true);
   expect(textOf(answer)).toBe("not_owner");
 });
+
+test("FR-INTAKE-03-16: with live delivery on, the scheduler still runs its catch-up at start", async () => {
+  const fake = startFakeKapso({ apiKey: "key-1", phoneNumberId: "pn-1" });
+  fakes.push(fake);
+  const first = await boot();
+  await first.close();
+  started.pop();
+  const db = new Database(join(first.dataDir, "deputy.db"));
+  db.run("INSERT INTO owner_numbers (number, kind, label, added_at) VALUES ('+50588880000', 'business', '', 1)");
+  db.close();
+  writeConfig(first.configDir, { provider: "kapso", kapso_phone_number_id: "pn-1", receiving_mode: "live" });
+  writeFileSync(join(first.configDir, "secrets.env"), "kapso-api-key=key-1\nkapso-webhook-secret=hook-secret\n");
+  const h = await boot({ DEPUTY_KAPSO_BASE_URL: fake.url, DEPUTY_PORT: String(first.port) }, { dataDir: first.dataDir, configDir: first.configDir });
+  await waitForOwner(h);
+  expect((await fetch(`http://127.0.0.1:${h.port}/health`)).status).toBe(200); // the listener is up: live is on
+  await statusWhen(h, (t) => t.includes("up to date as of"));
+  expect(fake.state.requests.some((r) => r.includes("/conversations"))).toBe(true);
+});

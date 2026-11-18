@@ -37,6 +37,7 @@ import { createDrafts } from "./drafts/index";
 import { listDraftsTool } from "./composition/mcp/list-drafts-tool";
 import { INSTRUCTIONS } from "./composition/mcp/instructions";
 import { compositionTools } from "./composition/mcp/composition-tools";
+import { ownerHooks } from "./composition/owner-hooks";
 import { createMcpServer } from "./composition/mcp/server";
 import pkg from "../package.json" with { type: "json" };
 
@@ -146,19 +147,18 @@ async function serve(): Promise<number> {
   });
   const listens = resolved.provider === "dev" || resolved.receiving === "live";
 
+  const hooks = ownerHooks({
+    listener,
+    listens,
+    scheduler,
+    ownerLine: `deputy: owner of ${dataDir} (config ${configDir}, provider ${resolved.provider})`,
+    log: (line) => console.error(line),
+  });
   const supervisor = new LeaseSupervisor({
     lease,
     clock,
-    onAcquired: async () => {
-      if (listens) await listener.start();
-      scheduler.start();
-      console.error(`deputy: owner of ${dataDir} (config ${configDir}, provider ${resolved.provider})`);
-    },
-    onLost: async () => {
-      scheduler.stop();
-      await listener.stop();
-      console.error("deputy: lost the owner lease");
-    },
+    onAcquired: hooks.onAcquired,
+    onLost: hooks.onLost,
   });
 
   const mcp = createMcpServer({
