@@ -43,11 +43,13 @@ Chosen: Option A. Its failure keeps the safe label (`owner_app`, an extra hold).
 
 ### TD-2: How are numbers compared?
 
-- **Option A** Digits only, a leading `00` removed, 9 to 15 digits, equality of the digit strings. A number outside that range is refused when it is entered. Cost: a small value object. Risk: a 9-digit number with no country code still passes.
-- **Option B** A phone library with E.164 parsing. Cost: checks the country code. Risk: a dependency and a large data table for one comparison.
-- **Option C** Require a leading plus. Cost: simplest. Risk: rejects "505-88880000", which FR-INTAKE-04-14 says must match.
+Deputy serves owners in many countries, and an owner types numbers the way they say them locally ("8888 0000", "0991 234 567", "+505 8888 0000"). Senders arrive from the provider already in international form.
 
-Chosen: Option A. The command line uses the same value object, so a wrong number is refused in the owner's terminal and never stored. Recorded in ADR-012.
+- **Option A** Hand-written digits-only rule: strip non-digits, drop a leading `00`, accept 9 to 15 digits, compare the strings. Cost: a small value object, no dependency. Risk: it cannot add a missing country code, so a local number is refused or, at 9 digits, stored wrong and never matches. It also knows nothing of national prefixes such as a trunk `0`. It re-implements, badly, what a maintained library already does.
+- **Option B** `libphonenumber-js`, the maintained JavaScript port of Google's libphonenumber, with its default `min` metadata (about 80 kB). Every number is parsed to E.164. A number typed without a country code is parsed with the country of the connected business number as the default. Cost: one dependency, a small data table that ships inside the compiled binary (D17). Risk: the metadata ages; it is updated with the dependency.
+- **Option C** Require the owner to type a leading `+` and the country code. Cost: simplest. Risk: rejects "505-88880000", which FR-INTAKE-04-14 says must match, and pushes the formatting work onto a non-technical owner.
+
+Chosen: Option B. It handles every country's local formats, which a hand-written rule cannot, at the cost of one well-maintained dependency. The `PhoneNumber` value object in `src/shared` wraps it, so the domain never imports the library directly. Setup and the command line show the parsed E.164 form back to the owner before storing it. Recorded in ADR-012.
 
 ### TD-3: How are owner-number changes logged?
 
@@ -279,7 +281,7 @@ Extra tests: a send where part 2 of 3 fails returns `unknown` with `partsSent = 
 |---|---|---|
 | Kapso does not report API sends back the way assumed | A Deputy send stays `owner_app` | `SendText` stores the id at send time, so the id match works whichever way the report looks. Confirm with one live send |
 | The live event that carries echoes is unknown | Live echoes are missed | Sweep 2 of catch-up (cross-cutting TD-5); periodic catch-up runs every 2 minutes; `CatchUpChat` runs before every send |
-| A number without a country code is configured | Owner replies look like customer messages | 9 to 15 digits and a refusal when entered; `status` shows the normalized numbers |
+| A number without a country code is configured | Owner replies look like customer messages | Parsed to E.164 with the business number's country as default; the E.164 form is shown back before storing; `status` shows the normalized numbers |
 | `FindOutgoing` links a staff message of the same text | The freshness check treats it as Deputy's | Exactly one match per part, an unknown outcome only, a 120-second skew window |
 | Provider `Date` header skew on a Deputy send | A sent message sorts a few seconds off | Order uses sent time; the skew is below the overlap, and the echo is the same row |
 | The business number is not set | Every owner reply looks like a customer message | Setup treats it as a required step (FR-INTAKE-01-8); `status` shows the count |
