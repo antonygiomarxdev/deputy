@@ -17,12 +17,14 @@ export class IntakeChatReader implements ChatReader {
     if (!exists.exists) return null;
     const view = await this.intake.readChat.execute({ chat });
     if (view === null) return null;
-    const messages = view.messages.map(toChatMessage);
+    // only the active world counts: a dev message is never the basis of a real draft, nor the reverse
+    const messages = view.messages.map(toChatMessage).filter((m) => m.dev === exists.activeWorldIsDev);
+    const latestCustomer = newest(messages.filter((m) => m.source === "customer"));
     return {
-      hasCustomerMessage: messages.some((m) => m.source === "customer"),
+      hasCustomerMessage: latestCustomer !== null,
       hasNonDevMessage: exists.hasNonDevMessage,
       activeWorldIsDev: exists.activeWorldIsDev,
-      latestCustomer: newest(messages.filter((m) => m.source === "customer")),
+      latestCustomer,
       latest: newest(messages),
     };
   }

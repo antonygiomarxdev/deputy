@@ -56,6 +56,24 @@ describe("describe", () => {
     expect(info?.latest?.id.providerMessageId).toBe("m1");
   });
 
+  test.each([false, true])("FR-DRAFTS-01-8: with activeWorldIsDev %p, latest and latestCustomer come from the active world only", async (activeWorldIsDev) => {
+    const info = await reader({
+      activeWorldIsDev,
+      messages: [
+        view("real", "customer", "real question", 100, { dev: false }),
+        view("test", "customer", "test question", 300, { dev: true }),
+      ],
+    }).describe(chat);
+    const expected = activeWorldIsDev ? "test" : "real";
+    expect(info?.latest?.id.providerMessageId).toBe(expected);
+    expect(info?.latestCustomer?.id.providerMessageId).toBe(expected);
+  });
+
+  test("FR-DRAFTS-01-8: a chat whose only customer messages are in the other world has no customer message", async () => {
+    const info = await reader({ activeWorldIsDev: false, messages: [view("test", "customer", "x", 300, { dev: true })] }).describe(chat);
+    expect(info).toMatchObject({ hasCustomerMessage: false, latestCustomer: null, latest: null });
+  });
+
   test.each([true, false])("FR-DRAFTS-01-8: activeWorldIsDev %p and hasNonDevMessage pass through", async (dev) => {
     const info = await reader({ activeWorldIsDev: dev, hasNonDevMessage: !dev, messages: [view("m1", "customer", "x", 1, { dev })] }).describe(chat);
     expect(info).toMatchObject({ activeWorldIsDev: dev, hasNonDevMessage: !dev });
