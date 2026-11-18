@@ -64,7 +64,7 @@ Not built yet:
 4. Nothing sent without `approve_draft` and your go naming the draft.
 5. Only your own numbers counting as you, with changes to them only through the command line, never through an agent tool.
 
-Known limit: Deputy guards only its own send path, so an agent that has other tools can bypass it. Run it with an agent whose tools you trust.
+Known limit: Deputy controls only its own send path. An agent that has other tools, such as a shell, could reach the provider without Deputy, so choose and limit the agent's tools.
 
 ## Development
 

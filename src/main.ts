@@ -30,10 +30,16 @@ import { SqliteOwnerNumbersRepository } from "./intake/adapters/sqlite/sqlite-ow
 import { SqliteIntakeSettingsRepository } from "./intake/adapters/sqlite/sqlite-intake-settings-repository";
 import { createIntake, createIntakeRuntime, createOwnerNumberCommands, type IntakeEvent, type Provider } from "./intake/index";
 import { IntakeChatReader } from "./drafts/adapters/intake/intake-chat-reader";
-import { draftsTools } from "./drafts/adapters/mcp/drafts-tools";
+import { Sha256Digest } from "./drafts/adapters/crypto/sha256-digest";
+import { UuidIds } from "./drafts/adapters/crypto/uuid-ids";
+import { IntakeCustomerTextCheck } from "./drafts/adapters/intake/intake-customer-text-check";
+import { IntakeSender } from "./drafts/adapters/intake/intake-sender";
+import { approvalTools, draftsTools } from "./drafts/adapters/mcp/drafts-tools";
+import { UnavailableOrderChanger } from "./drafts/adapters/orders/unavailable-order-changer";
 import { UnavailableOrderPreparer } from "./drafts/adapters/orders/unavailable-order-preparer";
+import { UnavailableOrderRecorder } from "./drafts/adapters/orders/unavailable-order-recorder";
 import { SqliteUnitOfWork } from "./drafts/adapters/sqlite/sqlite-unit-of-work";
-import { createDrafts } from "./drafts/index";
+import { createApprovals, createDrafts } from "./drafts/index";
 import { listDraftsTool } from "./composition/mcp/list-drafts-tool";
 import { INSTRUCTIONS } from "./composition/mcp/instructions";
 import { compositionTools } from "./composition/mcp/composition-tools";
@@ -143,13 +149,25 @@ async function serve(): Promise<number> {
     webhookSecret: connection.kapso.webhookSecret?.reveal() ?? null,
   });
 
+  const draftsUnitOfWork = new SqliteUnitOfWork(db, lease);
   const drafts = createDrafts({
     clock,
     lease,
     sessionStartedAt: clock.now(),
-    unitOfWork: new SqliteUnitOfWork(db, lease),
+    unitOfWork: draftsUnitOfWork,
     chats: new IntakeChatReader({ chatExists: intake.chatExists, readChat: intake.readChat }),
     orders: new UnavailableOrderPreparer(),
+  });
+  const approvals = createApprovals({
+    clock,
+    lease,
+    unitOfWork: draftsUnitOfWork,
+    customerText: new IntakeCustomerTextCheck({ isCustomerText: intake.isCustomerText }),
+    sender: new IntakeSender({ sendText: intake.sendText }),
+    orderRecorder: new UnavailableOrderRecorder(),
+    orderChanger: new UnavailableOrderChanger(),
+    digest: new Sha256Digest(),
+    ids: new UuidIds(),
   });
 
   const listener = new LiveListener({
@@ -186,6 +204,8 @@ async function serve(): Promise<number> {
       ...compositionTools({ isOwner: () => supervisor.isOwner, sections: [] }),
       ...intakeTools({ readChat: intake.readChat, listRejections: intake.listRejections, getOwnerNumbers: ownerNumbers.getOwnerNumbers }),
       ...draftsTools(drafts),
+      // Orders is not wired yet, so change_order and delete_order would only ever refuse: only the go that sends is offered
+      ...approvalTools(approvals).filter((t) => t.name === "approve_draft"),
       // Knowledge is not wired yet: no catalog is known, so every check is "unknown"
       listDraftsTool({ listDrafts: drafts.listDrafts, catalogChangedSince: async (since) => since.map(() => "unknown" as const) }),
     ],

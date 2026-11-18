@@ -7,6 +7,10 @@ import { FakeOrderRecorder } from "../../../src/drafts/adapters/memory/fake-orde
 import { FakeSender } from "../../../src/drafts/adapters/memory/fake-sender";
 import { ApproveDraftUseCase } from "../../../src/drafts/application/approve-draft";
 import { ApproveOrderCommandUseCase } from "../../../src/drafts/application/approve-order-command";
+import { CheckApprovalsUseCase } from "../../../src/drafts/application/check-approvals";
+import { ReadDraftLogUseCase } from "../../../src/drafts/application/read-draft-log";
+import { ChangeDraftUseCase } from "../../../src/drafts/application/change-draft";
+import { RejectDraftUseCase } from "../../../src/drafts/application/reject-draft";
 import { CreateDraftUseCase } from "../../../src/drafts/application/create-draft";
 import { ListDraftsUseCase } from "../../../src/drafts/application/list-drafts";
 import { WaitingChatsUseCase } from "../../../src/drafts/application/waiting-chats";
@@ -57,6 +61,10 @@ export function makeDrafts(
   const recorder = new FakeOrderRecorder();
   const changer = new FakeOrderChanger(o.orderChats ?? {});
   const approveDraft = new ApproveDraftUseCase({ clock, lease, unitOfWork, customerText, sender, recorder, digest, ids });
+  const changeDraft = new ChangeDraftUseCase({ clock, lease, unitOfWork, orders });
+  const rejectDraft = new RejectDraftUseCase({ clock, lease, unitOfWork });
+  const readDraftLog = new ReadDraftLogUseCase({ unitOfWork });
+  const checkApprovals = new CheckApprovalsUseCase({ unitOfWork });
   const approveOrderCommand = new ApproveOrderCommandUseCase({ clock, lease, unitOfWork, customerText, changer });
-  return { holder, clock, store, chats, orders, createDraft, listDrafts, waitingChats, sender, customerText, recorder, changer, approveDraft, approveOrderCommand };
+  return { holder, clock, store, chats, orders, createDraft, listDrafts, waitingChats, sender, customerText, recorder, changer, approveDraft, approveOrderCommand, changeDraft, rejectDraft, readDraftLog, checkApprovals };
 }
