@@ -99,3 +99,16 @@ describe("SyncState.markAttempt", () => {
     expect(s.props).toMatchObject({ lastAttemptAt: 500, runStartedAt: 500, connectedAt: null });
   });
 });
+
+describe("a rate limit with no usable wait", () => {
+  test("a retry wait of 0, a negative one or none is the default minute", () => {
+    for (const wait of [0, -5, null, undefined]) {
+      const s = SyncState.initial("kapso");
+      s.fail("usage_limit", 1_000, wait);
+      expect(s.props.retryAt).toBe(61_000);
+    }
+    const s = SyncState.initial("kapso");
+    s.fail("usage_limit", 1_000, 1);
+    expect(s.props.retryAt).toBe(1_001);
+  });
+});
