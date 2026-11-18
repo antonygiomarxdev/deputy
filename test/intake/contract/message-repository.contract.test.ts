@@ -126,6 +126,16 @@ for (const subject of subjects) {
       expect(await s.repos.messages.newestStoredAt("kapso")).not.toBe(NOW - 50 * DAY);
     });
 
+    test("ownerOrDeputy covers owner_app and sent_through_deputy, and nothing else", async () => {
+      await s.repos.messages.insertIfNew(receive({ providerMessageId: "cust", sentAt: 300 }));
+      await s.repos.messages.insertIfNew(receive({ providerMessageId: "mine", sentAt: 200, direction: "outbound", from: "+5491100000000" }, { owners: await ownersWith("+5491100000000") }));
+      await s.repos.messages.insertIfNew(receive({ providerMessageId: "deputy", sentAt: 250, direction: "outbound", from: null }, { matchesSend: true }));
+      expect((await s.repos.messages.find({ provider: "kapso", providerMessageId: "deputy" }))?.props.source).toBe("sent_through_deputy");
+      expect(await s.repos.messages.newestStoredBefore("kapso", { ownerOrDeputy: true }, 1_000)).toBe(250);
+      expect(await s.repos.messages.newestStoredBefore("kapso", { ownerOrDeputy: true }, 250)).toBe(200);
+      expect(await s.repos.messages.newestStoredBefore("kapso", { ownerOrDeputy: true }, 200)).toBeNull();
+    });
+
     test("outgoing: findByProviderId finds a part by its provider id", async () => {
       const sendId = parseSendId("send-1");
       if (!sendId) throw new Error("send id");
