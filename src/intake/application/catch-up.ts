@@ -11,6 +11,7 @@ import { ProviderError, type Cursor, type Provider } from "../ports/provider";
 import type { RunCoordinator } from "./run-coordinator";
 import type { StoreMessages } from "./store-messages";
 import type { StorageFailureLog } from "./storage-failure-log";
+import { publishEach } from "./publish-each";
 import { probeGap } from "./gap-probe";
 import { buildSyncStatusView } from "./status-view";
 import { readAll, RunBudget, RunStopped, RunTotals, sweepConversations, sweepOutbound } from "./sweeps";
@@ -147,7 +148,6 @@ export class CatchUpUseCase implements CatchUp {
     }
   }
 
-  /** Each event is published on its own: a subscriber that throws must not stop the next one. */
   private publish(totals: RunTotals, status: "complete" | "failed", reason: StoredReason | null, finishedAt: number): void {
     const { provider, publisher } = this.d;
     const summaries = totals.summaries();
@@ -162,12 +162,6 @@ export class CatchUpUseCase implements CatchUp {
       storedCount: totals.stored,
       finishedAt,
     });
-    for (const e of events) {
-      try {
-        publisher.publish(e);
-      } catch (err) {
-        console.error(`deputy: a subscriber failed on ${e.name} (${err instanceof Error ? err.name : "unknown error"})`);
-      }
-    }
+    publishEach(publisher, events);
   }
 }
