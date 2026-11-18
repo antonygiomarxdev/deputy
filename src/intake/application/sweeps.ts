@@ -1,6 +1,7 @@
 import type { Instant } from "../../shared/instant";
 import type { Clock } from "../../shared/clock";
 import { MAX_PAGES, PAGE_SIZE } from "../domain/constants";
+import type { ListingRead } from "./gap-probe";
 import type { StoredReason, SyncState } from "../domain/sync-state";
 import type { IntakeUnitOfWork } from "../ports/intake-unit-of-work";
 import { ProviderError, toCursor, type Cursor, type Provider, type ProviderConversation, type ProviderMessage, type Page } from "../ports/provider";
@@ -11,6 +12,8 @@ export class RunTotals {
   stored = 0;
   /** A page was stored or a mark moved in this run: what separates a run that is catching up from one that is stuck. */
   moved = false;
+  /** The listings read in this run, for the gap probe. */
+  readonly listings: ListingRead[] = [];
   unlinkedOwnerReplies = 0;
   private readonly counts = new Map<string, StoredSummary>();
 
@@ -91,6 +94,9 @@ export async function readAll<T>(
 }
 
 /** Stores one page in its own transaction, oldest item first, so a failure keeps what was stored. */
+const olderOf = (oldest: Instant | null, items: readonly ProviderMessage[]): Instant | null =>
+  items.reduce<Instant | null>((acc, m) => (acc === null || m.sentAt < acc ? m.sentAt : acc), oldest);
+
 export async function storePage(d: SweepDeps, items: readonly ProviderMessage[]): Promise<number> {
   const events = [...items].reverse().map((message) => ({ kind: "message" as const, message }));
   const outcome = await d.uow.run((r) => d.store.store(r, { provider: d.provider.name, events }));
@@ -110,6 +116,8 @@ export async function sweepConversations(
   for (const conversation of ordered) {
     let cursor: Cursor | null = null;
     const walk = new PageWalk();
+    let oldest: Instant | null = null;
+    let exhausted = false;
     for (;;) {
       d.budget.check();
       walk.request(cursor);
@@ -118,11 +126,16 @@ export async function sweepConversations(
         d.signal,
       );
       d.state.countStored(await storePage(d, page.items));
+      oldest = olderOf(oldest, page.items);
       const from = d.from;
       const reachedOlder = from !== null && page.items.some((m) => m.sentAt < from);
-      if (reachedOlder || page.next === null) break;
+      if (reachedOlder || page.next === null) {
+        exhausted = page.next === null;
+        break;
+      }
       cursor = page.next;
     }
+    d.totals.listings.push({ scope: { conversationRef: conversation.ref }, exhausted, oldestReturned: oldest });
     d.state.advanceConversations(conversation.lastActiveAt);
     d.totals.moved = true;
     await d.uow.run((r) => r.syncState.save(d.state));
@@ -142,6 +155,8 @@ export async function sweepOutbound(d: SweepDeps & { state: SyncState; from: Ins
   let runStart = continuing ? saved.runStart : d.providerNow;
   let firstRequest = true;
   let walk = new PageWalk();
+  let oldest: Instant | null = null;
+  let exhausted = false;
   for (;;) {
     let page: Page<ProviderMessage>;
     d.budget.check();
@@ -158,13 +173,18 @@ export async function sweepOutbound(d: SweepDeps & { state: SyncState; from: Ins
     }
     firstRequest = false;
     d.state.countStored(await storePage(d, page.items));
+    oldest = olderOf(oldest, page.items);
     const from = d.from;
     const reachedOlder = from !== null && page.items.some((m) => m.sentAt < from);
-    if (reachedOlder || page.next === null) break;
+    if (reachedOlder || page.next === null) {
+      exhausted = page.next === null;
+      break;
+    }
     cursor = page.next;
     d.state.saveOutboundResume({ cursor, from: d.from, runStart });
     d.totals.moved = true;
     await d.uow.run((r) => r.syncState.save(d.state));
   }
+  d.totals.listings.push({ scope: { ownerOrDeputy: true }, exhausted, oldestReturned: oldest });
   d.state.completeOutbound(runStart);
 }
