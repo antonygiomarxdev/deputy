@@ -3,6 +3,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { closedPort } from "./fake-kapso-server";
 
 const root = join(import.meta.dir, "..", "..");
 
@@ -14,19 +15,26 @@ export interface Harness {
   protocolErrors: Error[];
   dataDir: string;
   configDir: string;
+  /** The loopback port the live listener uses (DEPUTY_PORT). */
+  port: number;
   /** Closes stdin and waits for the process; returns how long that took in ms. */
   close(): Promise<number>;
 }
 
-export async function startServer(env: Record<string, string> = {}): Promise<Harness> {
-  const base = mkdtempSync(join(tmpdir(), "deputy-e2e-"));
-  const dataDir = join(base, "data");
-  const configDir = join(base, "config");
+/** `reuse` starts the server again on the folders of an earlier run (for example after seeding the database). */
+export async function startServer(
+  env: Record<string, string> = {},
+  reuse?: { dataDir: string; configDir: string },
+): Promise<Harness> {
+  const base = reuse === undefined ? mkdtempSync(join(tmpdir(), "deputy-e2e-")) : null;
+  const dataDir = reuse?.dataDir ?? join(base ?? "", "data");
+  const configDir = reuse?.configDir ?? join(base ?? "", "config");
   mkdirSync(configDir, { recursive: true });
+  const port = Number(env["DEPUTY_PORT"] ?? (await closedPort()));
   const transport = new StdioClientTransport({
     command: process.execPath,
     args: [join(root, "src", "main.ts"), "serve"],
-    env: { DEPUTY_DATA_DIR: dataDir, DEPUTY_CONFIG_DIR: configDir, ...env },
+    env: { DEPUTY_DATA_DIR: dataDir, DEPUTY_CONFIG_DIR: configDir, DEPUTY_PORT: String(port), ...env },
     stderr: "pipe",
   });
   let err = "";
@@ -41,6 +49,7 @@ export async function startServer(env: Record<string, string> = {}): Promise<Har
     protocolErrors,
     dataDir,
     configDir,
+    port,
     async close() {
       const t0 = performance.now();
       await transport.close();
@@ -60,4 +69,13 @@ export function writeConfig(dir: string, obj: Record<string, unknown>): void {
 
 export async function call(client: Client, name: string, args: Record<string, unknown> = {}) {
   return client.callTool({ name, arguments: args });
+}
+
+/** Waits until the server has acquired the lease and started what it starts when it owns it. */
+export async function waitForOwner(h: Harness, timeoutMs = 5_000): Promise<void> {
+  const until = Date.now() + timeoutMs;
+  while (!h.stderr().includes("deputy: owner of")) {
+    if (Date.now() > until) throw new Error(`the server never became owner; stderr: ${h.stderr()}`);
+    await new Promise((r) => setTimeout(r, 25));
+  }
 }
