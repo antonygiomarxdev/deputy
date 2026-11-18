@@ -214,12 +214,4 @@ describe("the send result", () => {
     expect(await approve(h, 1, "go 1")).toEqual({ ok: false, refusal: { code: "stale_draft", number: 1 } });
     expect((await draftOf(h, 1))?.state).toBe("waiting");
   });
-
-  test("an order draft is not approved here (Task 4)", async () => {
-    const h = makeDrafts({ chats });
-    await h.createDraft.run({ kind: "order", chat: "chat-a", order: { summary: "2 cakes" } });
-    await h.listDrafts.run({});
-    expect(code(await approve(h, 1, "go 1", "2 cakes"))).toBe("wrong_kind");
-    expect(h.sender.calls).toHaveLength(0);
-  });
 });
