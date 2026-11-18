@@ -12,6 +12,7 @@ import type { ProviderEvent, ProviderMessage } from "../../../src/intake/ports/p
 import { lineChatId, UNATTRIBUTED_CHAT, type ChatId } from "../../../src/shared/chat-id";
 import { PhoneNumber } from "../../../src/shared/phone-number";
 import type { ProviderName } from "../../../src/shared/provider-name";
+import type { SendId } from "../../../src/shared/send-id";
 import { FakeClock } from "../../support/fake-clock";
 import { providerMessage } from "../../support/intake-fixtures";
 
@@ -134,6 +135,19 @@ describe("read use cases", () => {
       expect(view).toMatchObject({ chat, unattributedStoredAt: 2_000, lastAnswerSource: "owner_app", lastAnswerAt: 1_800 });
     });
 
+    test("the later of the unattributed echo and a real answer wins, with its source", async () => {
+      await arrive([msg({ providerMessageId: "c1", sentAt: 1_100 })], 1_500);
+      await arrive([msg({ providerMessageId: "o1", direction: "outbound", from: OWNER, counterpart: CUSTOMER, sentAt: 2_000 })], 2_100);
+      await arrive([msg({ providerMessageId: "x1", direction: "outbound", from: null, counterpart: CUSTOMER, sentAt: 2_500 })], 2_600);
+      const [later] = await listChats().execute({});
+      expect(later).toMatchObject({ lastAnswerAt: 2_500, lastAnswerSource: "owner_app", lastUnattributedAt: 2_500 });
+
+      store.addOutgoingPart("kapso", "s1", "send-1" as SendId, 1);
+      await arrive([msg({ providerMessageId: "s1", direction: "outbound", from: null, counterpart: CUSTOMER, sentAt: 3_000 })], 3_100);
+      const [newer] = await listChats().execute({});
+      expect(newer).toMatchObject({ lastAnswerAt: 3_000, lastAnswerSource: "sent_through_deputy" });
+    });
+
     test("TP-02 extra: an echo stored after a draft has a later unattributedStoredAt than the draft's mark", async () => {
       const draftMark = 1_500;
       await arrive([msg({ providerMessageId: "c1", sentAt: 1_100 })], draftMark);
@@ -175,6 +189,12 @@ describe("read use cases", () => {
       await arrive([msg({ providerMessageId: "c1", text: "👍" })], 2_000);
       expect(await new IsCustomerTextUseCase(store.repos).execute({ text: "!!!" })).toEqual({ matches: false });
     });
+  });
+
+  test("ReadChat of a chat with no message is null", async () => {
+    expect(await readChat().execute({ chat: "nobody" as ChatId })).toBeNull();
+    await arrive([msg({ providerMessageId: "c1" })], 2_000);
+    expect(await readChat().execute({ chat: otherChat })).toBeNull();
   });
 
   test("FR-INTAKE-02-12: an edited message shows edited and its earlier text", async () => {
