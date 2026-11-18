@@ -67,7 +67,7 @@ function gate(state: DraftState, unknownAllowed: boolean): Refused | null {
 
 export type ApproveChange =
   | { readonly ok: true; readonly approval: Approval; readonly events: readonly DraftEvent[] }
-  | { readonly ok: false; readonly reason: "closed" | "in_flight" | "not_shown" | "text_differs" };
+  | { readonly ok: false; readonly reason: "closed" | "in_flight" | "not_shown" | "text_differs" | "already_approved" };
 
 export class Draft {
   private constructor(private s: DraftSnapshot) {}
@@ -188,6 +188,7 @@ export class Draft {
   }): ApproveChange {
     if (CLOSED_STATES.includes(this.s.state)) return { ok: false, reason: "closed" };
     if (IN_FLIGHT.includes(this.s.state)) return { ok: false, reason: "in_flight" };
+    if (this.s.approval !== null && this.s.approval.voidedAt === null) return { ok: false, reason: "already_approved" };
     if (this.s.shownVersion !== this.s.textVersion) return { ok: false, reason: "not_shown" };
     if (input.shownText !== this.s.currentText) return { ok: false, reason: "text_differs" };
     const approval: Approval = {

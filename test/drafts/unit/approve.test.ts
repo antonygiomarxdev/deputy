@@ -43,6 +43,17 @@ describe("approve", () => {
     expect(d.approve(go({ shownText: "v2" }))).toEqual({ ok: false, reason: "not_shown" });
   });
 
+  test("a draft that holds a live approval is not approved again; a voided one is replaced", () => {
+    const d = draft();
+    expect(d.approve(go()).ok).toBe(true);
+    expect(d.approve(go({ approvalId: "ap2", sendId: "deputy:ap2" }))).toEqual({ ok: false, reason: "already_approved" });
+    const held = d.snapshot().approval;
+    if (!held) throw new Error("no approval");
+    expect(held.id).toBe("ap1");
+    const voided = Draft.rehydrate({ ...d.snapshot(), approval: { ...held, voidedAt: 3_000, voidReason: "changed" } });
+    expect(voided.approve(go({ approvalId: "ap2", sendId: "deputy:ap2" })).ok).toBe(true);
+  });
+
   test.each(["held", "failed", "unknown"] as const)("a %s draft can be approved", (state) => {
     expect(draft("reply", state).approve(go()).ok).toBe(true);
   });
