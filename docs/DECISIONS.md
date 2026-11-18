@@ -18,6 +18,13 @@ Product decisions made by the owner, and design decisions the lead made while re
 | D10 | 2026-11-17 | **Media in v1.** Deputy stores that a media message arrived and its type. If the provider gives a transcript, it is shown as customer text. |
 | D11 | 2026-11-17 | **Known limit.** Deputy offers no way to send except an approved draft. An agent with other tools could bypass Deputy; the documents say so instead of claiming it is impossible. |
 | D12 | 2026-11-17 | **Receiving.** By default Deputy checks the provider when the session opens and then periodically while it is open (default every 2 minutes, minimum 1). No public address is needed. Live delivery is an optional advanced setting. Setup asks the owner which mode they want and explains the difference. |
+| D13 | 2026-11-17 | **Document chain.** After the FRDs comes a cross-cutting TP, then 1..N TPs per FRD with an ADR for each choice, then one spec per FRD, then implementation with ATDD. The FRDs' Given/When/Then tests are acceptance criteria. |
+| D14 | 2026-11-17 | **Architecture.** Ports and adapters (hexagonal) with DDD and clean architecture. Each slice is a bounded context with domain, application, ports and adapters; a composition root wires them; an architecture test enforces the dependency rule. The previous code's structure is not kept. |
+| D15 | 2026-11-17 | **Order scrub (L6).** The drafts log only grows, with one narrow, tested exception: deleting an order replaces the owner's words in its entries with "deleted". |
+| D16 | 2026-11-17 | **Second session.** A session that is not the owner is read-only: it cannot create drafts, approve or send. |
+| D17 | 2026-11-17 | **Packaging.** v1 ships as a compiled binary, so the owner does not need Bun installed. The package name is decided before launch. |
+| D18 | 2026-11-17 | **First live agents.** Live checks (stdio idle timeout, server instructions) run first on Claude Code, then Codex. |
+| D19 | 2026-11-17 | **Sensitive settings.** Provider, receiving mode, push and secrets change only through the owner's own terminal command, never through an agent tool. Setup shows the command, waits, and confirms the result. |
 
 ## Lead decisions (design, from the reviews)
 
