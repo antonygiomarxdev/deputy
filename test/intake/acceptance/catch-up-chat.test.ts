@@ -263,6 +263,21 @@ describe("CatchUpChat", () => {
     expect(e?.name === "MessageStored" && [e.origin, e.items]).toEqual(["catch_up", [{ chat: CHAT, source: "owner_app", count: 1 }]]);
   });
 
+  test("an owner reply with no sender is stored as unattributed and announced once as OwnerReplyUnlinked", async () => {
+    provider.hold("c1", "5491123456789", [msg("a", NOW - 5_000)]);
+    await catchUp().execute({ trigger: "timer" });
+    publisher.published.length = 0;
+    provider.outbound = [providerMessage({ providerMessageId: "unlinked", direction: "outbound", from: null, sentAt: NOW + 1_000, conversationRef: "c1" })];
+    provider.serverTime = NOW + 2_000;
+    const result = await chatUseCase().execute({ chat: CHAT });
+    expect(result).toMatchObject({ kind: "fresh", newMessages: 1 });
+    expect((await store.repos.messages.find({ provider: "kapso", providerMessageId: "unlinked" }))?.props.mark).toBe("not_attributable");
+    expect(publisher.published.filter((e) => e.name === "OwnerReplyUnlinked")).toHaveLength(1);
+    expect(storedEvents()).toHaveLength(1);
+    await chatUseCase().execute({ chat: CHAT });
+    expect(publisher.published.filter((e) => e.name === "OwnerReplyUnlinked")).toHaveLength(1);
+  });
+
   test("a subscriber that throws does not fail the read", async () => {
     provider.hold("c1", "5491123456789", [msg("a", NOW - 5_000)]);
     const throwing: EventPublisher = {
