@@ -194,6 +194,20 @@ describe("the send result", () => {
     expect(h.sender.calls).toHaveLength(1);
   });
 
+  test("a second go after an unknown outcome gets a new send id and is really sent", async () => {
+    const h = makeDrafts({ chats });
+    await threeListed(h);
+    h.sender.result = { kind: "unknown", partsSent: 0, partsTotal: 1 };
+    expect(await approve(h, 1, "go 1")).toMatchObject({ ok: true, value: { outcome: "unknown" } });
+    expect((await draftOf(h, 1))?.state).toBe("unknown");
+    await h.listDrafts.run({}); // the unknown outcome cleared the shown mark
+    h.sender.result = { kind: "sent" };
+    expect(await approve(h, 1, "go 1 again")).toMatchObject({ ok: true, value: { outcome: "sent", sendId: "deputy:ap2" } });
+    expect(h.sender.calls.map((c) => c.sendId)).toEqual(["deputy:ap1", "deputy:ap2"]);
+    expect((await approvals(h, 1)).map((a) => [a.id, a.sendId])).toEqual([["ap1", "deputy:ap1"], ["ap2", "deputy:ap2"]]);
+    expect((await draftOf(h, 1))?.state).toBe("sent");
+  });
+
   test("a refused send is not_owner and leaves the draft sending", async () => {
     const h = makeDrafts({ chats });
     await threeListed(h);
