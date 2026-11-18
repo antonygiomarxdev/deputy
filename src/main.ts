@@ -36,7 +36,7 @@ import { Sha256Digest } from "./drafts/adapters/crypto/sha256-digest";
 import { UuidIds } from "./drafts/adapters/crypto/uuid-ids";
 import { IntakeCustomerTextCheck } from "./drafts/adapters/intake/intake-customer-text-check";
 import { IntakeSender } from "./drafts/adapters/intake/intake-sender";
-import { approvalTools, draftsTools } from "./drafts/adapters/mcp/drafts-tools";
+import { approvalTools, draftsTools, logTools } from "./drafts/adapters/mcp/drafts-tools";
 import { UnavailableOrderChanger } from "./drafts/adapters/orders/unavailable-order-changer";
 import { UnavailableOrderPreparer } from "./drafts/adapters/orders/unavailable-order-preparer";
 import { UnavailableOrderRecorder } from "./drafts/adapters/orders/unavailable-order-recorder";
@@ -212,6 +212,7 @@ async function serve(): Promise<number> {
       }),
       ...intakeTools({ readChat: intake.readChat, listRejections: intake.listRejections, catchUp: intake.catchUp }),
       ...draftsTools(drafts),
+      ...logTools(drafts),
       // Orders is not wired yet, so change_order and delete_order would only ever refuse: only the go that sends is offered
       ...approvalTools(approvals).filter((t) => t.name === "approve_draft"),
       // Knowledge is not wired yet: no catalog is known, so every check is "unknown"
