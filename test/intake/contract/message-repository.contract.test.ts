@@ -1,7 +1,15 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { parseChatId, type ChatId } from "../../../src/shared/chat-id";
 import { parseSendId } from "../../../src/shared/send-id";
+import { OwnerNumbers } from "../../../src/intake/domain/owner-numbers";
+import { PhoneNumber } from "../../../src/shared/phone-number";
 import { receive } from "../../support/intake-fixtures";
+
+async function ownersWith(number: string): Promise<OwnerNumbers> {
+  const n = PhoneNumber.fromInternational(number);
+  if (!n) throw new Error(number);
+  return OwnerNumbers.of([{ number: n, kind: "business", label: "", addedAt: 1 }]);
+}
 import { subjects, type IntakeSubject } from "../../support/intake-subjects";
 
 const chat = (s: string): ChatId => {
@@ -95,6 +103,27 @@ for (const subject of subjects) {
       await s.repos.messages.insertIfNew(m);
       await s.repos.messages.markDeleted(m.props.id);
       expect((await s.repos.messages.find(m.props.id))?.props.deletedBySender).toBe(true);
+    });
+
+    test("FR-INTAKE-03-13: the gap queries look under the provider, ignoring the dev world", async () => {
+      const DAY = 86_400_000;
+      const NOW = 100 * DAY;
+      const ownerReply = receive(
+        { providerMessageId: "owner", direction: "outbound", from: "+5491100000000", sentAt: NOW - 10 * DAY, conversationRef: "c1" },
+        { owners: await ownersWith("+5491100000000") },
+      );
+      await s.repos.messages.insertIfNew(ownerReply);
+      await s.repos.messages.insertIfNew(receive({ providerMessageId: "cust", sentAt: NOW - 3 * DAY, conversationRef: "c1" }));
+      await s.repos.messages.insertIfNew(receive({ providerMessageId: "dev", sentAt: NOW - 50 * DAY }, { provider: "dev" }));
+
+      expect(await s.repos.messages.newestStoredBefore("kapso", { ownerOrDeputy: true }, NOW - 3 * DAY)).toBe(NOW - 10 * DAY);
+      expect(await s.repos.messages.newestStoredBefore("kapso", { ownerOrDeputy: true }, NOW - 10 * DAY)).toBeNull();
+      expect(await s.repos.messages.newestStoredBefore("kapso", { conversationRef: "c1" }, NOW)).toBe(NOW - 3 * DAY);
+      expect(await s.repos.messages.newestStoredBefore("kapso", { conversationRef: "other" }, NOW)).toBeNull();
+      expect(await s.repos.messages.newestStoredAt("kapso")).toBe(NOW - 3 * DAY);
+      expect(await s.repos.messages.oldestStoredAt("kapso")).toBe(NOW - 10 * DAY);
+      expect(await s.repos.messages.oldestStoredAt("dev")).toBe(NOW - 50 * DAY);
+      expect(await s.repos.messages.newestStoredAt("kapso")).not.toBe(NOW - 50 * DAY);
     });
 
     test("outgoing: findByProviderId finds a part by its provider id", async () => {
