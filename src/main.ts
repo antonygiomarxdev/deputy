@@ -22,7 +22,9 @@ import { FileConnectionConfig } from "./intake/adapters/config/file-connection-c
 import { DevProvider } from "./intake/adapters/dev/dev-provider";
 import { LiveListener } from "./intake/adapters/http/listener";
 import { KapsoProvider } from "./intake/adapters/kapso/kapso-provider";
-import { intakeTools } from "./intake/adapters/mcp/intake-tools";
+import { formatSyncStatus, intakeTools } from "./intake/adapters/mcp/intake-tools";
+import { CatchUpScheduler } from "./intake/adapters/scheduler/catch-up-scheduler";
+import { SqliteIntakeSettingsRepository } from "./intake/adapters/sqlite/sqlite-intake-settings-repository";
 import { LibphonenumberParser } from "./intake/adapters/phone/libphonenumber-parser";
 import { SqliteIntakeUnitOfWork } from "./intake/adapters/sqlite/sqlite-intake-unit-of-work";
 import { createSqliteIntakeRepos } from "./intake/adapters/sqlite/sqlite-intake-repos";
@@ -42,6 +44,7 @@ import { createApprovals, createDrafts } from "./drafts/index";
 import { listDraftsTool } from "./composition/mcp/list-drafts-tool";
 import { INSTRUCTIONS } from "./composition/mcp/instructions";
 import { compositionTools } from "./composition/mcp/composition-tools";
+import { ownerHooks } from "./composition/owner-hooks";
 import { createMcpServer } from "./composition/mcp/server";
 import pkg from "../package.json" with { type: "json" };
 
@@ -132,7 +135,9 @@ async function serve(): Promise<number> {
     provider,
     receiving: resolved.receiving,
     webhookSecret: connection.kapso.webhookSecret?.reveal() ?? null,
+    settings: new SqliteIntakeSettingsRepository(db),
   });
+  const scheduler = new CatchUpScheduler({ catchUp: intake.catchUp, settings: intake.getIntakeSettings, clock });
 
   const draftsUnitOfWork = new SqliteUnitOfWork(db, lease);
   const drafts = createDrafts({
@@ -162,20 +167,19 @@ async function serve(): Promise<number> {
   });
   const listens = resolved.provider === "dev" || resolved.receiving === "live";
 
+  const hooks = ownerHooks({
+    markInterruptedSends: () => intake.markInterruptedSends.execute(),
+    listener,
+    listens,
+    scheduler,
+    ownerLine: `deputy: owner of ${dataDir} (config ${configDir}, provider ${resolved.provider})`,
+    log: (line) => console.error(line),
+  });
   const supervisor = new LeaseSupervisor({
     lease,
     clock,
-    onAcquired: async () => {
-      // first: a send cut off by a stop or a crash is unknown, before the scheduler or the listener can send or report anything
-      const { marked } = await intake.markInterruptedSends.execute();
-      if (marked > 0) console.error(`deputy: ${marked} interrupted send(s) are now unknown`);
-      if (listens) await listener.start();
-      console.error(`deputy: owner of ${dataDir} (config ${configDir}, provider ${resolved.provider})`);
-    },
-    onLost: async () => {
-      await listener.stop();
-      console.error("deputy: lost the owner lease");
-    },
+    onAcquired: hooks.onAcquired,
+    onLost: hooks.onLost,
   });
 
   const mcp = createMcpServer({
@@ -183,8 +187,11 @@ async function serve(): Promise<number> {
     version: pkg.version,
     instructions: INSTRUCTIONS,
     tools: [
-      ...compositionTools({ isOwner: () => supervisor.isOwner, sections: [] }),
-      ...intakeTools({ readChat: intake.readChat, listRejections: intake.listRejections }),
+      ...compositionTools({
+        isOwner: () => supervisor.isOwner,
+        sections: [async () => formatSyncStatus(await intake.getSyncStatus.execute())],
+      }),
+      ...intakeTools({ readChat: intake.readChat, listRejections: intake.listRejections, catchUp: intake.catchUp }),
       ...draftsTools(drafts),
       // Orders is not wired yet, so change_order and delete_order would only ever refuse: only the go that sends is offered
       ...approvalTools(approvals).filter((t) => t.name === "approve_draft"),
