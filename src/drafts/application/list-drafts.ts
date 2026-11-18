@@ -22,7 +22,7 @@ export class ListDraftsUseCase implements ListDrafts {
     let filter: { chat?: NonNullable<ReturnType<typeof parseChatId>> } = {};
     if (input.chat !== undefined) {
       const chat = parseChatId(input.chat);
-      if (chat === null) return { ok: true, value: [] };
+      if (chat === null) return refuse({ code: "chat_not_found" });
       filter = { chat };
     }
 

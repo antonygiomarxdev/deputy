@@ -8,7 +8,7 @@ export class WaitingChatsUseCase implements WaitingChats {
 
   /** A pure read: no lease check. No draft text is returned. */
   async run(): Promise<WaitingChat[]> {
-    const open = await this.deps.unitOfWork.run((tx) => tx.drafts.listOpen(), { requireLease: false });
+    const open = await this.deps.unitOfWork.read((tx) => tx.drafts.listOpen());
     return open.map((draft) => {
       const d = draft.snapshot();
       const state = d.state === "sending" || d.state === "recording" ? "waiting" : d.state;

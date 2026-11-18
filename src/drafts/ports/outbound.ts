@@ -25,7 +25,14 @@ export interface Transaction {
   readonly log: DraftLogRepository;
 }
 
+/** What a pure read may use: no write method, and no transaction (so no write lock). */
+export interface ReadTransaction {
+  readonly drafts: Pick<DraftRepository, "get" | "openFor" | "listOpen">;
+}
+
 export interface UnitOfWork {
+  /** A read that takes no write lock and needs no lease. */
+  read<T>(work: (tx: ReadTransaction) => Promise<T>): Promise<T>;
   run<T>(
     work: (tx: Transaction) => Promise<T>,
     options?: { requireLease?: boolean }, // default true: a write checks the lease; pure reads pass false

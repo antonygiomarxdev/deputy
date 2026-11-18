@@ -65,12 +65,12 @@ describe("ListDrafts", () => {
     expect((await h.store.unitOfWork.run((tx) => tx.drafts.get(1)))?.snapshot().shownVersion).toBeNull();
   });
 
-  test("the chat filter narrows the list; a chat id that does not parse gives an empty list", async () => {
+  test("the chat filter narrows the list; a chat id that does not parse is refused as chat_not_found", async () => {
     const h = makeDrafts({ chats });
     await h.createDraft.run({ kind: "reply", chat: "chat-a", text: "a" });
     await h.createDraft.run({ kind: "reply", chat: "chat-b", text: "b" });
     expect((await list(h, "chat-b")).map((v) => v.chat)).toEqual(["chat-b"]);
-    expect(await list(h, "  ")).toEqual([]);
+    expect(await h.listDrafts.run({ chat: "  " })).toEqual({ ok: false, refusal: { code: "chat_not_found" } });
   });
 
   test("FR-DRAFTS-01-3: an order draft shows catalogChanged from revalidate; a reply shows false", async () => {
@@ -87,6 +87,14 @@ describe("ListDrafts", () => {
     await seed(h, 2, "chat-b", "waiting", 6_000);
     expect((await list(h)).map((v) => v.fromEarlierSession)).toEqual([true, false]);
   });
+});
+
+test("FR-DRAFTS-01-4: a draft made exactly at the session start is not from an earlier session", async () => {
+  const h = makeDrafts({ chats, sessionStartedAt: 5_000 });
+  await seed(h, 1, "chat-a", "waiting", 5_000);
+  await seed(h, 2, "chat-b", "waiting", 4_999);
+  expect((await list(h)).map((v) => v.fromEarlierSession)).toEqual([false, true]);
+  expect((await h.waitingChats.run()).map((w) => w.earlierSession)).toEqual([false, true]);
 });
 
 describe("WaitingChats", () => {
