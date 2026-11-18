@@ -16,7 +16,8 @@ export function buildSyncStatusView(i: {
 }): SyncStatusView {
   const state = i.state ?? SyncState.initial(i.provider);
   const p = state.props;
-  const reason = state.isNotYetRun() ? "not_yet_run" : p.status === "complete" ? null : (p.reason ?? "unreachable");
+  // a failed attempt with no recorded reason is one that could not write its own failure
+  const reason = state.isNotYetRun() ? "not_yet_run" : p.status === "complete" ? null : (p.reason ?? "storage");
   return {
     provider: i.provider,
     status: state.isNotYetRun() ? "failed" : p.status,

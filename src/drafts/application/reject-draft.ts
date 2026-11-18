@@ -7,6 +7,7 @@ import type { Refusal } from "../domain/refusals";
 import type { Outcome, RejectDraft } from "../ports/inbound";
 import type { UnitOfWork } from "../ports/outbound";
 import { refusalOfChange } from "./draft-change-refusal";
+import { voidApprovals, withLiveApproval } from "./live-approval";
 
 const refuse = (refusal: Refusal): Outcome<never> => ({ ok: false, refusal });
 
@@ -21,13 +22,16 @@ export class RejectDraftUseCase implements RejectDraft {
     const number = input.number;
     try {
       return await unitOfWork.run(async (tx): Promise<Outcome<{ number: number; state: "rejected" }>> => {
-        const draft = await tx.drafts.get(number);
-        if (draft === null) return refuse({ code: "draft_not_found", number });
+        const loaded = await tx.drafts.get(number);
+        if (loaded === null) return refuse({ code: "draft_not_found", number });
+        const draft = await withLiveApproval(tx, loaded);
         const before = draft.snapshot();
-        const rejected = draft.reject({ ownerWords: words, now: clock.now() });
+        const now = clock.now();
+        const rejected = draft.reject({ ownerWords: words, now });
         if (!rejected.ok) return refuse(refusalOfChange(number, before.state, rejected.reason));
         await tx.drafts.save(draft);
-        await tx.log.append(toLogEntries(rejected.events, { approvalEntryId: null }));
+        const approvalEntryId = await voidApprovals(tx, rejected.events, number, now);
+        await tx.log.append(toLogEntries(rejected.events, { approvalEntryId }));
         return { ok: true, value: { number, state: "rejected" } };
       });
     } catch (e) {

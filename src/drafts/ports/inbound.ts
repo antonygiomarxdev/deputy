@@ -68,3 +68,13 @@ export type WaitingChat = {
   state: "waiting" | "held" | "failed" | "unknown";
   earlierSession: boolean;
 };
+
+export interface ApproveDraft {
+  run(input: { number: number; shownText: string; ownerWords: string }): Promise<Outcome<ApproveResult>>;
+}
+export type ApproveResult =
+  | { outcome: "sent"; number: number; sendId: string; logged: boolean }
+  | { outcome: "recorded"; number: number; orderId: string }
+  | { outcome: "failed"; number: number; reason: string }
+  | { outcome: "unknown"; number: number; reason: string; detail: string };
+// SPEC-03 adds "held" and "queued".

@@ -79,6 +79,11 @@ export class SyncState {
     return this.p.lastAttemptAt === null;
   }
 
+  /** A run began, whether or not the provider answered: a failed first call is an attempt, not "not yet run". */
+  markAttempt(now: Instant): void {
+    this.p = { ...this.p, lastAttemptAt: now, runStartedAt: now };
+  }
+
   begin(i: { providerTime: Instant; now: Instant }): void {
     this.p = { ...this.p, lastAttemptAt: i.now, runStartedAt: i.now, connectedAt: this.p.connectedAt ?? i.providerTime };
   }
