@@ -1,12 +1,35 @@
 import type { Instant } from "../../src/shared/instant";
 import type { PhoneNumber } from "../../src/shared/phone-number";
 import type { ProviderName } from "../../src/shared/provider-name";
-import type { Cursor, Page, ParsedDelivery, Provider, ProviderConversation, ProviderMessage } from "../../src/intake/ports/provider";
+import type {
+  Cursor,
+  Page,
+  ParsedDelivery,
+  Provider,
+  ProviderConversation,
+  ProviderMessage,
+} from "../../src/intake/ports/provider";
 
-/** A scripted Provider: `verifyAndParse` answers `parsed` and records what it was given; the rest is not scripted. */
+export type ListCall =
+  | { kind: "conversations"; activeAfter: Instant | null; cursor: Cursor | null }
+  | { kind: "messages"; scope: { conversationRef: string } | { outbound: true }; cursor: Cursor | null };
+
+/**
+ * A scripted Provider. `verifyAndParse` answers `parsed`. Listings are served from the scripted data, newest first, in pages of
+ * `pageSize` with offset cursors, and every call is recorded. Sending is not scripted.
+ */
 export class FakeProvider implements Provider {
   parsed: ParsedDelivery = { kind: "malformed" };
   readonly verifyCalls: Array<{ rawBody: Uint8Array; headers: ReadonlyMap<string, string>; secret: string | null }> = [];
+
+  /** The provider clock, as `serverTime` of every listing. */
+  serverTime: Instant = 0;
+  pageSize = 100;
+  conversations: ProviderConversation[] = [];
+  /** Messages by conversation ref, any order; the fake sorts newest first. */
+  messages = new Map<string, ProviderMessage[]>();
+  outbound: ProviderMessage[] = [];
+  readonly calls: ListCall[] = [];
 
   constructor(readonly name: ProviderName = "kapso") {}
 
@@ -19,12 +42,42 @@ export class FakeProvider implements Provider {
     this.parsed = { kind: "ok", events: messages.map((message) => ({ kind: "message", message })) };
   }
 
-  listConversations(_q: { activeAfter: Instant | null; cursor: Cursor | null; limit: number }, _s: AbortSignal): Promise<Page<ProviderConversation>> {
-    return Promise.reject(new Error("FakeProvider: listConversations is not scripted"));
+  /** Holds a conversation with its messages; `lastActiveAt` is the newest message time unless given. */
+  hold(ref: string, counterpart: string, messages: ProviderMessage[], lastActiveAt?: Instant): void {
+    this.messages.set(ref, messages);
+    const newest = Math.max(...messages.map((m) => m.sentAt));
+    this.conversations = [
+      ...this.conversations.filter((c) => c.ref !== ref),
+      { ref, counterpart, group: false, lastActiveAt: lastActiveAt ?? newest },
+    ];
   }
 
-  listMessages(): Promise<Page<ProviderMessage>> {
-    return Promise.reject(new Error("FakeProvider: listMessages is not scripted"));
+  private page<T>(sorted: readonly T[], cursor: Cursor | null): Page<T> {
+    const offset = cursor === null ? 0 : Number(cursor);
+    const items = sorted.slice(offset, offset + this.pageSize);
+    const more = offset + this.pageSize < sorted.length;
+    // the cursor is this fake's own offset string
+    return { items, next: more ? (String(offset + this.pageSize) as Cursor) : null, serverTime: this.serverTime, remaining: null };
+  }
+
+  async listConversations(
+    q: { activeAfter: Instant | null; cursor: Cursor | null; limit: number },
+    _signal: AbortSignal,
+  ): Promise<Page<ProviderConversation>> {
+    this.calls.push({ kind: "conversations", activeAfter: q.activeAfter, cursor: q.cursor });
+    const active = this.conversations
+      .filter((c) => q.activeAfter === null || c.lastActiveAt >= q.activeAfter)
+      .sort((a, b) => b.lastActiveAt - a.lastActiveAt);
+    return this.page(active, q.cursor);
+  }
+
+  async listMessages(
+    q: { scope: { conversationRef: string } | { outbound: true }; cursor: Cursor | null; limit: number },
+    _signal: AbortSignal,
+  ): Promise<Page<ProviderMessage>> {
+    this.calls.push({ kind: "messages", scope: q.scope, cursor: q.cursor });
+    const all = "outbound" in q.scope ? this.outbound : (this.messages.get(q.scope.conversationRef) ?? []);
+    return this.page([...all].sort((a, b) => b.sentAt - a.sentAt), q.cursor);
   }
 
   sendText(_req: { to: PhoneNumber; text: string }, _s: AbortSignal): Promise<{ providerMessageId: string; serverTime: Instant }> {
