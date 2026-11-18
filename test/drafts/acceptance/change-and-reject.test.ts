@@ -4,7 +4,6 @@ import { RejectDraftUseCase } from "../../../src/drafts/application/reject-draft
 import type { Approval } from "../../../src/drafts/domain/approval";
 import { Draft, type DraftSnapshot, type DraftState } from "../../../src/drafts/domain/draft";
 import type { Refusal } from "../../../src/drafts/domain/refusals";
-import type { Transaction, UnitOfWork } from "../../../src/drafts/ports/outbound";
 import type { ChatId } from "../../../src/shared/chat-id";
 import { InMemoryOwnerLease } from "../../support/in-memory-owner-lease";
 import { makeDrafts, message } from "./harness";
@@ -26,35 +25,23 @@ const liveApproval: Approval = {
   voidReason: null,
 };
 
-/** Approvals are stored by SPEC-02; until then a unit of work can hand one to a loaded draft. */
-function withApproval(inner: UnitOfWork, approval: Approval): UnitOfWork {
-  return {
-    read: (work) => inner.read(work),
-    run: (work, options) =>
-      inner.run(
-        (tx) =>
-          work({
-            log: tx.log,
-            drafts: {
-              ...tx.drafts,
-              get: async (n) => {
-                const d = await tx.drafts.get(n);
-                return d === null ? null : Draft.rehydrate({ ...d.snapshot(), approval });
-              },
-            },
-          } satisfies Transaction),
-        options,
-      ),
-  };
-}
-
-function setup(unitOfWork?: (inner: UnitOfWork) => UnitOfWork) {
+function setup() {
   const h = makeDrafts({ chats: { "chat-a": question } });
   const lease = new InMemoryOwnerLease(h.holder, h.clock, "me");
-  const uow = unitOfWork ? unitOfWork(h.store.unitOfWork) : h.store.unitOfWork;
+  const uow = h.store.unitOfWork;
   const change = new ChangeDraftUseCase({ clock: h.clock, lease, unitOfWork: uow, orders: h.orders });
   const reject = new RejectDraftUseCase({ clock: h.clock, lease, unitOfWork: uow });
   return { h, change, reject };
+}
+
+/** Stores the approval and the `approved` log entry of its send, as ApproveDraft will. */
+async function seedApproval(h: ReturnType<typeof makeDrafts>): Promise<number> {
+  await h.store.unitOfWork.run((tx) => tx.approvals.insert({ ...liveApproval, usedAt: 600 }));
+  const [id] = await h.store.log.append([
+    { at: 600, kind: "approved", draft: 1, draftKind: "reply", chat, proposedText: "old", finalText: "old", reason: null, ownerWords: "yes, send it", approvalEntryId: null, sendId: "send-1", orderRef: null },
+  ]);
+  if (id === undefined) throw new Error("no entry id");
+  return id;
 }
 
 async function seed(h: ReturnType<typeof makeDrafts>, state: DraftState, over: Partial<DraftSnapshot> = {}) {
@@ -90,12 +77,17 @@ describe("ChangeDraft", () => {
     expect(entry).toMatchObject({ kind: "text_changed", proposedText: "old", finalText: "new text", ownerWords: "make it shorter" });
   });
 
-  test("FR-DRAFTS-01-5: a live approval is voided and logged", async () => {
-    const { h, change } = setup((inner) => withApproval(inner, liveApproval));
+  test("FR-DRAFTS-01-5: a live approval is voided, logged, and the entry points to the approved entry", async () => {
+    const { h, change } = setup();
     await seed(h, "waiting");
+    const approvedId = await seedApproval(h);
     const out = await change.run({ number: 1, text: "new text", ownerWords: "change it" });
     expect(out).toMatchObject({ ok: true, value: { approvalVoided: true } });
-    expect(await logKinds(h)).toEqual(["text_changed", "approval_voided"]);
+    expect(await logKinds(h)).toEqual(["approved", "text_changed", "approval_voided"]);
+    const voided = (await h.store.log.page({ after: 0, limit: 10 })).at(-1);
+    expect(voided).toMatchObject({ kind: "approval_voided", reason: "changed", approvalEntryId: approvedId, sendId: "send-1" });
+    const [row] = await h.store.unitOfWork.run((tx) => tx.approvals.forDraft(1));
+    expect(row).toMatchObject({ voidedAt: 1_000, voidReason: "changed" });
   });
 
   test("FR-DRAFTS-01-3: a change clears the shown version, so the next ListDrafts shows the new text", async () => {
@@ -157,11 +149,16 @@ describe("RejectDraft", () => {
     expect(refusal(await change.run({ number: 1, text: "x", ownerWords: "y" }))).toEqual({ code: "draft_closed", number: 1, state: "rejected" });
   });
 
-  test("a live approval is voided when a draft is rejected", async () => {
-    const { h, reject } = setup((inner) => withApproval(inner, liveApproval));
+  test("a live approval is voided when a draft is rejected, and the entry points to the approved entry", async () => {
+    const { h, reject } = setup();
     await seed(h, "waiting");
+    const approvedId = await seedApproval(h);
     await reject.run({ number: 1, ownerWords: "no" });
-    expect(await logKinds(h)).toEqual(["rejected", "approval_voided"]);
+    expect(await logKinds(h)).toEqual(["approved", "rejected", "approval_voided"]);
+    const voided = (await h.store.log.page({ after: 0, limit: 10 })).at(-1);
+    expect(voided).toMatchObject({ kind: "approval_voided", reason: "rejected", approvalEntryId: approvedId });
+    const [row] = await h.store.unitOfWork.run((tx) => tx.approvals.forDraft(1));
+    expect(row).toMatchObject({ voidReason: "rejected" });
   });
 });
 

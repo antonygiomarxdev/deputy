@@ -16,5 +16,7 @@ export function refusalOfChange(
       return { code: "outcome_unknown_open", number };
     case "empty_text":
       return { code: "empty_text" };
+    case "not_approvable":
+      return { code: "stale_draft", number }; // an internal error: the draft was not in the state its caller expected
   }
 }

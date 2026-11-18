@@ -14,6 +14,7 @@ import outgoingSql from "./intake/adapters/sqlite/migrations/0004-outgoing.sql" 
 import catchupStatusSql from "./intake/adapters/sqlite/migrations/0005-catchup-status.sql" with { type: "text" };
 import draftsSql from "./drafts/adapters/sqlite/migrations/0001-drafts.sql" with { type: "text" };
 import draftsLogSql from "./drafts/adapters/sqlite/migrations/0002-log.sql" with { type: "text" };
+import draftsApprovalsSql from "./drafts/adapters/sqlite/migrations/0003-approvals.sql" with { type: "text" };
 import { INSTRUCTIONS } from "./composition/mcp/instructions";
 import { compositionTools } from "./composition/mcp/composition-tools";
 import { createMcpServer } from "./composition/mcp/server";
@@ -35,6 +36,7 @@ async function serve(): Promise<number> {
     { name: "0005-catchup-status", sql: catchupStatusSql },
     { name: "0001-drafts", sql: draftsSql },
     { name: "0002-log", sql: draftsLogSql },
+    { name: "0003-approvals", sql: draftsApprovalsSql },
   ], {
     basePath: dbPath,
     copyTo: (p) => copyFile(dbPath, p),
