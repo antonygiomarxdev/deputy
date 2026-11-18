@@ -9,6 +9,11 @@ export const MAX_PART = 4_000;
 
 export type Cursor = string & { readonly __cursor: true };
 
+/** The one place a string becomes a Cursor: adapters build cursors they own the format of. */
+export function toCursor(s: string): Cursor {
+  return s as Cursor;
+}
+
 export interface Page<T> {
   items: readonly T[]; // newest first
   next: Cursor | null; // null: the listing is exhausted
