@@ -38,9 +38,10 @@ export class InMemoryDraftLog implements DraftLogRepository {
     });
   }
 
-  async page(f: { chat?: string; before?: number; after?: number; limit: number }): Promise<LogEntry[]> {
+  async page(f: { chat?: ChatId; before?: number; after?: number; limit: number }): Promise<LogEntry[]> {
     const rows = this.entries.filter((e) => f.chat === undefined || e.chat === f.chat);
-    if (f.after !== undefined) return rows.filter((e) => e.id > (f.after as number)).slice(0, f.limit);
+    const { after } = f;
+    if (after !== undefined) return rows.filter((e) => e.id > after).slice(0, f.limit);
     return rows
       .filter((e) => f.before === undefined || e.id < f.before)
       .reverse()
