@@ -24,3 +24,6 @@ export function createCheckProviderAccess(provider: Provider): CheckProviderAcce
   return new CheckProviderAccessUseCase(provider);
 }
 export type { CheckProviderAccess, Provider };
+
+export type { ChatExists } from "./ports/chat-exists";
+export type { ReadChat } from "./ports/read-chat";

@@ -112,7 +112,7 @@ describe("FR-DRAFTS-01-1", () => {
     });
     const h = makeDrafts({
       ...base,
-      unitOfWork: (store) => ({ run: (work, o) => store.unitOfWork.run((tx) => work({ drafts: tx.drafts, log: failingLog(tx.log) }), o) }),
+      unitOfWork: (store) => ({ read: (work) => store.unitOfWork.read(work), run: (work, o) => store.unitOfWork.run((tx) => work({ drafts: tx.drafts, log: failingLog(tx.log) }), o) }),
     });
     const r = await h.createDraft.run({ kind: "reply", chat: "chat-a", text: "x" });
     expect(r).toEqual({ ok: false, refusal: { code: "log_unavailable" } });
