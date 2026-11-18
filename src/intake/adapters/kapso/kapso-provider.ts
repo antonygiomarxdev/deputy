@@ -18,6 +18,7 @@ import {
   type ProviderMessage,
 } from "../../ports/provider";
 import { verifyHmacSha256Hex } from "../hmac";
+import { Pacer } from "./pacer";
 import {
   conversationPageSchema,
   liveDeliverySchema,
@@ -41,7 +42,6 @@ type Raw = z.infer<typeof messageSchema>;
 
 const SIGNATURE_HEADER = "x-webhook-signature";
 const EVENT_HEADER = "x-webhook-event";
-// shortcut: no pacing (TP-03 TD-2); a 429 ends the run through ProviderError. Upgrade when catch-up pages enough to hit the limit.
 
 function toMessage(m: Raw, conversationRef: string | null): ProviderMessage {
   const outbound = m.kapso.direction === "outbound";
@@ -67,9 +67,11 @@ export class KapsoProvider implements Provider {
   readonly name = "kapso";
   private readonly timeoutMs: number;
   private readonly ignoredEvents = new Map<string, number>();
+  private readonly pacer: Pacer;
 
   constructor(private readonly o: KapsoProviderOptions) {
     this.timeoutMs = o.requestTimeoutMs ?? REQUEST_TIMEOUT_MS;
+    this.pacer = new Pacer(o.clock);
   }
 
   async listConversations(
@@ -201,6 +203,8 @@ export class KapsoProvider implements Provider {
     signal: AbortSignal,
     isSend: boolean,
   ): Promise<{ body: unknown; serverTime: Instant; remaining: number | null }> {
+    // reads keep a reserve of the minute for sends: they wait for the next provider minute when it runs low; sends never wait
+    if (!isSend) await this.pacer.beforeRead();
     const timeout = AbortSignal.timeout(this.timeoutMs);
     let res: Response;
     try {
@@ -235,10 +239,12 @@ export class KapsoProvider implements Provider {
     }
     const date = Date.parse(res.headers.get("date") ?? "");
     const remaining = Number(res.headers.get("x-ratelimit-remaining") ?? "");
-    return {
+    const result = {
       body,
       serverTime: Number.isNaN(date) ? this.o.clock.now() : date,
       remaining: res.headers.has("x-ratelimit-remaining") && Number.isFinite(remaining) ? remaining : null,
     };
+    this.pacer.observe(result);
+    return result;
   }
 }
