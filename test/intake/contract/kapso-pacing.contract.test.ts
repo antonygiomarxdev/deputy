@@ -165,6 +165,15 @@ describe("FR-INTAKE-03-19: reads keep a reserve of the minute", () => {
     expect(clock.now()).toBe(BASE + MIN + 1_000); // it did not wait a second time
   });
 
+  test("a 429 returns at once with the provider's wait and the adapter does not sleep", async () => {
+    const { clock, fake, provider } = setup();
+    fake.burn(100); // the minute is spent: the next request is refused
+    const at = clock.now();
+    await expect(read(provider)).rejects.toMatchObject({ kind: "rate_limited", retryAfterMs: 40_000 });
+    expect(clock.now()).toBe(at);
+    expect(fake.state.rejected).toBe(1);
+  });
+
   test("a read at remaining 10 does not wait (the reserve is below 10)", async () => {
     const { clock, fake, provider } = setup();
     fake.burn(89);
