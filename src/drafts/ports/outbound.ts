@@ -1,6 +1,7 @@
 import type { ChatId } from "../../shared/chat-id";
 import type { Instant } from "../../shared/instant";
 import type { MessageId } from "../../shared/message-id";
+import type { Approval } from "../domain/approval";
 import type { Draft, DraftKind, DraftNumber } from "../domain/draft";
 import type { DraftLogRepository } from "./log";
 
@@ -17,11 +18,21 @@ export interface DraftRepository {
    * The object passed is not changed. Throws StaleDraft when the stored revision differs.
    */
   save(draft: Draft): Promise<void>;
+  /** The normalized text equals the proposed or the current normalized text of any draft, in any state. */
+  hasDraftText(normalized: string): Promise<boolean>;
 }
 
-// SPEC-02 adds `approvals: ApprovalRepository`.
+export interface ApprovalRepository {
+  /** An approval is born used (usedAt is set). Throws on a repeated id or sendId. */
+  insert(approval: Approval): Promise<void>;
+  /** Voids every live (not yet voided) approval of the draft; the rows stay. */
+  void(draft: DraftNumber, reason: string, at: Instant): Promise<void>;
+  forDraft(draft: DraftNumber): Promise<Approval[]>;
+}
+
 export interface Transaction {
   readonly drafts: DraftRepository;
+  readonly approvals: ApprovalRepository;
   readonly log: DraftLogRepository;
 }
 
