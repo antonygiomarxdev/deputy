@@ -24,6 +24,9 @@ export class FakeClock implements Clock {
    * Time passes by itself: when the program is idle (every microtask done) and something sleeps, the clock jumps to the earliest
    * sleeper. Work that only waits on fake time therefore finishes without the test pumping `advance`.
    */
+  // shortcut: idle is detected with a setTimeout(0) macrotask, so it can fire while real I/O (a socket, a file, a child process) is
+  // still pending and jump the clock too early. Use autoAdvance only with fully fake adapters; when a test mixes real I/O with a
+  // fake clock, drive time with advance() instead.
   autoAdvance(on = true): void {
     this.auto = on;
     if (on) this.pump();
