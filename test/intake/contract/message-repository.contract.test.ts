@@ -168,6 +168,27 @@ for (const subject of subjects) {
         expect(await s.sourceChanges()).toEqual([]);
       });
 
+      test("a message that is not owner_app, or is reclassified twice, leaves no false audit row", async () => {
+        const change = (providerMessageId: string, at: number) => ({
+          at,
+          id: { provider: "kapso" as const, providerMessageId },
+          from: "owner_app" as const,
+          to: "sent_through_deputy" as const,
+          sendId,
+        });
+        await s.repos.messages.insertIfNew(receive({ providerMessageId: "cust" }));
+        await s.repos.messages.reclassify({ provider: "kapso", providerMessageId: "cust" }, change("cust", 1_000));
+        expect((await s.repos.messages.find({ provider: "kapso", providerMessageId: "cust" }))?.props.source).toBe("customer");
+        expect(await s.sourceChanges()).toEqual([]);
+
+        const m = await ownerMessage("twice");
+        await s.repos.messages.insertIfNew(m);
+        await s.repos.messages.reclassify(m.props.id, change("twice", 2_000));
+        await s.repos.messages.reclassify(m.props.id, change("twice", 3_000));
+        await s.repos.messages.reclassify({ provider: "kapso", providerMessageId: "unknown-id" }, change("unknown-id", 4_000));
+        expect((await s.sourceChanges()).map((c) => [c.providerMessageId, c.at])).toEqual([["twice", 2_000]]);
+      });
+
       test("a customer message is never reclassified", async () => {
         const m = receive({ providerMessageId: "cust" });
         await s.repos.messages.insertIfNew(m);
