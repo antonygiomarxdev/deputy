@@ -30,6 +30,12 @@ describe("FR-DRAFTS-04-7: drafts_log is append-only", () => {
     await expect(db.run("UPDATE drafts_log SET scrubbed = 0")).rejects.toThrow("append-only");
   });
 
+  test("an entry with no draft kind is never scrubbable (a NULL must not pass the trigger)", async () => {
+    const db = await openLogDatabase();
+    await db.run(insert("rejected", null));
+    await expect(db.run("UPDATE drafts_log SET scrubbed = 1, owner_words = 'deleted'")).rejects.toThrow("append-only");
+  });
+
   test("schema: the trigger lists every column of the table", async () => {
     const db = await openLogDatabase();
     const columns = (await db.query("PRAGMA table_info(drafts_log)")).map((r) => str(r, "name"));

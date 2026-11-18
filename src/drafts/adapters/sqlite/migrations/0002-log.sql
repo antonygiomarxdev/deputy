@@ -29,7 +29,7 @@ CREATE TRIGGER drafts_log_scrub_only BEFORE UPDATE ON drafts_log
 WHEN NOT (
       OLD.scrubbed = 0 AND NEW.scrubbed = 1
   AND (NEW.owner_words IS OLD.owner_words OR NEW.owner_words = 'deleted')
-  AND (OLD.draft_kind = 'order' OR OLD.kind IN ('order_command','order_deleted'))
+  AND (OLD.draft_kind IS 'order' OR OLD.kind IN ('order_command','order_deleted'))
   AND NEW.id IS OLD.id AND NEW.at IS OLD.at AND NEW.kind IS OLD.kind
   AND NEW.draft_number IS OLD.draft_number AND NEW.draft_kind IS OLD.draft_kind
   AND NEW.chat IS OLD.chat AND NEW.proposed_text IS OLD.proposed_text
