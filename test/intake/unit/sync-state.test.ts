@@ -90,3 +90,12 @@ describe("SyncState", () => {
     expect(s.props.firstImportCount).toBe(5);
   });
 });
+
+describe("SyncState.markAttempt", () => {
+  test("a failed first call counts as an attempt without setting connectedAt", () => {
+    const s = SyncState.initial("kapso");
+    s.markAttempt(500);
+    expect(s.isNotYetRun()).toBe(false);
+    expect(s.props).toMatchObject({ lastAttemptAt: 500, runStartedAt: 500, connectedAt: null });
+  });
+});
