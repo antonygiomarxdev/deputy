@@ -1,0 +1,13 @@
+{
+  "id": "wamid.AUDIO1",
+  "timestamp": "1700000200",
+  "type": "audio",
+  "from": "15557654321",
+  "kapso": {
+    "direction": "inbound",
+    "origin": "cloud_api",
+    "has_media": true,
+    "whatsapp_conversation_id": "conv-1",
+    "transcript": { "text": "Do you deliver on Sundays?" }
+  }
+}
