@@ -1,0 +1,15 @@
+{
+  "id": "wamid.TEXT1",
+  "timestamp": "1700000100",
+  "type": "text",
+  "from": "15557654321",
+  "text": { "body": "How much is the cake?" },
+  "kapso": {
+    "direction": "inbound",
+    "status": "delivered",
+    "processing_status": "processed",
+    "origin": "cloud_api",
+    "has_media": false,
+    "whatsapp_conversation_id": "conv-1"
+  }
+}
