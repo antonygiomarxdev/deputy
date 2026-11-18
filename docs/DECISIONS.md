@@ -25,6 +25,9 @@ Product decisions made by the owner, and design decisions the lead made while re
 | D17 | 2026-11-17 | **Packaging.** v1 ships as a compiled binary, so the owner does not need Bun installed. The package name is decided before launch. |
 | D18 | 2026-11-17 | **First live agents.** Live checks (stdio idle timeout, server instructions) run first on Claude Code, then Codex. |
 | D19 | 2026-11-17 | **Sensitive settings.** Provider, receiving mode, push and secrets change only through the owner's own terminal command, never through an agent tool. Setup shows the command, waits, and confirms the result. |
+| D20 | 2026-11-17 | **Language.** Deputy speaks to the agent in fixed codes with an English default; the agent says them in the owner's language. Deputy ships no per-language text catalogs. |
+| D21 | 2026-11-17 | **Currency.** Setup suggests the currency from the owner's country and the owner confirms it; a catalog column may override it per product. |
+| D22 | 2026-11-17 | **Catalog import.** Deputy detects the separator, number format and which column is which, and shows the owner the mapping to confirm once. |
 
 ## Lead decisions (design, from the reviews)
 

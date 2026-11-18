@@ -30,7 +30,7 @@ FR-DRAFTS-02-6 asks Deputy to refuse words that equal any stored customer messag
 - **Option B** Equality only against messages of the draft's own chat, read through the existing `ReadChat`. Cost: no new port. Risk: text copied from another chat passes, so a customer in chat X can feed the words for a draft in chat Y.
 - **Option C** Containment (the words contain a customer message or the reverse). Cost: same port as A. Risk: very many false refusals; "1" is inside most messages.
 
-Chosen: Option A, because FR-DRAFTS-02-6 says "any stored customer message" and Option B leaves a cross-chat hole. Normalization is one function in `src/shared/` (NFKC, lower case, whitespace collapsed, edge punctuation removed) that Intake and Drafts both use. Recorded in ADR-003.
+Chosen: Option A, because FR-DRAFTS-02-6 says "any stored customer message" and Option B leaves a cross-chat hole. Normalization is one function, `normalizeText` in `src/shared/`, that Intake and Drafts both use, defined in the same words in Intake TP-02: NFKC; lower case; every `\p{Nd}` digit mapped to its ASCII digit (NFKC does not map Arabic-Indic, Persian or Devanagari digits); whitespace runs collapsed to one space; leading and trailing `\p{P}`, `\p{S}` and whitespace removed (so Spanish `¡` `¿`, full-width Chinese punctuation and edge emoji go). Recorded in ADR-003.
 
 ### TD-2: How is "one use, once" enforced?
 
@@ -75,11 +75,11 @@ flowchart LR
 Domain additions:
 - `Approval`: `id`, `draftNumber`, `textVersion`, `text`, `textHash`, `ownerWords`, `approvedAt`, `usedAt`, `sendId`, `voidedAt`, `voidReason`.
 - `OwnerWordsPolicy` (pure): `check(words, number | null, draftTexts)`. Steps in order:
-  1. `words` is non-empty after trimming and at most 1000 characters.
+  1. `words` is non-empty after trimming and at most 1000 characters. Why 1000: the words are one sentence of the owner's go (a go naming three drafts is under 100 characters); 1000 is about 150 words, longer than any real go, and it stops an agent from pasting a whole customer thread as "owner words", which would also make the copied-text check meaningless. The words are stored in the log in full, so the cap bounds the log too.
   2. For a draft: the number is a whole token (below). Not applied to order commands.
   3. The normalized words equal no draft's normalized proposed or current text (`DraftRepository.hasDraftText`).
   4. The normalized words equal no stored customer message (`CustomerTextCheck.isCustomerText`, outside the domain, called by the use case).
-- Whole token: after NFKC, find maximal runs of Unicode decimal digits. A run counts as a token unless a digit, then `.` or `,`, then a digit touches it ("3.5" gives none). Token value is compared with the draft number. "go on 1 and 3" names 1 and 3; "13" names 13 only; "3 kilos" names 3 (accepted, a guard). Number words ("the first one") do not count; the refusal says to name the number.
+- Whole token: the rule is the shared function `wholeNumberTokens(words): number[]` in `src/shared/`, in the same file as `normalizeText` (Knowledge's owner-words check uses the same one, so the two slices cannot drift). After `normalizeText` step 3 (every `\p{Nd}` digit is now an ASCII digit, so Arabic-Indic `٣` is `3`), find maximal runs of digits. A run counts as a token unless a digit, then `.`, `,`, `٫` or `٬`, then a digit touches it ("3.5" gives none). Token value is compared with the draft number. "go on 1 and 3" names 1 and 3; "13" names 13 only; "3 kilos" names 3 (accepted, a guard). Number words ("the first one") do not count; the refusal says to name the number.
 - `Draft.approve(shownText, version, now)` guards the state (waiting, held, failed, unknown), `shownVersion = textVersion`, and shown text equals current text. It returns an `Approval` and the events `Approved`. `Draft.startSending(now)` sets "sending" (reply) or "recording" (order). The aggregate is saved once with both, so "approved" is never stored.
 - The send identifier is `deputy:` plus the approval id. It is written with the approval, before the provider is called, so Intake can match an echo (cross-cutting TD-4).
 
@@ -134,7 +134,9 @@ interface ApprovalRepository {
 interface CustomerTextCheck { isCustomerText(words: string): Promise<boolean> }  // calls Intake IsCustomerText
 interface OrderRecorder {                                                        // calls Orders RecordOrder
   record(input: { draftNumber: number; payload: string; ownerWords: string }):
-    Promise<{ ok: true; orderId: string } | { ok: false; reason: string }>;      // idempotent on draftNumber
+    Promise<{ ok: true; orderId: string }
+      | { ok: false; reason: 'outcome_unknown' }                                  // the write may or may not have happened (Orders TD-6)
+      | { ok: false; reason: string }>;                                           // idempotent on draftNumber
 }
 interface TextDigest { sha256(text: string): string }
 interface Ids { next(): string }
@@ -193,6 +195,10 @@ Layers: UC use case with in-memory adapters, D domain unit, C adapter contract (
 | Test | FR ids | Layer |
 |---|---|---|
 | FR-DRAFTS-02-1 "go on 1 and 3" approves drafts 1 and 3, each with its own call and its own approval, and draft 2 waits | FR-DRAFTS-02-1, FR-DRAFTS-02-3 | UC |
+| Normalization and number tokens in es: `normalizeText("¡Dale al 3!")` and `normalizeText("dale al 3")` are equal; `"¿Cuánto cuesta?"` becomes `cuánto cuesta`; owner words "¡Dale al 3!" name token 3 | FR-DRAFTS-02-3, FR-DRAFTS-02-6 | D |
+| Normalization in ar: `"أريد ٣ كيلو"` becomes `"أريد 3 كيلو"`; owner words "وافق على ٣" name token 3 (Arabic-Indic digit, which NFKC alone leaves unchanged); `"٣٫٥"` gives no token | FR-DRAFTS-02-3, FR-DRAFTS-02-6 | D |
+| Normalization in zh: `"！！好的，我要３个。。"` becomes `"好的,我要3个"` (full-width digit and punctuation, edge `。` removed); owner words "好的，发送３号" name token 3 | FR-DRAFTS-02-3, FR-DRAFTS-02-6 | D |
+| An owner words string of 1001 characters is refused; one of 1000 is accepted | FR-DRAFTS-02-3 | D |
 | FR-DRAFTS-02-2 owner words "ok" without a number are refused and nothing is approved | FR-DRAFTS-02-2 | UC |
 | FR-DRAFTS-02-2 the `instructions` string and the tool description tell the agent to ask again and name the drafts | FR-DRAFTS-02-1, FR-DRAFTS-02-2 | E |
 | FR-DRAFTS-02-3 a shown text that differs from the current text is refused | FR-DRAFTS-02-3 | UC |
@@ -208,6 +214,7 @@ Layers: UC use case with in-memory adapters, D domain unit, C adapter contract (
 | FR-DRAFTS-02-7 only `ApproveDraft` imports the `Sender` port | FR-DRAFTS-02-7 | ARCH |
 | FR-DRAFTS-02-8 a second approval of a sent draft is refused and nothing more is sent | FR-DRAFTS-02-8 | UC |
 | FR-DRAFTS-02-9 an order draft without a go records nothing; with a go it calls `RecordOrder` once | FR-DRAFTS-02-9 | UC |
+| FR-DRAFTS-02-9 `RecordOrder` answers `outcome_unknown`: the draft is "unknown" with reason `order_outcome_unknown`, the log has an `unknown` entry, and `RecordOrder` is not called again until the owner approves that draft again (a new approval, one call, which starts with Orders' lookup) | FR-DRAFTS-02-9 | UC |
 | FR-DRAFTS-02-9 the order draft goes through the same words checks as a reply | FR-DRAFTS-02-9 | UC |
 | FR-DRAFTS-02-10 `ApproveOrderCommand` logs the owner's words, then calls `OrderChanger`; the log entry exists before the change | FR-DRAFTS-02-10 | UC |
 | FR-DRAFTS-02-10 a delete with `confirm` false logs nothing and deletes nothing; the log reason holds field names only | FR-DRAFTS-02-10 | UC |

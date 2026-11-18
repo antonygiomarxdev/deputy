@@ -13,7 +13,7 @@ What this TP settles without a choice, as consequences of those decisions:
 - **Provider identity.** Every stored message carries `provider` and the provider's own message id. The unique key is `(provider, provider_message_id)`, so the same id from two providers never collides (edge case).
 - **Receiving mode.** With Kapso, `receiving_mode` is `catch-up` (default) or `live`. `catch-up` starts no HTTP listener. `live` starts the listener, and periodic catch-up still runs (FR-INTAKE-01-11, FR-INTAKE-03-16). Both values are read at start.
 - **Kapso adapter.** It sends through the Graph-compatible proxy already used by `src/providers/graph.ts` (`https://api.kapso.ai/meta/whatsapp/<version>/<phone_number_id>/messages`, header `X-API-Key`) and reads through the platform API (`/platform/v1/whatsapp/conversations` and `/messages`, `docs/research/kapso.md` Q3). `splitText` and the HMAC check move into the adapter. Nothing else is kept from the old `providers/`.
-- **Old fields.** `Inbound.name` (the WhatsApp profile name) is not stored; it is sender-controlled and Intake never interprets customer data (FR-INTAKE-02-10).
+- **Profile name.** `ProviderMessage.profileName` (the WhatsApp profile name) is kept only as an untrusted display hint for the chat (TP-02, Profile name): it is sender-controlled, so Intake stores it as received, bounded, and never interprets it (FR-INTAKE-02-10).
 
 Facts that bind this TP: Kapso lists conversations by `last_active_after` and messages per conversation or per phone number, newest first, with Base64 cursors; every response carries `X-RateLimit-Remaining`; webhooks are signed with HMAC-SHA256 of the raw body in `X-Webhook-Signature` (`docs/research/kapso.md` Q3, Q4, rate limits).
 
@@ -48,7 +48,7 @@ Chosen: Option A. The rule sits in one place and other slices never see a provid
 ```mermaid
 flowchart LR
   Main["main.ts: composition root"] --> Resolve["ResolveProviderSettings"]
-  Resolve --> Cfg["IntakeConnectionConfig: config.json, secrets.env"]
+  Resolve --> Cfg["IntakeConnectionConfig: config.json, OS credential store, secrets.env fallback"]
   Resolve --> OwnerRepo["OwnerNumbersRepository"]
   Main --> ProvPort(["Provider port"])
   ProvPort --> Kapso["Kapso adapter: REST client, pacer, HMAC"]
@@ -66,7 +66,7 @@ Parts of the slice, shared by all four TPs (`src/intake/`):
 | Folder | Holds |
 |---|---|
 | `domain/` | `Message`, `SyncState`, `RejectionNote`, `OwnerNumbers`, `OutgoingSend`, `SourceClassifier`, domain events |
-| `application/` | use cases (one file each): `ResolveProviderSettings`, `ReceiveLiveDelivery`, `CatchUp`, `CatchUpChat`, `SendText`, `FindOutgoing`, `ReadChat`, `ListChats`, `ChatExists`, `GetSyncStatus`, `ListRejections`, `GetOwnerNumbers`, `ApplyPendingChanges`, `SetIntakeSettings`, `CheckProviderAccess`, and the shared `StoreMessages` service |
+| `application/` | use cases (one file each): `ResolveProviderSettings`, `ReceiveLiveDelivery`, `CatchUp`, `CatchUpChat`, `SendText`, `FindOutgoing`, `ReadChat`, `ListChats`, `ChatExists`, `GetSyncStatus`, `ListRejections`, `GetOwnerNumbers`, `ApplyPendingChanges`, `SetIntakeSettings`, `CheckProviderAccess`, `DeliverDevMessage`, and the shared `StoreMessages` service |
 | `ports/` | inbound port types and outbound ports: `Provider`, `MessageRepository`, `ChatStateRepository`, `SyncStateRepository`, `RejectionRepository`, `OutgoingRepository`, `OwnerNumbersRepository`, `IntakeSettingsRepository`, `IntakeConnectionConfig`, `IntakeUnitOfWork`, `EventPublisher` |
 | `adapters/` | `kapso/`, `dev/`, `sqlite/`, `http/` (listener and dev routes), `scheduler/`, `config/` |
 
@@ -135,6 +135,7 @@ export interface ProviderMessage {
   origin: string | null;            // kapso.origin, kept as information (FR-INTAKE-04-12)
   group: boolean;
   edited: boolean;                  // the provider says this text is an edit
+  profileName: string | null;       // the sender's profile name when the provider gives one; untrusted customer text
   devOwnerMark: boolean;            // true only from the dev adapter
 }
 
@@ -170,7 +171,7 @@ export interface Provider {
     q: { scope: { conversationRef: string } | { outbound: true }; cursor: Cursor | null; limit: number },
     signal: AbortSignal,
   ): Promise<Page<ProviderMessage>>;
-  /** One part of at most 4000 characters. The caller splits. */
+  /** One part of at most 4000 UTF-16 code units (`MAX_PART`, Intake TP-04). The caller splits. */
   sendText(
     req: { to: PhoneNumber; text: string },
     signal: AbortSignal,
@@ -180,6 +181,8 @@ export interface Provider {
     headers: ReadonlyMap<string, string>; // names lower-cased
     secret: string | null;
   }): ParsedDelivery;
+  /** The connected business number, when the provider offers it (the Kapso phone-number record); null otherwise. */
+  businessNumber(signal: AbortSignal): Promise<PhoneNumber | null>;
 }
 ```
 
@@ -189,6 +192,8 @@ Notes on the contract:
 - The adapter reads `X-RateLimit-Remaining` into `remaining` and turns `429` into `ProviderError("rate_limited", Retry-After, false)`. Pacing is in the Kapso adapter (TP-03, TD-2).
 - `ProviderError("credentials")` is a `401` or `403`; `quota` is the monthly message limit reported by the provider; any non-JSON or wrong-shape body is `bad_response`.
 - The dev adapter reads `dev_holdings`, sets `serverTime` from the `Clock`, never rate limits, and its `verifyAndParse` uses the fixed dev secret.
+
+- `businessNumber` serves `CheckProviderAccess` (TP-03): the Kapso adapter reads the number of the configured `phone_number_id` and the dev adapter returns null. A failure maps to the same `ProviderError` kinds. The number is public to the owner and is not a secret.
 
 Outbound port for settings:
 
@@ -229,6 +234,19 @@ Dev entry points (inbound adapter, only when the provider is dev; bodies are JSO
 | `POST /dev/hold` | writes the same payload into `dev_holdings` only | 204; the next catch-up stores it (FR-INTAKE-01-6) |
 | `POST /dev/forge` | the `deliver` body with a missing or wrong signature, or no secret | rejection result; used for FR-INTAKE-01-5 |
 
+Setup's test mode (no WhatsApp account, FR-SETUP-04-7) cannot use HTTP, so the same path is an inbound port, `DeliverDevMessage`, called only by Setup's `setup_test_message` adapter. It is not an MCP tool of Intake, and `/dev/deliver` calls it too:
+
+```ts
+export interface DeliverDevMessage {
+  execute(q: { chat: string; from: string; text: string }): Promise<
+    | { ok: true; result: "stored" | "duplicate" }
+    | { ok: false; reason: "not_dev" | "invalid_chat" | "invalid_from" | "storage_failed" }
+  >;
+}
+```
+
+It builds the delivery as `/dev/deliver` does (copy into `dev_holdings`, dev signature, `ReceiveLiveDelivery`). Under any other provider it answers `not_dev`, stores nothing and writes a rejection note `dev_entry_refused` (L3, FR-INTAKE-01-9), so no real chat can receive an injected message. `chat` and `from` are a fictional chat and number: they must parse, and a real number is not detected, so the dev world is the guard (a dev message is never visible under a real provider, FR-INTAKE-01-7).
+
 The same body sent twice, or with a repeated `providerMessageId`, tests repeats; `sentAt` in reverse order tests ordering; `history: true` sets `origin = history_sync`.
 
 Kapso adapter mapping (inbound to `ProviderMessage`): `message.id` to `providerMessageId`; `conversation.id` to `conversationRef`; `message.kapso.direction` to `direction`; `message.kapso.origin` to `origin`; `message.type` to `type`; `message.text.body` to `text`; `message.kapso.transcript.text` to `transcript` when present; the counterpart is `to` for outbound and `from` for inbound; `from` is the raw sender; a group is a conversation or message that the platform marks as a group. Field paths that the research did not confirm are listed in Open questions.
@@ -257,6 +275,8 @@ ATDD: each test is written from the FRD line first and is titled with its FR id.
 | FR-INTAKE-01-6 | Given a message posted to `/dev/hold`, When catch-up runs, Then it is stored once and flagged as found by catch-up | UC |
 | FR-INTAKE-01-7 | Given stored dev messages, When the provider switches to Kapso, Then `ReadChat` still returns them marked `dev`, and no row was deleted | UC |
 | FR-INTAKE-01-8 | Given `provider = kapso` and no API key, When `ResolveProviderSettings` runs, Then it refuses, lists the missing items, mentions Setup and prints no value | UC |
+| FR-INTAKE-01-8 | Given the fake Kapso server serves the phone-number record "+505 8888 1111", When `CheckProviderAccess` runs, Then it returns `ok` with `businessNumber` "+50588881111"; Given the record has no number or the provider is dev, Then `businessNumber` is null; Given a `401`, Then `ok` is false with reason `credentials` and no number | UC, AC |
+| FR-INTAKE-01-9 | Given the provider is Kapso, When `DeliverDevMessage` is called, Then it returns `not_dev`, nothing is stored and a rejection note `dev_entry_refused` exists; Given the dev provider, Then it stores the message through `ReceiveLiveDelivery` and `ReadChat` returns it | UC |
 | FR-INTAKE-01-9 | Given the provider is Kapso, When a client posts to `/dev/deliver`, Then the answer is 404, nothing is stored and a rejection note with reason `dev_entry_refused` exists | E2E |
 | FR-INTAKE-01-10 | Given a stored dev message from an unanswered customer and the provider is now Kapso, When `ListChats` runs, Then the chat is absent and no signal was emitted for it (Inbox and Notify repeat this at their layers) | UC |
 | FR-INTAKE-01-11 | Given Kapso with `receiving_mode` empty, When the server starts, Then no listener port is bound and catch-up runs; Given `receiving_mode = live`, Then the listener is bound and catch-up still runs | UC, E2E |

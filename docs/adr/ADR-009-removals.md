@@ -17,7 +17,7 @@ Remove:
 
 Tests: `test/e2e.test.ts` is rewritten per slice. The relay and Meta tests are deleted; the dev-flow test becomes draft, go, send; the Kapso test becomes signature check plus catch-up. The harness stays. `test/unit.test.ts` stays. `README.md`, `README.es.md` and `CLAUDE.md` are updated together (C20).
 
-The old structure is not kept (ADR-000). Small pieces move into adapters: `splitText`, the HMAC check, the CSV parser, the Google JWT helper.
+The old structure is not kept (ADR-000). Small pieces move into adapters: `splitText` (rewritten to cut on grapheme boundaries, Intake TP-04) and the HMAC check. The hand-written CSV parser and Google JWT helper are not carried over; `papaparse` and `jose` replace them (ADR-012).
 
 ## Alternatives
 - Keep some behind flags: two products in one repo, and `reply` and `notify_owner` would remain send paths outside a draft.

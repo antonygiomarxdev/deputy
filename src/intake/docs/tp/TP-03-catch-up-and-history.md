@@ -14,7 +14,16 @@ Fixed by the cross-cutting TP and kept as is (cross-cutting TD-5, TD-2, D12, D16
 
 What this TP settles without a choice:
 
-- **Constants.** Page size 100. Overlap 10 minutes. Request timeout 15 seconds. Run budget 60 seconds. Caller wait 20 seconds. Owner told of a usage limit after 10 minutes. Minimum period 1 minute, default 2. All are domain constants except the period.
+- **Constants.** Page size 100. Overlap 10 minutes. Request timeout 15 seconds. Run budget 60 seconds. Caller wait 20 seconds. Owner told of a usage limit after 10 minutes. Minimum period 1 minute, default 2. All are domain constants except the period. Why each value:
+  - Page size 100: the largest page Kapso accepts, so the fewest requests against 100 per minute.
+  - Overlap 10 minutes: five periods at the default of 2 minutes. It must exceed the provider's lag between an event and its appearance in a listing. Kapso documents no lag and Coexistence is called less stable, so 10 minutes is a margin, not a measurement. The live check at launch records the real lag; raise the overlap if it passes 5 minutes. Cost: one message read per conversation active in the last 10 minutes on every run (FR-INTAKE-03-18).
+  - Request timeout 15 seconds: a listing page is one HTTP call that normally takes well under a second; 15 seconds is long enough for a slow mobile or tunnel link and short enough to stay under the caller wait.
+  - Caller wait 20 seconds: the 15-second timeout plus 5 seconds to store, so a timed-out request shows as `timeout` and not as a lost race. It is also well below the tool timeout of the agents checked (Codex 60 seconds), so the owner is never left staring at a hung tool.
+  - Run budget 60 seconds: one rate-limit window (100 requests per minute), so a run never queues more than a window of work. A run that ends on budget with progress is `failed`, reason `catching_up`, and the next starts at once.
+  - Reserve 10 requests: 10 per cent of the limit, enough for about three sends in the same minute (each send, with its `CatchUpChat` reads, uses three to four requests).
+  - 2,000 pages: 200,000 items per listing at page size 100, and at 100 requests per minute 20 minutes of reading, so a real first import fits and a hostile endless listing stops.
+  - Owner told after 10 minutes: five default periods. A `Retry-After` is normally seconds to one minute, so a streak of 10 minutes means another tool is using the key or the plan is too small, and only then is an interruption worth it.
+  - Minimum period 1 minute: one listing plus one message read plus one outbound page is at least three requests per run, so shorter periods would crowd the reserve on a busy shop.
 - **The period is a setting.** `catch_up_minutes` is kept by Intake in `settings`. `SetIntakeSettings` refuses a value below 1 and keeps the previous one (FR-INTAKE-03-21). "The allowed minimum" in the FRD edge case is that 1 minute; after a `429`, the scheduler also waits for `retry_at` (TD-2).
 - **Authenticated only.** `CatchUp` is the only code that calls `Provider.listConversations` and `listMessages`, and no inbound port accepts a list of messages. `check_messages` takes no input. Something that "claims to be a catch-up" can reach Intake only as a live delivery, which needs the signature (FR-INTAKE-03-3).
 - **Single-flight.** An in-process coordinator holds the running promise. A second caller awaits it for at most its `waitMs`. One process owns the data (cross-cutting TD-2), so no database lock is needed.
@@ -124,7 +133,7 @@ Algorithm, one run (`CatchUp`), steps in order:
 
 History flag: for Kapso `history = sentAt < connectedAt || (origin == "history_sync" && source == customer)`; for dev the origin only (TD-3). Owner and Deputy messages after `connected_at` are never history, and consumers must not read the flag as proof of age.
 
-Failure mapping: `unreachable`, `credentials`, `quota`, `timeout`, `bad_response` map to the same reason names; `rate_limited` maps to `usage_limit` with `retryAfterMs`. A storage error maps to `storage`. A listing that repeats a cursor or exceeds 2,000 pages is `bad_response`.
+Failure mapping: `unreachable`, `credentials`, `quota`, `timeout`, `bad_response` map to the same reason names; `rate_limited` maps to `usage_limit` with `retryAfterMs`. A storage error maps to `storage`. Language (D20): the status carries the code (`reason`) and `reasonText`, its English default. Deputy ships no other language; the server instructions tell the agent to say the reason in the owner's language. A test checks that every `SyncReason` has a `reasonText` and that none contains provider text. A listing that repeats a cursor or exceeds 2,000 pages is `bad_response`.
 
 Scheduler adapter (`CatchUpScheduler`): started and stopped by the `LeaseSupervisor`. It runs once at start (`trigger = start`), then waits `period`, where `period = catch_up_minutes` read again before each wait. After a run it waits until `retry_at` when the status is `usage_limit`, runs again at once when the status is `catching_up`, and otherwise waits `period`. After a failure of any other kind it keeps its normal period; it does not retry faster (edge case). A run that throws is logged to stderr and does not stop the loop.
 
@@ -148,7 +157,8 @@ CREATE TABLE catchup_status (
   retry_at           INTEGER,
   gap_stored_at      INTEGER,
   gap_returned_at    INTEGER,
-  first_import_count INTEGER NOT NULL DEFAULT 0
+  first_import_count INTEGER NOT NULL DEFAULT 0,
+  live_verified_at   INTEGER                  -- local clock; set only after a live signature check passed
 );
 
 CREATE TABLE settings (          -- shared table, one owner slice per key (cross-cutting Information)
@@ -197,7 +207,7 @@ export interface SyncStatusView {
   provider: ProviderName;
   status: "complete" | "failed";
   reason: SyncReason | null;
-  reasonText: string;                 // fixed wording per reason, never provider text
+  reasonText: string;                 // English default text of the fixed reason code, never provider text (D20)
   running: boolean;
   lastAttemptAt: Instant | null;
   lastSuccessAt: Instant | null;      // readers show "up to date as of <time>"
@@ -210,6 +220,7 @@ export interface SyncStatusView {
   historyMaybeSyncing: boolean;       // first import complete with zero messages
   catchUpMinutes: number;
   storageFailureAt: Instant | null;   // from TP-02, in memory
+  lastLiveDeliveryVerifiedAt: Instant | null;   // local time of the newest delivery whose signature passed (TP-02); Setup's live check reads it
 }
 
 export interface CatchUp {
@@ -233,18 +244,25 @@ export interface GetSyncStatus { execute(): Promise<SyncStatusView> }      // pu
 export interface GetIntakeSettings { execute(): Promise<{ catchUpMinutes: number }> }
 
 export interface SetIntakeSettings {
-  execute(q: { key: "catch_up_minutes"; value: number; ownerWords: string }): Promise<
-    | { ok: true; value: number }
+  execute(q:
+    | { key: "catch_up_minutes"; value: number; ownerWords: string }
+    | { key: "country"; value: string; ownerWords: string }      // ISO 3166-1 alpha-2; the default region for typed numbers (ADR-012)
+  ): Promise<
+    | { ok: true; value: number | string }
     | { ok: false; reason: "below_minimum" | "not_an_integer" | "not_owner"; minimum: 1; kept: number }
+    | { ok: false; reason: "unknown_country" | "not_owner"; kept: string | null }
   >;
 }
 
 export interface CheckProviderAccess {
-  execute(): Promise<{ ok: true } | { ok: false; reason: "credentials" | "unreachable" | "quota" | "usage_limit" | "timeout" }>;
+  execute(): Promise<
+    | { ok: true; businessNumber: string | null }      // E.164, from Provider.businessNumber, when the provider offers it
+    | { ok: false; reason: "credentials" | "unreachable" | "quota" | "usage_limit" | "timeout" }
+  >;
 }
 ```
 
-`CheckProviderAccess` lists conversations with limit 1 and writes nothing (cross-cutting TD-8).
+`CheckProviderAccess` lists conversations with limit 1, then asks `Provider.businessNumber`, and writes nothing (cross-cutting TD-8). `SetIntakeSettings` with `country` checks the code through `PhoneNumberParser.isCountry` (the library stays behind that port, ADR-012) and refuses an unknown one with `unknown_country`, keeping the old value; the agent may write it after the owner says it, because it is not a trust boundary (cross-cutting TD-8).
 
 `CatchUpChat` steps: lease; await the running run (bounded by `waitMs`, default 20 seconds); read that chat's conversation newest first until an item older than the chat's newest stored time minus the overlap; read one page of the outbound listing; store both through `StoreMessages`; return `ChatStateRepository.get`. With no stored `conversationRef`, it lists conversations active in the last 24 hours and takes the one whose counterpart equals the chat. A `rate_limited` error returns `failed`, reason `usage_limit`, with no wait.
 
@@ -304,6 +322,7 @@ Layers: UC is a use case with in-memory adapters, a fake provider with scripted 
 | FR-INTAKE-03-18 | Given an idle shop, When a periodic run finds nothing new, Then it makes one conversation listing, one message read for each conversation active in the last 10 minutes (the overlap), and one outbound page; with no recent activity that is two requests | AC |
 | FR-INTAKE-03-19 | Given a long absence and `remaining` falling toward 10, When the run goes on, Then the adapter waits for the next minute and `remaining` never reaches 0 | AC |
 | FR-INTAKE-03-20 | Given a `429` with `Retry-After: 30`, When the run handles it, Then stored messages and marks are kept, status is `failed`, reason `usage_limit`, `retryAt` is 30 seconds ahead, `tellOwner` is false; the scheduler retries at `retryAt`; after 10 minutes of the same streak `tellOwner` is true | UC, AC |
+| FR-INTAKE-03-21 | Given `SetIntakeSettings` with `country` "NI", When it runs, Then the value is stored and `get_settings` shows it; Given "XX", Then it refuses with `unknown_country` and keeps the old value | UC |
 | FR-INTAKE-03-21 | Given the owner sets 30 seconds (0.5 minute), When `SetIntakeSettings` runs, Then it refuses, `kept` is the previous value and the period is unchanged; 1 is accepted | UC |
 
 Extra tests: a lease lost between two pages stops the run, stores nothing more and leaves the new owner's marks unchanged (in-memory lease). From the cross-cutting TD-5 list: a live-delivered message is stored while two earlier ones are missing and catch-up stores both; a run killed by `429` after half the conversations resumes from the saved mark and cursor; a provider clock one hour off loses nothing; an echo that does not move `last_active` is found by sweep 2; Deputy is off 10 days with a 7-day inbox window and nothing is lost; raising the window triggers no extra reads; `CatchUpChat` sees an owner reply made after the running run began.

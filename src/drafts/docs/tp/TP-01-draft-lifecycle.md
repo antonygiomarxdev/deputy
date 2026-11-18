@@ -54,6 +54,7 @@ stateDiagram-v2
   sending --> unknown: outcome not known
   recording --> recorded: order recorded
   recording --> failed: order refused
+  recording --> unknown: order outcome unknown
   recording --> held: check finds news
   held --> waiting: change text
   held --> sending: approve again
@@ -66,6 +67,7 @@ stateDiagram-v2
   failed --> replaced: new draft
   unknown --> sent: found by resolve
   unknown --> sending: approve again
+  unknown --> recording: approve order again
   unknown --> rejected: reject
   sent --> [*]
   recorded --> [*]
@@ -151,7 +153,9 @@ type WaitingChat = { number: number; kind: 'reply' | 'order'; chat: string; writ
 
 `ChangeDraft` on an order draft calls `OrderPreparer.prepare` again with the new order and stores the new summary and payload.
 
-`ListDrafts` for an order draft asks `OrderPreparer.revalidate(payload)` for the "catalog changed since this draft" mark (FR-KNOWLEDGE-01-14). A reply draft has no catalog mark; the Knowledge slice may later give replies one through a second port.
+Drafts never calls Knowledge. For an order draft, `ListDrafts` sets `catalogChanged` from `OrderPreparer.revalidate(payload)`, which compares the snapshotted item prices. The "catalog changed since this draft" mark for every draft, reply or order (FR-KNOWLEDGE-01-14), is composed by the `list_drafts` MCP adapter: it calls `ListDrafts`, then Knowledge's `CatalogChangedSince({ since: [each draft's madeAt] })` once, and merges the answers into the tool result (cross-cutting Interfaces; Knowledge TD-8). `changed: true` is the mark; `'unknown'` (the catalog is unreachable or has no baseline) shows the code `catalog_check_unavailable` and no mark, so the agent tells the owner to check the prices itself. The mark is set when either source says changed.
+
+`ListDrafts` wraps every customer-derived field in `<customer_text>` after escaping with the shared helper `src/adapters/mcp/customer-text.ts` (it escapes `&`, `<` and `>`; Inbox's `get_chat` and Inbox's tools use the same one). Those fields are the message answered and the draft text, which may carry customer words (FR-INBOX-02-10).
 
 Outbound ports for this TP (the others are in TP-02 and TP-03):
 
@@ -258,7 +262,7 @@ Inbound ports above. MCP tools this FRD adds (zod schemas; every tool also retur
 ## Threat model
 
 - A customer message cannot create, change or reject a draft: the tools take agent input, and customer text reaches the agent only in labeled blocks (cross-cutting threat model).
-- A draft's text is agent-written and may carry customer words; `list_drafts` wraps it in a labeled block so the agent does not read it as an instruction (FR-DRAFTS-02-6 reads "text found in a draft never counts").
+- A draft's text is agent-written and may carry customer words; `list_drafts` escapes it with the shared helper and wraps it in a labeled block so the agent does not read it as an instruction (FR-DRAFTS-02-6 reads "text found in a draft never counts").
 - `create_draft` takes a chat id, not a phone number, and checks it exists in Intake, so a draft cannot point at a number the agent invents (cross-cutting threat model, "other notes").
 - An injected agent could spam drafts. Effect: clutter, never a send (every send needs a go). Accepted.
 - Order payload and summary hold personal data. They stay in the owner's database (principle 8) and are scrubbed on order deletion (TP-04).
@@ -275,6 +279,8 @@ ATDD (cross-cutting TD-11): each test below is written first from the FRD line, 
 | FR-DRAFTS-01-2 a new draft is waiting and the fake provider received nothing | FR-DRAFTS-01-2 | UC |
 | FR-DRAFTS-01-3 list_drafts shows number, chat, exact text and the customer message answered | FR-DRAFTS-01-3 | UC, E |
 | FR-DRAFTS-01-3 list_drafts with no drafts says so | FR-DRAFTS-01-3 | UC |
+| FR-DRAFTS-01-3 a draft whose text and answered message contain `</customer_text>` and `&` is listed with `&lt;/customer_text&gt;` and `&amp;`, inside one label, through the shared escape helper | FR-DRAFTS-01-3 | UC |
+| FR-KNOWLEDGE-01-14 through the `list_drafts` MCP adapter, with a fake Knowledge: a reply draft made at T and a catalog saved after T: `CatalogChangedSince` answers changed and the list shows the mark; saved before T gives no mark; `'unknown'` shows `catalog_check_unavailable`; an order draft with a changed snapshotted price shows the mark even when the time check says unchanged; `ListDrafts` itself imports and calls nothing of Knowledge (architecture test) | FR-KNOWLEDGE-01-14 | E, ARCH |
 | FR-DRAFTS-01-4 WaitingChats returns waiting, held, failed and unknown drafts with chat, time and state, and no text | FR-DRAFTS-01-4 | UC |
 | FR-DRAFTS-01-4 two chats with waiting drafts return exactly those two with their written times | FR-DRAFTS-01-4 | UC |
 | FR-DRAFTS-01-5 changing the text of an approved draft returns it to waiting and voids the approval | FR-DRAFTS-01-5 | D (approved is transient), UC (held draft) |
@@ -297,6 +303,7 @@ Every FR id of FRD-01 (01-1 to 01-8) appears above.
 | The agent lists drafts for the owner but the owner reads an older chat state | The owner approves a draft that no longer fits | The send-time check (TP-03). |
 | A stuck "unknown" draft blocks a new draft for that chat | The owner is slowed | The refusal says to reject it first; resolve runs after each catch-up (TP-03). |
 | `revalidate` is a new Orders method | Orders' TP must offer it | Flagged to the lead. |
+| The catalog mark is composed in the MCP adapter, not in Drafts | The adapter holds a small rule | One `CatalogChangedSince` call per listing (an array of times, one fingerprint read), tested at the adapter. |
 
 ## Open questions
 
