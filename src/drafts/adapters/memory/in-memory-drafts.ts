@@ -96,7 +96,10 @@ export class InMemoryDrafts {
   readonly unitOfWork: UnitOfWork;
 
   constructor(private readonly lease: OwnerLease) {
-    this.unitOfWork = { run: (work, options) => this.serialize(() => this.transact(work, options)) };
+    this.unitOfWork = {
+      run: (work, options) => this.serialize(() => this.transact(work, options)),
+      read: (work) => this.serialize(() => work({ drafts: this.repository() })),
+    };
   }
 
   private serialize<T>(job: () => Promise<T>): Promise<T> {
