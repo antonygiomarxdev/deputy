@@ -27,6 +27,12 @@ import { SqliteIntakeUnitOfWork } from "./intake/adapters/sqlite/sqlite-intake-u
 import { createSqliteIntakeRepos } from "./intake/adapters/sqlite/sqlite-intake-repos";
 import { SqliteOwnerNumbersRepository } from "./intake/adapters/sqlite/sqlite-owner-numbers-repository";
 import { createIntake, createIntakeRuntime, type IntakeEvent, type Provider } from "./intake/index";
+import { IntakeChatReader } from "./drafts/adapters/intake/intake-chat-reader";
+import { draftsTools } from "./drafts/adapters/mcp/drafts-tools";
+import { UnavailableOrderPreparer } from "./drafts/adapters/orders/unavailable-order-preparer";
+import { SqliteUnitOfWork } from "./drafts/adapters/sqlite/sqlite-unit-of-work";
+import { createDrafts } from "./drafts/index";
+import { listDraftsTool } from "./composition/mcp/list-drafts-tool";
 import { INSTRUCTIONS } from "./composition/mcp/instructions";
 import { compositionTools } from "./composition/mcp/composition-tools";
 import { createMcpServer } from "./composition/mcp/server";
@@ -120,6 +126,15 @@ async function serve(): Promise<number> {
     webhookSecret: connection.kapso.webhookSecret?.reveal() ?? null,
   });
 
+  const drafts = createDrafts({
+    clock,
+    lease,
+    sessionStartedAt: clock.now(),
+    unitOfWork: new SqliteUnitOfWork(db, lease),
+    chats: new IntakeChatReader({ chatExists: intake.chatExists, readChat: intake.readChat }),
+    orders: new UnavailableOrderPreparer(),
+  });
+
   const listener = new LiveListener({
     receive: intake.receiveLiveDelivery,
     port,
@@ -147,6 +162,9 @@ async function serve(): Promise<number> {
     tools: [
       ...compositionTools({ isOwner: () => supervisor.isOwner, sections: [] }),
       ...intakeTools({ readChat: intake.readChat, listRejections: intake.listRejections }),
+      ...draftsTools(drafts),
+      // Knowledge is not wired yet: no catalog is known, so every check is "unknown"
+      listDraftsTool({ listDrafts: drafts.listDrafts, catalogChangedSince: async (since) => since.map(() => "unknown" as const) }),
     ],
     claudeChannel: false,
   });
