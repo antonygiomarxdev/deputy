@@ -59,8 +59,30 @@ export async function startServer(
   };
 }
 
-export function removeHarnessDirs(h: Harness): void {
-  rmSync(join(h.dataDir, ".."), { recursive: true, force: true });
+/**
+ * Removes the folders a server used. It never throws: on Windows a data file can stay busy for a moment after the process
+ * ends (EBUSY), and a cleanup error thrown from afterEach would hide the assertion that failed in the test. It retries, and when
+ * the folder will not go it says so on stderr and leaves it, so the test's own failure is what gets reported.
+ */
+export function removeHarnessDirs(
+  h: Pick<Harness, "dataDir">,
+  o: { remove?: (path: string) => void; attempts?: number; delayMs?: number } = {},
+): void {
+  const remove = o.remove ?? ((p: string) => rmSync(p, { recursive: true, force: true }));
+  const attempts = o.attempts ?? 10;
+  const path = join(h.dataDir, "..");
+  for (let i = 1; ; i++) {
+    try {
+      remove(path);
+      return;
+    } catch (e) {
+      if (i >= attempts) {
+        console.error(`harness cleanup left ${path} behind after ${attempts} tries: ${e instanceof Error ? e.message : String(e)}`);
+        return;
+      }
+      Bun.sleepSync(o.delayMs ?? 100);
+    }
+  }
 }
 
 export function writeConfig(dir: string, obj: Record<string, unknown>): void {
