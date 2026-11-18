@@ -16,13 +16,13 @@ Checked with Bun 1.4.4 on Windows, from source and from a `bun build --compile` 
 - Sign the Google JWT with `jose`.
 - No header-alias list in any language. Roles come from the content of each column: name (leftmost mostly distinct text), price (numeric), availability (few distinct values), unit (short repeating text), currency (ISO 4217 codes or symbols), description (long text). The header text is shown next to three sample values so the owner reads the mapping in their language.
 - The decimal mark is decided per price column from the last separator of each value: one or two digits after it means a decimal mark; exactly three digits after it is a thousands mark when another value shows the other mark, otherwise ambiguous. The majority of unambiguous values wins. A conflict or an all-ambiguous column becomes a question to the owner. Deputy never guesses a price.
-- The owner confirms the mapping once through the proposal flow (`propose_change`, `apply_change`, with the owner's words). It is stored as Knowledge's `catalog_mapping` setting with a hash of the header row. A changed header row asks again. Until confirmed, `find_catalog_items` refuses with the code `catalog_mapping_unconfirmed`.
+- The owner confirms the mapping once through the proposal flow (`propose_change`, `apply_change`, with the owner's words). It is stored as Knowledge's `catalog_mapping` setting with the header row itself (an equality check, so no hash). A changed header row asks again. Knowledge's and Orders' spreadsheet adapters share one Google client in `src/adapters/google/`. Until confirmed, `find_catalog_items` refuses with the code `catalog_mapping_unconfirmed`.
 - Currency: Setup's `currency` setting (suggested from the country, confirmed by the owner); an optional per-product currency column overrides it. A price with neither is "to be confirmed".
 
 ## Alternatives
 - Keep the hand-written parser and JWT helper: a CSV reader gets quoted separators, newlines, a byte-order mark and delimiter guessing wrong only on real files; and RS256 signing is security code Deputy would own. Rejected.
 - `csv-parse` plus our own delimiter guesser: the same kind of maintained parser, but the guessing, the part D22 needs, would be hand-written. Rejected for that reason.
-- `google-auth-library`: a large tree of transitive dependencies (an HTTP client) for one token request. Rejected; `jose` is one small package.
+- `google-spreadsheet` with `google-auth-library` (26 installed packages, 27 MB) or `@googleapis/sheets` (45 packages, 14 MB), measured by Orders: far more than one token request needs. Rejected; `jose` is 1 package. All three compile with `bun build --compile`.
 - Header aliases in more languages: a list that never ends (an owner's header can be in any language) and silently misreads a file that uses another word. Rejected by D22.
 - Let the agent guess the mapping without confirmation: a mistaken or injected guess would put a wrong price in front of a customer. Rejected: the owner confirms once.
 

@@ -101,7 +101,7 @@ Fixed reasons (codes with an English default text, never a provider body, cross-
 Recovery of interrupted work:
 - On every lease acquisition (at start, and when a process takes over from a dead owner), before the scheduler starts, `main.ts` runs `RecoverInterrupted`, then a catch-up, then `ResolveUnknownSends`, then `RedriveRecording`. Without this a draft left "sending" by a dead owner would stay wedged, because a "sending" draft cannot be changed, rejected or replaced.
 - `RecoverInterrupted` (owner process only): every draft in "sending" becomes "unknown" with a log entry (reason `session_ended`). Every draft in "recording" is passed to `RedriveRecording`.
-- `RedriveRecording`: calls `RecordOrder` again. It is idempotent on the draft number, so it is safe. On success the draft becomes "recorded"; on a refusal it becomes "failed".
+- `RedriveRecording`: calls `RecordOrder` again. It is idempotent (Orders keys it by install and draft number), so it is safe. On success the draft becomes "recorded"; on a refusal it becomes "failed"; on `outcome_unknown` it becomes "unknown" with reason `order_outcome_unknown`, the owner is shown it as unknown, and Deputy never calls `RecordOrder` for it again by itself: only the owner's go on that draft (`approve_draft` accepts an unknown draft) calls it again, and Orders starts with its lookup, so no second order is made.
 - `ResolveUnknownSends` runs after the first catch-up at start and after every `CatchUpFinished` that stored messages. For each reply draft in "unknown" it takes the latest approval and calls `OutgoingFinder.find({ chat, since: approvedAt, text, sendId })`. One match: Intake links it to the send id, the draft becomes "sent" and the log gets a `sent` entry (reason `found_after_unknown`). None or several: nothing changes, so a later run tries again (FR-DRAFTS-03-13). Only a failure the provider reported is "failed". Intake widens `since` by `OUTGOING_SKEW = 120 s` (one constant, stated in Intake TP-04) to cover the clock difference between Deputy and the provider; Drafts passes the approval time as is.
 
 Outbound ports for this TP:
@@ -139,7 +139,7 @@ Inbound ports added:
 ```ts
 interface ResolveUnknownSends { run(): Promise<{ resolved: number; stillUnknown: number }> }
 interface RecoverInterrupted  { run(): Promise<{ toUnknown: number; redriven: number }> }
-interface RedriveRecording    { run(): Promise<{ recorded: number; failed: number }> }
+interface RedriveRecording    { run(): Promise<{ recorded: number; failed: number; unknown: number }> }
 ```
 
 Called by the scheduler adapter and `main.ts` (start order: lease, `RecoverInterrupted`, catch-up, `ResolveUnknownSends`, `RedriveRecording`), and by the `CatchUpFinished` subscription.
@@ -209,6 +209,7 @@ Layers as in TP-02 (UC, D, C, E, X). The fake provider and a fake Intake adapter
 | FR-DRAFTS-03-2 a catch-up that ignores `waitMs` is still cut at 20 seconds in total | FR-DRAFTS-03-2 | UC |
 | FR-DRAFTS-03-8 a session killed after the provider call: at restart the draft is "unknown" and `ResolveUnknownSends` links it | FR-DRAFTS-03-8, FR-DRAFTS-03-13 | X |
 | FR-DRAFTS-03-1 an order draft runs the same check before `RecordOrder` | FR-DRAFTS-03-1 | UC |
+| FR-DRAFTS-03-8 a draft left "recording" at a crash, and `RecordOrder` answers `outcome_unknown` at restart: the draft becomes "unknown", `RedriveRecording` counts it in `unknown`, and a second restart does not call `RecordOrder` again | FR-DRAFTS-03-8 | X |
 
 Every FR id of FRD-03 (03-1 to 03-13) appears above.
 

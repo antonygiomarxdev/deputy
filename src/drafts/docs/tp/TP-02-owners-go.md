@@ -79,7 +79,7 @@ Domain additions:
   2. For a draft: the number is a whole token (below). Not applied to order commands.
   3. The normalized words equal no draft's normalized proposed or current text (`DraftRepository.hasDraftText`).
   4. The normalized words equal no stored customer message (`CustomerTextCheck.isCustomerText`, outside the domain, called by the use case).
-- Whole token: after `normalizeText` step 3 (every `\p{Nd}` digit is now an ASCII digit, so Arabic-Indic `٣` is `3`), find maximal runs of digits. A run counts as a token unless a digit, then `.`, `,`, `٫` or `٬`, then a digit touches it ("3.5" gives none). Token value is compared with the draft number. "go on 1 and 3" names 1 and 3; "13" names 13 only; "3 kilos" names 3 (accepted, a guard). Number words ("the first one") do not count; the refusal says to name the number.
+- Whole token: the rule is the shared function `wholeNumberTokens(words): number[]` in `src/shared/`, in the same file as `normalizeText` (Knowledge's owner-words check uses the same one, so the two slices cannot drift). After `normalizeText` step 3 (every `\p{Nd}` digit is now an ASCII digit, so Arabic-Indic `٣` is `3`), find maximal runs of digits. A run counts as a token unless a digit, then `.`, `,`, `٫` or `٬`, then a digit touches it ("3.5" gives none). Token value is compared with the draft number. "go on 1 and 3" names 1 and 3; "13" names 13 only; "3 kilos" names 3 (accepted, a guard). Number words ("the first one") do not count; the refusal says to name the number.
 - `Draft.approve(shownText, version, now)` guards the state (waiting, held, failed, unknown), `shownVersion = textVersion`, and shown text equals current text. It returns an `Approval` and the events `Approved`. `Draft.startSending(now)` sets "sending" (reply) or "recording" (order). The aggregate is saved once with both, so "approved" is never stored.
 - The send identifier is `deputy:` plus the approval id. It is written with the approval, before the provider is called, so Intake can match an echo (cross-cutting TD-4).
 
@@ -134,7 +134,9 @@ interface ApprovalRepository {
 interface CustomerTextCheck { isCustomerText(words: string): Promise<boolean> }  // calls Intake IsCustomerText
 interface OrderRecorder {                                                        // calls Orders RecordOrder
   record(input: { draftNumber: number; payload: string; ownerWords: string }):
-    Promise<{ ok: true; orderId: string } | { ok: false; reason: string }>;      // idempotent on draftNumber
+    Promise<{ ok: true; orderId: string }
+      | { ok: false; reason: 'outcome_unknown' }                                  // the write may or may not have happened (Orders TD-6)
+      | { ok: false; reason: string }>;                                           // idempotent on draftNumber
 }
 interface TextDigest { sha256(text: string): string }
 interface Ids { next(): string }
@@ -212,6 +214,7 @@ Layers: UC use case with in-memory adapters, D domain unit, C adapter contract (
 | FR-DRAFTS-02-7 only `ApproveDraft` imports the `Sender` port | FR-DRAFTS-02-7 | ARCH |
 | FR-DRAFTS-02-8 a second approval of a sent draft is refused and nothing more is sent | FR-DRAFTS-02-8 | UC |
 | FR-DRAFTS-02-9 an order draft without a go records nothing; with a go it calls `RecordOrder` once | FR-DRAFTS-02-9 | UC |
+| FR-DRAFTS-02-9 `RecordOrder` answers `outcome_unknown`: the draft is "unknown" with reason `order_outcome_unknown`, the log has an `unknown` entry, and `RecordOrder` is not called again until the owner approves that draft again (a new approval, one call, which starts with Orders' lookup) | FR-DRAFTS-02-9 | UC |
 | FR-DRAFTS-02-9 the order draft goes through the same words checks as a reply | FR-DRAFTS-02-9 | UC |
 | FR-DRAFTS-02-10 `ApproveOrderCommand` logs the owner's words, then calls `OrderChanger`; the log entry exists before the change | FR-DRAFTS-02-10 | UC |
 | FR-DRAFTS-02-10 a delete with `confirm` false logs nothing and deletes nothing; the log reason holds field names only | FR-DRAFTS-02-10 | UC |

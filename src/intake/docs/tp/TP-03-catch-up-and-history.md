@@ -157,7 +157,8 @@ CREATE TABLE catchup_status (
   retry_at           INTEGER,
   gap_stored_at      INTEGER,
   gap_returned_at    INTEGER,
-  first_import_count INTEGER NOT NULL DEFAULT 0
+  first_import_count INTEGER NOT NULL DEFAULT 0,
+  live_verified_at   INTEGER                  -- local clock; set only after a live signature check passed
 );
 
 CREATE TABLE settings (          -- shared table, one owner slice per key (cross-cutting Information)
@@ -219,6 +220,7 @@ export interface SyncStatusView {
   historyMaybeSyncing: boolean;       // first import complete with zero messages
   catchUpMinutes: number;
   storageFailureAt: Instant | null;   // from TP-02, in memory
+  lastLiveDeliveryVerifiedAt: Instant | null;   // local time of the newest delivery whose signature passed (TP-02); Setup's live check reads it
 }
 
 export interface CatchUp {
@@ -242,18 +244,25 @@ export interface GetSyncStatus { execute(): Promise<SyncStatusView> }      // pu
 export interface GetIntakeSettings { execute(): Promise<{ catchUpMinutes: number }> }
 
 export interface SetIntakeSettings {
-  execute(q: { key: "catch_up_minutes"; value: number; ownerWords: string }): Promise<
-    | { ok: true; value: number }
+  execute(q:
+    | { key: "catch_up_minutes"; value: number; ownerWords: string }
+    | { key: "country"; value: string; ownerWords: string }      // ISO 3166-1 alpha-2; the default region for typed numbers (ADR-012)
+  ): Promise<
+    | { ok: true; value: number | string }
     | { ok: false; reason: "below_minimum" | "not_an_integer" | "not_owner"; minimum: 1; kept: number }
+    | { ok: false; reason: "unknown_country" | "not_owner"; kept: string | null }
   >;
 }
 
 export interface CheckProviderAccess {
-  execute(): Promise<{ ok: true } | { ok: false; reason: "credentials" | "unreachable" | "quota" | "usage_limit" | "timeout" }>;
+  execute(): Promise<
+    | { ok: true; businessNumber: string | null }      // E.164, from Provider.businessNumber, when the provider offers it
+    | { ok: false; reason: "credentials" | "unreachable" | "quota" | "usage_limit" | "timeout" }
+  >;
 }
 ```
 
-`CheckProviderAccess` lists conversations with limit 1 and writes nothing (cross-cutting TD-8).
+`CheckProviderAccess` lists conversations with limit 1, then asks `Provider.businessNumber`, and writes nothing (cross-cutting TD-8). `SetIntakeSettings` with `country` checks the code through `PhoneNumberParser.isCountry` (the library stays behind that port, ADR-012) and refuses an unknown one with `unknown_country`, keeping the old value; the agent may write it after the owner says it, because it is not a trust boundary (cross-cutting TD-8).
 
 `CatchUpChat` steps: lease; await the running run (bounded by `waitMs`, default 20 seconds); read that chat's conversation newest first until an item older than the chat's newest stored time minus the overlap; read one page of the outbound listing; store both through `StoreMessages`; return `ChatStateRepository.get`. With no stored `conversationRef`, it lists conversations active in the last 24 hours and takes the one whose counterpart equals the chat. A `rate_limited` error returns `failed`, reason `usage_limit`, with no wait.
 
@@ -313,6 +322,7 @@ Layers: UC is a use case with in-memory adapters, a fake provider with scripted 
 | FR-INTAKE-03-18 | Given an idle shop, When a periodic run finds nothing new, Then it makes one conversation listing, one message read for each conversation active in the last 10 minutes (the overlap), and one outbound page; with no recent activity that is two requests | AC |
 | FR-INTAKE-03-19 | Given a long absence and `remaining` falling toward 10, When the run goes on, Then the adapter waits for the next minute and `remaining` never reaches 0 | AC |
 | FR-INTAKE-03-20 | Given a `429` with `Retry-After: 30`, When the run handles it, Then stored messages and marks are kept, status is `failed`, reason `usage_limit`, `retryAt` is 30 seconds ahead, `tellOwner` is false; the scheduler retries at `retryAt`; after 10 minutes of the same streak `tellOwner` is true | UC, AC |
+| FR-INTAKE-03-21 | Given `SetIntakeSettings` with `country` "NI", When it runs, Then the value is stored and `get_settings` shows it; Given "XX", Then it refuses with `unknown_country` and keeps the old value | UC |
 | FR-INTAKE-03-21 | Given the owner sets 30 seconds (0.5 minute), When `SetIntakeSettings` runs, Then it refuses, `kept` is the previous value and the period is unchanged; 1 is accepted | UC |
 
 Extra tests: a lease lost between two pages stops the run, stores nothing more and leaves the new owner's marks unchanged (in-memory lease). From the cross-cutting TD-5 list: a live-delivered message is stored while two earlier ones are missing and catch-up stores both; a run killed by `429` after half the conversations resumes from the saved mark and cursor; a provider clock one hour off loses nothing; an echo that does not move `last_active` is found by sweep 2; Deputy is off 10 days with a 7-day inbox window and nothing is lost; raising the window triggers no extra reads; `CatchUpChat` sees an owner reply made after the running run began.

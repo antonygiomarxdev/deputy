@@ -8,7 +8,7 @@ Fixed by the cross-cutting TP, so not decided again:
 - The log is the `drafts_log` table in the one SQLite file. Triggers reject UPDATE and DELETE, with one narrow exception for the order scrub of L6 and D15 (cross-cutting TD-3).
 - A log entry is written in the same transaction as the state change it records (the send step, cross-cutting TD-6). If the write fails, the change does not happen, and nothing is sent, because the provider is called only after the transaction commits.
 - The scrub is one named function in Drafts. It runs when Drafts handles Orders' `OrderDeleted` outbox event, idempotently, in a Drafts-only transaction (cross-cutting TD-3).
-- Knowledge reads the log through Drafts' `ReadDraftLog`; Drafts never pushes (FR-DRAFTS-04-3).
+- The lesson MCP adapter reads the log through Drafts' `ReadDraftLog` and hands the entries to Knowledge, which imports nothing of Drafts; Drafts never pushes (FR-DRAFTS-04-3).
 - The tools are `drafts_log` and `check_approvals`.
 
 Decisions here: how a sent entry is tied to its approval, how the log is paged, and how the trigger limits the scrub.
@@ -32,7 +32,7 @@ Chosen: Option A, because FR-DRAFTS-04-4 says "points to exactly one approval en
 
 ### TD-2: How is the log paged?
 
-- **Option A** By entry id: `before` for the owner paging back, `after` for Knowledge reading forward. Ordering uses the id, never the time. Cost: one cursor value. Risk: none known.
+- **Option A** By entry id: `before` for the owner paging back, `after` for the lesson MCP adapter reading forward. Ordering uses the id, never the time. Cost: one cursor value. Risk: none known.
 - **Option B** Offset and limit, ordered by time. Cost: simplest to write. Risk: a new entry shifts the pages while the owner reads back, and two events in the same second can swap.
 
 Chosen: Option A. Recorded in ADR-009.
@@ -61,7 +61,7 @@ interface ReadDraftLog {
     Promise<{ entries: LogEntryView[]; nextBefore: number | null }>;
 }
 // limit 1..100, default 20 (about 3k to 6k tokens, ADR-009); max 100 (about 15k to 30k tokens). Without `after`: newest first, entries with id < before.
-// With `after`: oldest first, entries with id > after (Knowledge). Not owner-gated (a read).
+// With `after`: oldest first, entries with id > after (the lesson MCP adapter). Not owner-gated (a read).
 
 interface CheckApprovals {
   run(): Promise<{
@@ -78,7 +78,7 @@ interface OnOrderDeleted {                         // handler of Orders' OrderDe
 }
 ```
 
-`LogEntryView` carries `id`, `at`, `kind`, `draft`, `chat`, `proposedText`, `finalText`, `reason`, `ownerWords`, `scrubbed`. The MCP adapter wraps texts and words in labeled blocks.
+`LogEntryView` carries `id`, `at`, `kind`, `draft`, `chat`, `proposedText`, `finalText`, `reason`, `ownerWords`, `scrubbed` and `answersMessageId: string | null`. `answersMessageId` is set for `approved` and `rejected` entries of a reply draft (the customer message the draft answered, so Knowledge can find the exact source of a lesson) and is null for every other entry and for order drafts. It is read at query time from `drafts.answers_message_id` by the entry's draft number (ADR-002); the log table gains no column, and the reference is an id, not customer text, so the order scrub (L6) leaves it. The MCP adapter wraps texts and words in labeled blocks.
 
 Outbound ports for this TP:
 
@@ -170,7 +170,7 @@ For order drafts all text fields are null. The `chat` of an order entry is the c
 | `drafts_log` | `{ chat?: string, limit?: int 1..100 (default 20), before?: int }` | entries newest first, with id, time, kind, draft, the proposed and final text and the owner's words; "nothing yet" when empty; "no entries for this chat"; `before` of the oldest shown entry when older ones exist | `ReadDraftLog` |
 | `check_approvals` | none | defects with the entry id and problem, gaps ("sending" or "unknown" with no `sent` entry), or "every sent message has an approval" | `CheckApprovals` |
 
-No tool changes or deletes an entry; a request to delete one is refused with "the log is a record" by the instructions and by the absence of a tool (FR-DRAFTS-04-7). Knowledge calls `ReadDraftLog` with `after`; the tool does not expose it. Orders delivers `OrderDeleted` to `OnOrderDeleted` through its outbox, and `ApproveOrderCommand` (TP-02, called from the change and delete tools) appends the `order_command` entry before it calls Orders.
+No tool changes or deletes an entry; a request to delete one is refused with "the log is a record" by the instructions and by the absence of a tool (FR-DRAFTS-04-7). The lesson MCP adapter calls `ReadDraftLog` with `after`; the tool does not expose it. Orders delivers `OrderDeleted` to `OnOrderDeleted` through its outbox, and `ApproveOrderCommand` (TP-02, called from the change and delete tools) appends the `order_command` entry before it calls Orders.
 
 ## Threat model
 
@@ -192,8 +192,9 @@ Layers as in TP-02 (UC, D, C, E, X).
 | FR-DRAFTS-04-1 every event kind of the list produces an entry that names the draft and the chat | FR-DRAFTS-04-1 | UC |
 | FR-DRAFTS-04-1 two events in the same second keep their order | FR-DRAFTS-04-1 | C |
 | FR-DRAFTS-04-2 the log holds both the proposed and the final text of an edited draft | FR-DRAFTS-04-2 | UC |
-| FR-DRAFTS-04-3 each entry has an id; `ReadDraftLog` with `after` returns entries in id order for Knowledge | FR-DRAFTS-04-3 | UC |
+| FR-DRAFTS-04-3 each entry has an id; `ReadDraftLog` with `after` returns entries in id order for the lesson MCP adapter | FR-DRAFTS-04-3 | UC |
 | FR-DRAFTS-04-3 no use case of Drafts writes to Knowledge | FR-DRAFTS-04-3 | ARCH |
+| FR-DRAFTS-04-3 `ReadDraftLog` with `after` returns `answersMessageId` equal to the draft's answered message on its `approved` and `rejected` entries, and null on `proposed`, `sent` and order entries | FR-DRAFTS-04-3 | UC, C |
 | FR-DRAFTS-04-4 each approval entry keeps the owner's words; each sent entry points to one earlier approval entry with the same text | FR-DRAFTS-04-4 | UC |
 | FR-DRAFTS-04-5 `check_approvals` over three sent messages reports none | FR-DRAFTS-04-5 | UC |
 | FR-DRAFTS-04-5 a sent entry with no approval entry is reported | FR-DRAFTS-04-5 | UC, C |
@@ -220,7 +221,7 @@ Every FR id of FRD-04 (04-1 to 04-10) appears above.
 | Order data kept outside the log | "No personal data remains" would be false | The scrub also clears `drafts` and `approvals` text. |
 | `order_command.reason` carries a name | A name stays after deletion | Drafts builds it from field names only; an e2e test checks it. |
 | The log grows without bound | A bigger file | Paged reads; archiving is a later decision (FRD-04 open question 1: kept for the life of the database in v1, no archive). |
-| The id cursor is lost by Knowledge | Re-reads | Entries are immutable, so a re-read is harmless. |
+| The id cursor kept by Knowledge is lost | Re-reads | Entries are immutable, so a re-read is harmless. |
 
 ## Open questions
 

@@ -28,6 +28,7 @@ Sources, all third-party except one sentence:
   - Every other country: the key is the E.164 string.
 - `sameLine(a, b)` is equality of line keys. Owner numbers, the business number and the `SourceClassifier` compare senders to owner numbers with it. Chats are looked up by line key too, so an echo whose counterpart id differs from the customer's own id lands in one chat; the stored `provider_id` is the one first received.
 - Group ids and other non-number chat keys never pass through `PhoneNumber`.
+- `PhoneNumberParser` also answers `isCountry(code)` (for the `country` setting) and serves `DescribeNumber`, which Setup uses to show a typed number back as E.164 and to count the customer messages of that line before it becomes an owner number. Setup never parses.
 - The rules are a table in the value object, one entry per country. A new country is a new entry and a test.
 - Launch gate (live check, first on Kapso): send one message through Deputy to a number in AR, MX and BR where one is available, and record the sender and counterpart format in the echo and in the inbound message. If a format differs from this table, fix the table before launch.
 
