@@ -42,12 +42,13 @@ export function checkArchitecture(root: string): Violation[] {
     return [base, `${base}.ts`, `${base}/index.ts`].find((c) => known.has(c)) ?? null;
   };
 
-  // What a file may `new`: local names from named, default and namespace imports of an `adapters/` file
-  // (a namespace `ns` yields the pattern `ns.Name`).
+  // What a file may not `new`: local names from named, default and namespace imports of an `adapters/` file
+  // in another folder (a namespace `ns` yields the pattern `ns.Name`). A sibling in the same adapter folder is
+  // one adapter built from its own parts, not wiring.
   const importedAdapters = (file: string, src: string): string[] =>
     [...src.matchAll(/import\s+(?:type\s+)?([^"';]*?)\s*from\s*["'](\.[^"']*)["']/g)].flatMap((m) => {
       const target = resolve(file, m[2] as string);
-      if (!target?.split("/").includes("adapters")) return [];
+      if (!target?.split("/").includes("adapters") || posix.dirname(target) === posix.dirname(file)) return [];
       const clause = m[1] as string;
       const named = /\{([^}]*)\}/.exec(clause)?.[1] ?? "";
       const ns = /\*\s+as\s+(\w+)/.exec(clause)?.[1];
@@ -173,6 +174,9 @@ describe("checkArchitecture", () => {
       expect(found(name)).toEqual(["adapter-instantiated"]);
     });
   }
+  test("fixture adapter-instantiated-other-slice: another slice's adapter class is internal and instantiated", () => {
+    expect(found("adapter-instantiated-other-slice")).toEqual(["adapter-instantiated", "cross-slice-internal"]);
+  });
 
   test("the real src/ has no violations", () => {
     expect(checkArchitecture(join(import.meta.dir, "..", ".."))).toEqual([]);
