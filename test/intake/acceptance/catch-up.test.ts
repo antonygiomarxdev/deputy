@@ -177,6 +177,25 @@ describe("CatchUp", () => {
     expect(done?.name === "CatchUpFinished" && done.storedCount).toBe(4);
   });
 
+  test("a conversation is read newest first and stops at the page that holds an item older than the window", async () => {
+    provider.serverTime = 2_000_000;
+    await build().execute({ trigger: "start" }); // mark 2,000,000: the next window starts at 2,000,000 - OVERLAP_MS = 1,400,000
+    provider.serverTime = 3_000_000;
+    provider.pageSize = 2;
+    provider.hold("c1", "5491123456789", [
+      msg("n1", 2_900_000),
+      msg("n2", 2_800_000),
+      msg("mid", 2_000_000),
+      msg("old", 1_000_000), // page 2 holds this item, older than the window: the conversation stops here
+      msg("ancient", 500_000), // page 3: never requested
+    ]);
+    provider.calls.length = 0;
+    await build().execute({ trigger: "timer" });
+    const reads = provider.calls.filter((c) => c.kind === "messages");
+    expect(reads.map((c) => (c.cursor === null ? null : String(c.cursor)))).toEqual([null, "2"]);
+    expect(await rows()).toEqual(["old", "mid", "n2", "n1"]);
+  });
+
   test("FR-INTAKE-03-17: a message already stored live is not stored or signalled again", async () => {
     provider.serverTime = 10_000;
     await store.unitOfWork.run((r) =>
