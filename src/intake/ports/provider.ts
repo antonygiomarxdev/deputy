@@ -4,8 +4,7 @@ import type { ProviderName } from "../../shared/provider-name";
 
 /** A listing is one HTTP call, normally under a second (Intake TP-03 "Constants"). */
 export const REQUEST_TIMEOUT_MS = 15_000;
-/** UTF-16 code units per sent part (Intake TP-04 splitText). */
-export const MAX_PART = 4_000;
+export { MAX_PART } from "../domain/constants";
 
 export type Cursor = string & { readonly __cursor: true };
 
