@@ -10,10 +10,10 @@ v1 accepts only Kapso and dev (FR-INTAKE-01-1). Catch-up needs list endpoints, w
 `Provider` offers:
 - list conversations active since a time;
 - list messages of a conversation, paged;
-- send text, returning the provider message id or an outcome (sent, failed, unknown), used only by Intake's `SendText`;
+- send text (`sendText({to, text})`, one part), returning `{providerMessageId, serverTime}` or failing with a classified error, used only by Intake's `SendText`;
 - optional live delivery: verify the signature and parse a delivery.
 
-Intake owns the provider connection: the `Provider` outbound port, implemented by the Kapso and dev adapters, and the inbound port `SendText(chat, text, sendId)`, which records the send id and the pending outgoing text, sends, then upserts the provider message id. Echo matching (L2) lives in this slice, and `FindOutgoing(chat, since, text)` resolves unknown outcomes. Drafts' `Sender` outbound port is implemented by an adapter that calls `SendText` (ADR-000). One client therefore paces every request, sends included. Dev adds the test entry points (missed messages, unreadable types, transcripts, forged deliveries) and they exist only while the provider is dev (FR-INTAKE-01-9). `providers/meta.ts` is deleted. `graph.ts` keeps `splitText` and the send helper.
+Intake owns the provider connection: the `Provider` outbound port, implemented by the Kapso and dev adapters, and the inbound port `SendText({sendId, chat, text})`, whose result is sent, failed (with a reason code), unknown or refused,, which records the send id and the pending outgoing text, sends, then upserts the provider message id. Echo matching (L2) lives in this slice, and `FindOutgoing({sendId, chat, since, text})` resolves unknown outcomes. Drafts' `Sender` outbound port is implemented by an adapter that calls `SendText` (ADR-000). One client therefore paces every request, sends included. Dev adds the test entry points (missed messages, unreadable types, transcripts, forged deliveries) and they exist only while the provider is dev (FR-INTAKE-01-9). `providers/meta.ts` is deleted. `graph.ts` keeps `splitText` and the send helper.
 
 ## Alternatives
 - A second sender adapter in Drafts: two clients each pace themselves and together break the 100 requests per minute limit, and one adapter would import two slices' outbound ports.
