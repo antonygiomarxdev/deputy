@@ -300,7 +300,7 @@ export class CatchUpScheduler {
   start(): void;          // runs once with trigger "start", then loops
   stop(): void;           // sets the flag; returns at once; the loop ends at its next wake; a run in flight is guarded by the lease check at every page
 }
-// Every wait is capped at MAX_WAIT_MS. After a run: usage_limit waits until retryAt (trigger "retry"); catching_up runs again at once (trigger "retry"); any other result waits `catchUpMinutes` minutes read again before each wait (trigger "timer"). A throw from a run goes to console.error and the loop goes on.
+// Every wait is capped at MAX_WAIT_MS. A retryAfterMs of 0 or less counts as absent, so it waits RATE_LIMIT_DEFAULT_WAIT_MS: a zero wait would repeat the run at once against a provider that just refused it. After a run: usage_limit waits until retryAt (trigger "retry"); catching_up runs again at once (trigger "retry"); any other result waits `catchUpMinutes` minutes read again before each wait (trigger "timer"). A throw from a run goes to console.error and the loop goes on.
 
 // adapters/kapso/pacer.ts
 export class Pacer {
@@ -393,7 +393,7 @@ None added. Files used: `catchup_status` (SPEC-02, `0005-catchup-status.sql`, ex
 - **Tests first:** `test/intake/acceptance/catch-up-scheduler.test.ts` (use case with fakes) and `test/e2e/check-messages.test.ts` (end to end).
   - FR-INTAKE-03-10: Given a fake clock and the default period, When 10 minutes pass with messages arriving at minute 3 and 7, Then runs happen at 0, 2, 4, 6, 8 and 10 and both messages are stored without being asked.
   - FR-INTAKE-03-10: Given the period changes to 5 between runs, Then the next wait is 5 minutes.
-  - FR-INTAKE-03-20: Given a `429` with `Retry-After: 30`, Then the scheduler's next run starts at `retryAt`, not at the period; given `catching_up`, Then it runs again at once; given a `retryAt` 30 days ahead, Then the next wait is `MAX_WAIT_MS`.
+  - FR-INTAKE-03-20: Given a `429` with `Retry-After: 30`, Then the scheduler's next run starts at `retryAt`, not at the period; given `catching_up`, Then it runs again at once; given a `retryAt` 30 days ahead, Then the next wait is `MAX_WAIT_MS`; given `Retry-After: 0`, Then the next wait is `RATE_LIMIT_DEFAULT_WAIT_MS`; given the lease is lost and acquired again while a wait is pending, Then only one loop runs.
   - FR-INTAKE-03-16: Given live delivery is on, Then the scheduler still runs periodically.
   - FR-INTAKE-03-6: Given the server over stdio after a failed run with reason `credentials`, When `status` is called, Then its text holds the mode line and the `credentials` sentence from `reasonText`, and no provider text (E2E, `test/e2e/check-messages.test.ts`).
   - Resilience: Given a run that throws, Then the error goes to `console.error` and the loop continues.
