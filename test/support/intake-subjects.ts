@@ -29,6 +29,7 @@ export interface IntakeSubject {
 const MIGRATIONS = [
   "adapters/sqlite/migrations/0001-shared.sql",
   "intake/adapters/sqlite/migrations/0001-owner-numbers.sql",
+  "intake/adapters/sqlite/migrations/0002-dev-holdings.sql",
   "intake/adapters/sqlite/migrations/0003-messages.sql",
   "intake/adapters/sqlite/migrations/0004-outgoing.sql",
   "intake/adapters/sqlite/migrations/0005-catchup-status.sql",
