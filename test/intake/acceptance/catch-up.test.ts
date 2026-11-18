@@ -325,9 +325,11 @@ describe("CatchUp", () => {
 
       test("the saved cursor makes the next run request page 2 first", async () => {
         expect((await store.repos.syncState.load("kapso"))?.props.outboundResume).toMatchObject({ cursor: "2", from: null, runStart: 10_000 });
+        provider.serverTime = 20_000; // the provider clock has moved on since the stopped run
         expect(await run()).toMatchObject({ kind: "finished" });
         expect(outboundCalls()[0]).toMatchObject({ cursor: "2" });
         expect(await rows()).toEqual(["e1", "e2", "e3", "e4", "e5"]);
+        // the resumed window was opened by the first run, so its mark is that run's start, not this one's
         expect((await store.repos.syncState.load("kapso"))?.props).toMatchObject({ outboundResume: null, markOutbound: 10_000 });
       });
 
@@ -343,6 +345,24 @@ describe("CatchUp", () => {
         expect(outboundCalls().map((c) => (c.cursor === null ? null : String(c.cursor)))).toEqual(["2", null, "2", "4"]);
         expect(await rows()).toEqual(["e1", "e2", "e3", "e4", "e5"]);
       });
+    });
+
+    test("sweep 2 stops at the page that holds an item older than its window", async () => {
+      provider.serverTime = 2_000_000;
+      await run(); // markOutbound 2,000,000: the next outbound window starts at 1,400,000
+      provider.serverTime = 3_000_000;
+      provider.pageSize = 2;
+      provider.outbound = [
+        echo("e1", 2_900_000),
+        echo("e2", 2_800_000),
+        echo("e3", 2_000_000),
+        echo("e4", 1_000_000), // page 2 holds this item, older than the window: sweep 2 stops here
+        echo("e5", 500_000), // page 3: never requested
+      ];
+      provider.calls.length = 0;
+      await run();
+      expect(outboundCalls().map((c) => (c.cursor === null ? null : String(c.cursor)))).toEqual([null, "2"]);
+      expect(await rows()).toEqual(["e4", "e3", "e2", "e1"]);
     });
 
     test("a provider clock one hour off loses nothing: marks use provider time, order uses sentAt", async () => {
