@@ -34,7 +34,7 @@ export async function startServer(
   const transport = new StdioClientTransport({
     command: process.execPath,
     args: [join(root, "src", "main.ts"), "serve"],
-    env: { DEPUTY_DATA_DIR: dataDir, DEPUTY_CONFIG_DIR: configDir, DEPUTY_PORT: String(port), ...env },
+    env: { DEPUTY_DATA_DIR: dataDir, DEPUTY_CONFIG_DIR: configDir, DEPUTY_PORT: String(port), DEPUTY_SECRET_SERVICE: `deputy-test-${crypto.randomUUID()}`, ...env },
     stderr: "pipe",
   });
   let err = "";

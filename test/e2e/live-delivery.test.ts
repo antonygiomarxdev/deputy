@@ -87,7 +87,7 @@ test("a storage failure is 500", async () => {
 });
 
 /** Kapso needs a business number, which Setup will store; here a first start creates the tables and the test seeds it. */
-async function kapsoServer(receivingMode: string | null): Promise<Harness> {
+async function kapsoServer(receivingMode: string | null, extraEnv: Record<string, string> = {}): Promise<Harness> {
   const fake = startFakeKapso({ apiKey: "key-1", phoneNumberId: "pn-1" });
   fakes.push(fake);
   const first = await boot();
@@ -103,7 +103,7 @@ async function kapsoServer(receivingMode: string | null): Promise<Harness> {
   writeFileSync(join(first.configDir, "secrets.env"), "kapso-api-key=key-1\nkapso-webhook-secret=hook-secret\n");
   started.pop();
   return boot(
-    { DEPUTY_KAPSO_BASE_URL: fake.url, DEPUTY_PORT: String(first.port) },
+    { DEPUTY_KAPSO_BASE_URL: fake.url, DEPUTY_PORT: String(first.port), ...extraEnv },
     { dataDir: first.dataDir, configDir: first.configDir },
   );
 }
@@ -116,4 +116,23 @@ test("FR-INTAKE-02-11: Kapso with an empty receiving_mode binds no port", async 
 test("FR-INTAKE-02-11: Kapso with receiving_mode live answers /health", async () => {
   const h = await kapsoServer("live");
   expect((await fetch(url(h, "/health"))).status).toBe(200);
+});
+
+test("hermetic: the server reads secrets from the namespace the harness sets, not from the real store", async () => {
+  const service = `deputy-test-probe-${crypto.randomUUID()}`;
+  await Bun.secrets.set({ service, name: "kapso-webhook-secret", value: "os-hook" });
+  try {
+    const h = await kapsoServer("live", { DEPUTY_SECRET_SERVICE: service });
+    const raw = new TextEncoder().encode(
+      JSON.stringify({ message: { id: "wamid.X1", timestamp: "1700000500", type: "text", from: "15557654321", text: { body: "hi" }, kapso: { direction: "inbound" } } }),
+    );
+    const sign = (secret: string) => new Bun.CryptoHasher("sha256", secret).update(raw).digest("hex");
+    const post = (secret: string) =>
+      fetch(url(h, "/webhook"), { method: "POST", headers: { "x-webhook-signature": sign(secret), "x-webhook-event": "whatsapp.message.received" }, body: new Blob([raw.slice().buffer]) });
+    // secrets.env holds "hook-secret"; the namespaced OS entry wins, which proves the namespace is the one read
+    expect((await post("os-hook")).status).toBe(200);
+    expect((await post("hook-secret")).status).toBe(401);
+  } finally {
+    await Bun.secrets.delete({ service, name: "kapso-webhook-secret" });
+  }
 });

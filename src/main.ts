@@ -62,7 +62,7 @@ async function serve(): Promise<number> {
 
   const config = new FileConnectionConfig({
     configDir,
-    secrets: createSecretStore({ os: { get: (service, name) => Bun.secrets.get({ service, name }) }, configDir }),
+    secrets: createSecretStore({ os: { get: (service, name) => Bun.secrets.get({ service: process.env["DEPUTY_SECRET_SERVICE"] ?? service, name }) }, configDir }),
   });
   const owners = new SqliteOwnerNumbersRepository(db);
   const resolved = await createIntake({ config, owners }).resolveProviderSettings.execute();
