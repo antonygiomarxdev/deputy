@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { Draft, type DraftKind, type DraftNumber } from "../../../src/drafts/domain/draft";
-import { LeaseLost, StaleDraft } from "../../../src/drafts/domain/errors";
+import { LeaseLost, LogUnavailable, StaleDraft } from "../../../src/drafts/domain/errors";
 import type { UnitOfWork } from "../../../src/drafts/ports/outbound";
 import type { ChatId } from "../../../src/shared/chat-id";
 import type { MessageId } from "../../../src/shared/message-id";
@@ -132,6 +132,21 @@ export function draftRepositoryContract(name: string, make: (lease: OwnerLease) 
       const found = await uow.run((tx) => tx.drafts.openFor("c0" as ChatId, "reply"));
       expect(found?.snapshot().state).toBe("waiting");
       expect(await uow.run((tx) => tx.drafts.openFor("c9" as ChatId, "reply"))).toBeNull();
+    });
+
+    test("FR-DRAFTS-04-7: a log append that fails rolls back the draft saved in the same transaction", async () => {
+      const { uow, next } = setup();
+      const n = await next();
+      await expect(
+        uow.run(async (tx) => {
+          await tx.drafts.save(newDraft(n));
+          await tx.log.append([
+            { at: 1, kind: "proposed", draft: n, draftKind: "order", chat: chatA, proposedText: "text", finalText: null, reason: null, ownerWords: null, approvalEntryId: null, sendId: null, orderRef: null },
+          ]);
+        }),
+      ).rejects.toBeInstanceOf(LogUnavailable);
+      expect(await uow.run((tx) => tx.drafts.get(n))).toBeNull();
+      expect(await uow.run((tx) => tx.log.page({ limit: 10 }))).toEqual([]);
     });
 
     test("requireLease: a write throws LeaseLost when this process is not the owner; a read may skip the check", async () => {

@@ -5,7 +5,7 @@ import { LeaseLost, LogUnavailable, StaleDraft } from "../../domain/errors";
 import type { LogEntry, NewLogEntry } from "../../domain/log-entry";
 import { toIso } from "../../domain/time";
 import type { DraftLogRepository } from "../../ports/log";
-import type { DraftRepository, UnitOfWork } from "../../ports/outbound";
+import type { DraftRepository, Transaction, UnitOfWork } from "../../ports/outbound";
 
 const SCRUBBABLE_KINDS = new Set(["order_command", "order_deleted"]);
 
@@ -106,13 +106,13 @@ export class InMemoryDrafts {
   }
 
   private async transact<T>(
-    work: (tx: { drafts: DraftRepository }) => Promise<T>,
+    work: (tx: Transaction) => Promise<T>,
     options?: { requireLease?: boolean },
   ): Promise<T> {
     if ((options?.requireLease ?? true) && !(await this.lease.isOwner())) throw new LeaseLost();
     const before = { drafts: new Map(this.drafts), counter: this.counter, log: this.log.save() };
     try {
-      return await work({ drafts: this.repository() });
+      return await work({ drafts: this.repository(), log: this.log });
     } catch (e) {
       this.drafts = before.drafts;
       this.counter = before.counter;

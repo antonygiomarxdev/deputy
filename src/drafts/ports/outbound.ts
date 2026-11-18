@@ -2,6 +2,7 @@ import type { ChatId } from "../../shared/chat-id";
 import type { Instant } from "../../shared/instant";
 import type { MessageId } from "../../shared/message-id";
 import type { Draft, DraftKind, DraftNumber } from "../domain/draft";
+import type { DraftLogRepository } from "./log";
 
 export type OrderInput = Readonly<Record<string, unknown>>; // validated by Orders' PrepareOrder
 
@@ -18,10 +19,15 @@ export interface DraftRepository {
   save(draft: Draft): Promise<void>;
 }
 
-// SPEC-04 Task 2 adds `log: DraftLogRepository` to the tx object and SPEC-02 adds `approvals: ApprovalRepository`.
+// SPEC-02 adds `approvals: ApprovalRepository`.
+export interface Transaction {
+  readonly drafts: DraftRepository;
+  readonly log: DraftLogRepository;
+}
+
 export interface UnitOfWork {
   run<T>(
-    work: (tx: { drafts: DraftRepository }) => Promise<T>,
+    work: (tx: Transaction) => Promise<T>,
     options?: { requireLease?: boolean }, // default true: a write checks the lease; pure reads pass false
   ): Promise<T>; // commits when work resolves; rolls back and rethrows when it throws; transactions run one at a time
 }
