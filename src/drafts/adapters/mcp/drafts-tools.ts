@@ -58,6 +58,7 @@ export function draftsTools(u: { createDraft: CreateDraft; changeDraft: ChangeDr
           `draft ${d.number} (${d.kind}) is waiting for the owner's go`,
           ...(d.replaced ? [`it replaced draft ${d.replaced.number} (${d.replaced.state})`] : []),
           ...(d.answers ? [`it answers: ${customerText("customer_text", d.answers.text)}`] : []),
+          `text: ${customerText("customer_text", d.text)}`,
         ];
         return {
           text: lines.join("\n"),
@@ -65,7 +66,7 @@ export function draftsTools(u: { createDraft: CreateDraft; changeDraft: ChangeDr
             number: d.number,
             kind: d.kind,
             state: d.state,
-            text: d.text,
+            text: customerText("customer_text", d.text),
             answers: d.answers ? answeredMessage(d.answers) : null,
             replaced: d.replaced,
           },
