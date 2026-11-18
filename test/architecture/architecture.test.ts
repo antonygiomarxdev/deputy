@@ -17,9 +17,9 @@ const CORE_LAYERS = new Set(["domain", "application", "ports"]);
 const DRAFTS_FORBIDDEN = new Set(["inbox", "notify", "knowledge", "setup"]);
 const CUSTOMER_TEXT_HELPER = "src/adapters/mcp/customer-text.ts";
 const SOURCE_CLASSIFIER = "src/intake/domain/source-classifier.ts";
-// A key is revealed only where it is used: the adapters, the live delivery that verifies a signature, and main.ts handing the secret over.
+// A key is revealed only where it is used: the adapters, and the live delivery that hands it to the provider to verify a signature.
 const REVEAL_ALLOWED = (file: string) =>
-  file.startsWith("src/intake/adapters/") || file === "src/intake/application/receive-live-delivery.ts" || file === "src/main.ts";
+  file.startsWith("src/intake/adapters/") || file === "src/intake/application/receive-live-delivery.ts";
 const CONNECTION_CONFIG = "src/intake/ports/intake-connection-config.ts";
 
 function locate(file: string): Loc {
@@ -187,6 +187,10 @@ describe("checkArchitecture", () => {
   }
   test("fixture adapter-instantiated-other-slice: another slice's adapter class is internal and instantiated", () => {
     expect(found("adapter-instantiated-other-slice")).toEqual(["adapter-instantiated", "cross-slice-internal"]);
+  });
+
+  test("fixture secret-reveal-main: main.ts may not reveal a secret either; it hands the Secret over", () => {
+    expect(found("secret-reveal-main")).toEqual(["secret-reveal"]);
   });
 
   for (const name of ["secret-reveal-config-api-key", "secret-reveal-config-webhook"]) {

@@ -148,7 +148,7 @@ async function serve(): Promise<number> {
     lease,
     provider,
     receiving: resolved.receiving,
-    webhookSecret: connection.kapso.webhookSecret?.reveal() ?? null,
+    webhookSecret: connection.kapso.webhookSecret,
     settings: new SqliteIntakeSettingsRepository(db),
   });
   const scheduler = new CatchUpScheduler({ catchUp: intake.catchUp, settings: intake.getIntakeSettings, clock });

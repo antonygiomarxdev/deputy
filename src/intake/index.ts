@@ -12,6 +12,7 @@ import { GetSyncStatusUseCase, type GetSyncStatusDeps } from "./application/get-
 import type { CatchUp } from "./ports/catch-up";
 import type { GetSyncStatus } from "./ports/get-sync-status";
 import { CheckProviderAccessUseCase } from "./application/check-provider-access";
+import type { Secret } from "./domain/secret";
 import { ApplyPendingChangesUseCase } from "./application/apply-pending-changes";
 import { DescribeNumberUseCase } from "./application/describe-number";
 import { GetOwnerNumbersUseCase } from "./application/get-owner-numbers";
@@ -93,7 +94,7 @@ export interface IntakeRuntimeDeps {
   lease: OwnerLease;
   provider: Provider;
   receiving: "catch_up" | "live";
-  webhookSecret: string | null;
+  webhookSecret: Secret | null;
   settings: IntakeSettingsRepository;
 }
 
