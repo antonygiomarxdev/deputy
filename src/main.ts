@@ -8,6 +8,7 @@ import { createSqliteOwnerLease } from "./adapters/sqlite/sqlite-owner-lease";
 import { LeaseSupervisor } from "./adapters/supervisor/lease-supervisor";
 import sharedSql from "./adapters/sqlite/migrations/0001-shared.sql" with { type: "text" };
 import { INSTRUCTIONS } from "./composition/mcp/instructions";
+import { compositionTools } from "./composition/mcp/composition-tools";
 import { createMcpServer } from "./composition/mcp/server";
 import pkg from "../package.json" with { type: "json" };
 
@@ -40,7 +41,7 @@ async function serve(): Promise<number> {
     name: "deputy",
     version: pkg.version,
     instructions: INSTRUCTIONS,
-    tools: [],
+    tools: compositionTools({ isOwner: () => supervisor.isOwner, sections: [] }),
     claudeChannel: false,
   });
 
