@@ -2,7 +2,7 @@
 
 Status: draft for owner review · Owner: Antony Giomar · Last updated: 2026-11-17
 
-This file holds what every slice shares: the problem, users, principles, scope and the slice map. Each slice (one feature) lives in `src/<slice>/` with its own document chain in `src/<slice>/docs/`: **PRD** → **FRDs** (`frd/`) → **TP** (Technical Proposal, `tp/`) → **specs** (`specs/`). A slice's PRD cites the principles below; it does not restate them.
+This file holds what every slice shares: the problem, users, principles, scope and the slice map. Each slice (one feature) lives in `src/<slice>/` with its own document chain in `src/<slice>/docs/`: **PRD** → **FRDs** (`frd/`) → **TP** (Technical Proposal, `tp/`) → **ADRs** (`adr/`, one per technical decision the TP makes) → **specs** (`specs/`). Decisions that span slices: [DECISIONS.md](DECISIONS.md) for product, `docs/adr/` for technical. Shared terms: [GLOSSARY.md](GLOSSARY.md). A slice's PRD cites the principles below; it does not restate them.
 
 ## 1. Problem
 
