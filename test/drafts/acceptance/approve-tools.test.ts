@@ -72,6 +72,18 @@ describe("the answers", () => {
     expect(r.text).toBe("draft 1 does not exist");
   });
 
+  test.each([
+    [{ outcome: "failed", number: 4, reason: "out of stock" } as const, false],
+    [{ outcome: "unknown", number: 4, reason: "unknown_outcome", detail: "it may or may not have been sent" } as const, false],
+    [{ outcome: "sent", number: 4, sendId: "deputy:a", logged: true } as const, true],
+    [{ outcome: "recorded", number: 4, orderId: "o-1" } as const, true],
+  ])("an outcome %p is an error result: %p", async (value, ok) => {
+    const approveDraft: ApproveDraft = { run: async () => ({ ok: true, value }) };
+    const t = tools({ approveDraft }).find((x) => x.name === "approve_draft");
+    const r = await t?.run({ number: 4, shown_text: "x", owner_words: "go 4" });
+    expect(r?.isError).toBe(!ok);
+  });
+
   test("a sent draft is reported as sent", async () => {
     const approveDraft: ApproveDraft = { run: async () => ({ ok: true, value: { outcome: "sent", number: 3, sendId: "deputy:a", logged: true } }) };
     const t = tools({ approveDraft }).find((x) => x.name === "approve_draft");
