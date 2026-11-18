@@ -121,3 +121,8 @@ export interface CheckApprovals {
   /** A pure read. */
   run(): Promise<{ defects: AuditDefect[]; gaps: AuditGap[] }>;
 }
+
+/** Orders' OrderDeleted, delivered through its outbox. `draftNumber` is null when the order is not from this data folder. */
+export interface OnOrderDeleted {
+  run(event: { eventId: string; orderId: string; draftNumber: number | null; chat: string }): Promise<{ scrubbed: number } | { refused: "not_owner" }>;
+}
