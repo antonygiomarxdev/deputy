@@ -3,6 +3,7 @@ import type { Instant } from "../../shared/instant";
 import type { MessageId } from "../../shared/message-id";
 import { PhoneNumber } from "../../shared/phone-number";
 import type { ProviderName } from "../../shared/provider-name";
+import type { SendId } from "../../shared/send-id";
 import type { Source } from "../../shared/source";
 import { normalizeText } from "../../shared/text";
 import type { IncomingMessage } from "./incoming-message";
@@ -38,6 +39,14 @@ export interface MessageProps {
   dev: boolean;
   edited: boolean;
   deletedBySender: boolean;
+}
+
+export interface SourceChange {
+  readonly at: Instant;
+  readonly id: MessageId;
+  readonly from: "owner_app";
+  readonly to: "sent_through_deputy";
+  readonly sendId: SendId;
 }
 
 export interface ReceiveContext {
@@ -119,6 +128,13 @@ export class Message {
     this.history = [...this.history, replaced];
     this.p = { ...this.p, text, edited: true };
     return replaced;
+  }
+
+  /** Allowed only from owner_app (the safe direction, L2). It changes nothing else, and no signal is emitted for it. */
+  reclassifyAsDeputySend(sendId: SendId, at: Instant): { ok: true; change: SourceChange } | { ok: false; reason: "not_owner_app" } {
+    if (this.p.source !== "owner_app") return { ok: false, reason: "not_owner_app" };
+    this.p = { ...this.p, source: "sent_through_deputy" };
+    return { ok: true, change: { at, id: this.p.id, from: "owner_app", to: "sent_through_deputy", sendId } };
   }
 
   markDeletedBySender(): void {
