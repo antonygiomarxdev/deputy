@@ -20,6 +20,11 @@ export interface DraftRepository {
   save(draft: Draft): Promise<void>;
   /** The normalized text equals the proposed or the current normalized text of any draft, in any state. */
   hasDraftText(normalized: string): Promise<boolean>;
+  /**
+   * An order was deleted in Orders: the texts of that order draft read "deleted" and its payload is cleared. The row and the
+   * number stay. Does nothing for a reply draft. Counts as a write (the revision rises).
+   */
+  scrubOrderDraft(number: DraftNumber): Promise<void>;
 }
 
 export interface ApprovalRepository {
@@ -28,6 +33,8 @@ export interface ApprovalRepository {
   /** Voids every live (not yet voided) approval of the draft; the rows stay. */
   void(draft: DraftNumber, reason: string, at: Instant): Promise<void>;
   forDraft(draft: DraftNumber): Promise<Approval[]>;
+  /** The text, the owner's words and the hash of that order draft's approvals read "deleted"; the rows stay. Does nothing for a reply draft. */
+  scrubOrderDraft(draft: DraftNumber): Promise<void>;
 }
 
 export interface Transaction {

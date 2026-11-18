@@ -42,6 +42,13 @@ export class SqliteDraftRepository implements DraftRepository {
     return row !== undefined;
   }
 
+  async scrubOrderDraft(number: DraftNumber): Promise<void> {
+    await this.db.run(
+      "UPDATE drafts SET current_text = 'deleted', proposed_text = 'deleted', current_norm = 'deleted', proposed_norm = 'deleted', order_payload = NULL, revision = revision + 1 WHERE number = ? AND kind = 'order'",
+      [number],
+    );
+  }
+
   async save(draft: Draft): Promise<void> {
     const s = draft.snapshot();
     const values = toValues(s);
