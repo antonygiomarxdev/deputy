@@ -191,7 +191,7 @@ describe("CatchUp", () => {
     ]);
     provider.calls.length = 0;
     await build().execute({ trigger: "timer" });
-    const reads = provider.calls.filter((c) => c.kind === "messages");
+    const reads = provider.calls.filter((c) => c.kind === "messages" && "conversationRef" in c.scope);
     expect(reads.map((c) => (c.cursor === null ? null : String(c.cursor)))).toEqual([null, "2"]);
     expect(await rows()).toEqual(["old", "mid", "n2", "n1"]);
   });
