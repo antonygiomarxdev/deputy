@@ -55,12 +55,6 @@ export interface DraftsDeps {
   unitOfWork: UnitOfWork;
   chats: ChatReader;
   orders: OrderPreparer;
-  customerText: CustomerTextCheck;
-  sender: Sender;
-  orderRecorder: OrderRecorder;
-  orderChanger: OrderChanger;
-  digest: TextDigest;
-  ids: Ids;
 }
 
 /** SPEC-02, SPEC-03 and SPEC-04 add dependencies and members. */
@@ -70,16 +64,36 @@ export function createDrafts(deps: DraftsDeps): {
   changeDraft: ChangeDraft;
   rejectDraft: RejectDraft;
   waitingChats: WaitingChats;
-  approveDraft: ApproveDraft;
-  approveOrderCommand: ApproveOrderCommand;
 } {
-  const { clock, lease, unitOfWork, chats, orders, sessionStartedAt, customerText, sender, orderRecorder, orderChanger, digest, ids } = deps;
+  const { clock, lease, unitOfWork, chats, orders, sessionStartedAt } = deps;
   return {
     createDraft: new CreateDraftUseCase({ clock, lease, unitOfWork, chats, orders }),
     listDrafts: new ListDraftsUseCase({ lease, unitOfWork, chats, orders, sessionStartedAt }),
     changeDraft: new ChangeDraftUseCase({ clock, lease, unitOfWork, orders }),
     rejectDraft: new RejectDraftUseCase({ clock, lease, unitOfWork }),
     waitingChats: new WaitingChatsUseCase({ unitOfWork, sessionStartedAt }),
+  };
+}
+
+export interface ApprovalDeps {
+  clock: Clock;
+  lease: OwnerLease;
+  unitOfWork: UnitOfWork;
+  customerText: CustomerTextCheck;
+  sender: Sender;
+  orderRecorder: OrderRecorder;
+  orderChanger: OrderChanger;
+  digest: TextDigest;
+  ids: Ids;
+}
+
+/**
+ * The owner's go: the one path that sends (approve_draft) and the order commands. Built apart from createDrafts so that
+ * main.ts offers these tools only once a real sender exists: a tool that can never send must not be offered.
+ */
+export function createApprovals(deps: ApprovalDeps): { approveDraft: ApproveDraft; approveOrderCommand: ApproveOrderCommand } {
+  const { clock, lease, unitOfWork, customerText, sender, orderRecorder, orderChanger, digest, ids } = deps;
+  return {
     approveDraft: new ApproveDraftUseCase({ clock, lease, unitOfWork, customerText, sender, recorder: orderRecorder, digest, ids }),
     approveOrderCommand: new ApproveOrderCommandUseCase({ clock, lease, unitOfWork, customerText, changer: orderChanger }),
   };

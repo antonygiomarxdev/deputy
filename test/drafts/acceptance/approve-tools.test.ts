@@ -1,18 +1,16 @@
 import { describe, expect, test } from "bun:test";
-import { draftsTools } from "../../../src/drafts/adapters/mcp/drafts-tools";
+import { approvalTools, draftsTools } from "../../../src/drafts/adapters/mcp/drafts-tools";
 import type { ApproveDraft, ApproveOrderCommand } from "../../../src/drafts/ports/inbound";
-import { makeDrafts } from "./harness";
+import { createApprovals } from "../../../src/drafts/index";
+import { makeDrafts, message } from "./harness";
 
 function tools(over: { approveDraft?: ApproveDraft; approveOrderCommand?: ApproveOrderCommand } = {}) {
   const h = makeDrafts({});
   const never = { run: async () => Promise.reject(new Error("not called")) };
-  return draftsTools({
-    createDraft: h.createDraft,
-    changeDraft: never,
-    rejectDraft: never,
-    approveDraft: over.approveDraft ?? h.approveDraft,
-    approveOrderCommand: over.approveOrderCommand ?? h.approveOrderCommand,
-  });
+  return [
+    ...draftsTools({ createDraft: h.createDraft, changeDraft: never, rejectDraft: never }),
+    ...approvalTools({ approveDraft: over.approveDraft ?? h.approveDraft, approveOrderCommand: over.approveOrderCommand ?? h.approveOrderCommand }),
+  ];
 }
 const byName = (name: string) => {
   const t = tools().find((x) => x.name === name);
@@ -41,6 +39,28 @@ describe("the tool list", () => {
   test("the order tools take an order reference and the owner's words, and no chat", () => {
     expect(Object.keys(byName("change_order").input)).toEqual(["order", "change", "owner_words"]);
     expect(Object.keys(byName("delete_order").input)).toEqual(["order", "confirm", "owner_words"]);
+  });
+});
+
+describe("createApprovals", () => {
+  test("it builds the go through the given sender and recorder: a listed draft is sent once", async () => {
+    const h = makeDrafts({ chats: { "chat-a": [message("a1", "customer", "How much?", 900)] } });
+    const { approveDraft } = createApprovals({
+      clock: h.clock,
+      lease: { isOwner: async () => true },
+      unitOfWork: h.store.unitOfWork,
+      customerText: h.customerText,
+      sender: h.sender,
+      orderRecorder: h.recorder,
+      orderChanger: h.changer,
+      digest: { sha256: (t) => `h(${t})` },
+      ids: { next: () => "ap9" },
+    });
+    await h.createDraft.run({ kind: "reply", chat: "chat-a", text: "ten" });
+    await h.listDrafts.run({});
+    expect(await approveDraft.run({ number: 1, shownText: "ten", ownerWords: "go 1" })).toMatchObject({ ok: true, value: { outcome: "sent", sendId: "deputy:ap9" } });
+    expect(h.sender.calls).toHaveLength(1);
+    expect(h.recorder.calls).toHaveLength(0);
   });
 });
 

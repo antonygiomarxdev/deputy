@@ -33,13 +33,7 @@ function orderCommandResult(r: OrderCommandValue): ToolResult {
   };
 }
 
-export function draftsTools(u: {
-  createDraft: CreateDraft;
-  changeDraft: ChangeDraft;
-  rejectDraft: RejectDraft;
-  approveDraft: ApproveDraft;
-  approveOrderCommand: ApproveOrderCommand;
-}): ToolDefinition[] {
+export function draftsTools(u: { createDraft: CreateDraft; changeDraft: ChangeDraft; rejectDraft: RejectDraft }): ToolDefinition[] {
   const createDraft = defineTool({
     name: "create_draft",
     description:
@@ -114,6 +108,11 @@ export function draftsTools(u: {
     },
   });
 
+  return [createDraft, changeDraft, rejectDraft];
+}
+
+/** The owner's go. Offered only when a real sender is wired (see createApprovals). */
+export function approvalTools(u: { approveDraft: ApproveDraft; approveOrderCommand: ApproveOrderCommand }): ToolDefinition[] {
   const approveDraft = defineTool({
     name: "approve_draft",
     description:
@@ -157,5 +156,5 @@ export function draftsTools(u: {
     },
   });
 
-  return [createDraft, changeDraft, rejectDraft, approveDraft, changeOrder, deleteOrder];
+  return [approveDraft, changeOrder, deleteOrder];
 }
