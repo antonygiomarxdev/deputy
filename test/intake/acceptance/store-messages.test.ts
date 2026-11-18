@@ -95,6 +95,12 @@ describe("StoreMessages", () => {
     expect((await find("m1"))?.versions).toHaveLength(1);
   });
 
+  test("a history message still updates the chat row, though it is not announced", async () => {
+    const out = await run([msg({ providerMessageId: "h", origin: "history_sync", sentAt: 400 })]);
+    expect(out.summaries).toEqual([]);
+    expect(await store.repos.chats.get(CHAT, false)).toMatchObject({ lastCustomerAt: 400, lastCustomerMessageId: "h" });
+  });
+
   test("FR-INTAKE-02-13: group and sender-unknown messages are kept and do not move lastCustomerAt", async () => {
     await run([msg({ providerMessageId: "plain", sentAt: 100 })]);
     await run([
