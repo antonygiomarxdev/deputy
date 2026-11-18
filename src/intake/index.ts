@@ -1,3 +1,8 @@
+import { GetIntakeSettingsUseCase } from "./application/get-intake-settings";
+import { SetIntakeSettingsUseCase, type SetIntakeSettingsDeps } from "./application/set-intake-settings";
+import type { GetIntakeSettings } from "./ports/get-intake-settings";
+import type { IntakeSettingsRepository } from "./ports/intake-settings-repository";
+import type { SetIntakeSettings } from "./ports/set-intake-settings";
 import type { Clock } from "../shared/clock";
 import type { OwnerLease } from "../shared/owner-lease";
 import { ChatExistsUseCase } from "./application/chat-exists";
@@ -118,4 +123,16 @@ export function createCatchUp(deps: CatchUpDeps): CatchUp {
 
 export function createGetSyncStatus(deps: GetSyncStatusDeps): GetSyncStatus {
   return new GetSyncStatusUseCase(deps);
+}
+
+export type { GetIntakeSettings } from "./ports/get-intake-settings";
+export type { SetIntakeSettings } from "./ports/set-intake-settings";
+export type { SetIntakeSettingsDeps } from "./application/set-intake-settings";
+
+export function createGetIntakeSettings(settings: IntakeSettingsRepository): GetIntakeSettings {
+  return new GetIntakeSettingsUseCase(settings);
+}
+
+export function createSetIntakeSettings(deps: SetIntakeSettingsDeps): SetIntakeSettings {
+  return new SetIntakeSettingsUseCase(deps);
 }
