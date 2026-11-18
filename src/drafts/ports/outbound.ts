@@ -94,3 +94,29 @@ export interface TextDigest {
 export interface Ids {
   next(): string;
 }
+
+/** Drafts owns this port; the adapter calls Orders' RecordOrder. Idempotent on draftNumber. */
+export interface OrderRecorder {
+  record(input: { draftNumber: number; payload: string; ownerWords: string }): Promise<
+    | { ok: true; orderId: string }
+    | { ok: false; kind: "outcome_unknown" }
+    | { ok: false; kind: "refused"; reason: string }
+  >;
+}
+
+/** The fields Orders accepts in a change (Orders ADR-008). Keys outside this list are refused, so a key can never carry customer text into the log. */
+export const ORDER_FIELDS = ["status", "customer_name", "fulfillment", "address", "wanted_date", "wanted_time", "notes", "items"] as const;
+export type OrderField = (typeof ORDER_FIELDS)[number];
+export type OrderChangeInput = Readonly<Partial<Record<OrderField, unknown>>>;
+
+/** Drafts owns this port; the adapter calls Orders' ChangeOrder and DeleteOrder. */
+export interface OrderChanger {
+  /** The chat of the order, read before the log entry is written (the entry comes first and its chat is not null). null when the order is unknown. */
+  chatOf(orderRef: string): Promise<string | null>;
+  change(orderRef: string, change: OrderChangeInput, ownerWords: string): Promise<{ ok: true; detail: string } | { ok: false; reason: string }>;
+  delete(
+    orderRef: string,
+    ownerWords: string,
+    confirm: boolean,
+  ): Promise<{ ok: true; detail: string } | { ok: false; reason: string } | { pending: string }>;
+}
