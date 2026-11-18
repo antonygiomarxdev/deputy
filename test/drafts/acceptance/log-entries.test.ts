@@ -48,7 +48,7 @@ describe("FR-DRAFTS-04-1: every event writes its entry", () => {
     }
   });
 
-  test("replaced, rejected and approval voided entries come from the use cases and name the draft and the chat", async () => {
+  test("replaced and rejected entries come from the use cases and name the draft and the chat", async () => {
     const h = makeDrafts({ chats });
     await create(h, "one");
     await create(h, "two"); // replaces draft 1
@@ -56,6 +56,34 @@ describe("FR-DRAFTS-04-1: every event writes its entry", () => {
     const log = await entries(h);
     expect(log.map((e) => [e.kind, e.draft])).toEqual([["proposed", 1], ["replaced", 1], ["proposed", 2], ["rejected", 2]]);
     for (const e of log) expect(e.chat).toBe("chat-a" as ChatId);
+  });
+});
+
+describe("FR-DRAFTS-04-1: approval voided", () => {
+  const seedApproval = async (h: H) => {
+    await h.store.unitOfWork.run((tx) =>
+      tx.approvals.insert({
+        id: "ap-0", draftNumber: 1, textVersion: 1, text: "ten", textHash: "h", ownerWords: "go 1", approvedAt: 1_000, usedAt: 1_000,
+        sendId: "send-0", voidedAt: null, voidReason: null,
+      }),
+    );
+    const [id] = await h.store.log.append([
+      { at: 1_000, kind: "approved", draft: 1, draftKind: "reply", chat: "chat-a" as ChatId, proposedText: "ten", finalText: "ten", reason: null, ownerWords: "go 1", approvalEntryId: null, sendId: "send-0", orderRef: null },
+    ]);
+    return id as number;
+  };
+
+  test.each([
+    ["changed", (h: H) => h.changeDraft.run({ number: 1, text: "eleven", ownerWords: "make it eleven" })],
+    ["rejected", (h: H) => h.rejectDraft.run({ number: 1, ownerWords: "no 1" })],
+    ["replaced", (h: H) => h.createDraft.run({ kind: "reply", chat: "chat-a", text: "newer" })],
+  ] as const)("an approval voided by a %s draft writes an approval_voided entry that names the draft and the chat and points to the approved entry", async (reason, act) => {
+    const h = makeDrafts({ chats });
+    await create(h, "ten");
+    const approvedId = await seedApproval(h);
+    await act(h);
+    const voided = (await entries(h)).find((e) => e.kind === "approval_voided");
+    expect(voided).toMatchObject({ draft: 1, chat: "chat-a", reason, approvalEntryId: approvedId, sendId: "send-0" });
   });
 });
 
