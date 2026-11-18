@@ -8,7 +8,7 @@ export interface SetIntakeSettings {
   ): Promise<
     | { ok: true; value: number | string }
     | { ok: false; reason: "not_owner" }
-    | { ok: false; reason: "below_minimum" | "above_maximum" | "not_an_integer"; minimum: 1; maximum: 1440; kept: number }
+    | { ok: false; reason: "below_minimum" | "not_an_integer"; minimum: 1; kept: number }
     | { ok: false; reason: "unknown_country"; kept: string | null }
   >;
 }
