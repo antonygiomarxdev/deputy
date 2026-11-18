@@ -126,3 +126,7 @@ export interface CheckApprovals {
 export interface OnOrderDeleted {
   run(event: { eventId: string; orderId: string; draftNumber: number | null; chat: string }): Promise<{ scrubbed: number } | { refused: "not_owner" }>;
 }
+
+export interface RetryPendingOutcomes {
+  run(): Promise<{ written: number; pending: number }>;
+}

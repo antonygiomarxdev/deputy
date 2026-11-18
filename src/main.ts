@@ -7,6 +7,7 @@ import { createSecretStore } from "./adapters/secrets/secret-store";
 import { openBunSqlite } from "./adapters/sqlite/bun-sqlite-database";
 import { migrate } from "./adapters/sqlite/migrate";
 import { createSqliteOwnerLease } from "./adapters/sqlite/sqlite-owner-lease";
+import { LEASE_RENEW_MS } from "./shared/lease-constants";
 import { LeaseSupervisor } from "./adapters/supervisor/lease-supervisor";
 import sharedSql from "./adapters/sqlite/migrations/0001-shared.sql" with { type: "text" };
 import ownerNumbersSql from "./intake/adapters/sqlite/migrations/0001-owner-numbers.sql" with { type: "text" };
@@ -175,11 +176,29 @@ async function serve(): Promise<number> {
     ownerLine: `deputy: owner of ${dataDir} (config ${configDir}, provider ${resolved.provider})`,
     log: (line) => console.error(line),
   });
+  // while this process owns the data, a `sent` record that could not be written is tried again every 10 seconds
+  let retryTimer: ReturnType<typeof setInterval> | null = null;
+  const stopRetrying = () => {
+    if (retryTimer !== null) clearInterval(retryTimer);
+    retryTimer = null;
+  };
   const supervisor = new LeaseSupervisor({
     lease,
     clock,
-    onAcquired: hooks.onAcquired,
-    onLost: hooks.onLost,
+    onAcquired: async () => {
+      await hooks.onAcquired();
+      stopRetrying();
+      retryTimer = setInterval(() => {
+        approvals.retryPendingOutcomes.run().catch((e: unknown) => {
+          console.error(`deputy: retrying the unwritten send records failed (${e instanceof Error ? e.name : "unknown error"})`);
+        });
+      }, LEASE_RENEW_MS);
+      retryTimer.unref();
+    },
+    onLost: async () => {
+      stopRetrying();
+      await hooks.onLost();
+    },
   });
 
   const mcp = createMcpServer({

@@ -11,6 +11,7 @@ import type { ApproveDraft, ApproveResult, Outcome } from "../ports/inbound";
 import type { CustomerTextCheck, Ids, OrderRecorder, TextDigest, UnitOfWork } from "../ports/outbound";
 import type { Sender } from "../ports/sender";
 import { checkOwnerWords } from "./check-owner-words";
+import type { PendingOutcomes } from "./pending-outcomes";
 
 const refuse = (refusal: Refusal): Outcome<never> => ({ ok: false, refusal });
 
@@ -22,10 +23,10 @@ function refusalOfError(e: unknown): Outcome<never> {
   throw e;
 }
 
-type SendDeps = { clock: Clock; unitOfWork: UnitOfWork; sender: Sender; recorder: OrderRecorder };
+type SendDeps = { clock: Clock; unitOfWork: UnitOfWork; sender: Sender; recorder: OrderRecorder; pending: PendingOutcomes };
 
 /** What the outside call answered: how to close the draft, and what the owner is told. Null: the call was refused. */
-type Step = { finish: (d: Draft, now: Instant) => DraftChange; value: ApproveResult } | null;
+export type Step = { finish: (d: Draft, now: Instant) => DraftChange; value: ApproveResult } | null;
 
 async function attempt(
   deps: SendDeps,
@@ -54,12 +55,7 @@ async function attempt(
   const sent = await deps.sender.send(draft.chat, approval.text, approval.sendId);
   // a refused send was never attempted by this process, so the draft stays "sending" for the owner process to recover
   if (sent.kind === "refused") return null;
-  if (sent.kind === "sent") {
-    return {
-      finish: (d, now) => d.finishSent({ sendId: approval.sendId, now, reason: null }),
-      value: { outcome: "sent", number, sendId: approval.sendId, logged: true },
-    };
-  }
+  if (sent.kind === "sent") return sentStep(number, approval.sendId);
   // any result other than sent is "unknown": it is never retried by itself (TP-03)
   return {
     finish: (d, now) => d.finishUnknown({ reason: "unknown_outcome", now }),
@@ -71,6 +67,38 @@ async function attempt(
     },
   };
 }
+
+/** The close of a send that went out: the draft becomes "sent". Also what the retry of an unwritten record does. */
+export function sentStep(number: number, sendId: string): NonNullable<Step> {
+  return {
+    finish: (d, now) => d.finishSent({ sendId, now, reason: null }),
+    value: { outcome: "sent", number, sendId, logged: true },
+  };
+}
+
+/**
+ * Transaction 4: reloads the draft, closes it with the step and logs the event, with the pointer to the approved entry.
+ * Throws what the unit of work throws.
+ */
+export async function commit(
+  deps: { clock: Clock; unitOfWork: UnitOfWork },
+  number: number,
+  step: NonNullable<Step>,
+  approvalEntryId: number,
+): Promise<Outcome<ApproveResult>> {
+  return deps.unitOfWork.run(async (tx): Promise<Outcome<ApproveResult>> => {
+    const loaded = await tx.drafts.get(number);
+    if (loaded === null) return refuse({ code: "stale_draft", number });
+    const finished = step.finish(loaded, deps.clock.now());
+    if (!finished.ok) return refuse({ code: "stale_draft", number });
+    await tx.drafts.save(loaded);
+    await tx.log.append(toLogEntries(finished.events, { approvalEntryId }));
+    return { ok: true, value: step.value };
+  });
+}
+
+/** Waits before each retry of the `sent` write: now, after 1 second, after 3 seconds in all. */
+const SENT_WRITE_WAITS_MS = [0, 1_000, 2_000];
 
 /**
  * After transaction 1 has committed: makes the outside call (the send, or Orders' record), then writes the result
@@ -84,19 +112,24 @@ export async function driveSend(
 ): Promise<Outcome<ApproveResult>> {
   const step = await attempt(deps, draft, approval);
   if (step === null) return refuse({ code: "not_owner" });
-  try {
-    return await deps.unitOfWork.run(async (tx): Promise<Outcome<ApproveResult>> => {
-      const loaded = await tx.drafts.get(draft.number);
-      if (loaded === null) return refuse({ code: "stale_draft", number: draft.number });
-      const finished = step.finish(loaded, deps.clock.now());
-      if (!finished.ok) return refuse({ code: "stale_draft", number: draft.number });
-      await tx.drafts.save(loaded);
-      await tx.log.append(toLogEntries(finished.events, { approvalEntryId }));
-      return { ok: true, value: step.value };
-    });
-  } catch (e) {
-    return refusalOfError(e);
+  if (step.value.outcome !== "sent") {
+    try {
+      return await commit(deps, draft.number, step, approvalEntryId);
+    } catch (e) {
+      return refusalOfError(e);
+    }
   }
+  // the message went out and is never sent again: a record that cannot be written is retried, then left pending
+  for (const wait of SENT_WRITE_WAITS_MS) {
+    if (wait > 0) await deps.clock.sleep(wait);
+    try {
+      return await commit(deps, draft.number, step, approvalEntryId);
+    } catch (e) {
+      if (!(e instanceof LogUnavailable)) return refusalOfError(e);
+    }
+  }
+  deps.pending.add({ draft: draft.number, sendId: approval.sendId, approvalEntryId });
+  return { ok: true, value: { outcome: "sent", number: draft.number, sendId: approval.sendId, logged: false } };
 }
 
 export class ApproveDraftUseCase implements ApproveDraft {
@@ -108,6 +141,7 @@ export class ApproveDraftUseCase implements ApproveDraft {
       customerText: CustomerTextCheck;
       sender: Sender;
       recorder: OrderRecorder;
+      pending: PendingOutcomes;
       digest: TextDigest;
       ids: Ids;
     },
