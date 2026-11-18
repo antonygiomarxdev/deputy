@@ -20,6 +20,8 @@ export type DraftState =
   | "replaced";
 export const OPEN_STATES: readonly DraftState[] = ["waiting", "held", "failed", "unknown", "sending", "recording"];
 export const CLOSED_STATES: readonly DraftState[] = ["sent", "recorded", "rejected", "replaced"];
+const IN_FLIGHT: readonly DraftState[] = ["sending", "recording"];
+const APPROVABLE: readonly DraftState[] = ["waiting", "held", "failed", "unknown"];
 export type MessageMark = { readonly messageId: MessageId; readonly sentAt: Instant };
 export type Mark = { readonly sentAt: Instant; readonly storedAt: Instant };
 
@@ -52,7 +54,7 @@ export interface DraftSnapshot {
   readonly approval: Approval | null; // the live approval; never stored in the drafts row
 }
 
-type Refused = { readonly ok: false; readonly reason: "closed" | "in_flight" | "unknown_open" | "empty_text" };
+type Refused = { readonly ok: false; readonly reason: "closed" | "in_flight" | "unknown_open" | "empty_text" | "not_approvable" };
 export type DraftChange = { readonly ok: true; readonly events: readonly DraftEvent[] } | Refused;
 
 /** The state gate shared by every change: closed, in flight, and (unless allowed) unknown. */
@@ -62,6 +64,10 @@ function gate(state: DraftState, unknownAllowed: boolean): Refused | null {
   if (state === "unknown" && !unknownAllowed) return { ok: false, reason: "unknown_open" };
   return null;
 }
+
+export type ApproveChange =
+  | { readonly ok: true; readonly approval: Approval; readonly events: readonly DraftEvent[] }
+  | { readonly ok: false; readonly reason: "closed" | "in_flight" | "not_shown" | "text_differs" };
 
 export class Draft {
   private constructor(private s: DraftSnapshot) {}
@@ -167,6 +173,74 @@ export class Draft {
     return { ok: true, events };
   }
 
+  /**
+   * State must be waiting, held, failed or unknown; shownVersion must equal textVersion; shownText must equal currentText.
+   * Returns the Approval (born used: usedAt = now) and the event Approved, and keeps the approval for startSending.
+   * Does not change the state.
+   */
+  approve(input: {
+    shownText: string;
+    ownerWords: string;
+    approvalId: string;
+    sendId: string;
+    textHash: string;
+    now: Instant;
+  }): ApproveChange {
+    if (CLOSED_STATES.includes(this.s.state)) return { ok: false, reason: "closed" };
+    if (IN_FLIGHT.includes(this.s.state)) return { ok: false, reason: "in_flight" };
+    if (this.s.shownVersion !== this.s.textVersion) return { ok: false, reason: "not_shown" };
+    if (input.shownText !== this.s.currentText) return { ok: false, reason: "text_differs" };
+    const approval: Approval = {
+      id: input.approvalId, draftNumber: this.s.number, textVersion: this.s.textVersion, text: input.shownText,
+      textHash: input.textHash, ownerWords: input.ownerWords, approvedAt: input.now, usedAt: input.now,
+      sendId: input.sendId, voidedAt: null, voidReason: null,
+    };
+    this.s = { ...this.s, approval };
+    const approved: DraftEvent = {
+      ...this.base(input.now), type: "Approved", approvalId: approval.id, sendId: approval.sendId,
+      proposedText: this.s.proposedText, text: approval.text, ownerWords: input.ownerWords,
+    };
+    return { ok: true, approval, events: [approved] };
+  }
+
+  /** After approve: "sending" for a reply and "recording" for an order. Approval and state are saved together, so "approved" is never stored. */
+  startSending(now: Instant): DraftChange {
+    const a = this.s.approval;
+    if (a === null || !APPROVABLE.includes(this.s.state)) return { ok: false, reason: "not_approvable" };
+    this.s = { ...this.s, state: this.s.kind === "order" ? "recording" : "sending" };
+    return { ok: true, events: [{ ...this.base(now), type: "SendStarted", sendId: a.sendId, text: a.text }] };
+  }
+
+  /** sending, or unknown (SPEC-03 resolve) -> "sent"; closes the draft. */
+  finishSent(input: { sendId: string; now: Instant; reason: string | null }): DraftChange {
+    if (this.s.state !== "sending" && this.s.state !== "unknown") return { ok: false, reason: "not_approvable" };
+    this.s = { ...this.s, state: "sent", closedAt: input.now };
+    return { ok: true, events: [{ ...this.base(input.now), type: "DraftSent", sendId: input.sendId, text: this.s.currentText, reason: input.reason }] };
+  }
+
+  /** recording -> "recorded"; stores orderId; closes the draft. */
+  finishRecorded(input: { orderId: string; now: Instant }): DraftChange {
+    if (this.s.state !== "recording") return { ok: false, reason: "not_approvable" };
+    this.s = { ...this.s, state: "recorded", orderId: input.orderId, closedAt: input.now };
+    return { ok: true, events: [{ ...this.base(input.now), type: "OrderRecorded", orderId: input.orderId }] };
+  }
+
+  /** sending or recording -> "failed"; stores the reason; clears shownVersion. */
+  finishFailed(input: { reason: string; now: Instant }): DraftChange {
+    return this.finishInFlight("failed", "SendFailed", input);
+  }
+
+  /** sending or recording -> "unknown"; stores the reason; clears shownVersion. */
+  finishUnknown(input: { reason: string; now: Instant }): DraftChange {
+    return this.finishInFlight("unknown", "OutcomeUnknown", input);
+  }
+
+  private finishInFlight(state: "failed" | "unknown", type: "SendFailed" | "OutcomeUnknown", input: { reason: string; now: Instant }): DraftChange {
+    if (this.s.state !== "sending" && this.s.state !== "recording") return { ok: false, reason: "not_approvable" };
+    this.s = { ...this.s, state, failReason: input.reason, shownVersion: null };
+    return { ok: true, events: [{ ...this.base(input.now), type, reason: input.reason }] };
+  }
+
   /** Sets shownVersion to textVersion. Returns false when it was already so. */
   markShown(): boolean {
     if (this.s.shownVersion === this.s.textVersion) return false;
@@ -180,6 +254,6 @@ export class Draft {
 
   private voidApproval(events: DraftEvent[], reason: "changed" | "replaced" | "rejected", at: Instant): void {
     const a = this.s.approval;
-    if (a && a.voidedAt === null) events.push({ ...this.base(at), type: "ApprovalVoided", reason, approvalId: a.id });
+    if (a && a.voidedAt === null) events.push({ ...this.base(at), type: "ApprovalVoided", reason, approvalId: a.id, sendId: a.sendId });
   }
 }
