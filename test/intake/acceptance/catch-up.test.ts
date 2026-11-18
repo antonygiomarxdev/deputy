@@ -10,6 +10,7 @@ import { StorageFailureLog } from "../../../src/intake/application/storage-failu
 import { StoreMessages } from "../../../src/intake/application/store-messages";
 import { OVERLAP_MS } from "../../../src/intake/domain/constants";
 import { OwnerNumbers } from "../../../src/intake/domain/owner-numbers";
+import { SyncState } from "../../../src/intake/domain/sync-state";
 import type { IntakeRepos, IntakeUnitOfWork } from "../../../src/intake/ports/intake-unit-of-work";
 import type { IntakeSettingsRepository } from "../../../src/intake/ports/intake-settings-repository";
 import { ProviderError, type Provider, type ProviderMessage } from "../../../src/intake/ports/provider";
@@ -363,6 +364,21 @@ describe("CatchUp", () => {
       await run();
       expect(outboundCalls().map((c) => (c.cursor === null ? null : String(c.cursor)))).toEqual([null, "2"]);
       expect(await rows()).toEqual(["e4", "e3", "e2", "e1"]);
+    });
+
+    test("a saved outbound cursor of an older window is not reused once the window start has moved", async () => {
+      // a stopped run left a cursor for the window that started at the beginning (from null); the mark has moved since
+      const old = SyncState.initial("kapso");
+      old.completeOutbound(2_000_000);
+      old.saveOutboundResume({ cursor: "2", from: null, runStart: 10_000 });
+      await store.repos.syncState.save(old);
+      provider.serverTime = 3_000_000;
+      provider.pageSize = 2;
+      provider.outbound = [echo("e1", 2_900_000), echo("e2", 2_800_000), echo("e3", 2_700_000)];
+      expect(await run()).toMatchObject({ kind: "finished", stored: 3 });
+      // window now starts at 2,000,000 - OVERLAP_MS: the read starts at the newest item, not at the old cursor
+      expect(outboundCalls().map((c) => (c.cursor === null ? null : String(c.cursor)))).toEqual([null, "2"]);
+      expect((await store.repos.syncState.load("kapso"))?.props.outboundResume).toBeNull();
     });
 
     test("a provider clock one hour off loses nothing: marks use provider time, order uses sentAt", async () => {
