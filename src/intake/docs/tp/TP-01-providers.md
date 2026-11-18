@@ -1,6 +1,6 @@
 # Technical Proposal: Intake FRD-01, Providers
 
-Status: proposed. Written 2026-11-17. Cross-cutting TP: `docs/tp/TP.md` (cited as "cross-cutting TD-n"). FRD: `../frd/FRD-01-providers.md`. This TP also defines the `Provider` port and the shared Intake types that TP-02, TP-03 and TP-04 use.
+Status: Approved (2026-11-18). Written 2026-11-17. Cross-cutting TP: `docs/tp/TP.md` (cited as "cross-cutting TD-n"). FRD: `../frd/FRD-01-providers.md`. This TP also defines the `Provider` port and the shared Intake types that TP-02, TP-03 and TP-04 use.
 
 ## Context
 

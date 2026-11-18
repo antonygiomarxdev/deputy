@@ -1,7 +1,7 @@
 # ADR-014: Export as a folder of CSV files and one JSON file
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-ORDERS-03-6 and FR-ORDERS-03-7: all orders with history, in a form the owner can read and keep; partial or failed exports are reported as such. From Orders TP-03 TD-4.

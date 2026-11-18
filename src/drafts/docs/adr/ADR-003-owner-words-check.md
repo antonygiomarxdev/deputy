@@ -1,7 +1,7 @@
 # ADR-003: Refuse owner words that are copied customer or draft text
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-DRAFTS-02-6: Deputy refuses an approval whose owner words equal any stored customer message or draft text. FR-DRAFTS-02-3: the words must contain the draft number. From TP-02 TD-1. The cross-cutting TP (TD-6) fixes the whole-token number check.

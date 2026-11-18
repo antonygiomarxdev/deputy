@@ -1,6 +1,6 @@
 # Technical Proposal: The drafts log (Drafts FRD-04)
 
-Status: proposed. Follows the cross-cutting TP (`docs/tp/TP.md`) and builds on TP-01 to TP-03, whose events become log entries. "Cross-cutting TD-n" means a decision there.
+Status: Approved (2026-11-18). Follows the cross-cutting TP (`docs/tp/TP.md`) and builds on TP-01 to TP-03, whose events become log entries. "Cross-cutting TD-n" means a decision there.
 
 ## Context
 

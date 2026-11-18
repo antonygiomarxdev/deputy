@@ -1,7 +1,7 @@
 # ADR-008: Sent entries point to their approval entry
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-DRAFTS-04-4: every sent entry points to exactly one earlier approval entry, and the text sent equals the text approved. FR-DRAFTS-04-5: the owner can list sent entries that lack one. From TP-04 TD-1.

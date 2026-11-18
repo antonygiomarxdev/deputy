@@ -1,7 +1,7 @@
 # ADR-012: Spreadsheet layout with atomic writes and strict reads
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-ORDERS-03-5a, FR-ORDERS-03-5 and the edge case of a sheet edited by hand. The Sheets API has no transactions across calls, but `spreadsheets.batchUpdate` writes all of its requests or none. From Orders TP-03 TD-2.

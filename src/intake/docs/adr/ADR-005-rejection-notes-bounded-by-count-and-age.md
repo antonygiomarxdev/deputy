@@ -1,7 +1,7 @@
 # ADR-005: Rejection notes are bounded to 500 rows and 30 days, with a counter for what was pruned
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FRD-02 open question 1: a flood of forged deliveries could fill storage. Notes hold only a time and a reason (FR-INTAKE-02-2). From the Intake TP-02, TD-3.

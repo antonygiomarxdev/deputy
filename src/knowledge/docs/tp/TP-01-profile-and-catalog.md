@@ -1,6 +1,6 @@
 # Technical Proposal: Business profile and catalog (Knowledge FRD-01)
 
-Status: Draft
+Status: Approved (2026-11-18)
 
 Follows the cross-cutting TP (`docs/tp/TP.md`). "Cross-cutting TD-n" means a decision there. This TP also defines the proposal mechanism that FRD-02 and FRD-03 reuse (TP-02, TP-03).
 
@@ -393,7 +393,7 @@ More tests that do not map to one FR: seed revision 1 twice writes once (`unchan
 
 For the lead:
 
-1. The FRD examples "Yes, mark the tamales unavailable" and "Yes, keep that one" contain no identifier. Under the Drafts rule that the FRDs name, they are not a go: the agent must show the number and the owner must say it. The lead keeps the Drafts rule for now. Recommendation: keep it. A rule that accepts natural words needs a match per language (rejected in TD-3), and one habit for drafts and proposals is cheaper for the owner than two.
+1. Decided (owner decision D27): lessons are approved in plain words with no number (TP-02 TD-5, ADR-017); "Yes, keep that one" is valid. Catalog and profile changes keep the Drafts number rule: "Yes, mark the tamales unavailable" is not a go until the agent has shown the number and the owner has said it. A match per language was rejected in TD-3.
 2. New tables not in the cross-cutting list: `catalog_seen`, `knowledge_wipes`, `lesson_sources`, `knowledge_state` (TP-02, TP-03). New tools: `create_templates`, `propose_change` and `apply_change` input shapes, `decline_proposal`, `list_proposals`, and the lesson and wipe tools of the next two TPs.
 3. Reconciling a proposal left `applying` runs at the start of the proposal use cases, so the lease supervisor's recovery list does not change. If the lead prefers an explicit step, `ReconcileApplying` can join that list.
 4. The whole-number-token function exists in Drafts' domain. Knowledge needs the same rule; it would be better in `src/shared/` next to `normalizeText`.

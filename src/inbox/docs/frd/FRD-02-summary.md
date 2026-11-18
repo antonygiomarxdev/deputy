@@ -1,5 +1,7 @@
 # FRD-02: The inbox summary
 
+Status: Approved (2026-11-18)
+
 ## Summary
 
 The owner asks "what's pending?" and the agent shows every pending chat in exactly one group, oldest first, with who, how long, and a short excerpt. Deputy first catches up, and warns when the record may be incomplete. It works at any time, without push. See the [Inbox PRD](../PRD.md).
@@ -73,6 +75,5 @@ R-INBOX-4, R-INBOX-5, R-INBOX-6, R-INBOX-7, R-INBOX-8, R-INBOX-10, R-INBOX-11, R
 ## Open questions
 
 1. Orders must key "already recorded" to the customer message (FR-INBOX-02-7). The Orders FRDs must confirm they store that link.
-2. Should a chat with a draft the owner has not approved or rejected stay in "easy questions" across sessions, or return to "needs the owner" after some time (PRD open question 1)?
 2. How many characters is a "short excerpt"? Needs a number the owner is happy with.
 3. Should the "already answered" group have a default start point of its own, such as "since my last check", which would need Deputy to remember the last check?

@@ -1,5 +1,7 @@
 # FRD-03: Ignore a chat
 
+Status: Approved (2026-11-18)
+
 ## Summary
 
 The owner can tell the agent to ignore a chat, for example a friend or a supplier who writes often. The chat stops appearing as pending, the summary reminds the owner how many chats are ignored, and the owner can undo it. See the [Inbox PRD](../PRD.md).
@@ -52,5 +54,5 @@ R-INBOX-15
 
 ## Open questions
 
-1. Should an ignored chat ever come back by itself (for example after 30 days)? The PRD says only the owner decides, so v1 says no. Confirm.
+1. Later, outside setup, the owner may want exceptions to an ignore (for example a mention in a group) and an expiry. Owner decision D24: v1 keeps an ignored chat ignored until the owner removes it. These settings are not in v1.
 2. Notify skips ignored chats in its notices (D5) and reads this list. FR-NOTIFY-02-10 and FR-INBOX-03-10 must stay consistent.

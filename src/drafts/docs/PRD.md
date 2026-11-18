@@ -1,6 +1,6 @@
 # Drafts: slice PRD
 
-Status: draft · Part of [Deputy product overview](../../../docs/PRODUCT.md) · Last updated: 2026-11-17
+Status: Approved (2026-11-18) · Part of [Deputy product overview](../../../docs/PRODUCT.md) · Last updated: 2026-11-17
 
 ## Purpose
 

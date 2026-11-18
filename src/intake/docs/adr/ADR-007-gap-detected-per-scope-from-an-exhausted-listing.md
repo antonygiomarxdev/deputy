@@ -1,7 +1,7 @@
 # ADR-007: A possible gap is detected per listing scope, when an exhausted listing lacks a message Deputy already stored
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-INTAKE-03-15 says: if the oldest message the provider returns is newer than the newest message Deputy stored, and the provider has nothing older, messages may be lost. Read globally, a quiet shop gives a false alarm: its newest stored message is old, and a new conversation's whole listing is newer. From the Intake TP-03, TD-1.

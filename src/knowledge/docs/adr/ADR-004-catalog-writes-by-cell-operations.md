@@ -1,7 +1,7 @@
 # ADR-004: A confirmed change is written as cell operations with a row check
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 An apply changes one cell or adds one row in a catalog the owner also edits by hand, or one section of the profile (FR-KNOWLEDGE-01-10, FR-KNOWLEDGE-01-13). A change can wait days for the go. It must not lose the owner's other content. From TP-01 TD-4.

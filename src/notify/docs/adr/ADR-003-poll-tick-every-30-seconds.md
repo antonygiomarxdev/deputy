@@ -1,7 +1,7 @@
 # ADR-003: A scheduler ticks every 30 seconds and Tick computes what is due
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 Notices depend on four clocks: the batching period, the reminder period, quiet periods and the outage rule. From TP-01 TD-3; cross-cutting TD-7 (a scheduler adapter calls `Tick`).

@@ -1,6 +1,6 @@
 # Technical Proposal: Where orders live, and export (Orders FRD-03)
 
-Status: Draft
+Status: Approved (2026-11-18)
 
 Builds on TP-01 (the `OrderRepository` port and `StoreResult`) and TP-02 (history, delete, outbox). "Cross-cutting TD-n" means a decision in `docs/tp/TP.md`.
 
@@ -80,7 +80,7 @@ The client keeps no rows and logs no cell values or tokens (logs go to stderr an
 - **Option B** One JSON file. Cost: simplest. Risk: a small-business owner cannot open it in a spreadsheet, which is the point of an export they can "read and keep" (FR-ORDERS-03-6).
 - **Option C** An `.xlsx` workbook through a library. Cost: one file the owner opens directly. Risk: a heavy dependency for a one-off file; the maintained options carry their own zip and XML stack, and a binary file is harder to test than CSV.
 
-Chosen: Option A. The delimiter rule is the real failure it removes: Excel in a locale with a decimal comma reads a comma-separated file as one column. The export is complete or failed: files are written into a temporary folder and renamed as one step, so a failure leaves nothing that looks like an export (FR-ORDERS-03-7). If rows were unreadable, the result is `complete: false` with the count and `orders_unreadable.csv` holds their raw values, so the owner has them. The result gives the location and counts, never the content, so no order data reaches the agent through an export (principle 8). The export holds the owner's words from the history; it is the owner's file on the owner's machine. Recorded in ADR-014.
+Chosen: Option A. The delimiter rule is the real failure it removes: Excel in a locale with a decimal comma reads a comma-separated file as one column. Owner decision D26: the export leaves cancelled orders out by default and reports how many (`cancelledLeftOut`); the rows stay in the store, and including them becomes an owner setting later (not in v1). `ExportData` holds only orders whose status is not `cancelled`; an order's history is exported with it. The export is complete or failed: files are written into a temporary folder and renamed as one step, so a failure leaves nothing that looks like an export (FR-ORDERS-03-7). If rows were unreadable, the result is `complete: false` with the count and `orders_unreadable.csv` holds their raw values, so the owner has them. The result gives the location and counts, never the content, so no order data reaches the agent through an export (principle 8). The export holds the owner's words from the history; it is the owner's file on the owner's machine. Recorded in ADR-014.
 
 ### TD-5: How does the owner choose the store, and what happens to old orders?
 
@@ -132,7 +132,7 @@ The spreadsheet layout is in TD-2. Export file columns: `orders.csv` has the `or
 ```ts
 interface ExportOrders {                    // MCP export_orders
   run(q: { delimiter?: ',' | ';' | 'tab' }): Promise<
-    | { ok: true; complete: boolean; location: string; counts: { orders: number; history: number; unreadable: number } }
+    | { ok: true; complete: boolean; location: string; counts: { orders: number; history: number; unreadable: number; cancelledLeftOut: number } }
     | { ok: false; reason: 'store_unavailable' | 'layout_mismatch' | 'write_failed' | 'not_owner' }>;   // no orders: ok, counts all 0, location null
 }
 interface SetOrdersSettings {               // routed from set_setting for the key orders_store
@@ -178,7 +178,7 @@ One contract suite runs against both repositories (SQLite in memory, spreadsheet
 | FR-ORDERS-03-5 | Given the fake sheet is unreachable, When the owner gives the go, Then `store_unavailable` and nothing is listed; When the owner lists, Then `store_unavailable` and no rows; a 429 on a read is retried and succeeds; a 429 on a write is retried; a timeout after storing is not retried and the lookup finds the order | AC, UC |
 | FR-ORDERS-03-5a | Given a row with status `donee`, a row with `items` edited by hand and a row with a retyped date, When listed, Then the first two are `unreadable` with their ids and the other orders and the retyped date are listed; given a changed header, Then `layout_mismatch` and no write | AC |
 | FR-ORDERS-03-5b | Given three orders on the machine, When the owner switches to the spreadsheet, Then the list shows none and `oldPlace.remaining` is 3; switching back clears the notice; an unreachable old sheet gives `remaining: null` | UC |
-| FR-ORDERS-03-6 | Given five orders with history and a note starting with `=`, When exported, Then the folder holds five orders in every CSV and the JSON, the note is prefixed, the delimiter follows the system decimal mark and `delimiter: tab` overrides it | UC, AC |
+| FR-ORDERS-03-6 | Given five orders with history and a note starting with `=`, When exported, Then the folder holds five orders in every CSV and the JSON (with one of the five cancelled, four and `cancelledLeftOut: 1`), the note is prefixed, the delimiter follows the system decimal mark and `delimiter: tab` overrides it | UC, AC |
 | FR-ORDERS-03-7 | Given the write fails halfway, When exported, Then `write_failed` and no export folder exists; given an unreadable row, Then `complete: false`, the count and `orders_unreadable.csv`; given no orders, Then counts are 0 | UC, AC |
 
 Also tested: the atomic write (the fake rejects the second request of one `batchUpdate`; the row and its history are both absent); a cell `=1+1` round-trips as text. A live check at launch: one real token request and one real append and read from the compiled binary against a test spreadsheet, the same live check as cross-cutting TD-12.
@@ -196,6 +196,6 @@ Also tested: the atomic write (the fake rejects the second request of one `batch
 ## Open questions
 
 1. Should Deputy offer to copy orders when the owner switches stores? Not in v1; the FRD only asks for a warning.
-2. For the owner: should the export be able to leave out cancelled orders? Not in v1; one `delimiter` option only.
+2. Later, not in v1 (D26): an owner setting to include cancelled orders in the export. v1 has one `delimiter` option only.
 3. Should an archive tab take old delivered orders once the sheet is large? Not decided; no number is set.
 4. `orders-spreadsheet` is a terminal-only key (lead's decision, cross-cutting TD-8).

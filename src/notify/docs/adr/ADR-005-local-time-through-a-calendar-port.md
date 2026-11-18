@@ -1,7 +1,7 @@
 # ADR-005: Local time through a calendar port over Intl, with a minute scan
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 Quiet periods are wall-clock hours in the owner's time zone and must follow daylight saving (FR-NOTIFY-02-2). Owners live in many zones. From TP-02 TD-2; cross-cutting TD-7.

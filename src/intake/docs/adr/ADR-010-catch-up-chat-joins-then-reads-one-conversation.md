@@ -1,7 +1,7 @@
 # ADR-010: CatchUpChat waits for the running catch-up, then reads that one conversation
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 Before every send Drafts needs the chat to be fresh (FR-DRAFTS-03-1). Cross-cutting TD-5 says the pre-send catch-up shares the single-flight lock with the timer. A run that began before the owner answered from the app cannot see that answer. From the Intake TP-03, TD-4.

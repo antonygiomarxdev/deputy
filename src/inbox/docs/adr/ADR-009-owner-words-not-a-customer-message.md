@@ -1,7 +1,7 @@
 # ADR-009: Owner words that equal a customer message are refused
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-INBOX-03-2: ignoring happens only on the owner's explicit command and customer text can never cause it. Deputy cannot verify who spoke (D11), so the owner's words are logged for audit (L4). An injected agent could pass the customer's own sentence as the owner's words. Drafts already refuses approval words that equal a stored customer message. From TP-03 TD-2.

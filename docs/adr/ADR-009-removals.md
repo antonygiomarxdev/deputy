@@ -1,7 +1,7 @@
 # ADR-009: Remove the push-and-answer model
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 The FRDs and decisions contradict the current code in 20 places (`docs/research/codebase.md`, C1 to C20). PRODUCT section 6 says the `operator/` profile is removed. D1 and FR-DRAFTS-02-7 forbid any send path except an approved draft. From TP TD-9.

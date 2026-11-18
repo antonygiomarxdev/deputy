@@ -1,7 +1,7 @@
 # ADR-002: The pending window is N elapsed days of 24 hours
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-INBOX-01-6 says the window is "the last N days, counted back from now". Deputy serves owners in many countries and time zones, so the rule must not depend on one. From TP-01 TD-2.

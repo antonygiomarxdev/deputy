@@ -1,5 +1,7 @@
 # FRD-01: Business profile and catalog
 
+Status: Approved (2026-11-18)
+
 ## Summary
 
 The agent can read the owner's business profile and look up catalog items. Unknown prices and availability are never guessed. The owner creates both from templates, edits them any time, and the next draft uses the change. See the [slice PRD](../PRD.md).

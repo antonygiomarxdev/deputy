@@ -1,5 +1,7 @@
 # FRD-04: Owner replies and source
 
+Status: Approved (2026-11-18)
+
 ## Summary
 
 Deputy decides, once and only from configuration, who sent each message. A reply the owner makes from the WhatsApp Business app is stored as an owner reply, so Deputy never answers on top of the owner. A reply sent through Deputy is recorded once. See the [Intake PRD](../PRD.md).

@@ -1,7 +1,7 @@
 # ADR-009: A lesson may carry structured claims, and the catalog wins when they differ
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-KNOWLEDGE-02-10: lessons are free text, so Deputy does not detect conflicts in them; for each catalog item a lesson links to or names, it returns the catalog value with the marker "catalog wins; lesson differs" when the lesson holds a different price or availability. Owners write in any language and number format. From TP-02 TD-3.

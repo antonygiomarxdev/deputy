@@ -1,7 +1,7 @@
 # ADR-005: Catalog saved time is the file's mtime, or a content fingerprint for a sheet
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-KNOWLEDGE-01-14: when the agent lists a waiting draft, Deputy marks it if the catalog was saved after the draft was written. A spreadsheet has no modified time in the Sheets API. From TP-01 TD-5.

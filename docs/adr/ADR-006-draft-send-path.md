@@ -1,7 +1,7 @@
 # ADR-006: Drafts, the owner's go and one send path
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 Principle 1 and D1: nothing goes out without the owner's go in the conversation. D11: Deputy offers no way to send except an approved draft, and says that an agent with other tools could bypass it. FR-DRAFTS-02-12 needs mark-used-before-send. FR-DRAFTS-03-1 to FR-DRAFTS-03-4 need a fresh look at the chat before sending. From TP TD-6.

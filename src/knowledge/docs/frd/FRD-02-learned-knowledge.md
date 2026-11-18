@@ -1,5 +1,7 @@
 # FRD-02: Learned knowledge
 
+Status: Approved (2026-11-18)
+
 ## Summary
 
 Deputy proposes lessons from what the owner approved or corrected, and keeps one only after the owner confirms it. The owner can list, edit and delete lessons. The agent uses all kept lessons when it drafts. The catalog wins when a lesson disagrees. See the [slice PRD](../PRD.md).
@@ -13,11 +15,11 @@ R-KNOWLEDGE-4, R-KNOWLEDGE-5, R-KNOWLEDGE-6, R-KNOWLEDGE-7, R-KNOWLEDGE-8, R-KNO
 ## Behavior
 
 - **FR-KNOWLEDGE-02-1.** Deputy reads the drafts log. It does not wait for Drafts to tell it anything.
-- **FR-KNOWLEDGE-02-2.** When the owner approves a draft unchanged, or corrects it and then approves, Deputy can propose a lesson. A lesson has: the situation, what the owner wanted, and when it was learned.
+- **FR-KNOWLEDGE-02-2.** When the owner approves a draft unchanged, or corrects it and then approves, Deputy can propose a lesson. A lesson has: its kind (for example currency, price or wording), the situation, what the owner wanted, and when it was learned.
 - **FR-KNOWLEDGE-02-3.** A rejected draft leads to a proposed lesson only with the owner's ok, like any lesson.
 - **FR-KNOWLEDGE-02-4.** Before keeping a lesson, the agent shows the owner the exact wording Deputy will keep, and the customer message it came from, labeled as customer text. The owner can confirm, change the wording, or decline.
 - **FR-KNOWLEDGE-02-5.** Deputy keeps a lesson only after the owner's confirmation, made in the owner's conversation with the agent. This includes the same conversation reached remotely. Deputy logs each confirmation with the owner's words.
-- **FR-KNOWLEDGE-02-5a.** Deputy records each proposed lesson with an identifier and the wording shown. Deputy offers the agent one way to keep, edit or delete a lesson. It takes the proposal or lesson identifier and the owner's own words. Deputy refuses without both, and refuses words that do not identify the proposal. Each use is logged. The agent has no other way to write lessons.
+- **FR-KNOWLEDGE-02-5a.** Deputy records each proposed lesson with an identifier and the wording shown. Deputy offers the agent one way to keep, edit or delete a lesson. It takes the proposal or lesson identifier and the owner's own words, which need no number and may be any wording; the agent interprets them and asks when in doubt. An answer that names no lesson keeps one only when exactly one lesson is waiting and the agent just asked about it; otherwise Deputy refuses and the agent asks the owner which one. Each use is logged. The agent has no other way to write lessons.
 - **FR-KNOWLEDGE-02-5b.** A confirmation binds to the exact wording shown last. If the owner changes the wording, Deputy shows the new wording and keeps the lesson only after a new confirmation that holds that wording.
 - **FR-KNOWLEDGE-02-6.** Text written by a customer never creates, changes or deletes a lesson. Deputy enforces this by the rule in FR-KNOWLEDGE-02-5a: no keep, edit or delete works without the owner's words and an identifier. Known limit: Deputy cannot check who spoke, and an agent with other tools could edit the files directly (decision D11).
 - **FR-KNOWLEDGE-02-7.** Each kept lesson links to the chat and the draft it came from.
@@ -28,7 +30,7 @@ R-KNOWLEDGE-4, R-KNOWLEDGE-5, R-KNOWLEDGE-6, R-KNOWLEDGE-7, R-KNOWLEDGE-8, R-KNO
 
 Example:
 
-> Agent: You changed "10 pesos" to "12 pesos" before approving. I can keep this lesson: "Tamales cost 12 pesos." It came from this customer message (customer text): "how much are the tamales?" Keep it?
+> Agent: You changed "10 pesos" to "12 pesos" before approving. I can keep this lesson (kind: price): "Tamales cost 12 pesos." It came from this customer message (customer text): "how much are the tamales?" Keep it?
 > Owner: Yes, keep that one.
 
 ## Edge cases
@@ -61,6 +63,7 @@ Example:
 - Given a kept lesson, When the owner edits it and later deletes it, Then the edited wording is used until deletion and never after. (FR-KNOWLEDGE-02-8, FR-KNOWLEDGE-02-11)
 - Given a lesson that names "tamales" at 10 pesos and a catalog price of 12, When Deputy returns the lessons, Then it also returns the catalog price 12 marked "catalog wins; lesson differs". (FR-KNOWLEDGE-02-10)
 - Given a proposed lesson, When the agent tries to keep it without the owner's words, Then Deputy refuses and no lesson exists. (FR-KNOWLEDGE-02-5a)
+- Given two lessons waiting, When the owner says only "yes", Then Deputy refuses, no lesson is kept, and the agent asks which one. (FR-KNOWLEDGE-02-5a)
 - Given the owner changed the wording and then said "yes", When Deputy has only the old confirmation, Then the lesson is not kept until the new wording is confirmed, and the log holds that wording. (FR-KNOWLEDGE-02-5b)
 - Given a waiting proposal and a restart, When the owner confirms later, Then the proposal is still there. (FR-KNOWLEDGE-02-5a)
 - Given the owner declined a lesson, When time passes and no new owner decision exists, Then no lesson is kept. (FR-KNOWLEDGE-02-4)

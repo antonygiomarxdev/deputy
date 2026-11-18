@@ -1,7 +1,7 @@
 # ADR-001: Pending counts live in the memory of the owner process
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 Notify counts new messages per chat from Intake's `MessageStored` hint until a notice is sent (FR-NOTIFY-01-2, FR-NOTIFY-01-7). The question is whether those counts are stored. From TP-01 TD-1; cross-cutting TD-2 (one owner process).

@@ -1,7 +1,7 @@
 # ADR-004: One use per approval, enforced by a revision check
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-DRAFTS-02-12: marking the approval used and the draft "sending" is one step that cannot be done twice; two simultaneous sends let one through. FR-DRAFTS-02-8: a second send of the same approval is refused. From TP-02 TD-2. Only the owner process writes (cross-cutting TD-2), but two tool calls can interleave inside it.

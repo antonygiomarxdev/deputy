@@ -1,7 +1,7 @@
 # ADR-008: A chat is ignored by its exact identifier
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 The owner says "ignore Juan's chat" (FR-INBOX-03-1, FR-INBOX-03-3). Intake will store the provider's profile name only as an untrusted display hint (`ChatStateView.profileName`), and a WhatsApp profile name is typed by the customer. A chat's identifier is the customer's line key. From TP-03 TD-1.

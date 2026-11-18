@@ -1,7 +1,7 @@
 # ADR-002: A draft keeps a reference to the message it answers, not a copy
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-DRAFTS-01-3 shows each waiting draft with the customer message it answers. FR-DRAFTS-01-1 stores the time of the latest chat message at creation, which FRD-03 later uses as a baseline. From TP-01 TD-2.

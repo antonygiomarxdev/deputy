@@ -1,7 +1,7 @@
 # ADR-003: Live deliveries are verified inside the use case through the Provider port
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-INTAKE-02-1 and 02-2 need a signature check before anything is stored, a rejection note on failure, and the rejection reasons `no secret` and `no identifier`. The provider must answer within 10 seconds (`docs/research/kapso.md` Q4). From the Intake TP-02, TD-1.

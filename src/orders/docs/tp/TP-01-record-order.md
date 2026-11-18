@@ -1,6 +1,6 @@
 # Technical Proposal: Record an order from a chat (Orders FRD-01)
 
-Status: Draft
+Status: Approved (2026-11-18)
 
 Follows the cross-cutting TP (`docs/tp/TP.md`, "cross-cutting TD-n" below) and the settled Drafts TPs. This TP owns the `Order` aggregate, the prepare and record use cases, and the `OrderRepository` port. TP-02 adds change and delete. TP-03 adds the two storage adapters and export.
 
@@ -345,11 +345,11 @@ Property tests (`Money`, `Quantity`): the sum is commutative and associative; pr
 
 ## Open questions
 
-For the owner (FRD items this TP settles in a stated way):
+Settled by the owner:
 
-1. Is the date wanted required? The FRD leaves it optional; this TP follows that.
-2. Should the owner be able to set the total by hand (a discount)? The FRD says the agent's total is not stored, so no.
-3. Status order (TP-02): any status may follow any other.
+Owner decision D26 fixes the defaults: the delivery date is optional, status changes are free (TP-02), the total is computed from the items, and an export leaves cancelled orders out (TP-03). Each becomes an owner setting later; v1 ships only the defaults.
+
+- Later, not in v1: an owner setting to require the date wanted.
 
 For the lead and tp-knowledge:
 

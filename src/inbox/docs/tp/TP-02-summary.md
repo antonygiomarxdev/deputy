@@ -1,6 +1,6 @@
 # Technical Proposal: The inbox summary (Inbox FRD-02)
 
-Status: Draft
+Status: Approved (2026-11-18)
 
 Follows the cross-cutting TP (`docs/tp/TP.md`) and builds on TP-01 (`PendingPolicy`, `ChatScanner`, `PendingWindow`). "Cross-cutting TD-n" means a decision there.
 
@@ -105,7 +105,7 @@ The MCP rendering lives in `src/adapters/mcp/` (the one MCP adapter): it turns `
 Inbox stores nothing in this FRD (FRD-02 Information). Domain values:
 
 ```ts
-export interface DraftMark { number: number; kind: "reply" | "order"; state: "waiting" | "held" | "failed" | "unknown"; writtenAt: Instant }
+export interface DraftMark { number: number; kind: "reply" | "order"; state: "waiting" | "held" | "failed" | "unknown"; writtenAt: Instant; earlierSession: boolean }
 
 export type Group = "needs_owner" | "orders" | "easy_questions";
 export type NeedsOwnerReason =
@@ -144,13 +144,14 @@ export const WaitingRun: { from(messagesAscending: ReadonlyArray<MessageFacts>):
 ```ts
 export type PendingItem = {
   chat: ChatId;                      // customer text (a number; group:<id> is provider text)
-  profileName?: string;              // customer text, untrusted display hint from Intake; cut at 80 graphemes like the excerpt rule; absent when Intake has none
+  profileName?: string;              // customer text, untrusted display hint from Intake; cut at 80 graphemes by Intake (owner decision D28; the same `Intl.Segmenter` rule as the excerpt); absent when Intake has none
   group: Group;
+  followsAnswer: boolean;            // an answer exists before the waiting run; the agent may skip a closing "ok" or "thanks" only when sure, else asks (D23)
   reasons: ReadonlyArray<NeedsOwnerReason>;        // only for needs_owner
   waitingSince: Instant; waitingSeconds: number;
   latestMessageId: MessageId; latestMessageAt: Instant;
   excerpt: Excerpt;
-  draft: { number: number; kind: "reply" | "order"; state: DraftMark["state"] } | null;   // number, kind and state only, never text
+  draft: { number: number; kind: "reply" | "order"; state: DraftMark["state"]; earlierSession: boolean } | null;   // number, kind, state and the earlier-session mark only, never text (D25)
   orderRecorded: boolean;
 };
 export type AnsweredItem = {
@@ -216,6 +217,9 @@ export interface OrdersQuery {                                               // 
 }
 ```
 
+Owner decision D25: a draft the owner did not approve still waits in the next session and keeps its group. Drafts sets `earlierSession` when the draft was made before the current session started; the summary shows that mark and changes no group.
+
+
 Adapters import only the other slice's `index.ts`. `SyncSnapshot` is an Inbox-local alias structurally equal to Intake's `SyncStatusView`, as in TP-01.
 
 MCP tool (the cross-cutting `inbox`, with two inputs added):
@@ -279,6 +283,4 @@ ATDD: each row is a test titled with its FR id, written before the code. UC: use
 
 ## Open questions
 
-1. For the owner: should a draft the owner has not approved or rejected stay in easy questions across sessions? Recommendation: yes for v1, shown with its age, because moving it back silently hides a ready answer, and the waiting time already sorts it up. It changes only `GroupAssigner`.
-2. Should "already answered" have its own default start, such as "since my last check"? It would need Inbox to store the last check time, which FRD-02 says it does not do. v1 uses the pending window.
-3. For the owner: how long may a name be? Recommendation: 80 graphemes, enough for a full name, so a long name cannot push the excerpt out of view (a domain constant).
+1. Should "already answered" have its own default start, such as "since my last check"? It would need Inbox to store the last check time, which FRD-02 says it does not do. v1 uses the pending window.

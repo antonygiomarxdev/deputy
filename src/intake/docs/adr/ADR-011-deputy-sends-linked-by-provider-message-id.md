@@ -1,7 +1,7 @@
 # ADR-011: A report is linked to a Deputy send by the provider message id, with a text match only for unknown outcomes
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 L2: a message is "sent through Deputy" only when it matches a Deputy send identifier. The provider's way of echoing an API-sent message is unconfirmed (FRD-04 open question 2). The report can arrive before or after Deputy stores the id. From the Intake TP-04, TD-1.

@@ -1,7 +1,7 @@
 # ADR-016: A wipe writes a complete export first and refuses if it cannot
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 A wipe deletes the owner's own `profile.md` and `catalog.csv`. The confirmation code is shown to the agent, so an injected agent could request and confirm a wipe with invented owner words (D11). FR-KNOWLEDGE-03-7: Deputy suggests an export before a wipe and does not require one of the owner. From TP-03 TD-4.

@@ -1,7 +1,7 @@
 # ADR-008: A rate limit ends the run, records the retry time, and the scheduler resumes it
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-INTAKE-03-19 and 03-20: slow down when few requests remain, wait as long as the provider says on a refusal, keep what is stored, and tell the owner only after 10 minutes. Reads and sends share one request budget (cross-cutting TD-4). From the Intake TP-03, TD-2.

@@ -1,7 +1,7 @@
 # ADR-004: One Provider interface; Kapso and dev; Meta removed
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 v1 accepts only Kapso and dev (FR-INTAKE-01-1). Catch-up needs list endpoints, which Kapso's Meta-compatible proxy lacks (`docs/research/kapso.md` Q3). Intake needs the raw `kapso.origin` to tell owner echoes from other messages (FR-INTAKE-04-12). From TP TD-4.

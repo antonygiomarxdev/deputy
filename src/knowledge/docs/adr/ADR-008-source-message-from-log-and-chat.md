@@ -1,7 +1,7 @@
 # ADR-008: The customer message of a lesson is read by its id, which the drafts log view carries
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-KNOWLEDGE-02-4: the owner sees the exact wording and the customer message it came from, labeled as customer text. Drafts' log view now carries `answersMessageId` on `approved` and `rejected` entries (Drafts TP-04). Knowledge may call only published ports, and it imports nothing of Drafts: the MCP adapter reads the log and passes Knowledge a `DraftOutcome` that holds the id. From TP-02 TD-2.

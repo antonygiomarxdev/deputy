@@ -1,5 +1,7 @@
 # FRD-02: Owner controls
 
+Status: Approved (2026-11-18)
+
 ## Summary
 
 The owner decides how long Deputy batches, when it stays quiet, whether notices are on, and which chats to ignore. See [the slice PRD](../PRD.md).

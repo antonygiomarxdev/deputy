@@ -1,7 +1,7 @@
 # ADR-014: A catalog item reference is the id cell, or the folded name
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 Orders stores a reference to a catalog item with a snapshot and re-reads the item later by that reference (`GetCatalogItems`, FR-ORDERS-01-2, FR-ORDERS-01-14). The owner's file or sheet has no key that Deputy controls. From TP-01 TD-7.

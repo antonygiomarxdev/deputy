@@ -1,7 +1,7 @@
 # ADR-006: Customer text is escaped inside its label
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-INBOX-02-10 and R-INBOX-8: everything from a customer is labeled as customer text so the agent treats it as data. The cross-cutting TP wraps customer fields in `<customer_text>...</customer_text>` but does not say what happens when the text itself contains that tag. From TP-02 TD-3.

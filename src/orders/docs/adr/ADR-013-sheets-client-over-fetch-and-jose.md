@@ -1,7 +1,7 @@
 # ADR-013: A small Sheets client over fetch and jose
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 Orders needs five Sheets endpoints and the service-account sign-in that cross-cutting TD-12 already builds with `jose`. From Orders TP-03 TD-3.

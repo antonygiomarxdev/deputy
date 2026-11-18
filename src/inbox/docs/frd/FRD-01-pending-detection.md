@@ -1,5 +1,7 @@
 # FRD-01: Pending detection
 
+Status: Approved (2026-11-18)
+
 ## Summary
 
 Deputy decides which chats are waiting for a reply. A chat is pending when the customer wrote last, recently, and nobody has answered. A reply the owner made from the phone always clears it. See the [Inbox PRD](../PRD.md).
@@ -31,7 +33,7 @@ R-INBOX-1, R-INBOX-2, R-INBOX-3, R-INBOX-9, R-INBOX-14
 - The owner's reply and the customer's message have the same send time: the order Intake gives decides. Deputy does not guess a different order.
 - The owner answered from the app, but Intake has not caught up yet and the catch-up fails: the chat may show as pending wrongly. The failure warning (FRD-02) covers this: Deputy says the record may be incomplete.
 - The only message in a chat is a history message older than the window: the chat is not pending.
-- A customer's reply of only "ok" or "thanks" after an answer is treated as any other message in v1 (see open questions).
+- A customer's reply of only "ok" or "thanks" after an answer: the chat is still pending in the count, but the agent leaves it out of what it tells the owner when it is sure the chat is closed. When it is not sure, it asks the owner (owner decision D23).
 - N is set to 0 or a negative number: refused, the old value stays.
 - The chat has only owner messages (the owner wrote first): never pending.
 
@@ -59,5 +61,4 @@ R-INBOX-1, R-INBOX-2, R-INBOX-3, R-INBOX-9, R-INBOX-14
 
 ## Open questions
 
-1. Is a customer's reply of only "ok" or "thanks" after an answer pending again (PRD open question 2)? A rule would cut noise but could hide a real message. Needs the owner's call.
 2. How does Deputy learn the provider's maximum for N, and what does it tell the owner when N exceeds it (PRD open question 3)?

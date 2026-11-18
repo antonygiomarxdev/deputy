@@ -1,5 +1,7 @@
 # FRD-04: The drafts log
 
+Status: Approved (2026-11-18)
+
 ## Summary
 
 Deputy keeps an ordered log of everything that happens to a draft. The owner can read it, check that every sent message has an approval, and Knowledge can learn from it. See [the slice PRD](../PRD.md).

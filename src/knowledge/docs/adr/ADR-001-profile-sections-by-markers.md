@@ -1,7 +1,7 @@
 # ADR-001: Profile sections are found by marker comments
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 Deputy must return "to be confirmed" for an empty profile section (FR-KNOWLEDGE-01-1) and replace one section when a change is applied (FR-KNOWLEDGE-01-9). Owners write the profile in any language, so heading text cannot be matched against a fixed word. From TP-01 TD-1.

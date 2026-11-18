@@ -1,7 +1,7 @@
 # ADR-003: Money is integer minor units, with the exponent of each currency from a port
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 Deputy computes the order total from prices and quantities (FR-ORDERS-01-15). Currencies have different numbers of decimals (JPY 0, USD 2, BHD 3). The domain imports no package and no platform module (cross-cutting ADR-000). Prices arrive from Knowledge as plain decimal text with a currency code (D21, D22). From Orders TP-01 TD-3.

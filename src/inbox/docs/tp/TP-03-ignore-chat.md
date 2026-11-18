@@ -1,6 +1,6 @@
 # Technical Proposal: Ignore a chat (Inbox FRD-03)
 
-Status: Draft
+Status: Approved (2026-11-18)
 
 Follows the cross-cutting TP (`docs/tp/TP.md`) and builds on TP-01 (`ChatScanner`, `PendingPolicy`) and TP-02 (the count line). "Cross-cutting TD-n" means a decision there.
 
@@ -219,6 +219,6 @@ ATDD: each row is a test titled with its FR id. UC: use case through its inbound
 
 ## Open questions
 
-1. Should an ignored chat ever return by itself, for example after 30 days? v1 says no (FRD-03 open question 1); only the owner decides. Confirm with the owner.
+1. Later, not in v1 (D24): owner settings for exceptions to an ignore (for example a mention in a group) and for an expiry. v1 keeps an ignored chat ignored until the owner removes it (FRD-03 open question 1). The ignore log would need the exception that fired; no change now.
 2. FR-NOTIFY-02-10 and FR-INBOX-03-10 stay consistent through `IsIgnored` (FRD-03 open question 2). Notify's TP must read it with that signature.
 3. Names: the owner says "Juan"; the agent maps the words to a chat identifier using the number and the profile-name hint shown in the summary, and asks when more than one chat fits. Deputy never matches on the name. No owner decision needed.

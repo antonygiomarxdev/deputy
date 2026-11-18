@@ -1,7 +1,7 @@
 # ADR-006: "Message stored" signals are published in process after commit, grouped per run
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-INTAKE-02-9, 03-5, 03-12, 03-17 and 04-10 set when a signal is emitted: once per live message, once per catch-up run that stored new messages, never for history, repeats or Deputy sends, and with the source. Notify recounts from stored data if a signal is lost (cross-cutting TD-7). From the Intake TP-02, TD-4.

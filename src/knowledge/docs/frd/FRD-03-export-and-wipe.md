@@ -1,5 +1,7 @@
 # FRD-03: Where knowledge lives, export and wipe
 
+Status: Approved (2026-11-18)
+
 ## Summary
 
 All knowledge stays on the owner's machine. The only exception is a catalog the owner keeps in their own spreadsheet. The owner can export everything and wipe everything, with an explicit confirmation to wipe. See the [slice PRD](../PRD.md).

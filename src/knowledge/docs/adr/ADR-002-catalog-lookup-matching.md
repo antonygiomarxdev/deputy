@@ -1,7 +1,7 @@
 # ADR-002: Catalog lookup folds case and accents and returns exact and contained matches
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-KNOWLEDGE-01-3 to FR-KNOWLEDGE-01-5: look up by name, say when nothing matches, return all matches. The FRD asks how loose the matching may be. Owners and customers write in any language and script. The answer is a price, so a wrong match is a wrong promise. From TP-01 TD-2.

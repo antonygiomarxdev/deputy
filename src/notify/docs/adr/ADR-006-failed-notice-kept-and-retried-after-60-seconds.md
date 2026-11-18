@@ -1,7 +1,7 @@
 # ADR-006: A failed notice returns its batch to pending and is retried after 60 seconds
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 A notice fails when there is no session or the write errors (FR-NOTIFY-03-6). The next notice must count those messages as new (FR-NOTIFY-03-7). From TP-03 TD-1.

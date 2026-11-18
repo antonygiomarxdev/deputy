@@ -1,7 +1,7 @@
 # ADR-010: A delete uses an intent row, an outbox and secure delete
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-ORDERS-02-10a and FR-ORDERS-02-11: after a confirmed delete nothing about the order remains, even after a crash, and a failed delete is never reported as done. Orders must not call Drafts. From Orders TP-02 TD-4 and cross-cutting TD-3.

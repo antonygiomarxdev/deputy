@@ -1,7 +1,7 @@
 # ADR-013: Owner numbers keep a separate append-only change log
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 L4: owner numbers change only by explicit command, logged with the owner's words, listable at any time. Cross-cutting TD-8: the change comes from the owner's terminal as a pending-change row that the owner process applies. From the Intake TP-04, TD-3.

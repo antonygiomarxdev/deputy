@@ -1,7 +1,7 @@
 # ADR-005: The summary reuses a catch-up that is fresher than one period
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 R-INBOX-10 and FR-INBOX-02-2: the summary asks Intake to catch up first, but reuses a successful catch-up from within one catch-up period (default 2 minutes) and runs a new one after that or when the owner says "check again". The free Kapso plan allows 100 requests per minute and sends share the budget (cross-cutting TD-5). From TP-02 TD-2.

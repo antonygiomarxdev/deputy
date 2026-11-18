@@ -1,7 +1,7 @@
 # ADR-015: The MCP adapter adds the "catalog changed" mark to listed drafts
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-KNOWLEDGE-01-14: when the agent lists a waiting draft, Deputy marks it "catalog changed since this draft" if the catalog was saved after the draft was written. Knowledge reads the drafts log (FR-KNOWLEDGE-02-1), so Drafts must not call Knowledge: the two slices would depend on each other. From TP-01 TD-8.

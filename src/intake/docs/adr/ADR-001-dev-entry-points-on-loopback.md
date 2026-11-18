@@ -1,7 +1,7 @@
 # ADR-001: Dev test entry points are loopback HTTP routes that exist only under the dev provider
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-INTAKE-01-3, 01-5 and 01-6 need a way to create customer messages, owner replies, repeated and out-of-order messages, forged deliveries and "missed" messages. FR-INTAKE-01-9 says these exist only while the provider is dev and are refused and noted otherwise. Cross-cutting TD-1 forbids giving the agent a tool that injects messages. From the Intake TP-01, TD-1.

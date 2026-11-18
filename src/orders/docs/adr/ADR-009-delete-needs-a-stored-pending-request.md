@@ -1,7 +1,7 @@
 # ADR-009: A delete needs a stored pending request
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-ORDERS-02-10: nothing is deleted until the owner explicitly confirms. Drafts passes a `confirm` flag the agent controls. From Orders TP-02 TD-3.

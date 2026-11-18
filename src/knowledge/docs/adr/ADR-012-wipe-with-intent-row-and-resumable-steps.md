@@ -1,7 +1,7 @@
 # ADR-012: A wipe records its intent first and runs idempotent steps
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-KNOWLEDGE-03-5 and FR-KNOWLEDGE-03-9: after a confirmed wipe nothing remains except one entry holding the time and the owner's words. FRD edge cases: a wipe that fails halfway says what remains and never reports success; a second wipe says there is nothing to delete. Files and database rows cannot be changed in one transaction. From TP-03 TD-2.

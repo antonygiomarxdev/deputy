@@ -1,7 +1,7 @@
 # ADR-007: The owner's choice after a hold is read from the next call
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-DRAFTS-03-4 offers three choices after a hold: send as is, edit, drop. FR-DRAFTS-03-12 logs the choice. From TP-03 TD-2.

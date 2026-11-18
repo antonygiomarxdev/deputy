@@ -1,7 +1,7 @@
 # ADR-009: The log is paged by entry id
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-DRAFTS-04-6: newest first, filtered by chat. A very long log is shown newest first with an offer to go further back. Two events in one second keep their order (FRD-04 edge cases). The lesson MCP adapter reads the log too, for Knowledge (FR-DRAFTS-04-3). From TP-04 TD-2.

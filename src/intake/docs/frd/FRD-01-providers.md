@@ -1,5 +1,7 @@
 # FRD-01: Providers
 
+Status: Approved (2026-11-18)
+
 ## Summary
 
 The owner picks where messages come from: Kapso (the owner's real WhatsApp Business number) or dev (a local practice source with no WhatsApp). Changing the choice changes nothing else in Deputy. The dev source lets anyone test every other feature without WhatsApp. See the [Intake PRD](../PRD.md).

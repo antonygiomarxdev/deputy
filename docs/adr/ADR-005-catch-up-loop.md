@@ -1,7 +1,7 @@
 # ADR-005: Catch-up by two sweeps on the provider's clock, paged in full
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 D12 makes catch-up the default way messages arrive. Kapso lists conversations by `last_active_after`, then messages per conversation, newest first, with cursors; the message list also filters by `direction` and has no time filter. Free plan: 100 requests per minute; `429` carries `Retry-After`; responses carry `X-RateLimit-Remaining` (`docs/research/kapso.md`). Whether an owner echo updates a conversation's `last_active` is unverified. From TP TD-5.

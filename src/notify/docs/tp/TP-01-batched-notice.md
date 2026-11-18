@@ -1,6 +1,6 @@
 # Technical Proposal: FRD-01 The batched notice
 
-Status: Draft
+Status: Approved (2026-11-18)
 
 Per-FRD TP for [FRD-01](../frd/FRD-01-batched-notice.md). It consumes the cross-cutting TP ([TP.md](../../../../docs/tp/TP.md): TD-0, TD-2, TD-7) and does not change it. This TP defines the Notify domain core that TP-02 and TP-03 build on.
 
@@ -148,7 +148,9 @@ export type Notice =
   | { code: "new_messages"; messages: number; chats: number; otherWaiting: number; caveats: Caveat[] }
   | { code: "reminder"; waiting: number; caveats: Caveat[] }
   | { code: "provider_unreachable"; since: Instant; reason: OutageReason }
-  | { code: "provider_reachable" };
+  | { code: "provider_reachable" }
+  | { code: "send_needs_owner"; reason: SendNeedsReason };   // TP-03: urgent, one per event, no counts
+export type SendNeedsReason = "held_after_retry" | "window_closed" | "owner_reply_unlinked";
 ```
 
 A `Notice` has no `string` that can come from outside: codes and caveats are closed unions, the rest are numbers and one instant. FR-NOTIFY-01-5 holds by type. The `Notice` has no field for a chat.

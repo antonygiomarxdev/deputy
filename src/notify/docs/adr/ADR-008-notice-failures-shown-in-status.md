@@ -1,7 +1,7 @@
 # ADR-008: Failed notices are shown in the status tool only
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-NOTIFY-03-6 says the failure is recorded where the owner can see it. FRD-03 open question 2 asks where. From TP-03 TD-3.

@@ -1,5 +1,7 @@
 # FRD-01: The batched notice
 
+Status: Approved (2026-11-18)
+
 ## Summary
 
 When customer messages arrive while an open session can receive push, Deputy sends one short notice made of counts only. It points the owner to the inbox. See [the slice PRD](../PRD.md).

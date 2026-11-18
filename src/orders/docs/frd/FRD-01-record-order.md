@@ -1,5 +1,7 @@
 # FRD-01: Record an order from a chat
 
+Status: Approved (2026-11-18)
+
 ## Summary
 
 The agent prepares an order from the conversation and the catalog, shows it in full, and Deputy records it only after the owner's go. Missing details block recording. Recording never messages the customer. See the [slice PRD](../PRD.md).
@@ -80,6 +82,6 @@ Example:
 
 ## Open questions
 
-- Is the date wanted required for every order, or only for orders that have one? R-ORDERS-4 does not require it.
+- Later, not in v1: an owner setting to require the date wanted. Owner decision D26: by default it is optional.
 - The order draft approval interface is agreed with the Drafts FRDs (FR-DRAFTS-02-9). Confirm the wording with frd-b.
 - Should the owner be able to open a recorded order from the chat it came from?

@@ -1,5 +1,7 @@
 # FRD-03: Catch-up and history
 
+Status: Approved (2026-11-18)
+
 ## Summary
 
 When a session starts, Deputy first fetches every message the provider holds that Deputy has not stored, so the inbox is complete even after days off. If it cannot, it says so and says how recent its data is. When the owner first connects, the synced history is stored the same way. See the [Intake PRD](../PRD.md).

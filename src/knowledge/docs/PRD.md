@@ -1,6 +1,6 @@
 # Knowledge: slice PRD
 
-Status: draft for owner review · Product overview: [PRODUCT.md](../../../docs/PRODUCT.md)
+Status: Approved (2026-11-18) · Product overview: [PRODUCT.md](../../../docs/PRODUCT.md)
 
 ## Purpose
 

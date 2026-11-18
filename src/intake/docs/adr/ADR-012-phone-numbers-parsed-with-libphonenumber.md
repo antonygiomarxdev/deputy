@@ -1,7 +1,7 @@
 # ADR-012: Phone numbers are parsed to E.164 with libphonenumber-js and compared by a per-country line key
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-INTAKE-04-14: "+505 8888 0000", "505-88880000" and "50588880000" are one number, for owner numbers and senders. Deputy serves owners in many countries. Owners type numbers in local formats, with or without a country code or a national trunk prefix. A configured number that never matches makes the owner's own replies look like customer messages.
