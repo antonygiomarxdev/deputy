@@ -1,3 +1,5 @@
+import type { ChatId } from "../../shared/chat-id";
+import type { Instant } from "../../shared/instant";
 import type { DraftKind, DraftNumber, DraftState } from "../domain/draft";
 import type { Refusal } from "../domain/refusals";
 import type { OrderInput } from "./outbound";
@@ -20,6 +22,8 @@ export type CreateDraftResult = {
   number: number;
   kind: DraftKind;
   state: "waiting";
+  chat: ChatId;
+  madeAt: Instant;
   text: string; // exactly what would be sent (order: Orders' summary)
   answers: MessageView | null;
   replaced: { number: number; state: "waiting" | "held" | "failed" } | null;
