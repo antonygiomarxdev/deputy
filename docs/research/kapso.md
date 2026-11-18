@@ -79,3 +79,16 @@ Quote: "Copy the auto-generated secret key." (project webhooks; fetcher also rep
 
 Source: https://docs.kapso.ai/api/platform/v1/webhooks/create-webhook.md
 Quote: "never generated for you"
+
+## Live check, 2026-11-17: owner echo through the API
+
+The owner sent one message from the WhatsApp Business app on the Coexistence number. Listing outbound messages for that number (`GET /platform/v1/whatsapp/messages?phone_number_id=…&direction=outbound`) returned it as the newest entry with `kapso.origin = "business_app"`, `kapso.direction = "outbound"`, `kapso.status = "delivered"`. Older entries from the history import carry `origin = "history_sync"`. The platform API object has no `kapso.source` field (`smb_message_echo` is set only by Kapso's SDK normalizer). So catch-up alone can tell owner echoes apart; which webhook event carries them is still unchecked.
+
+## Rate limits, 2026-11-17
+
+Kapso limits API requests per API key per fixed minute: Free 100, Pro 2,000, Platform and Enterprise 4,000. Over the limit it returns `429` with `Retry-After`; every response carries `X-RateLimit-Limit` and `X-RateLimit-Remaining`. A live call on the RUMAI key returned `x-ratelimit-limit: 100`, `x-ratelimit-remaining: 99`.
+
+Effect on periodic catch-up: one check costs one conversation listing plus one message listing per conversation with new activity, so a check every 2 minutes uses a few requests per minute at most. A first catch-up after a long absence with many active conversations can need more: page through results and slow down when `X-RateLimit-Remaining` gets low. The monthly quota of the free plan counts messages, not API requests.
+
+Source: https://docs.kapso.ai/api/rate-limits
+Quote: "Read `X-RateLimit-Remaining` and back off before you hit zero"
