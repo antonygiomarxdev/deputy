@@ -42,12 +42,21 @@ export function checkArchitecture(root: string): Violation[] {
     return [base, `${base}.ts`, `${base}/index.ts`].find((c) => known.has(c)) ?? null;
   };
 
-  // Names a file imports (`{ X }` or `{ X as Y }`, the local name) from a file under an `adapters/` folder.
+  // What a file may `new`: local names from named, default and namespace imports of an `adapters/` file
+  // (a namespace `ns` yields the pattern `ns.Name`).
   const importedAdapters = (file: string, src: string): string[] =>
-    [...src.matchAll(/import\s+(?:type\s+)?\{([^}]*)\}\s*from\s*["'](\.[^"']*)["']/g)].flatMap((m) => {
+    [...src.matchAll(/import\s+(?:type\s+)?([^"';]*?)\s*from\s*["'](\.[^"']*)["']/g)].flatMap((m) => {
       const target = resolve(file, m[2] as string);
       if (!target?.split("/").includes("adapters")) return [];
-      return (m[1] as string).split(",").map((n) => (n.split(/\s+as\s+/).pop() ?? "").trim()).filter(Boolean);
+      const clause = m[1] as string;
+      const named = /\{([^}]*)\}/.exec(clause)?.[1] ?? "";
+      const ns = /\*\s+as\s+(\w+)/.exec(clause)?.[1];
+      const dflt = clause.replace(/\{[^}]*\}|\*\s+as\s+\w+|,/g, "").trim();
+      return [
+        ...named.split(",").map((n) => (n.split(/\s+as\s+/).pop() ?? "").trim()),
+        ...(ns ? [`${ns}\\.\\w+`] : []),
+        dflt,
+      ].filter(Boolean);
     });
 
   for (const [file, src] of sources) {
@@ -157,6 +166,11 @@ describe("checkArchitecture", () => {
   for (const rule of rules) {
     test(`fixture ${rule} violates exactly that rule`, () => {
       expect(found(rule)).toEqual([rule]);
+    });
+  }
+  for (const name of ["adapter-instantiated-default", "adapter-instantiated-namespace"]) {
+    test(`fixture ${name} violates adapter-instantiated`, () => {
+      expect(found(name)).toEqual(["adapter-instantiated"]);
     });
   }
 
