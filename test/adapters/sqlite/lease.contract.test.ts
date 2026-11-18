@@ -79,6 +79,14 @@ for (const [name, factory] of [["in-memory", inMemory], ["sqlite", sqlite]] as c
       expect(wins.filter(Boolean)).toHaveLength(1);
     });
 
+    test("the lease has expired at exactly 30 s, not before", async () => {
+      await s.a.tryAcquire();
+      await s.clock.advance(29_999);
+      expect(await s.b.tryAcquire()).toBe(false);
+      await s.clock.advance(1);
+      expect(await s.b.tryAcquire()).toBe(true);
+    });
+
     test("release hands the lease over at once", async () => {
       await s.a.tryAcquire();
       await s.a.release();
