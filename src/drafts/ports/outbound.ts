@@ -1,0 +1,59 @@
+import type { ChatId } from "../../shared/chat-id";
+import type { Instant } from "../../shared/instant";
+import type { MessageId } from "../../shared/message-id";
+import type { Draft, DraftKind, DraftNumber } from "../domain/draft";
+
+export type OrderInput = Readonly<Record<string, unknown>>; // validated by Orders' PrepareOrder
+
+/** Every method runs inside UnitOfWork.run. */
+export interface DraftRepository {
+  nextNumber(): Promise<DraftNumber>;
+  get(number: DraftNumber): Promise<Draft | null>;
+  openFor(chat: ChatId, kind: DraftKind): Promise<Draft | null>;
+  listOpen(filter?: { chat?: ChatId }): Promise<Draft[]>;
+  /**
+   * Insert when the number is new. Otherwise compare-and-set on draft.snapshot().revision and store revision + 1.
+   * The object passed is not changed. Throws StaleDraft when the stored revision differs.
+   */
+  save(draft: Draft): Promise<void>;
+}
+
+// SPEC-04 Task 2 adds `log: DraftLogRepository` to the tx object and SPEC-02 adds `approvals: ApprovalRepository`.
+export interface UnitOfWork {
+  run<T>(
+    work: (tx: { drafts: DraftRepository }) => Promise<T>,
+    options?: { requireLease?: boolean }, // default true: a write checks the lease; pure reads pass false
+  ): Promise<T>; // commits when work resolves; rolls back and rethrows when it throws; transactions run one at a time
+}
+
+export type ChatMessage = {
+  readonly id: MessageId;
+  readonly sentAt: Instant;
+  readonly storedAt: Instant;
+  readonly source: "customer" | "owner_app" | "sent_through_deputy";
+  readonly text: string; // Intake's readerText
+  readonly dev: boolean;
+  readonly history: boolean;
+};
+
+export type ChatInfo = {
+  readonly hasCustomerMessage: boolean;
+  readonly hasNonDevMessage: boolean;
+  readonly activeWorldIsDev: boolean;
+  readonly latestCustomer: ChatMessage | null;
+  readonly latest: ChatMessage | null;
+};
+
+export interface ChatReader {
+  describe(chat: ChatId): Promise<ChatInfo | null>; // null when the chat is unknown
+  message(chat: ChatId, id: MessageId): Promise<ChatMessage | null>;
+}
+
+/** Drafts owns this port; the adapter calls Orders' PrepareOrder and revalidate. */
+export interface OrderPreparer {
+  prepare(
+    chat: ChatId,
+    order: OrderInput,
+  ): Promise<{ ok: true; payload: string; summary: string } | { ok: false; reasons: string[] }>;
+  revalidate(payload: string): Promise<{ catalogChanged: boolean }>;
+}

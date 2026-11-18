@@ -1,0 +1,66 @@
+import type { DraftKind, DraftNumber, DraftState } from "../domain/draft";
+import type { Refusal } from "../domain/refusals";
+import type { OrderInput } from "./outbound";
+
+export type Outcome<T> = { readonly ok: true; readonly value: T } | { readonly ok: false; readonly refusal: Refusal };
+
+export type MessageView = {
+  id: string;
+  sentAt: string;
+  text: string;
+  source: "customer" | "owner_app" | "sent_through_deputy";
+};
+
+export interface CreateDraft {
+  run(
+    input: { kind: "reply"; chat: string; text: string } | { kind: "order"; chat: string; order: OrderInput },
+  ): Promise<Outcome<CreateDraftResult>>;
+}
+export type CreateDraftResult = {
+  number: number;
+  kind: DraftKind;
+  state: "waiting";
+  text: string; // exactly what would be sent (order: Orders' summary)
+  answers: MessageView | null;
+  replaced: { number: number; state: "waiting" | "held" | "failed" } | null;
+};
+
+export interface ListDrafts {
+  run(input: { chat?: string }): Promise<Outcome<DraftView[]>>;
+}
+export type DraftView = {
+  number: DraftNumber;
+  kind: DraftKind;
+  chat: string;
+  state: DraftState;
+  text: string;
+  madeAt: string;
+  answers: MessageView | { unavailable: true } | null;
+  catalogChanged: boolean; // orders only; replies are marked by the MCP adapter
+  holdReason: string | null;
+  failReason: string | null;
+  fromEarlierSession: boolean; // madeAt is before sessionStartedAt (D25)
+  retryAt: string | null; // SPEC-03
+};
+
+export interface ChangeDraft {
+  run(input: { number: number; text?: string; order?: OrderInput; ownerWords: string }): Promise<Outcome<ChangeDraftResult>>;
+}
+export type ChangeDraftResult = { number: number; state: "waiting"; approvalVoided: boolean };
+
+export interface RejectDraft {
+  run(input: { number: number; ownerWords: string }): Promise<Outcome<{ number: number; state: "rejected" }>>;
+}
+
+/** A pure read: no lease check. "sending" and "recording" are reported as "waiting". No draft text is returned. */
+export interface WaitingChats {
+  run(): Promise<WaitingChat[]>;
+}
+export type WaitingChat = {
+  number: number;
+  kind: DraftKind;
+  chat: string;
+  writtenAt: string;
+  state: "waiting" | "held" | "failed" | "unknown";
+  earlierSession: boolean;
+};
