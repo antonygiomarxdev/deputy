@@ -21,7 +21,3 @@ export class SqliteOutgoingRepository implements OutgoingRepository {
     return { sendId, part: num(r, "part") };
   }
 }
-
-export function createSqliteOutgoingRepository(ex: SqlExecutor): SqliteOutgoingRepository {
-  return new SqliteOutgoingRepository(ex);
-}

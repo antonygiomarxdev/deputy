@@ -13,7 +13,7 @@ import type { MessageRepository } from "../../ports/message-repository";
 import type { OutgoingRepository } from "../../ports/outgoing-repository";
 import { REJECTION_MAX_AGE_MS, REJECTION_MAX_ROWS, type RejectionRepository } from "../../ports/rejection-repository";
 import type { SyncStateRepository } from "../../ports/sync-state-repository";
-import { createInMemoryOwnerNumbersRepository } from "./in-memory-owner-numbers-repository";
+import { InMemoryOwnerNumbersRepository } from "./in-memory-owner-numbers-repository";
 
 interface Stored {
   seq: number;
@@ -68,7 +68,7 @@ export class InMemoryIntakeStore {
     sync: new Map(),
     outgoingParts: new Map(),
   };
-  readonly owners = createInMemoryOwnerNumbersRepository();
+  readonly owners = new InMemoryOwnerNumbersRepository();
 
   readonly repos: IntakeRepos = {
     messages: this.messageRepository(),

@@ -166,7 +166,3 @@ export class SqliteMessageRepository implements MessageRepository {
     return rows.map((v) => ({ version: num(v, "version"), text: strOrNull(v, "text"), replacedAt: num(v, "replaced_at") }));
   }
 }
-
-export function createSqliteMessageRepository(ex: SqlExecutor): SqliteMessageRepository {
-  return new SqliteMessageRepository(ex);
-}

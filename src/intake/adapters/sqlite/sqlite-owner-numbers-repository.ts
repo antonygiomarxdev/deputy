@@ -71,7 +71,3 @@ export class SqliteOwnerNumbersRepository implements OwnerNumbersRepository {
     });
   }
 }
-
-export function createSqliteOwnerNumbersRepository(db: SqlDatabase): SqliteOwnerNumbersRepository {
-  return new SqliteOwnerNumbersRepository(db);
-}

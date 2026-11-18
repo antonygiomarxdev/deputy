@@ -53,7 +53,3 @@ export class SqliteRejectionRepository implements RejectionRepository {
     );
   }
 }
-
-export function createSqliteRejectionRepository(ex: SqlExecutor): SqliteRejectionRepository {
-  return new SqliteRejectionRepository(ex);
-}

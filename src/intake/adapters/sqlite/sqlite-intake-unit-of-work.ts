@@ -16,7 +16,3 @@ export class SqliteIntakeUnitOfWork implements IntakeUnitOfWork {
     });
   }
 }
-
-export function createSqliteIntakeUnitOfWork(db: SqlDatabase, lease: OwnerLease): SqliteIntakeUnitOfWork {
-  return new SqliteIntakeUnitOfWork(db, lease);
-}

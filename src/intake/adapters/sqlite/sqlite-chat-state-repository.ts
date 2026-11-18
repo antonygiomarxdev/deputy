@@ -88,7 +88,3 @@ export class SqliteChatStateRepository implements ChatStateRepository {
     return r === undefined ? null : toState(r);
   }
 }
-
-export function createSqliteChatStateRepository(ex: SqlExecutor): SqliteChatStateRepository {
-  return new SqliteChatStateRepository(ex);
-}

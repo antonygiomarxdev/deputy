@@ -5,7 +5,7 @@ import { openBunSqlite } from "../../src/adapters/sqlite/bun-sqlite-database";
 import { migrate } from "../../src/adapters/sqlite/migrate";
 import { InMemoryIntakeStore } from "../../src/intake/adapters/memory/in-memory-intake-store";
 import { createSqliteIntakeRepos } from "../../src/intake/adapters/sqlite/sqlite-intake-repos";
-import { createSqliteIntakeUnitOfWork } from "../../src/intake/adapters/sqlite/sqlite-intake-unit-of-work";
+import { SqliteIntakeUnitOfWork } from "../../src/intake/adapters/sqlite/sqlite-intake-unit-of-work";
 import type { IntakeRepos, IntakeUnitOfWork } from "../../src/intake/ports/intake-unit-of-work";
 import type { OwnerLease } from "../../src/shared/owner-lease";
 import type { ProviderName } from "../../src/shared/provider-name";
@@ -41,7 +41,7 @@ export async function openSqliteSubject(lease: OwnerLease = ownsLease): Promise<
     name: "sqlite",
     db,
     repos: createSqliteIntakeRepos(db),
-    unitOfWork: createSqliteIntakeUnitOfWork(db, lease),
+    unitOfWork: new SqliteIntakeUnitOfWork(db, lease),
     async addOutgoingPart(provider, providerMessageId, sendId, part) {
       await db.run("INSERT INTO outgoing (send_id, chat_id, text, parts_total, state, created_at) VALUES (?, 'c', 't', 1, 'sent', 1)", [sendId]);
       await db.run(

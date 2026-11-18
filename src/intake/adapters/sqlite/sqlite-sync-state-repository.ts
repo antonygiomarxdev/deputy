@@ -29,7 +29,3 @@ export class SqliteSyncStateRepository implements SyncStateRepository {
     return r === undefined ? null : numOrNull(r, "v");
   }
 }
-
-export function createSqliteSyncStateRepository(ex: SqlExecutor): SqliteSyncStateRepository {
-  return new SqliteSyncStateRepository(ex);
-}
