@@ -18,7 +18,8 @@ Owner decision D14: Deputy is rebuilt with hexagonal architecture, DDD and clean
 - Inbound adapters: the command line (`deputy config`, `deputy secrets`; it writes a pending-change row or a file and calls no use case; the agent never sees it), the MCP server (one adapter, tools mapped to use cases), the optional live-delivery HTTP listener, the scheduler. Outbound adapters: Kapso and dev providers, SQLite repositories, owner files, spreadsheet, Claude channel notifier, owner lease (the `OwnerLease` adapter).
 - Composition root: `src/main.ts` wires adapters to ports. Nothing else instantiates an adapter.
 - Aggregates: Message (keyed by provider message id, holding a ChatId), SyncState, RejectionNote, OwnerNumbers (Intake; `Chat` is a small projection, not an aggregate that holds messages); IgnoreList and InboxSettings (Inbox); Draft and DraftLog (Drafts); NoticeState and NotifySettings (Notify); Proposal and LearnedItem (Knowledge; profile and catalog are owner files behind ports); Order (Orders); SetupProgress (Setup).
-- An architecture test enforces the rules by parsing imports (see ADR-011).
+- Libraries stay behind ports. `domain/`, `application/`, `ports/` and `src/shared/` import no third-party package and no runtime module (`bun:*`, `node:*`); only relative imports. A library (phone parsing, CSV, JWT, SQLite, the keychain) is used only inside an adapter that implements a port. Runtime services with environment-dependent behavior (time zones, randomness, crypto) are reached through ports too (`Clock`, for example), so the domain stays pure and testable.
+- An architecture test enforces the rules by parsing imports (see ADR-011). It fails on any bare package specifier or runtime module imported from `domain/`, `application/`, `ports/` or `src/shared/`.
 
 ## Alternatives
 - Keep the layered layout and add slice folders: the MCP server keeps the rules; tests need a real server and provider.

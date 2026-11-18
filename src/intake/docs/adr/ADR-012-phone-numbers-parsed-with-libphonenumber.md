@@ -16,7 +16,8 @@ Sources, all third-party except one sentence:
 - Meta has one relevant sentence in the Cloud API phone-number reference: "For Brazil and Mexico, the extra added prefix of the phone number may be modified by the Cloud API" (https://developers.facebook.com/docs/whatsapp/cloud-api/reference/phone-numbers). I found no Meta source for Argentina, and none that states the format of the sender id in an inbound webhook or a Kapso business-app echo. The rules below therefore rest on third-party sources plus that one sentence, and a launch gate checks them live.
 
 ## Decision
-- The `PhoneNumber` value object in `src/shared` wraps `libphonenumber-js` (default `min` metadata) and stores numbers in E.164. Only this object imports the library.
+- The `PhoneNumber` value object in `src/shared` holds an E.164 string and computes `lineKey()` with plain code. It imports nothing.
+- Parsing is an outbound port, `PhoneNumberParser.parse(text, defaultCountry?) -> PhoneNumber | { invalid: reason }`. Its adapter in `src/intake/adapters/` wraps `libphonenumber-js` (default `min` metadata). Only that adapter imports the library (ADR-000), so it can be replaced without touching the domain, and use cases are tested with an in-memory parser.
 - A number typed without a country code is parsed with the owner's country (Setup asks for it, D21) as the default region. Senders arrive in international form and parse without a default. A number the library cannot parse as possible is refused with a message that asks for the country code. Setup and the command line show the E.164 form back before storing it.
 - The business number is read from the provider when it offers it (the Kapso phone number record); otherwise it must be typed with `+` and the country code. It never decides the default country.
 - The provider's id is stored as received (`provider_sender`, and the chat's `provider_id`, which is also the destination of a send). Nothing rewrites it.
@@ -47,3 +48,4 @@ Sources, all third-party except one sentence:
 - An owner number typed as `+54 11 2345-6789` classifies a sender `5491123456789` as `owner_app`. The same for MX `+52 55 1234 5678` with sender `5215512345678`, and BR `+55 11 8765-4321` with sender `5511987654321`.
 - A typed local number (`011 15 2345 6789`, region AR) stores `+5491123456789`; Setup shows it back.
 - The provider's id is stored unchanged.
+- Watch: the per-country rules (AR, MX, BR) are best effort from public sources. Owners in those countries confirm or correct them with a field report; each correction adds a test case for its country.

@@ -417,7 +417,7 @@ ATDD (D13). The order of work for each FRD:
 2. Write the slice code until the unit tests pass.
 3. Run the end-to-end test for that slice.
 
-The architecture test (`test/architecture.test.ts`) reads every `.ts` file under `src/`, parses its imports and fails on: `domain` importing outside `domain` and `src/shared/`; `application` or `ports` importing `adapters`; a slice importing a file of another slice other than its `index.ts`; any import of `src/main.ts`; any adapter instantiated outside `src/main.ts`. Each use case has acceptance tests driven through its inbound port with in-memory adapters (an in-memory repository, a fake provider, a fake clock).
+The architecture test (`test/architecture.test.ts`) reads every `.ts` file under `src/`, parses its imports and fails on: `domain` importing outside `domain` and `src/shared/`; `application` or `ports` importing `adapters`; a slice importing a file of another slice other than its `index.ts`; any import of `src/main.ts`; any adapter instantiated outside `src/main.ts`; any bare package specifier or runtime module (`bun:*`, `node:*`) imported from `domain/`, `application/`, `ports/` or `src/shared/`, because libraries live only in adapters (ADR-000). Each use case has acceptance tests driven through its inbound port with in-memory adapters (an in-memory repository, a fake provider, a fake clock).
 
 Test layers:
 
