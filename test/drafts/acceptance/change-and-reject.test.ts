@@ -149,6 +149,29 @@ describe("RejectDraft", () => {
     expect(refusal(await change.run({ number: 1, text: "x", ownerWords: "y" }))).toEqual({ code: "draft_closed", number: 1, state: "rejected" });
   });
 
+  test("an approval voided by a change is not voided again by a later reject", async () => {
+    const { h, change, reject } = setup();
+    await seed(h, "waiting");
+    await seedApproval(h);
+    await change.run({ number: 1, text: "new text", ownerWords: "change it" });
+    await reject.run({ number: 1, ownerWords: "no" });
+    expect(await logKinds(h)).toEqual(["approved", "text_changed", "approval_voided", "rejected"]);
+    const [row] = await h.store.unitOfWork.run((tx) => tx.approvals.forDraft(1));
+    expect(row).toMatchObject({ voidReason: "changed" });
+  });
+
+  test("the live approval is voided even when a later approval of the draft is already voided", async () => {
+    const { h, reject } = setup();
+    await seed(h, "waiting");
+    const approvedId = await seedApproval(h);
+    await h.store.unitOfWork.run((tx) =>
+      tx.approvals.insert({ ...liveApproval, id: "ap-2", sendId: "send-2", usedAt: 700, voidedAt: 800, voidReason: "changed" }),
+    );
+    await reject.run({ number: 1, ownerWords: "no" });
+    const voided = (await h.store.log.page({ after: 0, limit: 10 })).find((e) => e.kind === "approval_voided");
+    expect(voided).toMatchObject({ reason: "rejected", approvalEntryId: approvedId, sendId: "send-1" });
+  });
+
   test("a live approval is voided when a draft is rejected, and the entry points to the approved entry", async () => {
     const { h, reject } = setup();
     await seed(h, "waiting");
