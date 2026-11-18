@@ -29,7 +29,7 @@ CREATE TABLE drafts (
   fail_reason             TEXT,
   order_payload           TEXT,
   order_id                TEXT,
-  replaced_by             INTEGER REFERENCES drafts(number),
+  replaced_by             INTEGER REFERENCES drafts(number) DEFERRABLE INITIALLY DEFERRED,
   closed_at               TEXT,
   retry_at                TEXT,
   attempts                INTEGER NOT NULL DEFAULT 0,

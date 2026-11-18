@@ -112,7 +112,14 @@ export class InMemoryDrafts {
     if ((options?.requireLease ?? true) && !(await this.lease.isOwner())) throw new LeaseLost();
     const before = { drafts: new Map(this.drafts), counter: this.counter, log: this.log.save() };
     try {
-      return await work({ drafts: this.repository(), log: this.log });
+      const result = await work({ drafts: this.repository(), log: this.log });
+      // the SQLite foreign key on replaced_by is deferred to commit; so is this check
+      for (const d of this.drafts.values()) {
+        if (d.replacedBy !== null && !this.drafts.has(d.replacedBy)) {
+          throw new Error(`draft ${d.number} was replaced by ${d.replacedBy}, which does not exist`);
+        }
+      }
+      return result;
     } catch (e) {
       this.drafts = before.drafts;
       this.counter = before.counter;
