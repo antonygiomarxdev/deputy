@@ -9,13 +9,13 @@ import { PhoneNumber } from "../../../src/shared/phone-number";
 type Config = Awaited<ReturnType<IntakeConnectionConfig["read"]>>;
 
 async function resolve(
-  over: { provider?: string | null; receivingMode?: string | null; apiKey?: boolean; phoneNumberId?: string | null; webhookSecret?: boolean; business?: boolean },
+  over: { provider?: string | null; receivingMode?: string | null; apiKey?: boolean; apiKeyValue?: string; phoneNumberId?: string | null; webhookSecret?: boolean; business?: boolean },
 ) {
   const config: Config = {
     provider: over.provider ?? null,
     receivingMode: over.receivingMode ?? null,
     kapso: {
-      apiKey: over.apiKey ? new Secret("sk-secret-value") : null,
+      apiKey: over.apiKey ? new Secret(over.apiKeyValue ?? "sk-secret-value") : null,
       phoneNumberId: over.phoneNumberId ?? null,
       webhookSecret: over.webhookSecret ? new Secret("whsec-secret-value") : null,
     },
@@ -54,6 +54,10 @@ describe("FR-INTAKE-01-8", () => {
       expect(r.message).not.toContain("secret-value");
     }
   });
+  test.each(["", "   "])("a blank api key %p counts as missing", async (apiKeyValue) => {
+    const r = await resolve({ ...kapsoAll, apiKeyValue });
+    expect(r).toEqual({ ok: false, message: "Kapso needs: api key. Run Setup." });
+  });
   test("every missing item is listed", async () => {
     const r = await resolve({ provider: "kapso", receivingMode: "live" });
     expect(r).toEqual({ ok: false, message: "Kapso needs: api key, phone number id, webhook secret, business number. Run Setup." });
@@ -72,6 +76,10 @@ describe("FR-INTAKE-01-11", () => {
   test("kapso: empty is catch_up, live is live", async () => {
     expect(await resolve(kapsoAll)).toMatchObject({ ok: true, receiving: "catch_up" });
     expect(await resolve({ ...kapsoAll, receivingMode: "live", webhookSecret: true })).toMatchObject({ ok: true, receiving: "live" });
+  });
+  test("Kapso items are checked before receiving_mode (TP-01 rule order)", async () => {
+    const r = await resolve({ ...kapsoAll, apiKey: false, receivingMode: "weekly" });
+    expect(r).toEqual({ ok: false, message: "Kapso needs: api key. Run Setup." });
   });
   test("weekly is refused and the message lists catch-up and live", async () => {
     const r = await resolve({ ...kapsoAll, receivingMode: "weekly" });

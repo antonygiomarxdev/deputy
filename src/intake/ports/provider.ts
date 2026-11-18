@@ -99,3 +99,8 @@ export interface Provider {
   /** The connected business number, when the provider offers it; null otherwise. */
   businessNumber(signal: AbortSignal): Promise<PhoneNumber | null>;
 }
+
+/** A caller bug, not an expected failure: every listing asks for at least one item. */
+export function assertLimit(limit: number): void {
+  if (!Number.isInteger(limit) || limit < 1) throw new RangeError(`limit must be a whole number of 1 or more, got ${limit}`);
+}

@@ -115,3 +115,28 @@ test("stop calls onLost when owner and releases the lease", async () => {
   expect(a.calls.lost).toBe(1);
   expect(holder.heartbeat).toBe(0);
 });
+
+test("stop does not wait for a running onAcquired and leaves the lease free", async () => {
+  const { holder, make } = setup();
+  const a = make("a", { onAcquired: () => new Promise<void>(() => {}) });
+  a.s.start();
+  await tick();
+  const t0 = performance.now();
+  await a.s.stop();
+  expect(performance.now() - t0).toBeLessThan(400);
+  expect(holder.heartbeat).toBe(0);
+});
+
+test("a lease taken over while onAcquired ran: not owner, and what it started is stopped", async () => {
+  const { holder, make } = setup();
+  const a = make("a", {
+    onAcquired: async () => {
+      holder.token = "b";
+    },
+  });
+  a.s.start();
+  await tick();
+  expect(a.s.isOwner).toBe(false);
+  expect(a.calls.lost).toBe(1);
+  await a.s.stop();
+});

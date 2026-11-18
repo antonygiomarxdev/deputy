@@ -4,6 +4,7 @@ import type { Instant } from "../../../shared/instant";
 import type { PhoneNumber } from "../../../shared/phone-number";
 import type { SqlDatabase, SqlRow } from "../../../shared/sql-database";
 import {
+  assertLimit,
   toCursor,
   type Cursor,
   type Page,
@@ -70,6 +71,7 @@ export class DevProvider implements Provider {
   async listConversations(
     q: { activeAfter: Instant | null; cursor: Cursor | null; limit: number },
   ): Promise<Page<ProviderConversation>> {
+    assertLimit(q.limit);
     const limit = Math.min(q.limit, MAX_PAGE);
     const offset = offsetOf(q.cursor);
     const rows = await this.d.db.query(
@@ -91,6 +93,7 @@ export class DevProvider implements Provider {
   async listMessages(
     q: { scope: { conversationRef: string } | { outbound: true }; cursor: Cursor | null; limit: number },
   ): Promise<Page<ProviderMessage>> {
+    assertLimit(q.limit);
     const limit = Math.min(q.limit, MAX_PAGE);
     const offset = offsetOf(q.cursor);
     const [where, params] =
@@ -187,9 +190,10 @@ export class DevProvider implements Provider {
     return this.d.db.transaction(async (tx) => {
       const placeholder = h.id ?? `dev-pending-${crypto.randomUUID()}`;
       const r = await tx.run(
-        `INSERT OR IGNORE INTO dev_holdings
+        `INSERT INTO dev_holdings
            (provider_message_id, conversation_ref, counterpart, sender, direction, type, text, transcript, origin, sent_at, owner_mark)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(provider_message_id) DO NOTHING`,
         [placeholder, h.chat, h.chat, h.sender, h.direction, h.type, h.text, h.transcript, h.origin, h.sentAt, h.ownerMark ? 1 : 0],
       );
       if (r.changes === 0) return { providerMessageId: placeholder, isNew: false };
