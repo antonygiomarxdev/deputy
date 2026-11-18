@@ -193,8 +193,10 @@ describe("intake settings", () => {
     expect(await country("XX")).toEqual({ ok: false, reason: "unknown_country", kept: null });
   });
 
-  test("the change time is the clock's", async () => {
+  test("the change time is the clock's, for the period and for the country", async () => {
     await minutes(4);
     expect(settings.changedAt.get("catch_up_minutes")).toBe(NOW);
+    await country("NI");
+    expect(settings.changedAt.get("country")).toBe(NOW);
   });
 });
