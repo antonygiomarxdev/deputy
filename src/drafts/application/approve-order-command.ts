@@ -53,6 +53,8 @@ export class ApproveOrderCommandUseCase implements ApproveOrderCommand {
       throw e;
     }
     if (logEntryId === undefined) return refuse({ code: "log_unavailable" });
+    // the lease may have been lost since the first check: another process owns the data now, and no Orders method is called
+    if (!(await lease.isOwner())) return refuse({ code: "not_owner" });
 
     const answer =
       input.command === "change"

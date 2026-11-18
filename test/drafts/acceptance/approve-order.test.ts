@@ -165,6 +165,31 @@ describe("ApproveOrderCommand (FR-DRAFTS-02-10)", () => {
     expect(h.changer.calls).toEqual([]);
   });
 
+  test("a lease lost after the log entry is written stops the command: not_owner and no Orders method is called", async () => {
+    let holderOf: { token: string | null } | undefined;
+    const h = makeDrafts({
+      chats,
+      orderChats,
+      unitOfWork: (store) => ({
+        read: (work) => store.unitOfWork.read(work),
+        run: async (work, o) => {
+          const result = await store.unitOfWork.run(work, o);
+          if (holderOf) holderOf.token = "other"; // another process takes the lease once the entry is committed
+          return result;
+        },
+      }),
+    });
+    holderOf = h.holder;
+    for (const input of [
+      { command: "change" as const, orderRef: "o-1", change: { status: "ready" }, ownerWords: "mark o-1 ready" },
+      { command: "delete" as const, orderRef: "o-1", confirm: true, ownerWords: "delete o-1" },
+    ]) {
+      h.holder.token = "me";
+      expect(await h.approveOrderCommand.run(input)).toEqual({ ok: false, refusal: { code: "not_owner" } });
+    }
+    expect(h.changer.calls).toEqual([]);
+  });
+
   test("when Orders refuses, a failed entry with order_command_failed follows and the answer is returned", async () => {
     const h = makeDrafts({ chats, orderChats });
     h.changer.answer = { ok: false, reason: "order is closed" };

@@ -111,7 +111,10 @@ export type OrderChangeInput = Readonly<Partial<Record<OrderField, unknown>>>;
 
 /** Drafts owns this port; the adapter calls Orders' ChangeOrder and DeleteOrder. */
 export interface OrderChanger {
-  /** The chat of the order, read before the log entry is written (the entry comes first and its chat is not null). null when the order is unknown. */
+  /**
+   * The chat id of the order, and nothing else (no name, no address, no customer text): it goes into the log entry,
+   * which is written before the command is called. null when the order is unknown.
+   */
   chatOf(orderRef: string): Promise<string | null>;
   change(orderRef: string, change: OrderChangeInput, ownerWords: string): Promise<{ ok: true; detail: string } | { ok: false; reason: string }>;
   delete(
