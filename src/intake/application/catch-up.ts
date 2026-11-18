@@ -10,7 +10,7 @@ import { LeaseLostError, type IntakeRepos, type IntakeUnitOfWork } from "../port
 import type { Cursor, Provider } from "../ports/provider";
 import type { RunCoordinator } from "./run-coordinator";
 import type { StoreMessages } from "./store-messages";
-import { readAll, RunTotals, sweepConversations } from "./sweeps";
+import { readAll, RunTotals, sweepConversations, sweepOutbound } from "./sweeps";
 
 export interface CatchUpDeps {
   provider: Provider;
@@ -45,6 +45,7 @@ export class CatchUpUseCase implements CatchUp {
       const now = clock.now();
       const state = (await this.d.reads.syncState.load(provider.name)) ?? SyncState.initial(provider.name);
       const from = state.props.markConversations === null ? null : state.props.markConversations - OVERLAP_MS;
+      const fromOutbound = state.props.markOutbound === null ? null : state.props.markOutbound - OVERLAP_MS;
 
       const first = await provider.listConversations({ activeAfter: from, cursor: null, limit: PAGE_SIZE }, signal);
       const providerNow = first.serverTime;
@@ -57,6 +58,7 @@ export class CatchUpUseCase implements CatchUp {
       );
       await sweepConversations({ provider, uow, store: this.d.store, signal, totals, state, conversations, from });
       state.completeConversations(providerNow);
+      await sweepOutbound({ provider, uow, store: this.d.store, signal, totals, state, from: fromOutbound, providerNow });
 
       const finishedAt = clock.now();
       state.complete(finishedAt);
