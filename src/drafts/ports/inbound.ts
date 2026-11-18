@@ -1,5 +1,7 @@
 import type { ChatId } from "../../shared/chat-id";
 import type { Instant } from "../../shared/instant";
+import type { AuditDefect, AuditGap } from "../domain/approval-audit";
+import type { LogKind } from "../domain/log-entry";
 import type { DraftKind, DraftNumber, DraftState } from "../domain/draft";
 import type { Refusal } from "../domain/refusals";
 import type { OrderChangeInput, OrderInput } from "./outbound";
@@ -90,4 +92,32 @@ export interface ApproveOrderCommand {
       | { approved: false; pendingDelete: string }
     >
   >;
+}
+
+export type LogEntryView = {
+  id: number;
+  at: string;
+  kind: LogKind;
+  draft: number | null;
+  chat: string;
+  proposedText: string | null;
+  finalText: string | null;
+  reason: string | null;
+  ownerWords: string | null;
+  scrubbed: boolean;
+  /** The customer message the draft answered. Set only on `approved` and `rejected` entries of a reply draft; an id, not text. */
+  answersMessageId: string | null;
+};
+
+export interface ReadDraftLog {
+  /**
+   * limit 1 to 100, default 20 (ADR-009). Without `after`: newest first, entries with id < before. With `after`: oldest first,
+   * entries with id > after. `nextBefore` is the id of the oldest shown entry when older ones exist. A pure read, no lease check.
+   */
+  run(input: { chat?: string; limit?: number; before?: number; after?: number }): Promise<Outcome<{ entries: LogEntryView[]; nextBefore: number | null }>>;
+}
+
+export interface CheckApprovals {
+  /** A pure read. */
+  run(): Promise<{ defects: AuditDefect[]; gaps: AuditGap[] }>;
 }

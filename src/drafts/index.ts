@@ -2,6 +2,8 @@ import type { Clock } from "../shared/clock";
 import type { Instant } from "../shared/instant";
 import type { OwnerLease } from "../shared/owner-lease";
 import { ChangeDraftUseCase } from "./application/change-draft";
+import { CheckApprovalsUseCase } from "./application/check-approvals";
+import { ReadDraftLogUseCase } from "./application/read-draft-log";
 import { CreateDraftUseCase } from "./application/create-draft";
 import { ListDraftsUseCase } from "./application/list-drafts";
 import { RejectDraftUseCase } from "./application/reject-draft";
@@ -9,12 +11,15 @@ import { WaitingChatsUseCase } from "./application/waiting-chats";
 import type {
   ChangeDraft,
   ChangeDraftResult,
+  CheckApprovals,
   CreateDraft,
   CreateDraftResult,
   DraftView,
   ListDrafts,
+  LogEntryView,
   MessageView,
   Outcome,
+  ReadDraftLog,
   RejectDraft,
   WaitingChat,
   WaitingChats,
@@ -24,13 +29,16 @@ import type { ChatReader, OrderInput, OrderPreparer, UnitOfWork } from "./ports/
 export type {
   ChangeDraft,
   ChangeDraftResult,
+  CheckApprovals,
   CreateDraft,
   CreateDraftResult,
   DraftView,
   ListDrafts,
+  LogEntryView,
   MessageView,
   Outcome,
   OrderInput,
+  ReadDraftLog,
   RejectDraft,
   WaitingChat,
   WaitingChats,
@@ -55,6 +63,8 @@ export function createDrafts(deps: DraftsDeps): {
   changeDraft: ChangeDraft;
   rejectDraft: RejectDraft;
   waitingChats: WaitingChats;
+  readDraftLog: ReadDraftLog;
+  checkApprovals: CheckApprovals;
 } {
   const { clock, lease, unitOfWork, chats, orders, sessionStartedAt } = deps;
   return {
@@ -63,5 +73,7 @@ export function createDrafts(deps: DraftsDeps): {
     changeDraft: new ChangeDraftUseCase({ clock, lease, unitOfWork, orders }),
     rejectDraft: new RejectDraftUseCase({ clock, lease, unitOfWork }),
     waitingChats: new WaitingChatsUseCase({ unitOfWork, sessionStartedAt }),
+    readDraftLog: new ReadDraftLogUseCase({ unitOfWork }),
+    checkApprovals: new CheckApprovalsUseCase({ unitOfWork }),
   };
 }

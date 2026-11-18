@@ -127,7 +127,7 @@ export class InMemoryDrafts {
   constructor(private readonly lease: OwnerLease) {
     this.unitOfWork = {
       run: (work, options) => this.serialize(() => this.transact(work, options)),
-      read: (work) => this.serialize(() => work({ drafts: this.repository() })),
+      read: (work) => this.serialize(() => work({ drafts: this.repository(), log: this.log })),
     };
   }
 
