@@ -87,6 +87,39 @@ export function draftRepositoryContract(name: string, make: (lease: OwnerLease) 
       await uow.run((tx) => tx.drafts.save(newDraft(second + 1, "reply", chatB)));
     });
 
+    test("FR-DRAFTS-01-7: replacing an open draft saves the old one first, then the new one, in one transaction", async () => {
+      const { uow, next } = setup();
+      const first = await next();
+      await uow.run((tx) => tx.drafts.save(newDraft(first)));
+      await uow.run(async (tx) => {
+        const second = await tx.drafts.nextNumber();
+        const old = await tx.drafts.get(first);
+        if (!old) throw new Error("missing");
+        expect(old.replaceBy({ number: second, now: 2_000 }).ok).toBe(true);
+        await tx.drafts.save(old);
+        await tx.drafts.save(newDraft(second));
+      });
+      const old = await uow.run((tx) => tx.drafts.get(first));
+      expect(old?.snapshot()).toMatchObject({ state: "replaced", replacedBy: first + 1 });
+      const open = await uow.run((tx) => tx.drafts.listOpen());
+      expect(open.map((d) => d.snapshot().number)).toEqual([first + 1]);
+    });
+
+    test("FR-DRAFTS-01-7: a replaced draft that points at a draft that does not exist fails at commit and stores nothing", async () => {
+      const { uow, next } = setup();
+      const first = await next();
+      await uow.run((tx) => tx.drafts.save(newDraft(first)));
+      await expect(
+        uow.run(async (tx) => {
+          const old = await tx.drafts.get(first);
+          if (!old) throw new Error("missing");
+          old.replaceBy({ number: 99, now: 2_000 });
+          await tx.drafts.save(old);
+        }),
+      ).rejects.toThrow();
+      expect((await uow.run((tx) => tx.drafts.get(first)))?.snapshot().state).toBe("waiting");
+    });
+
     test("FR-DRAFTS-01-7: saving twice from the same loaded copy throws StaleDraft", async () => {
       const { uow, next } = setup();
       const n = await next();
