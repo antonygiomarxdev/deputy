@@ -150,7 +150,7 @@ export class InMemoryIntakeStore {
         const times = [...s().messages.values()]
           .map((m) => m.message.props)
           .filter((p) => p.id.provider === provider && p.sentAt < before)
-          .filter((p) => ("conversationRef" in scope ? p.conversationRef === scope.conversationRef : p.source !== "customer"))
+          .filter((p) => ("conversationRef" in scope ? p.conversationRef === scope.conversationRef : p.source === "owner_app" || p.source === "sent_through_deputy"))
           .map((p) => p.sentAt);
         return times.length === 0 ? null : Math.max(...times);
       },
@@ -176,7 +176,7 @@ export class InMemoryIntakeStore {
       async recompute(chat: ChatId, dev: boolean, now: Instant, seen: ChatSeen) {
         const mine = [...s().messages.values()].filter((m) => m.message.props.chat === chat && m.message.props.dev === dev);
         const customer = newest(mine.filter((m) => m.message.props.source === "customer" && m.message.props.mark === "normal"));
-        const answer = newest(mine.filter((m) => m.message.props.source !== "customer"));
+        const answer = newest(mine.filter((m) => m.message.props.source === "owner_app" || m.message.props.source === "sent_through_deputy"));
         const unattributed = mine.filter((m) => m.message.props.mark === "not_attributable").map((m) => m.message.props.sentAt);
         const old = s().chats.get(key(chat, dev));
         const source = answer?.message.props.source;
