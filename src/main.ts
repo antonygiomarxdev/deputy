@@ -146,6 +146,9 @@ async function serve(): Promise<number> {
     lease,
     clock,
     onAcquired: async () => {
+      // first: a send cut off by a stop or a crash is unknown, before the scheduler or the listener can send or report anything
+      const { marked } = await intake.markInterruptedSends.execute();
+      if (marked > 0) console.error(`deputy: ${marked} interrupted send(s) are now unknown`);
       if (listens) await listener.start();
       console.error(`deputy: owner of ${dataDir} (config ${configDir}, provider ${resolved.provider})`);
     },
