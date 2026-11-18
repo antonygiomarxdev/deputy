@@ -63,3 +63,20 @@ test("FR-DRAFTS-04-1: the SPEC-02 events map to approved, sending, sent, failed,
   expect(entries[4]).toMatchObject({ reason: "unknown_outcome", approvalEntryId: 9 });
   expect(entries[5]).toMatchObject({ orderRef: "o-1", approvalEntryId: 9 });
 });
+
+test("FR-DRAFTS-04-9: every SPEC-02 event of an order draft carries no text", () => {
+  const order = { ...base, draftKind: "order" as const };
+  const entries = toLogEntries(
+    [
+      { ...order, type: "Approved", approvalId: "ap1", sendId: "deputy:ap1", proposedText: "2 cakes", text: "3 cakes", ownerWords: "go 4" },
+      { ...order, type: "SendStarted", sendId: "deputy:ap1", text: "3 cakes" },
+      { ...order, type: "DraftSent", sendId: "deputy:ap1", text: "3 cakes", reason: null },
+      { ...order, type: "SendFailed", reason: "quota" },
+      { ...order, type: "OutcomeUnknown", reason: "order_outcome_unknown" },
+      { ...order, type: "OrderRecorded", orderId: "o-1" },
+    ],
+    { approvalEntryId: 9 },
+  );
+  expect(entries.map((e) => e.kind)).toEqual(["approved", "sending", "sent", "failed", "unknown", "recorded"]);
+  for (const e of entries) expect(e).toMatchObject({ draftKind: "order", proposedText: null, finalText: null });
+});
