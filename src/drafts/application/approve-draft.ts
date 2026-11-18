@@ -1,13 +1,14 @@
 import type { ChatId } from "../../shared/chat-id";
 import type { Clock } from "../../shared/clock";
+import type { Instant } from "../../shared/instant";
 import type { OwnerLease } from "../../shared/owner-lease";
 import type { Approval } from "../domain/approval";
-import { Draft } from "../domain/draft";
+import { Draft, type DraftChange, type DraftKind } from "../domain/draft";
 import { LeaseLost, LogUnavailable, StaleDraft } from "../domain/errors";
 import { toLogEntries } from "../domain/log-mapper";
 import type { Refusal } from "../domain/refusals";
 import type { ApproveDraft, ApproveResult, Outcome } from "../ports/inbound";
-import type { CustomerTextCheck, Ids, TextDigest, UnitOfWork } from "../ports/outbound";
+import type { CustomerTextCheck, Ids, OrderRecorder, TextDigest, UnitOfWork } from "../ports/outbound";
 import type { Sender } from "../ports/sender";
 import { checkOwnerWords } from "./check-owner-words";
 
@@ -21,46 +22,77 @@ function refusalOfError(e: unknown): Outcome<never> {
   throw e;
 }
 
-type SendDeps = { clock: Clock; unitOfWork: UnitOfWork; sender: Sender };
+type SendDeps = { clock: Clock; unitOfWork: UnitOfWork; sender: Sender; recorder: OrderRecorder };
+
+/** What the outside call answered: how to close the draft, and what the owner is told. Null: the call was refused. */
+type Step = { finish: (d: Draft, now: Instant) => DraftChange; value: ApproveResult } | null;
+
+async function attempt(
+  deps: SendDeps,
+  draft: { number: number; chat: ChatId; kind: DraftKind; orderPayload: string | null },
+  approval: Approval,
+): Promise<Step> {
+  const number = draft.number;
+  if (draft.kind === "order") {
+    // an order draft only ever reaches Orders: its summary is never sent to a customer
+    if (draft.orderPayload === null) throw new Error(`order draft ${number} has no payload`);
+    const r = await deps.recorder.record({ draftNumber: number, payload: draft.orderPayload, ownerWords: approval.ownerWords });
+    if (r.ok) return { finish: (d, now) => d.finishRecorded({ orderId: r.orderId, now }), value: { outcome: "recorded", number, orderId: r.orderId } };
+    if (r.kind === "outcome_unknown") {
+      return {
+        finish: (d, now) => d.finishUnknown({ reason: "order_outcome_unknown", now }),
+        value: {
+          outcome: "unknown",
+          number,
+          reason: "order_outcome_unknown",
+          detail: "the order may or may not have been recorded; check the orders before you decide",
+        },
+      };
+    }
+    return { finish: (d, now) => d.finishFailed({ reason: r.reason, now }), value: { outcome: "failed", number, reason: r.reason } };
+  }
+  const sent = await deps.sender.send(draft.chat, approval.text, approval.sendId);
+  // a refused send was never attempted by this process, so the draft stays "sending" for the owner process to recover
+  if (sent.kind === "refused") return null;
+  if (sent.kind === "sent") {
+    return {
+      finish: (d, now) => d.finishSent({ sendId: approval.sendId, now, reason: null }),
+      value: { outcome: "sent", number, sendId: approval.sendId, logged: true },
+    };
+  }
+  // any result other than sent is "unknown": it is never retried by itself (TP-03)
+  return {
+    finish: (d, now) => d.finishUnknown({ reason: "unknown_outcome", now }),
+    value: {
+      outcome: "unknown",
+      number,
+      reason: "unknown_outcome",
+      detail: "the message may or may not have been sent; check the chat before you decide",
+    },
+  };
+}
 
 /**
- * After transaction 1 has committed: sends the approved text, then records the result in one transaction.
- * The one send pipeline; SPEC-03's RetrySend reuses it without importing Sender.
+ * After transaction 1 has committed: makes the outside call (the send, or Orders' record), then writes the result
+ * in one transaction. The one send pipeline; SPEC-03's RetrySend reuses it without importing Sender.
  */
 export async function driveSend(
   deps: SendDeps,
-  draft: { number: number; chat: ChatId },
+  draft: { number: number; chat: ChatId; kind: DraftKind; orderPayload: string | null },
   approval: Approval,
   approvalEntryId: number,
 ): Promise<Outcome<ApproveResult>> {
-  const sent = await deps.sender.send(draft.chat, approval.text, approval.sendId);
-  // a refused send was never attempted by this process, so the draft stays "sending" for the owner process to recover
-  if (sent.kind === "refused") return refuse({ code: "not_owner" });
+  const step = await attempt(deps, draft, approval);
+  if (step === null) return refuse({ code: "not_owner" });
   try {
     return await deps.unitOfWork.run(async (tx): Promise<Outcome<ApproveResult>> => {
       const loaded = await tx.drafts.get(draft.number);
       if (loaded === null) return refuse({ code: "stale_draft", number: draft.number });
-      const now = deps.clock.now();
-      // any result other than sent is "unknown": it is never retried by itself (TP-03)
-      const finished =
-        sent.kind === "sent"
-          ? loaded.finishSent({ sendId: approval.sendId, now, reason: null })
-          : loaded.finishUnknown({ reason: "unknown_outcome", now });
+      const finished = step.finish(loaded, deps.clock.now());
       if (!finished.ok) return refuse({ code: "stale_draft", number: draft.number });
       await tx.drafts.save(loaded);
       await tx.log.append(toLogEntries(finished.events, { approvalEntryId }));
-      if (sent.kind === "sent") {
-        return { ok: true, value: { outcome: "sent", number: draft.number, sendId: approval.sendId, logged: true } };
-      }
-      return {
-        ok: true,
-        value: {
-          outcome: "unknown",
-          number: draft.number,
-          reason: "unknown_outcome",
-          detail: "the message may or may not have been sent; check the chat before you decide",
-        },
-      };
+      return { ok: true, value: step.value };
     });
   } catch (e) {
     return refusalOfError(e);
@@ -75,6 +107,7 @@ export class ApproveDraftUseCase implements ApproveDraft {
       unitOfWork: UnitOfWork;
       customerText: CustomerTextCheck;
       sender: Sender;
+      recorder: OrderRecorder;
       digest: TextDigest;
       ids: Ids;
     },
@@ -89,7 +122,6 @@ export class ApproveDraftUseCase implements ApproveDraft {
     if (first === null) return refuse({ code: "draft_not_found", number });
     const refused = this.refusalOfState(first, shownText);
     if (refused) return refuse(refused);
-    if (first.snapshot().kind === "order") return refuse({ code: "wrong_kind", number }); // order drafts are SPEC-02 Task 4
     const words = await checkOwnerWords(this.deps, ownerWords, number);
     if (words) return refuse(words);
 

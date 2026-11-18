@@ -2,7 +2,7 @@ import type { ChatId } from "../../shared/chat-id";
 import type { Instant } from "../../shared/instant";
 import type { DraftKind, DraftNumber, DraftState } from "../domain/draft";
 import type { Refusal } from "../domain/refusals";
-import type { OrderInput } from "./outbound";
+import type { OrderChangeInput, OrderInput } from "./outbound";
 
 export type Outcome<T> = { readonly ok: true; readonly value: T } | { readonly ok: false; readonly refusal: Refusal };
 
@@ -78,3 +78,16 @@ export type ApproveResult =
   | { outcome: "failed"; number: number; reason: string }
   | { outcome: "unknown"; number: number; reason: string; detail: string };
 // SPEC-03 adds "held" and "queued".
+
+export interface ApproveOrderCommand {
+  run(
+    input:
+      | { command: "change"; orderRef: string; change: OrderChangeInput; ownerWords: string }
+      | { command: "delete"; orderRef: string; confirm: boolean; ownerWords: string },
+  ): Promise<
+    Outcome<
+      | { approved: true; logEntryId: number; result: { ok: true; detail: string } | { ok: false; reason: string } }
+      | { approved: false; pendingDelete: string }
+    >
+  >;
+}

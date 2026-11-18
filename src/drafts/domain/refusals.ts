@@ -19,7 +19,8 @@ export type Refusal =
   | { readonly code: "text_differs"; readonly number: number }
   | { readonly code: "not_shown"; readonly number: number }
   | { readonly code: "words_missing_number"; readonly number: number }
-  | { readonly code: "words_copied"; readonly copied: "customer" | "draft" };
+  | { readonly code: "words_copied"; readonly copied: "customer" | "draft" }
+  | { readonly code: "order_command_refused"; readonly reason: string };
 
 /** English default text for each code (D20). No customer or provider text. */
 export function refusalText(r: Refusal): string {
@@ -60,6 +61,8 @@ export function refusalText(r: Refusal): string {
       return "list the drafts and show the owner this text first";
     case "words_missing_number":
       return `draft ${r.number} has not been approved: the owner's words do not name draft ${r.number} by its number`;
+    case "order_command_refused":
+      return `the order change was refused: ${r.reason}`;
     case "words_copied":
       return r.copied === "customer"
         ? "those words are a customer message; ask the owner to say it in their own words"
