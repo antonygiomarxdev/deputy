@@ -22,6 +22,8 @@ Constants (domain, `src/intake/domain/constants.ts`). Each value has its reason 
 | `MAX_PAGES` | 2,000 | 200,000 items per listing at 100 per page; 20 minutes of reading at 100 requests a minute |
 | `DEFAULT_PERIOD_MINUTES` | 2 | FR-INTAKE-03-10 |
 | `MIN_PERIOD_MINUTES` | 1 | one listing, one message read and one outbound page is at least three requests per run (FR-INTAKE-03-21) |
+| `MAX_PERIOD_MINUTES` | 1,440 (one day) | a slower period leaves a customer unseen for over a day; it also stays far under the 2^31 ms timer limit (about 35,791 minutes), above which Bun clamps a delay to 1 ms and the scheduler would loop against the provider |
+| `MAX_WAIT_MS` | 86,400,000 (one day) | `MAX_PERIOD_MINUTES` in ms; caps every scheduler wait, including a `retryAt` from a large `Retry-After`, for the same timer limit |
 | `READ_RESERVE` | 10 | 10 per cent of the limit, about three sends in the same minute |
 | `RATE_LIMIT_DEFAULT_WAIT_MS` | 60,000 | a `429` with no `Retry-After`: the plan limit is counted per minute (TP-04) |
 | `CHAT_LOOKUP_WINDOW_MS` | 86,400,000 (24 h) | `CatchUpChat` with no stored conversation looks at conversations active in the last day (TP-03) |
@@ -240,7 +242,7 @@ export interface SetIntakeSettings {
   ): Promise<
     | { ok: true; value: number | string }
     | { ok: false; reason: "not_owner" }
-    | { ok: false; reason: "below_minimum" | "not_an_integer"; minimum: 1; kept: number }
+    | { ok: false; reason: "below_minimum" | "above_maximum" | "not_an_integer"; minimum: 1; maximum: 1440; kept: number }
     | { ok: false; reason: "unknown_country"; kept: string | null }
   >;
 }
@@ -298,7 +300,7 @@ export class CatchUpScheduler {
   start(): void;          // runs once with trigger "start", then loops
   stop(): void;           // sets the flag; returns at once; the loop ends at its next wake; a run in flight is guarded by the lease check at every page
 }
-// After a run: usage_limit waits until retryAt (trigger "retry"); catching_up runs again at once (trigger "retry"); any other result waits `catchUpMinutes` minutes read again before each wait (trigger "timer"). A throw from a run goes to console.error and the loop goes on.
+// Every wait is capped at MAX_WAIT_MS. A retryAfterMs of 0 or less counts as absent, so it waits RATE_LIMIT_DEFAULT_WAIT_MS: a zero wait would repeat the run at once against a provider that just refused it. After a run: usage_limit waits until retryAt (trigger "retry"); catching_up runs again at once (trigger "retry"); any other result waits `catchUpMinutes` minutes read again before each wait (trigger "timer"). A throw from a run goes to console.error and the loop goes on.
 
 // adapters/kapso/pacer.ts
 export class Pacer {
@@ -382,7 +384,7 @@ None added. Files used: `catchup_status` (SPEC-02, `0005-catchup-status.sql`, ex
 - **Tests first:** `test/intake/acceptance/sync-status-and-settings.test.ts`. Layer: use case with in-memory adapters.
   - FR-INTAKE-03-6: Given the last success was 6 hours ago, When `GetSyncStatus` runs, Then `lastSuccessAt` is that time and `newestStoredAt` is set. Before any run, the view is `failed`, reason `not_yet_run`. Given a first import of zero messages and nothing stored, Then `historyMaybeSyncing` is true.
   - FR-INTAKE-02-1 (view of the live check): Given a signed delivery was stored at time T, Then `lastLiveDeliveryVerifiedAt` is T and a catch-up does not change it.
-  - FR-INTAKE-03-21: Given the owner sets 30 seconds (0.5 minute), When `SetIntakeSettings` runs, Then it refuses, `kept` is the previous value and the period is unchanged; given 1, Then it is accepted; given 0 or -3, Then `below_minimum`; given the owner is not the lease holder, Then `not_owner`.
+  - FR-INTAKE-03-21: Given the owner sets 30 seconds (0.5 minute), When `SetIntakeSettings` runs, Then it refuses, `kept` is the previous value and the period is unchanged; given 1, Then it is accepted; given 0 or -3, Then `below_minimum`; given 1,441, Then `above_maximum` and 1,440 is accepted; given the owner is not the lease holder, Then `not_owner`.
   - FR-INTAKE-03-21: Given `SetIntakeSettings` with `country` "NI", When it runs, Then the value is stored and `GetIntakeSettings` shows it; Given "XX", Then it refuses with `unknown_country` and keeps the old value (`PhoneNumberParser.isCountry`).
 - **Build:** `get-sync-status.ts` (complete), `get-intake-settings.ts`, `set-intake-settings.ts`.
 - **Done when:** `bun test test/intake/acceptance/sync-status-and-settings.test.ts` and `bun run typecheck` pass.
@@ -391,7 +393,7 @@ None added. Files used: `catchup_status` (SPEC-02, `0005-catchup-status.sql`, ex
 - **Tests first:** `test/intake/acceptance/catch-up-scheduler.test.ts` (use case with fakes) and `test/e2e/check-messages.test.ts` (end to end).
   - FR-INTAKE-03-10: Given a fake clock and the default period, When 10 minutes pass with messages arriving at minute 3 and 7, Then runs happen at 0, 2, 4, 6, 8 and 10 and both messages are stored without being asked.
   - FR-INTAKE-03-10: Given the period changes to 5 between runs, Then the next wait is 5 minutes.
-  - FR-INTAKE-03-20: Given a `429` with `Retry-After: 30`, Then the scheduler's next run starts at `retryAt`, not at the period; given `catching_up`, Then it runs again at once.
+  - FR-INTAKE-03-20: Given a `429` with `Retry-After: 30`, Then the scheduler's next run starts at `retryAt`, not at the period; given `catching_up`, Then it runs again at once; given a `retryAt` 30 days ahead, Then the next wait is `MAX_WAIT_MS`; given `Retry-After: 0`, Then the next wait is `RATE_LIMIT_DEFAULT_WAIT_MS`; given the lease is lost and acquired again while a wait is pending, Then only one loop runs.
   - FR-INTAKE-03-16: Given live delivery is on, Then the scheduler still runs periodically.
   - FR-INTAKE-03-6: Given the server over stdio after a failed run with reason `credentials`, When `status` is called, Then its text holds the mode line and the `credentials` sentence from `reasonText`, and no provider text (E2E, `test/e2e/check-messages.test.ts`).
   - Resilience: Given a run that throws, Then the error goes to `console.error` and the loop continues.
