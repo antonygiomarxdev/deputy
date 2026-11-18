@@ -351,8 +351,8 @@ export class InMemoryIntakeStore {
       async saveSend(send) {
         const stored = s().sends.get(send.props.sendId);
         if (stored === undefined) throw new Error("no such send");
-        const { state, failureReason, finishedAt } = send.props;
-        s().sends.set(stored.sendId, { ...stored, state, failureReason, finishedAt });
+        const { state, failureReason, finishedAt, retryAt } = send.props;
+        s().sends.set(stored.sendId, { ...stored, state, failureReason, finishedAt, retryAt });
       },
       async findByProviderId(provider, providerMessageId) {
         return s().outgoingParts.get(`${provider}:${providerMessageId}`) ?? null;
