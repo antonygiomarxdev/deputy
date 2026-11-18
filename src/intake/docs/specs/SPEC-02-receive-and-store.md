@@ -134,7 +134,7 @@ export function isHistory(i: { provider: ProviderName; connectedAt: Instant | nu
 export function chatOf(p: ProviderMessage): ChatId;
 // group: groupChatId(counterpart ?? conversationRef ?? "unknown"); else the counterpart (for an inbound message with no counterpart, the sender)
 // parsed with PhoneNumber.fromInternational and turned by lineChatId; no counterpart or an unparseable one: UNATTRIBUTED_CHAT.
-export function markOf(p: ProviderMessage, sender: PhoneNumber | null, chat: ChatId): Mark;
+export function markOf(p: ProviderMessage, sender: PhoneNumber | null, chat: ChatId, matchesSend: boolean): Mark;
 // order: group_chat (p.group); not_attributable (outbound with no sender, or chat is UNATTRIBUTED_CHAT); sender_unknown (inbound with no sender); else normal.
 
 // domain/chat-state.ts

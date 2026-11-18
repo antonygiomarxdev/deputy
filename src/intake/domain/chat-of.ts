@@ -11,7 +11,7 @@ export function chatOf(p: ProviderMessage): ChatId {
 }
 
 /** `matchesSend`: a Deputy send the provider echoes without a sender is attributable (L8). */
-export function markOf(p: ProviderMessage, sender: PhoneNumber | null, chat: ChatId, matchesSend = false): Mark {
+export function markOf(p: ProviderMessage, sender: PhoneNumber | null, chat: ChatId, matchesSend: boolean): Mark {
   if (p.group) return "group_chat";
   if (chat === UNATTRIBUTED_CHAT) return "not_attributable";
   if (sender === null && p.direction === "outbound") return matchesSend ? "normal" : "not_attributable";

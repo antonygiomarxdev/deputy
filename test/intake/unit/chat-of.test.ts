@@ -45,9 +45,9 @@ test("an unparseable counterpart is unattributed", () => {
 
 test("markOf order: group, not attributable, sender unknown", () => {
   const sender = PhoneNumber.fromInternational("5491123456789");
-  expect(markOf(pm({ group: true }), null, chatOf(pm({ group: true })))).toBe("group_chat");
-  expect(markOf(pm({ direction: "outbound" }), null, chatOf(pm()))).toBe("not_attributable");
-  expect(markOf(pm(), null, chatOf(pm()))).toBe("sender_unknown");
-  expect(markOf(pm(), sender, chatOf(pm()))).toBe("normal");
+  expect(markOf(pm({ group: true }), null, chatOf(pm({ group: true })), false)).toBe("group_chat");
+  expect(markOf(pm({ direction: "outbound" }), null, chatOf(pm()), false)).toBe("not_attributable");
+  expect(markOf(pm(), null, chatOf(pm()), false)).toBe("sender_unknown");
+  expect(markOf(pm(), sender, chatOf(pm()), false)).toBe("normal");
   expect(markOf(pm({ direction: "outbound" }), null, chatOf(pm()), true)).toBe("normal");
 });
