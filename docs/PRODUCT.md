@@ -42,7 +42,7 @@ These hold for every feature. A requirement that breaks one needs an explicit ow
 5. **It knows what the owner knows:** business profile, catalog, chat history, and the owner's past decisions.
 6. **Official APIs only.** No unofficial WhatsApp bridges.
 7. **Fair use.** The owner is in the loop and volume is low. Deputy never stretches any provider's terms (Meta, Anthropic, OpenAI, the BSP).
-8. **The owner's data stays the owner's.** Conversations, orders and learned knowledge live on the owner's machine.
+8. **The owner's data stays the owner's.** Conversations, orders and learned knowledge live on the owner's machine, unless the owner chooses their own spreadsheet for the catalog or orders.
 
 ## 5. Use cases
 
@@ -84,6 +84,8 @@ These hold for every feature. A requirement that breaks one needs an explicit ow
 | Orders | `src/orders/` | Recording and listing orders | UC-6 |
 | Setup | `src/setup/` | Guided onboarding for a non-technical owner | UC-7 |
 
+UC-4 has no slice: the agent's own remote access covers it, and "in the conversation" includes that same conversation reached remotely.
+
 Safety is not a slice: section 4 and the safety requirements below apply to all of them, and each slice's FRDs state how they meet them.
 
 ### Safety requirements (all slices)
@@ -92,6 +94,7 @@ Safety is not a slice: section 4 and the safety requirements below apply to all 
 - Owner identity comes from configuration (the owner's numbers), never from what a message says.
 - Webhooks are verified (signature) before anything is stored.
 - Only the agent's conversation with the owner can approve a send (principle 1).
+- Known limit: Deputy offers no way to send except an approved draft, but an agent that also has other tools (for example a shell) could bypass Deputy. Deputy does not claim to prevent that.
 
 ## 8. Success criteria for v1
 
@@ -115,9 +118,16 @@ Safety is not a slice: section 4 and the safety requirements below apply to all 
 
 ## 10. Open questions
 
-1. Does the Kapso free plan include Coexistence long term, or only during a trial? The live test ran on the free plan with a "Payment issue" flag.
-2. How do owner echoes arrive in Kapso webhooks and API (event, fields)? Needed for principle 2.
-3. Does Kapso's API let Deputy fetch messages received while no session was open, and since when? Needed for principle 3 without an always-on receiver.
-4. Where do approvals and drafts live so another agent (Codex) sees the same state?
-5. Anthropic and OpenAI terms for this owner-attended use: confirm before launch.
-6. npm package name (`deputy` is taken).
+Answered by [research/kapso.md](research/kapso.md) (2026-11-17, checked against Kapso's docs):
+
+- Kapso's docs name no plan requirement for Coexistence. A failed payment blocks outbound template messages only. Whether the free plan keeps Coexistence long term is still not documented.
+- Owner echoes are marked `business_app` in the message's origin. Which webhook event carries them is not documented: confirm with a real echo.
+- Catch-up works without an always-on receiver: Kapso lists conversations active since a time, then their messages, and keeps data indefinitely by default.
+
+Still open:
+
+1. Which webhook event carries an owner echo, with a real payload.
+2. Where approvals and drafts live so another agent (Codex) sees the same state.
+3. Anthropic and OpenAI terms for this owner-attended use: confirm before launch.
+4. npm package name (`deputy` is taken).
+5. How learning separates kinds of knowledge (facts, tone, one-customer cases): see the Knowledge slice.
