@@ -27,7 +27,8 @@ import { LibphonenumberParser } from "./intake/adapters/phone/libphonenumber-par
 import { SqliteIntakeUnitOfWork } from "./intake/adapters/sqlite/sqlite-intake-unit-of-work";
 import { createSqliteIntakeRepos } from "./intake/adapters/sqlite/sqlite-intake-repos";
 import { SqliteOwnerNumbersRepository } from "./intake/adapters/sqlite/sqlite-owner-numbers-repository";
-import { createIntake, createIntakeRuntime, type IntakeEvent, type Provider } from "./intake/index";
+import { SqliteIntakeSettingsRepository } from "./intake/adapters/sqlite/sqlite-intake-settings-repository";
+import { createIntake, createIntakeRuntime, createOwnerNumberCommands, type IntakeEvent, type Provider } from "./intake/index";
 import { IntakeChatReader } from "./drafts/adapters/intake/intake-chat-reader";
 import { draftsTools } from "./drafts/adapters/mcp/drafts-tools";
 import { UnavailableOrderPreparer } from "./drafts/adapters/orders/unavailable-order-preparer";
@@ -87,9 +88,22 @@ async function serve(): Promise<number> {
     secrets: createSecretStore({ os: { get: (service, name) => Bun.secrets.get({ service: process.env["DEPUTY_SECRET_SERVICE"] ?? service, name }) }, configDir }),
   });
   const owners = new SqliteOwnerNumbersRepository(db);
+  const reads = createSqliteIntakeRepos(db);
+  const ownerNumbers = createOwnerNumberCommands({
+    repos: reads,
+    owners,
+    unitOfWork: new SqliteIntakeUnitOfWork(db, lease),
+    parser: new LibphonenumberParser(),
+    settings: new SqliteIntakeSettingsRepository(db),
+    lease,
+    clock,
+  });
+  // a pending business number must be applied before ResolveProviderSettings looks for one; only the owner may apply it
+  if (await lease.tryAcquire()) await ownerNumbers.applyPendingChanges.execute();
   const resolved = await createIntake({ config, owners }).resolveProviderSettings.execute();
   if (!resolved.ok) {
     console.error(`deputy: ${resolved.message}`);
+    await lease.release();
     db.close();
     return 1;
   }
@@ -103,6 +117,7 @@ async function serve(): Promise<number> {
     // ResolveProviderSettings has refused a missing key or phone number id already; this only narrows the types
     if (connection.kapso.apiKey === null || connection.kapso.phoneNumberId === null) {
       console.error("deputy: Kapso needs its api key and phone number id. Run Setup.");
+      await lease.release();
       db.close();
       return 1;
     }
@@ -118,7 +133,7 @@ async function serve(): Promise<number> {
 
   const events = new InProcessEventBus<IntakeEvent>();
   const intake = createIntakeRuntime({
-    repos: createSqliteIntakeRepos(db),
+    repos: reads,
     unitOfWork: new SqliteIntakeUnitOfWork(db, lease),
     events,
     clock,
@@ -158,6 +173,9 @@ async function serve(): Promise<number> {
       await listener.stop();
       console.error("deputy: lost the owner lease");
     },
+    onTick: async () => {
+      await ownerNumbers.applyPendingChanges.execute();
+    },
   });
 
   const mcp = createMcpServer({
@@ -166,7 +184,7 @@ async function serve(): Promise<number> {
     instructions: INSTRUCTIONS,
     tools: [
       ...compositionTools({ isOwner: () => supervisor.isOwner, sections: [] }),
-      ...intakeTools({ readChat: intake.readChat, listRejections: intake.listRejections }),
+      ...intakeTools({ readChat: intake.readChat, listRejections: intake.listRejections, getOwnerNumbers: ownerNumbers.getOwnerNumbers }),
       ...draftsTools(drafts),
       // Knowledge is not wired yet: no catalog is known, so every check is "unknown"
       listDraftsTool({ listDrafts: drafts.listDrafts, catalogChangedSince: async (since) => since.map(() => "unknown" as const) }),

@@ -11,6 +11,9 @@ import { GetSyncStatusUseCase, type GetSyncStatusDeps } from "./application/get-
 import type { CatchUp } from "./ports/catch-up";
 import type { GetSyncStatus } from "./ports/get-sync-status";
 import { CheckProviderAccessUseCase } from "./application/check-provider-access";
+import { ApplyPendingChangesUseCase } from "./application/apply-pending-changes";
+import { DescribeNumberUseCase } from "./application/describe-number";
+import { GetOwnerNumbersUseCase } from "./application/get-owner-numbers";
 import { FindOutgoingUseCase } from "./application/find-outgoing";
 import { MarkInterruptedSendsUseCase } from "./application/mark-interrupted-sends";
 import { SendTextUseCase } from "./application/send-text";
@@ -26,6 +29,10 @@ import { StoreMessages } from "./application/store-messages";
 import type { CheckProviderAccess } from "./ports/check-provider-access";
 import type { ChatExists } from "./ports/chat-exists";
 import type { EventPublisher } from "./ports/event-publisher";
+import type { ApplyPendingChanges } from "./ports/apply-pending-changes";
+import type { DescribeNumber } from "./ports/describe-number";
+import type { GetOwnerNumbers } from "./ports/get-owner-numbers";
+import type { PhoneNumberParser } from "./ports/phone-number-parser";
 import type { FindOutgoing } from "./ports/find-outgoing";
 import type { MarkInterruptedSends } from "./ports/mark-interrupted-sends";
 import type { SendText } from "./ports/send-text";
@@ -52,6 +59,9 @@ export type { ReadChat } from "./ports/read-chat";
 export type { SendText, SendTextResult } from "./ports/send-text";
 export type { FindOutgoing, FindOutgoingResult } from "./ports/find-outgoing";
 export type { MarkInterruptedSends } from "./ports/mark-interrupted-sends";
+export type { ApplyPendingChanges } from "./ports/apply-pending-changes";
+export type { DescribeNumber } from "./ports/describe-number";
+export type { GetOwnerNumbers, OwnerNumbersView } from "./ports/get-owner-numbers";
 export type { ChatExists } from "./ports/chat-exists";
 export type { IsCustomerText } from "./ports/is-customer-text";
 export type { ListChats } from "./ports/list-chats";
@@ -150,4 +160,30 @@ export function createGetIntakeSettings(settings: IntakeSettingsRepository): Get
 
 export function createSetIntakeSettings(deps: SetIntakeSettingsDeps): SetIntakeSettings {
   return new SetIntakeSettingsUseCase(deps);
+}
+
+export interface OwnerNumberCommandsDeps {
+  repos: IntakeRepos;
+  owners: OwnerNumbersRepository;
+  unitOfWork: IntakeUnitOfWork;
+  parser: PhoneNumberParser;
+  settings: Pick<IntakeSettingsRepository, "getCountry">;
+  lease: OwnerLease;
+  clock: Clock;
+}
+
+/**
+ * The owner-number commands. They need no provider, and the first one runs before the provider is chosen:
+ * a pending business number must be applied before ResolveProviderSettings looks for it.
+ */
+export function createOwnerNumberCommands(d: OwnerNumberCommandsDeps): {
+  applyPendingChanges: ApplyPendingChanges;
+  getOwnerNumbers: GetOwnerNumbers;
+  describeNumber: DescribeNumber;
+} {
+  return {
+    applyPendingChanges: new ApplyPendingChangesUseCase({ lease: d.lease, unitOfWork: d.unitOfWork, parser: d.parser, settings: d.settings, clock: d.clock }),
+    getOwnerNumbers: new GetOwnerNumbersUseCase(d.owners),
+    describeNumber: new DescribeNumberUseCase({ parser: d.parser, owners: d.owners, messages: d.repos.messages }),
+  };
 }

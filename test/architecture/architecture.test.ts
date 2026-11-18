@@ -16,6 +16,11 @@ type Loc =
 const CORE_LAYERS = new Set(["domain", "application", "ports"]);
 const DRAFTS_FORBIDDEN = new Set(["inbox", "notify", "knowledge", "setup"]);
 const CUSTOMER_TEXT_HELPER = "src/adapters/mcp/customer-text.ts";
+const SOURCE_CLASSIFIER = "src/intake/domain/source-classifier.ts";
+// A key is revealed only where it is used: the adapters, the live delivery that verifies a signature, and main.ts handing the secret over.
+const REVEAL_ALLOWED = (file: string) =>
+  file.startsWith("src/intake/adapters/") || file === "src/intake/application/receive-live-delivery.ts" || file === "src/main.ts";
+const CONNECTION_CONFIG = "src/intake/ports/intake-connection-config.ts";
 
 function locate(file: string): Loc {
   const parts = file.split("/");
@@ -70,6 +75,9 @@ export function checkArchitecture(root: string): Violation[] {
       }
     }
     if (file !== CUSTOMER_TEXT_HELPER && src.includes("<customer_text")) add("customer-text-label", "<customer_text");
+    if (src.includes(".reveal(") && !REVEAL_ALLOWED(file)) add("secret-reveal", ".reveal(");
+    if (file === CONNECTION_CONFIG && !/apiKey: Secret \| null/.test(src)) add("secret-reveal", "apiKey is not typed Secret | null");
+    if (file === CONNECTION_CONFIG && !/webhookSecret: Secret \| null/.test(src)) add("secret-reveal", "webhookSecret is not typed Secret | null");
 
     for (const spec of listImports(src)) {
       if (!spec.startsWith(".")) {
@@ -81,6 +89,7 @@ export function checkArchitecture(root: string): Violation[] {
       const to = locate(target);
 
       if (to.kind === "main") add("imports-main", spec);
+      if (target === SOURCE_CLASSIFIER && file !== "src/intake/domain/message.ts") add("source-classifier-import", spec);
       if (to.kind === "composition" && file !== "src/main.ts") add("composition-imported-outside", spec);
       const mayUseSharedAdapters =
         from.kind === "adapters" ||
@@ -158,6 +167,8 @@ describe("checkArchitecture", () => {
     "imports-main",
     "adapter-instantiated",
     "customer-text-label",
+    "source-classifier-import",
+    "secret-reveal",
   ];
   const found = (name: string) => [...new Set(checkArchitecture(join(fixtures, name)).map((v) => v.rule))].sort();
 
@@ -176,6 +187,17 @@ describe("checkArchitecture", () => {
   }
   test("fixture adapter-instantiated-other-slice: another slice's adapter class is internal and instantiated", () => {
     expect(found("adapter-instantiated-other-slice")).toEqual(["adapter-instantiated", "cross-slice-internal"]);
+  });
+
+  for (const name of ["secret-reveal-config-api-key", "secret-reveal-config-webhook"]) {
+    test(`fixture ${name}: a connection config with a key field not typed Secret | null`, () => {
+      expect(found(name)).toEqual(["secret-reveal"]);
+    });
+  }
+
+  // FR-INTAKE-04-8: Intake never reaches into Drafts. The general cross-slice rule is what stops it; this fixture proves it.
+  test("fixture drafts-internals: an Intake file importing a Drafts file is a cross-slice-internal import", () => {
+    expect(found("drafts-internals")).toContain("cross-slice-internal");
   });
 
   test("the real src/ has no violations", () => {

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { customerText } from "../../../adapters/mcp/customer-text";
 import { defineTool, type ToolDefinition } from "../../../adapters/mcp/tool";
 import { parseChatId } from "../../../shared/chat-id";
+import type { GetOwnerNumbers } from "../../ports/get-owner-numbers";
 import type { ListRejections } from "../../ports/list-rejections";
 import type { ReadChat } from "../../ports/read-chat";
 import type { MessageView } from "../../ports/views";
@@ -26,7 +27,7 @@ function marksOf(m: MessageView): string[] {
 
 const iso = (at: number): string => new Date(at).toISOString();
 
-export function intakeTools(u: { readChat: ReadChat; listRejections: ListRejections }): ToolDefinition[] {
+export function intakeTools(u: { readChat: ReadChat; listRejections: ListRejections; getOwnerNumbers: GetOwnerNumbers }): ToolDefinition[] {
   const getChat = defineTool({
     name: "get_chat",
     description:
@@ -68,5 +69,30 @@ export function intakeTools(u: { readChat: ReadChat; listRejections: ListRejecti
     },
   });
 
-  return [getChat, rejected];
+  const ownerNumbers = defineTool({
+    name: "list_owner_numbers",
+    description:
+      "List the numbers Deputy treats as the owner (the business number and the staff numbers), and the log of every change with the command the owner typed. Read only: the numbers change only through the owner's own command line, never through a tool.",
+    input: {},
+    async run() {
+      const v = await u.getOwnerNumbers.execute({ withLog: true });
+      const lines = [
+        ...v.numbers.map((n) => `${n.kind}: ${n.number}${n.label === "" ? "" : ` (${n.label})`}, added ${iso(n.addedAt)}`),
+        ...(v.numbers.length === 0 ? ["no owner numbers"] : []),
+        "log:",
+        ...(v.log ?? []).map((l) => `${iso(l.at)} ${l.action} ${l.number} (${l.kind}): ${l.command}`),
+        ...((v.log ?? []).length === 0 ? ["no changes yet"] : []),
+      ];
+      return {
+        text: lines.join("\n"),
+        structured: {
+          numbers: v.numbers.map((n) => ({ ...n, addedAt: iso(n.addedAt) })),
+          log: (v.log ?? []).map((l) => ({ ...l, at: iso(l.at) })),
+        },
+        isError: false,
+      };
+    },
+  });
+
+  return [getChat, rejected, ownerNumbers];
 }
