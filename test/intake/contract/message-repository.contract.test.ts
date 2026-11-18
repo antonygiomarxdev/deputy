@@ -136,6 +136,77 @@ for (const subject of subjects) {
       expect(await s.repos.messages.newestStoredBefore("kapso", { ownerOrDeputy: true }, 200)).toBeNull();
     });
 
+    describe("FR-INTAKE-04-13: source changes", () => {
+      const sendId = parseSendId("send-1");
+      if (!sendId) throw new Error("send id");
+      const owners = ownersWith("+5491100000000");
+      const ownerMessage = async (providerMessageId = "echo") =>
+        receive({ providerMessageId, direction: "outbound", from: "+5491100000000", sentAt: 500 }, { owners: await owners });
+
+      test("reclassify makes an owner_app message sent_through_deputy and writes one source_changes row", async () => {
+        const m = await ownerMessage();
+        expect(m.props.source).toBe("owner_app");
+        await s.repos.messages.insertIfNew(m);
+        const change = m.reclassifyAsDeputySend(sendId, 9_000);
+        if (!change.ok) throw new Error("not owner_app");
+        const stored = await s.repos.messages.find(m.props.id);
+        expect(stored?.props.source).toBe("owner_app");
+        await s.repos.messages.reclassify(m.props.id, change.change);
+        expect((await s.repos.messages.find(m.props.id))?.props.source).toBe("sent_through_deputy");
+        expect(await s.sourceChanges()).toEqual([
+          { at: 9_000, provider: "kapso", providerMessageId: "echo", from: "owner_app", to: "sent_through_deputy", sendId },
+        ]);
+      });
+
+      test("a failure in the second write leaves the source unchanged", async () => {
+        const m = await ownerMessage();
+        await s.repos.messages.insertIfNew(m);
+        const change = m.reclassifyAsDeputySend(sendId, Number.NaN); // no time: the second insert fails
+        if (!change.ok) throw new Error("not owner_app");
+        await expect(s.repos.messages.reclassify(m.props.id, change.change)).rejects.toThrow();
+        expect((await s.repos.messages.find(m.props.id))?.props.source).toBe("owner_app");
+        expect(await s.sourceChanges()).toEqual([]);
+      });
+
+      test("a message that is not owner_app, or is reclassified twice, leaves no false audit row", async () => {
+        const change = (providerMessageId: string, at: number) => ({
+          at,
+          id: { provider: "kapso" as const, providerMessageId },
+          from: "owner_app" as const,
+          to: "sent_through_deputy" as const,
+          sendId,
+        });
+        await s.repos.messages.insertIfNew(receive({ providerMessageId: "cust" }));
+        await s.repos.messages.reclassify({ provider: "kapso", providerMessageId: "cust" }, change("cust", 1_000));
+        expect((await s.repos.messages.find({ provider: "kapso", providerMessageId: "cust" }))?.props.source).toBe("customer");
+        expect(await s.sourceChanges()).toEqual([]);
+
+        const m = await ownerMessage("twice");
+        await s.repos.messages.insertIfNew(m);
+        await s.repos.messages.reclassify(m.props.id, change("twice", 2_000));
+        await s.repos.messages.reclassify(m.props.id, change("twice", 3_000));
+        await s.repos.messages.reclassify({ provider: "kapso", providerMessageId: "unknown-id" }, change("unknown-id", 4_000));
+        expect((await s.sourceChanges()).map((c) => [c.providerMessageId, c.at])).toEqual([["twice", 2_000]]);
+      });
+
+      test("a customer message is never reclassified", async () => {
+        const m = receive({ providerMessageId: "cust" });
+        await s.repos.messages.insertIfNew(m);
+        expect(m.reclassifyAsDeputySend(sendId, 9_000)).toEqual({ ok: false, reason: "not_owner_app" });
+      });
+    });
+
+    test("FR-INTAKE-04-13: countCustomerMessages counts non-dev customer messages of the chat only", async () => {
+      const c = chat("+541123456789");
+      await s.repos.messages.insertIfNew(receive({ providerMessageId: "c1" }));
+      await s.repos.messages.insertIfNew(receive({ providerMessageId: "c2" }));
+      await s.repos.messages.insertIfNew(receive({ providerMessageId: "dev1" }, { provider: "dev" }));
+      await s.repos.messages.insertIfNew(receive({ providerMessageId: "mine", direction: "outbound", from: "+5491100000000" }, { owners: await ownersWith("+5491100000000") }));
+      await s.repos.messages.insertIfNew(receive({ providerMessageId: "other", counterpart: "5215512345678", from: "5215512345678" }));
+      expect(await s.repos.messages.countCustomerMessages(c)).toBe(2);
+      expect(await s.repos.messages.countCustomerMessages(chat("+19990000000"))).toBe(0);
+    });
+
     test("outgoing: findByProviderId finds a part by its provider id", async () => {
       const sendId = parseSendId("send-1");
       if (!sendId) throw new Error("send id");

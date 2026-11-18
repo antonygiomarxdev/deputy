@@ -11,3 +11,6 @@ export const READ_RESERVE = 10; // 10 per cent of the limit, about three sends i
 export const RATE_LIMIT_DEFAULT_WAIT_MS = 60_000; // a 429 with no Retry-After: the plan limit is counted per minute (TP-04)
 export const CHAT_LOOKUP_WINDOW_MS = 86_400_000; // CatchUpChat with no stored conversation looks at the last 24 hours (TP-03)
 export const PACE_MARGIN_MS = 1_000; // the Date header has whole-second resolution
+export const MAX_PART = 4_000; // UTF-16 code units per sent part: Meta limits a body to 4096 characters and does not say how it counts, code units are never fewer than code points, 96 spare
+export const SPLIT_LOOKBACK_UNITS = 500; // about the last line of a long paragraph; a part gains nothing by being shorter
+export const OUTGOING_SKEW_MS = 120_000; // the provider stamps a message with its own clock; covers a laptop clock off by a minute plus the 15 s request timeout (same as Drafts TP-03)

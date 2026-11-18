@@ -4,10 +4,10 @@ import type { Instant } from "../../../shared/instant";
 import type { MessageId } from "../../../shared/message-id";
 import { PhoneNumber } from "../../../shared/phone-number";
 import type { ProviderName } from "../../../shared/provider-name";
-import type { SqlExecutor, SqlRow } from "../../../shared/sql-database";
+import type { SqlDatabase, SqlExecutor, SqlRow } from "../../../shared/sql-database";
 import type { Source } from "../../../shared/source";
 import { normalizeText } from "../../../shared/text";
-import { Message, type Mark, type MessageVersion } from "../../domain/message";
+import { Message, type Mark, type MessageVersion, type SourceChange } from "../../domain/message";
 import type { MessageRepository } from "../../ports/message-repository";
 
 function providerOf(r: SqlRow): ProviderName {
@@ -57,6 +57,11 @@ function toMessage(r: SqlRow, versions: readonly MessageVersion[]): Message {
     },
     versions,
   );
+}
+
+/** A unit of work already runs in one transaction; a plain database needs its own for statements that go together. */
+function isDatabase(ex: SqlExecutor): ex is SqlDatabase {
+  return "transaction" in ex;
 }
 
 export class SqliteMessageRepository implements MessageRepository {
@@ -131,6 +136,30 @@ export class SqliteMessageRepository implements MessageRepository {
     const out: Message[] = [];
     for (const r of rows) out.push(toMessage(r, await this.versionsOf(r)));
     return out;
+  }
+
+  async reclassify(id: MessageId, change: SourceChange): Promise<void> {
+    const write = async (ex: SqlExecutor): Promise<void> => {
+      const updated = await ex.run("UPDATE messages SET source = ? WHERE provider = ? AND provider_message_id = ? AND source = ?", [
+        change.to,
+        id.provider,
+        id.providerMessageId,
+        change.from,
+      ]);
+      // an audit row only for a change that happened: a message that is not (or no longer) `from` has none
+      if (updated.changes !== 1) return;
+      await ex.run(
+        "INSERT INTO source_changes (at, provider, provider_message_id, from_source, to_source, send_id) VALUES (?, ?, ?, ?, ?, ?)",
+        [change.at, id.provider, id.providerMessageId, change.from, change.to, change.sendId],
+      );
+    };
+    if (isDatabase(this.ex)) await this.ex.transaction(write);
+    else await write(this.ex);
+  }
+
+  async countCustomerMessages(chat: ChatId): Promise<number> {
+    const [r] = await this.ex.query("SELECT COUNT(*) AS n FROM messages WHERE chat_id = ? AND source = 'customer' AND dev = 0", [chat]);
+    return r === undefined ? 0 : num(r, "n");
   }
 
   async chatExists(chat: ChatId): Promise<{ exists: boolean; hasNonDevMessage: boolean }> {

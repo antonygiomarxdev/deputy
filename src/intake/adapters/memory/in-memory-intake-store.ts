@@ -6,7 +6,9 @@ import type { ProviderName } from "../../../shared/provider-name";
 import type { OwnerLease } from "../../../shared/owner-lease";
 import type { SendId } from "../../../shared/send-id";
 import type { ChatState } from "../../domain/chat-state";
-import { Message, type Mark, type MessageVersion } from "../../domain/message";
+import { Message, type Mark, type MessageVersion, type SourceChange } from "../../domain/message";
+import { OutgoingSend, type OutgoingSendProps } from "../../domain/outgoing-send";
+import type { PendingChange, PendingChangesReader } from "../../ports/pending-changes-reader";
 import { SyncState, type SyncStateProps } from "../../domain/sync-state";
 import type { RejectionNote, RejectionReason } from "../../domain/rejection-note";
 import type { ChatSeen, ChatStateRepository } from "../../ports/chat-state-repository";
@@ -33,6 +35,9 @@ interface State {
   pruned: number;
   sync: Map<ProviderName, SyncStateProps>;
   outgoingParts: Map<string, { sendId: SendId; part: number }>;
+  sends: Map<string, OutgoingSendProps>;
+  sourceChanges: SourceChange[];
+  pending: (PendingChange & { appliedAt: Instant | null })[];
 }
 
 const copyMessage = (m: Message): Message => Message.rehydrate(m.props, m.versions);
@@ -47,6 +52,9 @@ function copyState(s: State): State {
     pruned: s.pruned,
     sync: new Map([...s.sync].map(([k, v]) => [k, { ...v }])),
     outgoingParts: new Map(s.outgoingParts),
+    sends: new Map(s.sends),
+    sourceChanges: [...s.sourceChanges],
+    pending: s.pending.map((p) => ({ ...p })),
   };
 }
 
@@ -72,6 +80,9 @@ export class InMemoryIntakeStore {
     pruned: 0,
     sync: new Map(),
     outgoingParts: new Map(),
+    sends: new Map(),
+    sourceChanges: [],
+    pending: [],
   };
   readonly owners = new InMemoryOwnerNumbersRepository();
 
@@ -82,6 +93,7 @@ export class InMemoryIntakeStore {
     syncState: this.syncRepository(),
     outgoing: this.outgoingRepository(),
     owners: this.owners,
+    pending: this.pendingRepository(),
   };
 
   readonly unitOfWork: IntakeUnitOfWork = {
@@ -101,6 +113,32 @@ export class InMemoryIntakeStore {
   /** Test seam: what SPEC-04's send path would write. */
   addOutgoingPart(provider: ProviderName, providerMessageId: string, sendId: SendId, part: number): void {
     this.state.outgoingParts.set(`${provider}:${providerMessageId}`, { sendId, part });
+  }
+
+  /** Test seam: what the command line writes into pending_changes. */
+  addPendingChange(key: PendingChange["key"], value: string, command: string, at: Instant): void {
+    this.state.pending.push({ id: this.state.pending.length + 1, key, value, command, at, appliedAt: null });
+  }
+
+  /** Test seam: the source_changes rows written so far. */
+  sourceChanges(): readonly SourceChange[] {
+    return this.state.sourceChanges;
+  }
+
+  private pendingRepository(): PendingChangesReader {
+    const s = (): State => this.state;
+    return {
+      async takeOwnerNumberChanges() {
+        return s()
+          .pending.filter((p) => p.appliedAt === null)
+          .sort((a, b) => a.at - b.at || a.id - b.id)
+          .map(({ appliedAt: _applied, ...change }) => change);
+      },
+      async markApplied(id, at) {
+        const row = s().pending.find((p) => p.id === id);
+        if (row !== undefined) row.appliedAt = at;
+      },
+    };
   }
 
   private messageRepository(): MessageRepository {
@@ -144,6 +182,16 @@ export class InMemoryIntakeStore {
                 (m, i) => i >= all.length - limit || (q.storedSince !== undefined && m.message.props.storedAt >= q.storedSince),
               );
         return keep.map((m) => copyMessage(m.message));
+      },
+      async reclassify(id, change) {
+        // the SQLite adapter's NOT NULL column refuses a change with no time: both writes or neither
+        if (!Number.isFinite(change.at)) throw new Error("a source change needs a time");
+        const found = s().messages.get(messageIdKey(id));
+        if (found === undefined || !found.message.reclassifyAsDeputySend(change.sendId, change.at).ok) return;
+        s().sourceChanges.push(change);
+      },
+      async countCustomerMessages(chat) {
+        return [...s().messages.values()].filter((m) => m.message.props.chat === chat && m.message.props.source === "customer" && !m.message.props.dev).length;
       },
       async chatExists(chat) {
         const mine = [...s().messages.values()].filter((m) => m.message.props.chat === chat);
@@ -280,8 +328,54 @@ export class InMemoryIntakeStore {
   private outgoingRepository(): OutgoingRepository {
     const s = (): State => this.state;
     return {
+      async find(sendId) {
+        const props = s().sends.get(sendId);
+        return props === undefined ? null : OutgoingSend.rehydrate(props);
+      },
+      async insert(send) {
+        if (s().sends.has(send.props.sendId)) throw new Error("send id already used");
+        s().sends.set(send.props.sendId, send.props);
+      },
+      async savePart(send, part, provider) {
+        const stored = s().sends.get(send.props.sendId);
+        const found = send.props.parts.find((x) => x.index === part);
+        if (stored === undefined || found === undefined) throw new Error("no such send or part");
+        if (found.providerMessageId !== null) {
+          const key = `${provider}:${found.providerMessageId}`;
+          const taken = s().outgoingParts.get(key);
+          if (taken !== undefined && (taken.sendId !== send.props.sendId || taken.part !== part)) throw new Error("provider id already linked");
+          s().outgoingParts.set(key, { sendId: send.props.sendId, part });
+        }
+        s().sends.set(stored.sendId, { ...stored, parts: stored.parts.map((x) => (x.index === part ? found : x)) });
+      },
+      async saveSend(send) {
+        const stored = s().sends.get(send.props.sendId);
+        if (stored === undefined) throw new Error("no such send");
+        const { state, failureReason, finishedAt } = send.props;
+        s().sends.set(stored.sendId, { ...stored, state, failureReason, finishedAt });
+      },
       async findByProviderId(provider, providerMessageId) {
         return s().outgoingParts.get(`${provider}:${providerMessageId}`) ?? null;
+      },
+      async markPendingAsUnknown() {
+        let changed = 0;
+        for (const [id, props] of s().sends) {
+          if (props.state !== "pending") continue;
+          const sent = OutgoingSend.rehydrate(props);
+          sent.markPendingUnknown();
+          s().sends.set(id, sent.props);
+          changed++;
+        }
+        return changed;
+      },
+      async candidatesForPart(chat, text, since) {
+        return [...s().messages.values()]
+          .filter((m) => {
+            const p = m.message.props;
+            return p.chat === chat && p.source === "owner_app" && p.text === text && p.sentAt >= since && !s().outgoingParts.has(messageIdKey(p.id));
+          })
+          .sort(bySent)
+          .map((m) => m.message.props.id);
       },
     };
   }
