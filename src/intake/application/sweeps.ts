@@ -2,7 +2,7 @@ import type { Instant } from "../../shared/instant";
 import { PAGE_SIZE } from "../domain/constants";
 import type { SyncState } from "../domain/sync-state";
 import type { IntakeUnitOfWork } from "../ports/intake-unit-of-work";
-import type { Cursor, Provider, ProviderConversation, ProviderMessage, Page } from "../ports/provider";
+import { ProviderError, toCursor, type Cursor, type Provider, type ProviderConversation, type ProviderMessage, type Page } from "../ports/provider";
 import type { StoredSummary, StoreMessages } from "./store-messages";
 
 /** What a run stored so far, folded for the one MessageStored it publishes. */
@@ -79,4 +79,39 @@ export async function sweepConversations(
     d.state.advanceConversations(conversation.lastActiveAt);
     await d.uow.run((r) => r.syncState.save(d.state));
   }
+}
+
+/**
+ * Sweep 2: the outbound listing, newest first, until an item older than `from` or its end. Owner echoes that did not move a
+ * conversation's activity show up only here. After each page the cursor is saved, so a stopped run continues with the same window;
+ * a provider that refuses that cursor makes the window start again without one.
+ */
+export async function sweepOutbound(d: SweepDeps & { state: SyncState; from: Instant | null; providerNow: Instant }): Promise<void> {
+  const saved = d.state.props.outboundResume;
+  const continuing = saved !== null && saved.from === d.from;
+  let cursor: Cursor | null = continuing ? toCursor(saved.cursor) : null;
+  // continuing keeps the first run's start: that run read from there, this one reads on from where it stopped
+  let runStart = continuing ? saved.runStart : d.providerNow;
+  let firstRequest = true;
+  for (;;) {
+    let page: Page<ProviderMessage>;
+    try {
+      page = await d.provider.listMessages({ scope: { outbound: true }, cursor, limit: PAGE_SIZE }, d.signal);
+    } catch (e) {
+      if (!(firstRequest && cursor !== null && e instanceof ProviderError && e.kind === "bad_response")) throw e;
+      cursor = null;
+      runStart = d.providerNow;
+      firstRequest = false;
+      continue;
+    }
+    firstRequest = false;
+    d.state.countStored(await storePage(d, page.items));
+    const from = d.from;
+    const reachedOlder = from !== null && page.items.some((m) => m.sentAt < from);
+    if (reachedOlder || page.next === null) break;
+    cursor = page.next;
+    d.state.saveOutboundResume({ cursor, from: d.from, runStart });
+    await d.uow.run((r) => r.syncState.save(d.state));
+  }
+  d.state.completeOutbound(runStart);
 }
