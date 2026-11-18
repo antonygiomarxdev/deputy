@@ -79,8 +79,8 @@ describe("sqlite only", () => {
   test("the log is append-only", async () => {
     const { db, repo } = await sqlite();
     await repo.save(set(), entries(100));
-    expect(db.run("UPDATE owner_number_log SET command = 'x'")).rejects.toThrow("append-only");
-    expect(db.run("DELETE FROM owner_number_log")).rejects.toThrow("append-only");
+    await expect(db.run("UPDATE owner_number_log SET command = 'x'")).rejects.toThrow("append-only");
+    await expect(db.run("DELETE FROM owner_number_log")).rejects.toThrow("append-only");
   });
 
   test("a failing log insert leaves the set unchanged", async () => {
@@ -88,7 +88,7 @@ describe("sqlite only", () => {
     await repo.save(set(), entries(100));
     const next = OwnerNumbers.empty();
     const bad = { ...entries(200)[0]!, action: "bogus" as "add" };
-    expect(repo.save(next, [bad])).rejects.toThrow();
+    await expect(repo.save(next, [bad])).rejects.toThrow();
     expect((await repo.load()).entries()).toHaveLength(2);
     expect(await repo.log()).toHaveLength(2);
   });
