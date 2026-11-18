@@ -1,6 +1,6 @@
 # Spec: Draft lifecycle (Drafts FRD-01)
 
-Status: Draft
+Status: Approved (2026-11-18)
 
 One per FRD, resting on [TP-01](../tp/TP-01-draft-lifecycle.md). It decides nothing new: where TP-01 is silent, the choices listed under Context settle it (L9).
 

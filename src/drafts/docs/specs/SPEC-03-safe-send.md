@@ -1,6 +1,6 @@
 # Spec: Safe send and outcome (Drafts FRD-03)
 
-Status: Draft
+Status: Approved (2026-11-18)
 
 One per FRD, resting on [TP-03](../tp/TP-03-safe-send.md). It decides nothing new. It builds on SPEC-01 and SPEC-02: it completes `ApproveDraft` (steps 3 to 5 of the send path) and adds the retry, recovery and resolve use cases.
 
