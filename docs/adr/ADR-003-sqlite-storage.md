@@ -14,12 +14,15 @@ FR-DRAFTS-02-12 needs "mark approval used and draft sending" as one step that ca
 - `Message` is its own aggregate, keyed by provider and provider message id and holding a `ChatId`. `Chat` keeps only its state (last customer message, last owner or Deputy answer, source of that answer) and is updated from `MessageStored` events. The `lease` row (ADR-002) lives in the same file.
 - Each aggregate has a repository port in its slice and a SQLite adapter. A `UnitOfWork` port per slice gives one-transaction steps. The spreadsheet is a second adapter of the order and catalog ports (ADR-000).
 - Exports (knowledge, orders, log) give the owner a readable copy.
+- Repositories reach the database only through a `SqlDatabase` port (`query`, `run`, `transaction`) in the shared kernel, with plain SQLite SQL. Only its adapter imports `bun:sqlite`. That keeps a later sync engine (for example Turso's `@tursodatabase/sync`) to one adapter.
 
 ## Alternatives
 - Keep JSONL, CSV and `state.json`: no transactions; cannot meet FR-DRAFTS-02-12.
 - An embedded key-value store: a new dependency and no relational queries.
+- Turso's local database now, with sync later: SQLite-compatible and a direct path to sync, but a new dependency on a newer engine whose trigger support and concurrency must be verified first. Kept reachable through the `SqlDatabase` port instead.
 
 ## Consequences
 - Easier: idempotent storing, atomic send step, "latest message per chat" and log queries.
 - Harder: a binary file the owner cannot open by hand; schema migrations to maintain.
+- Watch: sync is out of v1. It needs the owner's choice (D7), and a design for the lease and the append-only log across devices, in its own ADR.
 - Watch: the L6 exception to append-only was accepted by the owner (D15); it is tested as the only path that rewrites a log row.
