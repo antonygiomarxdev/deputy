@@ -240,7 +240,7 @@ export function createSqliteOwnerLease(db: SqlDatabase, clock: Clock, newToken: 
 
 `migrate` numbers a file by its position in `files` (first file is 1). Before it runs the first file of a database whose `user_version` is above 0, it calls `backup.copyTo(`${basePath}.bak-v${current}`)`. A database whose `user_version` is above `files.length` returns `newer_than_binary` and runs nothing (`main.ts` prints "update Deputy" and exits).
 
-`createSqliteOwnerLease`: `tryAcquire` inserts the row when the table is empty; when the row's token is ours it renews; otherwise it runs `UPDATE lease SET token = :mine, holder_started = :now, heartbeat = :now WHERE token = :seen AND heartbeat < :now - 30000` and returns whether one row changed. `isOwner` compares the stored token with the one in memory on every call. `release` sets `heartbeat = 0` when the token is ours.
+`createSqliteOwnerLease`: `tryAcquire` is three atomic statements (no transaction): `INSERT OR IGNORE` the row when the table is empty; renew when the row's token is ours; otherwise run `UPDATE lease SET token = :mine, holder_started = :now, heartbeat = :now WHERE token <> :mine AND (heartbeat = 0 OR heartbeat <= :now - 30000)` and returns whether one row changed. `isOwner` compares the stored token with the one in memory on every call. `release` sets `heartbeat = 0` when the token is ours.
 
 ### Supervisor and MCP (`src/adapters/`)
 

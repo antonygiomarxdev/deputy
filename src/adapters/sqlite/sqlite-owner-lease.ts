@@ -24,9 +24,9 @@ export function createSqliteOwnerLease(db: SqlDatabase, clock: Clock, newToken: 
       );
       if (inserted.changes === 1) return true;
       if (await renew()) return true;
-      // heartbeat 0 is a released lease (the clock may be small in tests)
+      // heartbeat 0 is a released lease; at exactly the TTL the lease has expired
       const taken = await db.run(
-        "UPDATE lease SET token = ?, holder_started = ?, heartbeat = ? WHERE id = 1 AND token <> ? AND (heartbeat = 0 OR heartbeat < ?)",
+        "UPDATE lease SET token = ?, holder_started = ?, heartbeat = ? WHERE id = 1 AND token <> ? AND (heartbeat = 0 OR heartbeat <= ?)",
         [mine, now, now, mine, now - LEASE_TTL_MS],
       );
       return taken.changes === 1;

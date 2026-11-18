@@ -17,23 +17,23 @@ interface Setup {
   cleanup(): void;
   sqlite?: ReturnType<typeof openBunSqlite>;
 }
-type Factory = () => Promise<Setup>;
+type Factory = (startAt?: number) => Promise<Setup>;
 
-const inMemory: Factory = async () => {
-  const clock = new FakeClock(1_000_000);
+const inMemory: Factory = async (startAt = 1_000_000) => {
+  const clock = new FakeClock(startAt);
   const holder: LeaseHolder = { token: null, heartbeat: 0 };
   return { clock, a: new InMemoryOwnerLease(holder, clock, "a"), b: new InMemoryOwnerLease(holder, clock, "b"), cleanup() {} };
 };
 
 let n = 0;
-const sqlite: Factory = async () => {
+const sqlite: Factory = async (startAt = 1_000_000) => {
   const dir = mkdtempSync(join(tmpdir(), "deputy-lease-"));
   const path = join(dir, "deputy.db");
   const sql = await Bun.file(join(import.meta.dir, "../../../src/adapters/sqlite/migrations/0001-shared.sql")).text();
   const first = openBunSqlite({ path });
   await migrate(first, [{ name: "0001", sql }], { basePath: path, copyTo: async () => {} });
   const second = openBunSqlite({ path });
-  const clock = new FakeClock(1_000_000);
+  const clock = new FakeClock(startAt);
   return {
     clock,
     a: createSqliteOwnerLease(first, clock, () => `a${n++}`),
@@ -54,6 +54,14 @@ for (const [name, factory] of [["in-memory", inMemory], ["sqlite", sqlite]] as c
       s = await factory();
     });
     afterEach(() => s.cleanup());
+
+    test("release hands over at once even when the clock is below the TTL", async () => {
+      const early = await factory(1_000);
+      await early.a.tryAcquire();
+      await early.a.release();
+      expect(await early.b.tryAcquire()).toBe(true);
+      early.cleanup();
+    });
 
     test("a free lease goes to the first caller only", async () => {
       expect(await s.a.tryAcquire()).toBe(true);
@@ -77,6 +85,14 @@ for (const [name, factory] of [["in-memory", inMemory], ["sqlite", sqlite]] as c
       await s.clock.advance(31_000);
       const wins = await Promise.all([s.a.tryAcquire(), s.b.tryAcquire()]);
       expect(wins.filter(Boolean)).toHaveLength(1);
+    });
+
+    test("the lease has expired at exactly 30 s, not before", async () => {
+      await s.a.tryAcquire();
+      await s.clock.advance(29_999);
+      expect(await s.b.tryAcquire()).toBe(false);
+      await s.clock.advance(1);
+      expect(await s.b.tryAcquire()).toBe(true);
     });
 
     test("release hands the lease over at once", async () => {
