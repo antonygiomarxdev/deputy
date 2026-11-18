@@ -29,7 +29,7 @@ export class ReadDraftLogUseCase implements ReadDraftLog {
         const shown = found.slice(0, limit);
         const answered = new Map<number, string | null>();
         for (const e of shown) {
-          if (e.draft === null || answered.has(e.draft) || !(e.kind === "approved" || e.kind === "rejected") || e.draftKind !== "reply") continue;
+          if (e.draft === null || answered.has(e.draft) || !isReplyDecision(e)) continue;
           const answers = (await tx.drafts.get(e.draft))?.snapshot().answers ?? null;
           answered.set(e.draft, answers === null ? null : messageIdKey(answers));
         }
@@ -41,8 +41,13 @@ export class ReadDraftLogUseCase implements ReadDraftLog {
   }
 }
 
+/** The owner's go or no on a reply: the only entries that name the customer message the draft answered. */
+function isReplyDecision(e: LogEntry): boolean {
+  return (e.kind === "approved" || e.kind === "rejected") && e.draftKind === "reply";
+}
+
 function view(e: LogEntry, answered: ReadonlyMap<number, string | null>): LogEntryView {
-  const replyDecision = (e.kind === "approved" || e.kind === "rejected") && e.draftKind === "reply";
+  const replyDecision = isReplyDecision(e);
   return {
     id: e.id,
     at: toIso(e.at),

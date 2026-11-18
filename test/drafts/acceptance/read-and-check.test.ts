@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { Draft } from "../../../src/drafts/domain/draft";
 import type { NewLogEntry } from "../../../src/drafts/domain/log-entry";
 import type { ChatId } from "../../../src/shared/chat-id";
 import { makeDrafts, message } from "./harness";
@@ -54,6 +55,25 @@ describe("ReadDraftLog (FR-DRAFTS-04-3 and -6)", () => {
       if (!((draft === 1 || draft === 2) && (kind === "approved" || kind === "rejected"))) expect(answers).toBeNull();
     }
     expect(byKind.filter(([d]) => d === 3).every(([, , a]) => a === null)).toBe(true);
+  });
+
+  test("answersMessageId is null on approved and rejected entries of an order draft, even if the draft row names a message", async () => {
+    const h = makeDrafts({ chats });
+    const made = Draft.propose({
+      number: 1, kind: "order", chat: "chat-a" as ChatId, text: "2 cakes", now: 1_000, dev: false,
+      answers: { provider: "dev", providerMessageId: "a1" }, basis: { messageId: { provider: "dev", providerMessageId: "a1" }, sentAt: 900 },
+      checkedStoredAt: 950, orderPayload: "{}",
+    });
+    if (!("draft" in made)) throw new Error("fixture refused");
+    await h.store.unitOfWork.run(async (tx) => {
+      await tx.drafts.nextNumber();
+      await tx.drafts.save(made.draft);
+    });
+    await h.store.log.append([
+      raw({ kind: "approved", draftKind: "order", proposedText: null, finalText: null, ownerWords: "go 1" }),
+      raw({ kind: "rejected", draftKind: "order", proposedText: null, finalText: null, ownerWords: "no 1" }),
+    ]);
+    expect((await read(h)).entries.map((e) => [e.kind, e.answersMessageId])).toEqual([["rejected", null], ["approved", null]]);
   });
 
   test("only the entries of the asked chat show, newest first", async () => {
