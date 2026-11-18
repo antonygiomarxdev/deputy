@@ -7,9 +7,11 @@ import type { Clock } from "../shared/clock";
 import type { OwnerLease } from "../shared/owner-lease";
 import { ChatExistsUseCase } from "./application/chat-exists";
 import { CatchUpUseCase, type CatchUpDeps, type RunResult } from "./application/catch-up";
+import { CatchUpChatUseCase } from "./application/catch-up-chat";
 import { RunCoordinator } from "./application/run-coordinator";
 import { GetSyncStatusUseCase, type GetSyncStatusDeps } from "./application/get-sync-status";
 import type { CatchUp } from "./ports/catch-up";
+import type { CatchUpChat } from "./ports/catch-up-chat";
 import type { GetSyncStatus } from "./ports/get-sync-status";
 import { CheckProviderAccessUseCase } from "./application/check-provider-access";
 import { GetMessagesUseCase } from "./application/get-messages";
@@ -87,6 +89,7 @@ export interface IntakeRuntime {
   getMessages: GetMessages;
   listRejections: ListRejections;
   catchUp: CatchUp;
+  catchUpChat: CatchUpChat;
   getSyncStatus: GetSyncStatus;
   getIntakeSettings: GetIntakeSettings;
 }
@@ -135,12 +138,23 @@ export function createIntakeRuntime(d: IntakeRuntimeDeps): IntakeRuntime {
       status: getSyncStatus,
       failures,
     }),
+    catchUpChat: new CatchUpChatUseCase({
+      provider: d.provider,
+      clock: d.clock,
+      lease: d.lease,
+      uow: d.unitOfWork,
+      reads: d.repos,
+      store,
+      publisher: d.events,
+      coordinator,
+    }),
     getSyncStatus,
     getIntakeSettings: new GetIntakeSettingsUseCase(d.settings),
   };
 }
 
 export type { CatchUp } from "./ports/catch-up";
+export type { CatchUpChat } from "./ports/catch-up-chat";
 export type { GetSyncStatus, SyncStatusView } from "./ports/get-sync-status";
 export type { CatchUpFinished } from "./domain/events";
 export { RunCoordinator } from "./application/run-coordinator";
