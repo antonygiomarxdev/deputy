@@ -157,6 +157,32 @@ export class SqliteMessageRepository implements MessageRepository {
     return r === undefined ? null : numOrNull(r, "at");
   }
 
+  async newestStoredBefore(
+    provider: ProviderName,
+    scope: { conversationRef: string } | { ownerOrDeputy: true },
+    before: Instant,
+  ): Promise<Instant | null> {
+    const [where, params] =
+      "conversationRef" in scope
+        ? ["conversation_ref = ?", [scope.conversationRef]]
+        : ["source IN ('owner_app', 'sent_through_deputy')", []];
+    const [r] = await this.ex.query(
+      `SELECT MAX(sent_at) AS at FROM messages WHERE provider = ? AND sent_at < ? AND ${where}`,
+      [provider, before, ...params],
+    );
+    return r === undefined ? null : numOrNull(r, "at");
+  }
+
+  async newestStoredAt(provider: ProviderName): Promise<Instant | null> {
+    const [r] = await this.ex.query("SELECT MAX(sent_at) AS at FROM messages WHERE provider = ?", [provider]);
+    return r === undefined ? null : numOrNull(r, "at");
+  }
+
+  async oldestStoredAt(provider: ProviderName): Promise<Instant | null> {
+    const [r] = await this.ex.query("SELECT MIN(sent_at) AS at FROM messages WHERE provider = ?", [provider]);
+    return r === undefined ? null : numOrNull(r, "at");
+  }
+
   private async versionsOf(r: SqlRow): Promise<MessageVersion[]> {
     if (!flag(r, "edited")) return [];
     const rows = await this.ex.query(
