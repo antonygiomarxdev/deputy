@@ -1,12 +1,17 @@
 import type { Clock } from "../shared/clock";
 import type { Instant } from "../shared/instant";
 import type { OwnerLease } from "../shared/owner-lease";
+import { ApproveDraftUseCase } from "./application/approve-draft";
+import { ApproveOrderCommandUseCase } from "./application/approve-order-command";
 import { ChangeDraftUseCase } from "./application/change-draft";
 import { CreateDraftUseCase } from "./application/create-draft";
 import { ListDraftsUseCase } from "./application/list-drafts";
 import { RejectDraftUseCase } from "./application/reject-draft";
 import { WaitingChatsUseCase } from "./application/waiting-chats";
 import type {
+  ApproveDraft,
+  ApproveOrderCommand,
+  ApproveResult,
   ChangeDraft,
   ChangeDraftResult,
   CreateDraft,
@@ -19,9 +24,13 @@ import type {
   WaitingChat,
   WaitingChats,
 } from "./ports/inbound";
-import type { ChatReader, OrderInput, OrderPreparer, UnitOfWork } from "./ports/outbound";
+import type { ChatReader, CustomerTextCheck, Ids, OrderChanger, OrderInput, OrderPreparer, OrderRecorder, TextDigest, UnitOfWork } from "./ports/outbound";
+import type { Sender } from "./ports/sender";
 
 export type {
+  ApproveDraft,
+  ApproveOrderCommand,
+  ApproveResult,
   ChangeDraft,
   ChangeDraftResult,
   CreateDraft,
@@ -46,6 +55,12 @@ export interface DraftsDeps {
   unitOfWork: UnitOfWork;
   chats: ChatReader;
   orders: OrderPreparer;
+  customerText: CustomerTextCheck;
+  sender: Sender;
+  orderRecorder: OrderRecorder;
+  orderChanger: OrderChanger;
+  digest: TextDigest;
+  ids: Ids;
 }
 
 /** SPEC-02, SPEC-03 and SPEC-04 add dependencies and members. */
@@ -55,13 +70,17 @@ export function createDrafts(deps: DraftsDeps): {
   changeDraft: ChangeDraft;
   rejectDraft: RejectDraft;
   waitingChats: WaitingChats;
+  approveDraft: ApproveDraft;
+  approveOrderCommand: ApproveOrderCommand;
 } {
-  const { clock, lease, unitOfWork, chats, orders, sessionStartedAt } = deps;
+  const { clock, lease, unitOfWork, chats, orders, sessionStartedAt, customerText, sender, orderRecorder, orderChanger, digest, ids } = deps;
   return {
     createDraft: new CreateDraftUseCase({ clock, lease, unitOfWork, chats, orders }),
     listDrafts: new ListDraftsUseCase({ lease, unitOfWork, chats, orders, sessionStartedAt }),
     changeDraft: new ChangeDraftUseCase({ clock, lease, unitOfWork, orders }),
     rejectDraft: new RejectDraftUseCase({ clock, lease, unitOfWork }),
     waitingChats: new WaitingChatsUseCase({ unitOfWork, sessionStartedAt }),
+    approveDraft: new ApproveDraftUseCase({ clock, lease, unitOfWork, customerText, sender, recorder: orderRecorder, digest, ids }),
+    approveOrderCommand: new ApproveOrderCommandUseCase({ clock, lease, unitOfWork, customerText, changer: orderChanger }),
   };
 }

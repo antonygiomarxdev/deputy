@@ -3,7 +3,7 @@ import { customerText } from "../../../adapters/mcp/customer-text";
 import { defineTool, type ToolDefinition, type ToolResult } from "../../../adapters/mcp/tool";
 import type { Refusal } from "../../domain/refusals";
 import { refusalText } from "../../domain/refusals";
-import type { ChangeDraft, CreateDraft, MessageView, Outcome, RejectDraft } from "../../ports/inbound";
+import type { ApproveDraft, ApproveOrderCommand, ChangeDraft, CreateDraft, MessageView, Outcome, RejectDraft } from "../../ports/inbound";
 
 const order = z.record(z.string(), z.unknown());
 
@@ -22,7 +22,24 @@ async function outcome<T>(run: Promise<Outcome<T>>, ok: (value: T) => ToolResult
   return out.ok ? ok(out.value) : refusalResult(out.refusal);
 }
 
-export function draftsTools(u: { createDraft: CreateDraft; changeDraft: ChangeDraft; rejectDraft: RejectDraft }): ToolDefinition[] {
+type OrderCommandValue = Extract<Awaited<ReturnType<ApproveOrderCommand["run"]>>, { ok: true }>["value"];
+
+function orderCommandResult(r: OrderCommandValue): ToolResult {
+  if (!r.approved) return { text: r.pendingDelete, structured: { approved: false, pendingDelete: r.pendingDelete }, isError: false };
+  return {
+    text: r.result.ok ? r.result.detail : `Orders refused: ${r.result.reason}`,
+    structured: { approved: true, logEntryId: r.logEntryId, result: r.result },
+    isError: false,
+  };
+}
+
+export function draftsTools(u: {
+  createDraft: CreateDraft;
+  changeDraft: ChangeDraft;
+  rejectDraft: RejectDraft;
+  approveDraft: ApproveDraft;
+  approveOrderCommand: ApproveOrderCommand;
+}): ToolDefinition[] {
   const createDraft = defineTool({
     name: "create_draft",
     description:
@@ -97,5 +114,48 @@ export function draftsTools(u: { createDraft: CreateDraft; changeDraft: ChangeDr
     },
   });
 
-  return [createDraft, changeDraft, rejectDraft];
+  const approveDraft = defineTool({
+    name: "approve_draft",
+    description:
+      "Send a draft, or record an order draft, after the owner's go. No go, no send: the owner's words must name the draft by its number. " +
+      "If the owner's reply does not name the draft, ask again and name the drafts. One call per draft: there is no approve-all and no standing permission. " +
+      "Show the owner the text from list_drafts first, and pass that exact text as `shown_text`.",
+    input: { number: z.number().int().min(1), shown_text: z.string(), owner_words: z.string().min(1).max(1000) },
+    async run(a) {
+      return outcome(u.approveDraft.run({ number: a.number, shownText: a.shown_text, ownerWords: a.owner_words }), (r) => {
+        switch (r.outcome) {
+          case "sent":
+            return { text: `draft ${r.number} was sent`, structured: { ...r }, isError: false };
+          case "recorded":
+            return { text: `order draft ${r.number} was recorded as order ${r.orderId}`, structured: { ...r }, isError: false };
+          case "failed":
+            return { text: `draft ${r.number} failed: ${r.reason}; it needs a new go`, structured: { ...r }, isError: false };
+          case "unknown":
+            return { text: `draft ${r.number}: ${r.detail}`, structured: { ...r }, isError: false };
+        }
+      });
+    },
+  });
+
+  const changeOrder = defineTool({
+    name: "change_order",
+    description:
+      "Change fields of an existing order after the owner's words. Only the fields Orders accepts are allowed; anything else is refused. `owner_words` is what the owner said.",
+    input: { order: z.string().min(1), change: z.record(z.string(), z.unknown()), owner_words: z.string() },
+    async run(a) {
+      return outcome(u.approveOrderCommand.run({ command: "change", orderRef: a.order, change: a.change, ownerWords: a.owner_words }), orderCommandResult);
+    },
+  });
+
+  const deleteOrder = defineTool({
+    name: "delete_order",
+    description:
+      "Delete an order after the owner's words. Call it first with `confirm` false to see what would be deleted; call again with `confirm` true once the owner agreed. `owner_words` is what the owner said.",
+    input: { order: z.string().min(1), confirm: z.boolean(), owner_words: z.string() },
+    async run(a) {
+      return outcome(u.approveOrderCommand.run({ command: "delete", orderRef: a.order, confirm: a.confirm, ownerWords: a.owner_words }), orderCommandResult);
+    },
+  });
+
+  return [createDraft, changeDraft, rejectDraft, approveDraft, changeOrder, deleteOrder];
 }
