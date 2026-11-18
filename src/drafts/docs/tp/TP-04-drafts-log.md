@@ -1,6 +1,6 @@
 # Technical Proposal: The drafts log (Drafts FRD-04)
 
-Status: Approved (2026-11-18). Follows the cross-cutting TP (`docs/tp/TP.md`) and builds on TP-01 to TP-03, whose events become log entries. "Cross-cutting TD-n" means a decision there.
+Status: Draft. Follows the cross-cutting TP (`docs/tp/TP.md`) and builds on TP-01 to TP-03, whose events become log entries. "Cross-cutting TD-n" means a decision there.
 
 ## Context
 
@@ -89,6 +89,8 @@ interface DraftLogRepository {                     // takes part in the UnitOfWo
   sentWithApproval(): Promise<{ sent: LogEntry; approval: LogEntry | null }[]>;
   stuckDrafts(): Promise<{ draft: number; chat: string; state: 'sending' | 'unknown'; since: string }[]>;
   scrubOrder(orderId: string, draftNumber: number | null): Promise<number>; // the one update path
+  approvalEntryIdFor(sendId: string): Promise<number | null>;  // the `approved` entry with that send id; a retry or a link finds its pointer (L7)
+  hasOrderDeleted(orderRef: string): Promise<boolean>;         // an `order_deleted` entry exists; makes the scrub idempotent (L7)
 }
 ```
 
@@ -96,7 +98,7 @@ Flows:
 - Every use case of TP-01 to TP-03 appends its entries inside its unit of work. `approved` is appended first; its id is passed to `sending`, `sent`, `held`, `failed`, `unknown` and `recorded`.
 - A log that cannot be written stops the action: the unit of work rolls back, the use case returns `LogUnavailable`, and nothing is sent. The "sending" entry is written before the provider is asked (transaction 1 of TP-03).
 - A `sent` entry that cannot be written after the provider accepted: the use case retries transaction 4 three times (now, 1 second, 3 seconds). If it still fails it returns `sent` with `logged: false`, tells the owner, never sends again, and a scheduler task retries every 10 seconds while the process lives. The draft stays "sending", which `CheckApprovals` lists as a gap. If the process ends, `RecoverInterrupted` turns it into "unknown" and `ResolveUnknownSends` links the message and writes `sent` (TP-03).
-- `OnOrderDeleted`: in one Drafts-only transaction, `scrubOrder` sets `scrubbed = 1` and `owner_words = 'deleted'` on entries with that `order_ref` or that `draft_number` (and `order_command` entries of that order), sets `drafts.current_text`, `drafts.proposed_text`, `drafts.current_norm`, `drafts.proposed_norm`, `approvals.text`, `approvals.owner_words` and `approvals.text_hash` of that order's drafts to "deleted", clears `drafts.order_payload`, and appends one `order_deleted` entry (once; a second run finds it and does nothing).
+- `OnOrderDeleted`: in one Drafts-only transaction, `scrubOrder` sets `scrubbed = 1` and `owner_words = 'deleted'` on entries with that `order_ref` or that `draft_number` (and `order_command` entries of that order), sets `drafts.current_text`, `drafts.proposed_text`, `drafts.current_norm`, `drafts.proposed_norm`, `approvals.text`, `approvals.owner_words` and `approvals.text_hash` of that order's drafts to "deleted", clears `drafts.order_payload`, and appends one `order_deleted` entry (once; a second run finds it with `hasOrderDeleted` and does nothing). Log times are ISO-8601 UTC text (L7).
 
 ## Information
 

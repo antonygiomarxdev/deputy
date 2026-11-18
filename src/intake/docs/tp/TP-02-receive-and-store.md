@@ -1,6 +1,6 @@
 # Technical Proposal: Intake FRD-02, Receive, verify and store
 
-Status: Approved (2026-11-18). Written 2026-11-17. Cross-cutting TP: `docs/tp/TP.md`. FRD: `../frd/FRD-02-receive-and-store.md`. Shared types and the `Provider` port are in `TP-01-providers.md`.
+Status: Draft. Written 2026-11-17. Cross-cutting TP: `docs/tp/TP.md`. FRD: `../frd/FRD-02-receive-and-store.md`. Shared types and the `Provider` port are in `TP-01-providers.md`.
 
 ## Context
 
@@ -16,7 +16,7 @@ Consequences settled here without a choice:
 - **Live delivery verified.** When `ReceiveLiveDelivery` accepts a delivery whose signature check passed (any outcome except `bad_signature`, `missing_signature` and `no_secret`), it records the time in `catchup_status.live_verified_at` through `SyncStateRepository.markLiveVerified`, so `GetSyncStatus` can show it (TP-03). A rejected delivery never sets it, and neither does catch-up (FR-INTAKE-02-1).
 - **Reader text.** `Message.readerText()` returns the text when readable. Otherwise it returns `"<type label>, transcript: <transcript>"` when a transcript exists, and `"[<type label>, not readable]"` when not. The label for `audio` is "voice note"; other types use their own name (FR-INTAKE-02-6). The stored text is never changed (FR-INTAKE-02-10).
 - **Edits and deletes.** The Kapso adapter maps an edit report to `ProviderEvent` kind `edit` and a delete report to kind `delete`. A listing item with `edited = true` and a different text from the stored one counts as an edit too. An edit keeps the old text in `message_versions`, sets `edited = 1` and updates `text`. A delete sets `deleted_by_sender = 1` and keeps the text. An edit or delete of an unknown message is ignored: the original arrives with its latest text at the next catch-up (FR-INTAKE-02-12). Reactions and receipts map to `ignored` and are not stored.
-- **Marks.** `mark` is `group_chat` for a group message (its `ChatId` is `group:<id>`), `not_attributable` when an outbound message has no sender, or the provider gives no counterpart (with no counterpart its `ChatId` is `unattributed`), `sender_unknown` when an inbound message has no sender, else `normal`. When two apply, the order is group, not attributable, sender unknown. Inbox does not count a chat whose mark is not `normal` as pending unless its FRDs say so (FR-INTAKE-02-13).
+- **Marks.** `mark` is `group_chat` for a group message (its `ChatId` is `group:<id>`), `not_attributable` when an outbound message has no sender, or the provider gives no counterpart, and it is not a message that matches a Deputy send (L8: a message that matches a Deputy send is never `not_attributable`; it is `sent_through_deputy` in its chat) (with no counterpart its `ChatId` is `unattributed`), `sender_unknown` when an inbound message has no sender, else `normal`. When two apply, the order is group, not attributable, sender unknown. Inbox does not count a chat whose mark is not `normal` as pending unless its FRDs say so (FR-INTAKE-02-13).
 - **Echo with no sender or chat.** It is stored with source `customer` and mark `not_attributable` and is never guessed (FRD-04 edge case). It is shown in `ReadChat` and kept out of pending. It also holds sends. One contract for Drafts: (a) in its own chat it holds like an owner reply, because `chats.last_unattributed_at` records the newest such message, `ChatStateView` reports `lastAnswerAt` as the later of the real answer and that time, with `lastAnswerSource` `owner_app` when it is the newest (L2, the safe direction); (b) with no counterpart the message goes to chat `unattributed`, and every `ChatStateView` carries `unattributedStoredAt`, the local time the newest `not_attributable` message of the active world was stored. A draft is held when `unattributedStoredAt` is later than the draft's mark, in any chat. Equivalent form: `ReadChat({ chat: "unattributed", storedSince: <mark> })` returns any such message, and a non-empty result is a hold; both read the same data. `ReadChat` accepts the chat `unattributed` and shows these messages with their mark. A `not_attributable` message is never `history`-excluded from this check.
 - **No identifier.** A live message with no provider id is not stored. A rejection note with reason `no_identifier` and `recoverable = 1` is written. The next catch-up that starts after the note and finishes `complete` sets `resolved_at` on it. A catch-up that ends `possible_gap` leaves it open. `ListRejections` returns the count of open recoverable notes as `unrecovered`, which is how the owner learns that one message could not be recovered (FRD-02 edge case).
 - **Storage failure.** If the write fails (disk full, locked), `ReceiveLiveDelivery` returns `storage_failed` and the listener answers 500 so the provider delivers again. The process keeps the time of the last storage failure in memory and `GetSyncStatus` returns it, so the owner is told at the next read. Nothing says "stored" for a message that was not (FRD-02 edge case).
@@ -87,7 +87,7 @@ Domain (all in `src/intake/domain/`, no I/O):
 - **Aggregate `Message`.** Root and only entity. Fields below. Invariants: `(provider, providerMessageId)` is never empty; `readable` implies `type = "text"`; `source` is set once, at `receive`, and changes only through `Message.reclassifyAsDeputySend` (TP-04); `history` never changes; `text` changes only through `applyEdit`, which appends the old text to `versions`.
 - **Value objects.** `ChatId`, `MessageId = { provider, providerMessageId }`, `Source` (`customer`, `owner_app`, `sent_through_deputy`), `Mark`, `PhoneNumber` (TP-04).
 - **Domain service `SourceClassifier`** (TP-04) is called by `Message.receive`.
-- **Domain events.** `MessageStored`, `OwnerReplyUnlinked` and `CatchUpFinished` are defined in `src/intake/domain/events.ts` and re-exported by `index.ts`.
+- **Domain events.** `MessageStored` and `CatchUpFinished` are defined in `src/intake/domain/events.ts` and re-exported by `index.ts`. `OwnerReplyUnlinked` is a cross-slice signal defined in `src/shared/signals.ts` (L8).
 - **Entity `RejectionNote`** (separate small aggregate): `at`, `reason`, `recoverable`, `resolvedAt`. No content field exists, so none can be stored.
 
 ```ts
@@ -159,6 +159,7 @@ CREATE TABLE messages (
   chat_id             TEXT    NOT NULL,
   conversation_ref    TEXT,
   sender              TEXT,
+  provider_sender     TEXT,                 -- the sender id as the provider sent it (L8)
   type                TEXT    NOT NULL,
   readable            INTEGER NOT NULL CHECK (readable IN (0,1)),
   text                TEXT,
@@ -196,6 +197,7 @@ CREATE TABLE chats (
   dev                      INTEGER NOT NULL CHECK (dev IN (0,1)),
   mark                     TEXT    NOT NULL DEFAULT 'normal',
   conversation_ref         TEXT,
+  provider_id              TEXT,                 -- first counterpart id seen, as the provider sent it; the destination of a send (L8)
   last_customer_at         INTEGER,
   last_customer_message_id TEXT,
   last_answer_at           INTEGER,
