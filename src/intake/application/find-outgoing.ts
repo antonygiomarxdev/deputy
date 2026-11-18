@@ -51,6 +51,8 @@ export class FindOutgoingUseCase implements FindOutgoing {
           if (id === undefined || message === null || changed === undefined || !changed.ok) return { kind: "none" };
           plan.push({ id, change: changed.change, dev: message.props.dev });
         }
+        // two parts with identical text would both claim the one echo; it can be only one of them
+        if (new Set(plan.map((p) => `${p.id.provider}:${p.id.providerMessageId}`)).size < plan.length) return { kind: "none" };
         const ids: string[] = [];
         for (const [i, p] of plan.entries()) {
           await r.messages.reclassify(p.id, p.change);

@@ -22,6 +22,8 @@ export interface OutgoingSendProps {
   failureReason: SendFailure | null;
   createdAt: Instant;
   finishedAt: Instant | null;
+  /** Set when the provider's rate limit refused the send: when it may be tried again. */
+  retryAt: Instant | null;
   parts: readonly OutgoingPart[];
 }
 
@@ -38,6 +40,7 @@ export class OutgoingSend {
       failureReason: null,
       createdAt: i.createdAt,
       finishedAt: null,
+      retryAt: null,
       parts: splitText(i.text).map((text, n) => ({ index: n + 1, text, providerMessageId: null, state: "pending" })),
     });
   }
@@ -57,12 +60,13 @@ export class OutgoingSend {
   }
 
   /** Every part failed; the send failed. */
-  failNothingAccepted(reason: SendFailure, at: Instant): void {
+  failNothingAccepted(reason: SendFailure, at: Instant, retryAt: Instant | null = null): void {
     this.p = {
       ...this.p,
       state: "failed",
       failureReason: reason,
       finishedAt: at,
+      retryAt,
       parts: this.p.parts.map((x) => ({ ...x, state: "failed" })),
     };
   }

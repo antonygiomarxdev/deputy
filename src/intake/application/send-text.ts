@@ -20,7 +20,7 @@ function recorded(send: OutgoingSend): SendTextResult {
   const sent = p.parts.filter((x) => x.state === "sent");
   if (p.state === "sent") return { kind: "sent", providerMessageIds: sent.map((x) => x.providerMessageId ?? "") };
   if (p.state === "failed") {
-    if (p.failureReason === "rate_limited") return { kind: "rate_limited", retryAt: p.finishedAt ?? p.createdAt };
+    if (p.failureReason === "rate_limited") return { kind: "rate_limited", retryAt: p.retryAt ?? p.finishedAt ?? p.createdAt };
     const reason = p.failureReason;
     return { kind: "failed", reason: reason === "credentials" || reason === "unreachable" || reason === "quota" ? reason : "rejected" };
   }
@@ -126,9 +126,10 @@ export class SendTextUseCase implements SendText {
   /** A part failed or was interrupted: record the send and say what is known. `err` null means the outcome is unknown. */
   private async stopped(send: OutgoingSend, index: number, err: ProviderError | null, now: number): Promise<SendTextResult> {
     if (err?.kind === "rate_limited" && index === 1) {
-      send.failNothingAccepted("rate_limited", now);
+      const retryAt = now + (err.retryAfterMs ?? RATE_LIMIT_DEFAULT_WAIT_MS);
+      send.failNothingAccepted("rate_limited", now, retryAt);
       await this.persist(send, this.d.provider.name);
-      return { kind: "rate_limited", retryAt: now + (err.retryAfterMs ?? RATE_LIMIT_DEFAULT_WAIT_MS) };
+      return { kind: "rate_limited", retryAt };
     }
     if (err !== null && !err.mayHaveBeenAccepted && index === 1) {
       const reason: SendFailure = REFUSAL[err.kind] ?? "rejected";
