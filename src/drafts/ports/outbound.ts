@@ -39,6 +39,7 @@ export interface Transaction {
 /** What a pure read may use: no write method, and no transaction (so no write lock). */
 export interface ReadTransaction {
   readonly drafts: Pick<DraftRepository, "get" | "openFor" | "listOpen" | "hasDraftText">;
+  readonly log: Pick<DraftLogRepository, "page" | "sentWithApproval" | "stuckDrafts">;
 }
 
 export interface UnitOfWork {

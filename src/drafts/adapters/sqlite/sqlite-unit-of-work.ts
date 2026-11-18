@@ -13,7 +13,7 @@ export class SqliteUnitOfWork implements UnitOfWork {
   ) {}
 
   read<T>(work: (tx: ReadTransaction) => Promise<T>): Promise<T> {
-    return work({ drafts: new SqliteDraftRepository(this.db) });
+    return work({ drafts: new SqliteDraftRepository(this.db), log: new SqliteDraftLogRepository(this.db) });
   }
 
   run<T>(work: (tx: Transaction) => Promise<T>, options?: { requireLease?: boolean }): Promise<T> {
