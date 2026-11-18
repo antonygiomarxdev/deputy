@@ -140,12 +140,14 @@ export class SqliteMessageRepository implements MessageRepository {
 
   async reclassify(id: MessageId, change: SourceChange): Promise<void> {
     const write = async (ex: SqlExecutor): Promise<void> => {
-      await ex.run("UPDATE messages SET source = ? WHERE provider = ? AND provider_message_id = ? AND source = ?", [
+      const updated = await ex.run("UPDATE messages SET source = ? WHERE provider = ? AND provider_message_id = ? AND source = ?", [
         change.to,
         id.provider,
         id.providerMessageId,
         change.from,
       ]);
+      // an audit row only for a change that happened: a message that is not (or no longer) `from` has none
+      if (updated.changes !== 1) return;
       await ex.run(
         "INSERT INTO source_changes (at, provider, provider_message_id, from_source, to_source, send_id) VALUES (?, ?, ?, ?, ?, ?)",
         [change.at, id.provider, id.providerMessageId, change.from, change.to, change.sendId],
