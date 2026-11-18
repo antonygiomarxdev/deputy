@@ -31,7 +31,19 @@ import { compositionTools } from "./composition/mcp/composition-tools";
 import { createMcpServer } from "./composition/mcp/server";
 import pkg from "../package.json" with { type: "json" };
 
+/** DEPUTY_PORT: a whole number from 1 to 65535, default 8788; anything else is refused, never turned into NaN. */
+function parsePort(raw: string | undefined): number | null {
+  if (raw === undefined) return 8788;
+  const port = /^[0-9]+$/.test(raw) ? Number(raw) : NaN;
+  return Number.isInteger(port) && port >= 1 && port <= 65535 ? port : null;
+}
+
 async function serve(): Promise<number> {
+  const port = parsePort(process.env["DEPUTY_PORT"]);
+  if (port === null) {
+    console.error(`deputy: DEPUTY_PORT must be a whole number from 1 to 65535, got '${process.env["DEPUTY_PORT"] ?? ""}'`);
+    return 1;
+  }
   const dataDir = process.env["DEPUTY_DATA_DIR"] ?? "data";
   const configDir = process.env["DEPUTY_CONFIG_DIR"] ?? join(homedir(), ".deputy");
   await mkdir(dataDir, { recursive: true });
@@ -108,7 +120,7 @@ async function serve(): Promise<number> {
 
   const listener = new LiveListener({
     receive: intake.receiveLiveDelivery,
-    port: Number(process.env["DEPUTY_PORT"] ?? "8788"),
+    port,
     host: "127.0.0.1",
   });
   const listens = resolved.provider === "dev" || resolved.receiving === "live";

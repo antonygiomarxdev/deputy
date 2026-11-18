@@ -24,10 +24,14 @@ async function boot(...args: Parameters<typeof startServer>): Promise<Harness> {
 
 afterEach(async () => {
   for (const f of fakes.splice(0)) f.stop();
+  const errors: Error[] = [];
   for (const h of started.splice(0)) {
+    errors.push(...h.protocolErrors);
     await h.close().catch(() => 0);
     removeHarnessDirs(h);
   }
+  // stdout is the MCP transport: anything else the server prints shows up here
+  expect(errors).toEqual([]);
 });
 
 const textOf = (r: Awaited<ReturnType<typeof call>>): string => {

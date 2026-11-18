@@ -9,9 +9,12 @@ const body = (text: string, sentAt: number) => ({ chat: "15557654321", from: "15
 let h: Harness | null = null;
 afterEach(async () => {
   if (h !== null) {
+    const errors = [...h.protocolErrors];
     await h.close().catch(() => 0);
     removeHarnessDirs(h);
     h = null;
+    // stdout is the MCP transport: anything else the server prints shows up here
+    expect(errors).toEqual([]);
   }
 });
 

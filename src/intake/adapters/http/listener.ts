@@ -73,8 +73,14 @@ export class LiveListener {
       if (body === null) return new Response("body too large", { status: 413 });
       const headers = new Map<string, string>();
       req.headers.forEach((value, name) => headers.set(name.toLowerCase(), value));
-      const result = await this.d.receive.execute({ rawBody: body, headers });
-      return new Response(result.kind, { status: statusOf(result) });
+      try {
+        const result = await this.d.receive.execute({ rawBody: body, headers });
+        return new Response(result.kind, { status: statusOf(result) });
+      } catch (e) {
+        // only the error name: its message could carry what was received
+        console.error(`deputy: the live listener failed on a delivery (${e instanceof Error ? e.name : "unknown error"})`);
+        return new Response("storage_failed", { status: 500 });
+      }
     }
     const extra = await this.d.extraRoutes?.(req);
     return extra ?? new Response("not found", { status: 404 });
