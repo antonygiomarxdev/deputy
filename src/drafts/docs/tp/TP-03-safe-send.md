@@ -67,7 +67,7 @@ sequenceDiagram
 
 Transaction 1 is step 2 of TP-02. The steps here:
 
-3. `ChatFreshness.catchUp(chat, 20000)`. Not fresh: hold with reason `catch_up_failed` or `catch_up_timeout`. Marks do not move. Intake's `waitMs` only bounds the wait for a shared run, so the adapter also enforces the 20 seconds in total (a race against a timer); a lost race is `catch_up_timeout` and the Intake work that continues is harmless.
+3. `ChatFreshness.catchUp(chat, 20000)` (20 seconds: the 15-second request timeout of Intake plus 5 to store, and far under the 60-second tool timeout of the agents checked, so the owner is not left waiting on a hung tool). Not fresh: hold with reason `catch_up_failed` or `catch_up_timeout`. Marks do not move. Intake's `waitMs` only bounds the wait for a shared run, so the adapter also enforces the 20 seconds in total (a race against a timer); a lost race is `catch_up_timeout` and the Intake work that continues is harmless.
 4. `ChatReader.messagesSince(chat, { sentAt: checked_sent_at, storedAt: checked_stored_at })`, then `FreshnessPolicy.evaluate(messages, draft.dev)`. Only messages whose `dev` flag equals the draft's `dev` count (the draft learns its world at creation, TP-01), so the dev provider holds like any other. Reasons: `owner_answered` (a new message with source `owner_app`), `customer_wrote` (a new `customer` message), `unattributed_echo` (the `fresh` result of step 3 carries Intake's `unattributedStoredAt`, the time of the newest owner echo it could not tie to a chat; when it is later than `checked_stored_at`, in any chat, every send holds). Any of them holds. The hold moves both marks to the newest message seen (for `unattributed_echo`, the stored mark moves to `unattributedStoredAt`).
 5. Transaction 3 checks the lease token and that the draft is still "sending" with the same revision. Then `Sender.send`. Then transaction 4.
 
@@ -81,9 +81,9 @@ Outcome (transaction 4):
 - Unknown (connection dropped after the request; a split reply that sent only some parts; any result Intake does not call sent or failed): state "unknown", log `unknown`, and the owner is told. No retry (FR-DRAFTS-03-8).
 - A provider message that the owner will see is never taken from the provider's text: reasons come from fixed sets.
 
-Fixed reasons (plain words, never a provider body, cross-cutting threat model):
+Fixed reasons (codes with an English default text, never a provider body, cross-cutting threat model). D20: Deputy returns the code and the English default; it ships no other language. The server instructions tell the agent to say the reason to the owner in the owner's language. A test checks that each code has a default text, and that a result carries the code next to the text, so an agent can translate from the code.
 
-| Code | Words shown to the owner |
+| Code | English default text |
 |---|---|
 | `catch_up_failed` | "I could not check the chat, so I held the send." |
 | `catch_up_timeout` | "Checking the chat took too long, so I held the send." |
@@ -102,7 +102,7 @@ Recovery of interrupted work:
 - On every lease acquisition (at start, and when a process takes over from a dead owner), before the scheduler starts, `main.ts` runs `RecoverInterrupted`, then a catch-up, then `ResolveUnknownSends`, then `RedriveRecording`. Without this a draft left "sending" by a dead owner would stay wedged, because a "sending" draft cannot be changed, rejected or replaced.
 - `RecoverInterrupted` (owner process only): every draft in "sending" becomes "unknown" with a log entry (reason `session_ended`). Every draft in "recording" is passed to `RedriveRecording`.
 - `RedriveRecording`: calls `RecordOrder` again. It is idempotent on the draft number, so it is safe. On success the draft becomes "recorded"; on a refusal it becomes "failed".
-- `ResolveUnknownSends` runs after the first catch-up at start and after every `CatchUpFinished` that stored messages. For each reply draft in "unknown" it takes the latest approval and calls `OutgoingFinder.find({ chat, since: approvedAt minus 5 minutes, text, sendId })`. One match: Intake links it to the send id, the draft becomes "sent" and the log gets a `sent` entry (reason `found_after_unknown`). None or several: nothing changes, so a later run tries again (FR-DRAFTS-03-13). Only a failure the provider reported is "failed". The 5 minutes cover the clock difference between Deputy and the provider.
+- `ResolveUnknownSends` runs after the first catch-up at start and after every `CatchUpFinished` that stored messages. For each reply draft in "unknown" it takes the latest approval and calls `OutgoingFinder.find({ chat, since: approvedAt, text, sendId })`. One match: Intake links it to the send id, the draft becomes "sent" and the log gets a `sent` entry (reason `found_after_unknown`). None or several: nothing changes, so a later run tries again (FR-DRAFTS-03-13). Only a failure the provider reported is "failed". Intake widens `since` by `OUTGOING_SKEW = 120 s` (one constant, stated in Intake TP-04) to cover the clock difference between Deputy and the provider; Drafts passes the approval time as is.
 
 Outbound ports for this TP:
 
@@ -220,7 +220,7 @@ Every FR id of FRD-03 (03-1 to 03-13) appears above.
 | An echo the provider cannot tie to a chat (Intake reports `unattributedStoredAt`) | An owner answer that belongs to no real chat | `unattributed_echo` holds every send until the owner says go again (L2, safe direction). |
 | Approving an "unknown" draft again | The first message may have arrived | Safe: if it arrived and was not linked it is an `owner_app` message newer than the marks, so the check holds the second send. |
 | The 20-second limit is short on a slow provider | More holds | A hold is safe and the owner can go again. |
-| `FindOutgoing` windows are too narrow | A sent message stays "unknown" | The window is 5 minutes before the approval and open at the end; the owner can decide. |
+| `FindOutgoing` windows are too narrow | A sent message stays "unknown" | The window is the approval time minus 120 seconds (`OUTGOING_SKEW`, Intake TP-04) and open at the end; the owner can decide. |
 | A mislabeled history message | A false hold | The safe error. |
 | The lease is lost between transactions 3 and the call | A send by a process that is no longer the owner, one network call wide | Accepted in the cross-cutting TP. |
 

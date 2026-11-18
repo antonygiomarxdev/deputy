@@ -48,7 +48,7 @@ Chosen: Option A. The rule sits in one place and other slices never see a provid
 ```mermaid
 flowchart LR
   Main["main.ts: composition root"] --> Resolve["ResolveProviderSettings"]
-  Resolve --> Cfg["IntakeConnectionConfig: config.json, secrets.env"]
+  Resolve --> Cfg["IntakeConnectionConfig: config.json, OS credential store, secrets.env fallback"]
   Resolve --> OwnerRepo["OwnerNumbersRepository"]
   Main --> ProvPort(["Provider port"])
   ProvPort --> Kapso["Kapso adapter: REST client, pacer, HMAC"]
@@ -170,7 +170,7 @@ export interface Provider {
     q: { scope: { conversationRef: string } | { outbound: true }; cursor: Cursor | null; limit: number },
     signal: AbortSignal,
   ): Promise<Page<ProviderMessage>>;
-  /** One part of at most 4000 characters. The caller splits. */
+  /** One part of at most 4000 UTF-16 code units (`MAX_PART`, Intake TP-04). The caller splits. */
   sendText(
     req: { to: PhoneNumber; text: string },
     signal: AbortSignal,

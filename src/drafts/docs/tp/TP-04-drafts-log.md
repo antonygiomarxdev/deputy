@@ -60,7 +60,7 @@ interface ReadDraftLog {
   run(input: { chat?: string; limit?: number; before?: number; after?: number }):
     Promise<{ entries: LogEntryView[]; nextBefore: number | null }>;
 }
-// limit 1..100, default 20. Without `after`: newest first, entries with id < before.
+// limit 1..100, default 20 (about 3k to 6k tokens, ADR-009); max 100 (about 15k to 30k tokens). Without `after`: newest first, entries with id < before.
 // With `after`: oldest first, entries with id > after (Knowledge). Not owner-gated (a read).
 
 interface CheckApprovals {
