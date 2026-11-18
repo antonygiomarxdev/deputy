@@ -2,6 +2,8 @@ import { copyFile, mkdir } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { SystemClock } from "./adapters/clock/system-clock";
+import { InProcessEventBus } from "./adapters/events/in-process-event-bus";
+import { createSecretStore } from "./adapters/secrets/secret-store";
 import { openBunSqlite } from "./adapters/sqlite/bun-sqlite-database";
 import { migrate } from "./adapters/sqlite/migrate";
 import { createSqliteOwnerLease } from "./adapters/sqlite/sqlite-owner-lease";
@@ -14,12 +16,34 @@ import outgoingSql from "./intake/adapters/sqlite/migrations/0004-outgoing.sql" 
 import catchupStatusSql from "./intake/adapters/sqlite/migrations/0005-catchup-status.sql" with { type: "text" };
 import draftsSql from "./drafts/adapters/sqlite/migrations/0001-drafts.sql" with { type: "text" };
 import draftsLogSql from "./drafts/adapters/sqlite/migrations/0002-log.sql" with { type: "text" };
+import { FileConnectionConfig } from "./intake/adapters/config/file-connection-config";
+import { DevProvider } from "./intake/adapters/dev/dev-provider";
+import { LiveListener } from "./intake/adapters/http/listener";
+import { KapsoProvider } from "./intake/adapters/kapso/kapso-provider";
+import { intakeTools } from "./intake/adapters/mcp/intake-tools";
+import { LibphonenumberParser } from "./intake/adapters/phone/libphonenumber-parser";
+import { SqliteIntakeUnitOfWork } from "./intake/adapters/sqlite/sqlite-intake-unit-of-work";
+import { createSqliteIntakeRepos } from "./intake/adapters/sqlite/sqlite-intake-repos";
+import { SqliteOwnerNumbersRepository } from "./intake/adapters/sqlite/sqlite-owner-numbers-repository";
+import { createIntake, createIntakeRuntime, type IntakeEvent, type Provider } from "./intake/index";
 import { INSTRUCTIONS } from "./composition/mcp/instructions";
 import { compositionTools } from "./composition/mcp/composition-tools";
 import { createMcpServer } from "./composition/mcp/server";
 import pkg from "../package.json" with { type: "json" };
 
+/** DEPUTY_PORT: a whole number from 1 to 65535, default 8788; anything else is refused, never turned into NaN. */
+function parsePort(raw: string | undefined): number | null {
+  if (raw === undefined) return 8788;
+  const port = /^[0-9]+$/.test(raw) ? Number(raw) : NaN;
+  return Number.isInteger(port) && port >= 1 && port <= 65535 ? port : null;
+}
+
 async function serve(): Promise<number> {
+  const port = parsePort(process.env["DEPUTY_PORT"]);
+  if (port === null) {
+    console.error(`deputy: DEPUTY_PORT must be a whole number from 1 to 65535, got '${process.env["DEPUTY_PORT"] ?? ""}'`);
+    return 1;
+  }
   const dataDir = process.env["DEPUTY_DATA_DIR"] ?? "data";
   const configDir = process.env["DEPUTY_CONFIG_DIR"] ?? join(homedir(), ".deputy");
   await mkdir(dataDir, { recursive: true });
@@ -46,18 +70,82 @@ async function serve(): Promise<number> {
   }
 
   const clock = new SystemClock();
-  const supervisor = new LeaseSupervisor({
-    lease: createSqliteOwnerLease(db, clock, () => crypto.randomUUID()),
+  const lease = createSqliteOwnerLease(db, clock, () => crypto.randomUUID());
+
+  const config = new FileConnectionConfig({
+    configDir,
+    secrets: createSecretStore({ os: { get: (service, name) => Bun.secrets.get({ service: process.env["DEPUTY_SECRET_SERVICE"] ?? service, name }) }, configDir }),
+  });
+  const owners = new SqliteOwnerNumbersRepository(db);
+  const resolved = await createIntake({ config, owners }).resolveProviderSettings.execute();
+  if (!resolved.ok) {
+    console.error(`deputy: ${resolved.message}`);
+    db.close();
+    return 1;
+  }
+  for (const notice of resolved.notices) console.error(`deputy: ${notice}`);
+
+  const connection = await config.read();
+  let provider: Provider;
+  if (resolved.provider === "dev") {
+    provider = new DevProvider({ db, clock });
+  } else {
+    // ResolveProviderSettings has refused a missing key or phone number id already; this only narrows the types
+    if (connection.kapso.apiKey === null || connection.kapso.phoneNumberId === null) {
+      console.error("deputy: Kapso needs its api key and phone number id. Run Setup.");
+      db.close();
+      return 1;
+    }
+    provider = new KapsoProvider({
+      baseUrl: process.env["DEPUTY_KAPSO_BASE_URL"] ?? "https://api.kapso.ai",
+      graphVersion: "v24.0",
+      apiKey: connection.kapso.apiKey,
+      phoneNumberId: connection.kapso.phoneNumberId,
+      clock,
+      parser: new LibphonenumberParser(),
+    });
+  }
+
+  const events = new InProcessEventBus<IntakeEvent>();
+  const intake = createIntakeRuntime({
+    repos: createSqliteIntakeRepos(db),
+    unitOfWork: new SqliteIntakeUnitOfWork(db, lease),
+    events,
     clock,
-    onAcquired: async () => console.error(`deputy: owner of ${dataDir} (config ${configDir})`),
-    onLost: async () => console.error("deputy: lost the owner lease"),
+    lease,
+    provider,
+    receiving: resolved.receiving,
+    webhookSecret: connection.kapso.webhookSecret?.reveal() ?? null,
+  });
+
+  const listener = new LiveListener({
+    receive: intake.receiveLiveDelivery,
+    port,
+    host: "127.0.0.1",
+  });
+  const listens = resolved.provider === "dev" || resolved.receiving === "live";
+
+  const supervisor = new LeaseSupervisor({
+    lease,
+    clock,
+    onAcquired: async () => {
+      if (listens) await listener.start();
+      console.error(`deputy: owner of ${dataDir} (config ${configDir}, provider ${resolved.provider})`);
+    },
+    onLost: async () => {
+      await listener.stop();
+      console.error("deputy: lost the owner lease");
+    },
   });
 
   const mcp = createMcpServer({
     name: "deputy",
     version: pkg.version,
     instructions: INSTRUCTIONS,
-    tools: compositionTools({ isOwner: () => supervisor.isOwner, sections: [] }),
+    tools: [
+      ...compositionTools({ isOwner: () => supervisor.isOwner, sections: [] }),
+      ...intakeTools({ readChat: intake.readChat, listRejections: intake.listRejections }),
+    ],
     claudeChannel: false,
   });
 
