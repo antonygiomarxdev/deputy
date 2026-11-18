@@ -289,6 +289,7 @@ export interface CreateDraft {
 }
 export type CreateDraftResult = {
   number: number; kind: DraftKind; state: "waiting";
+  chat: ChatId; madeAt: Instant;      // FR-DRAFTS-01-1: the chat and the time the draft was made
   text: string;                       // exactly what would be sent (order: Orders' summary)
   answers: MessageView | null;
   replaced: { number: number; state: "waiting" | "held" | "failed" } | null;

@@ -1,6 +1,8 @@
 import type { ChatId } from "../../shared/chat-id";
 import type { Instant } from "../../shared/instant";
+import type { ProviderName } from "../../shared/provider-name";
 import type { OwnerReplyUnlinked } from "../../shared/signals";
+import type { SyncReason } from "./sync-state";
 
 /** One item per chat and source; only newly stored, non-history, non-Deputy messages; no text or name (FR-INTAKE-02-9). */
 export interface MessageStored {
@@ -10,4 +12,13 @@ export interface MessageStored {
   readonly at: Instant;
 }
 
-export type IntakeEvent = MessageStored | OwnerReplyUnlinked;
+export interface CatchUpFinished {
+  readonly name: "CatchUpFinished";
+  readonly provider: ProviderName;
+  readonly status: "complete" | "failed";
+  readonly reason: SyncReason | null;
+  readonly storedCount: number; // all stored, history included
+  readonly finishedAt: Instant;
+}
+
+export type IntakeEvent = MessageStored | OwnerReplyUnlinked | CatchUpFinished;

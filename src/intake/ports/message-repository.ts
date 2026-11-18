@@ -1,9 +1,23 @@
 import type { ChatId } from "../../shared/chat-id";
 import type { Instant } from "../../shared/instant";
 import type { MessageId } from "../../shared/message-id";
+import type { ProviderName } from "../../shared/provider-name";
 import type { Message, MessageVersion } from "../domain/message";
 
-export interface MessageRepository {
+export interface MessageRepositoryGap {
+  /** Newest sent_at stored under `provider` in `scope` that is older than `before`, or null. `ownerOrDeputy` is source owner_app or sent_through_deputy. */
+  newestStoredBefore(
+    provider: ProviderName,
+    scope: { conversationRef: string } | { ownerOrDeputy: true },
+    before: Instant,
+  ): Promise<Instant | null>;
+  /** MAX(sent_at) under `provider`. */
+  newestStoredAt(provider: ProviderName): Promise<Instant | null>;
+  /** MIN(sent_at) under `provider`. */
+  oldestStoredAt(provider: ProviderName): Promise<Instant | null>;
+}
+
+export interface MessageRepository extends MessageRepositoryGap {
   insertIfNew(m: Message): Promise<"stored" | "duplicate">;
   find(id: MessageId): Promise<Message | null>;
   /** Unknown ids are absent from the result. */

@@ -1,3 +1,7 @@
+import { num } from "../../src/adapters/sqlite/row";
+import { InMemoryIntakeSettingsRepository } from "../../src/intake/adapters/memory/in-memory-intake-settings-repository";
+import { SqliteIntakeSettingsRepository } from "../../src/intake/adapters/sqlite/sqlite-intake-settings-repository";
+import type { IntakeSettingsRepository } from "../../src/intake/ports/intake-settings-repository";
 import { copyFileSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -15,6 +19,9 @@ export interface IntakeSubject {
   name: string;
   repos: IntakeRepos;
   unitOfWork: IntakeUnitOfWork;
+  settings: IntakeSettingsRepository;
+  /** When a settings key last changed, or null. */
+  settingChangedAt(key: string): Promise<number | null>;
   addOutgoingPart(provider: ProviderName, providerMessageId: string, sendId: SendId, part: number): Promise<void>;
   cleanup(): void;
 }
@@ -42,6 +49,11 @@ export async function openSqliteSubject(lease: OwnerLease = ownsLease): Promise<
     db,
     repos: createSqliteIntakeRepos(db),
     unitOfWork: new SqliteIntakeUnitOfWork(db, lease),
+    settings: new SqliteIntakeSettingsRepository(db),
+    async settingChangedAt(key) {
+      const [r] = await db.query("SELECT changed_at FROM settings WHERE key = ?", [key]);
+      return r === undefined ? null : num(r, "changed_at");
+    },
     async addOutgoingPart(provider, providerMessageId, sendId, part) {
       await db.run("INSERT INTO outgoing (send_id, chat_id, text, parts_total, state, created_at) VALUES (?, 'c', 't', 1, 'sent', 1)", [sendId]);
       await db.run(
@@ -58,10 +70,15 @@ export async function openSqliteSubject(lease: OwnerLease = ownsLease): Promise<
 
 export function openMemorySubject(): IntakeSubject {
   const store = new InMemoryIntakeStore();
+  const settings = new InMemoryIntakeSettingsRepository();
   return {
     name: "in-memory",
     repos: store.repos,
     unitOfWork: store.unitOfWork,
+    settings,
+    async settingChangedAt(key) {
+      return settings.changedAt.get(key) ?? null;
+    },
     async addOutgoingPart(provider, providerMessageId, sendId, part) {
       store.addOutgoingPart(provider, providerMessageId, sendId, part);
     },
