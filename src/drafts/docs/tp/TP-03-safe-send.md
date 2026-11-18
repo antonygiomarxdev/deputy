@@ -1,6 +1,6 @@
 # Technical Proposal: Safe send and outcome (Drafts FRD-03)
 
-Status: Approved (2026-11-18). Follows the cross-cutting TP (`docs/tp/TP.md`) and continues TP-02 at step 3 of `ApproveDraft`. "Cross-cutting TD-n" means a decision there.
+Status: Draft. Follows the cross-cutting TP (`docs/tp/TP.md`) and continues TP-02 at step 3 of `ApproveDraft`. "Cross-cutting TD-n" means a decision there.
 
 ## Context
 
@@ -110,10 +110,10 @@ Fixed reasons (codes with an English default text, never a provider body, cross-
 | `customer_wrote` | "The customer wrote again after this draft." |
 | `fail_not_reachable` | "The provider could not be reached. Nothing was delivered." |
 | `fail_credentials` | "The provider refused the key. Nothing was delivered." |
-| `send_queued` | "The provider asked to slow down. Nothing was delivered. I will retry at 14:05 and check the chat again first." (the local time is filled in; a status, not a failure) |
-| `fail_window_closed` | "The provider asked to wait until 14:05, which is after WhatsApp's 24-hour window for this customer closes. Nothing was delivered. The customer must write first, then draft again." |
+| `send_queued` | "The provider asked to slow down. Nothing was delivered. I will retry at 2026-11-18T14:05:00Z and check the chat again first." (the time is ISO UTC and the agent renders it in local time, D20, L7; a status, not a failure; the log records it as a `sending` entry with reason `send_queued`) |
+| `fail_window_closed` | "The provider asked to wait until 2026-11-18T14:05:00Z, which is after WhatsApp's 24-hour window for this customer closes. Nothing was delivered. The customer must write first, then draft again." |
 | `draft_changed` | "The draft changed after you approved it, so I held the send. Say go again if it is still right." |
-| `fail_rejected` | "The provider refused this message. Nothing was delivered." |
+| `fail_rejected` | "The provider refused this message. Nothing was delivered." (also the code for a provider `quota` failure, with reason `quota` in the log, L7) |
 | `unattributed_echo` | "I found a reply from your number that I cannot match to any chat, so I stopped every send to be safe. Open WhatsApp and see which customer you answered. If that customer is waiting here, drop or change the draft. Then say send as is." |
 | `unknown_outcome` | "I cannot tell if it was delivered. Check the chat before you decide." |
 | `unknown_partial` | "Part 2 of 3 failed after part 1 was delivered. Check the chat." (numbers filled in; used only when `partsSent` is 1 or more) |
@@ -164,7 +164,7 @@ interface RetryScheduler {               // one timer per chat; adapter uses the
 const CUSTOMER_WINDOW_MS = 24 * 60 * 60 * 1000;   // WhatsApp's customer service window
 ```
 
-`ApproveDraft` step 5 on `rate_limited`: if `retryAt` is after `latestCustomer.sentAt + CUSTOMER_WINDOW_MS`, transaction 4 ends in "failed" with `fail_window_closed`; otherwise transaction 4 stores `retry_at = retryAt` and `attempts + 1`, keeps the state "sending", logs `send_queued` and calls `RetryScheduler.schedule`. The result is `{ queued: true, retryAt }` with the `send_queued` text. `RetrySend` is the use case the timer calls. It runs the lease check, the draft check (`draft_changed`), the window check, steps 3 and 4, and then steps 5 and the outcome with the new send id. Holds and failures publish `SendNeedsOwner { reason, at }` (a signal in the shared kernel with no chat and no text) after the commit; Notify turns it into a notice. The queue is rebuilt at start by `RecoverInterrupted` from the drafts with `retry_at` set.
+`ApproveDraft` step 5 on `rate_limited`: if `retryAt` is after `latestCustomer.sentAt + CUSTOMER_WINDOW_MS`, transaction 4 ends in "failed" with `fail_window_closed`; otherwise transaction 4 stores `retry_at = retryAt` and `attempts + 1`, keeps the state "sending", logs `send_queued` and calls `RetryScheduler.schedule`. The result is `{ queued: true, retryAt }` with the `send_queued` text. `RetrySend` is the use case the timer calls. It reuses the approve pipeline (the one send function of `ApproveDraft`, L7) and does not copy it: the lease check, the draft check (`draft_changed`), the window check, steps 3 and 4, and then step 5 and the outcome with the new send id. A queued send is logged as `sending` with reason `send_queued`. Holds and failures publish `SendNeedsOwner { reason, at }` (a signal in `src/shared/signals.ts`, with no chat and no text; L8) after the commit, with `reason` `held_after_retry` (a hold), `window_closed` (`fail_window_closed`) or `retry_failed` (any other retry that ends unsent, L7); Notify turns it into a notice. The queue is rebuilt at start by `RecoverInterrupted` from the drafts with `retry_at` set.
 
 Domain additions: `Draft.queueRetry(retryAt, now)`, `Draft.failWindowClosed`; `FreshnessPolicy.evaluate(messages, marks)` returns `{ ownerAnswered: ChatMessage[]; customerWrote: ChatMessage[]; newestSeen: { sentAt; storedAt } }`; `Draft.hold`, `Draft.finishSent`, `Draft.finishFailed`, `Draft.finishUnknown`, `Draft.recover`.
 
@@ -193,7 +193,7 @@ No new MCP tool. The outcomes extend `approve_draft` (TP-02):
 - `failed`, `unknown`: the fixed words above. `unknown` says that Deputy does not retry and the owner decides after checking the chat.
 
 Cross-slice calls: Intake `CatchUpChat`, `ReadChat`, `SendText`, `FindOutgoing`; Orders `RecordOrder`. The Drafts-side ports use the Intake result names (one object argument each; times are epoch milliseconds). The use cases map them:
-- `SendText`: `sent` is accepted. `failed` reasons `unreachable`, `credentials` and `quota`, and `rejected` or `unsupported_chat`, map to the codes `fail_not_reachable`, `fail_credentials` and `fail_rejected`. Intake never waits for a rate limit: a `429` is `rate_limited` with `retryAt`, and the use case queues the retry (TD-3). `unknown` keeps `partsSent` and `partsTotal` for the partial words. `refused: not_owner` becomes the `NotOwner` refusal. `SendText` is idempotent on the send id, a second guard against a double send.
+- `SendText`: `sent` is accepted. `failed` reasons `unreachable`, `credentials` and `quota`, and `rejected` or `unsupported_chat`, map to the codes `fail_not_reachable`, `fail_credentials` and `fail_rejected`; `quota` maps to `fail_rejected` and the log reason is `quota` (L7). Intake never waits for a rate limit: a `429` is `rate_limited` with `retryAt`, and the use case queues the retry (TD-3). `unknown` keeps `partsSent` and `partsTotal` for the partial words. `refused: not_owner` becomes the `NotOwner` refusal. `SendText` is idempotent on the send id, a second guard against a double send.
 - `FindOutgoing` (owner only; `refused: not_owner` makes the run skip): `found` resolves the draft to "sent". `none`, `ambiguous` and `partial` leave it unknown (partial adds "part N of M was found" to the owner's words). Intake links only when every part has exactly one match.
 - `CatchUpChat({ chat, waitMs: 20000 })`: `fresh` is ok. `failed` with reason `timeout` is `catch_up_timeout`; any other reason (including `quota` and `usage_limit`) is `catch_up_failed`. `refused` becomes `NotOwner`.
 - Intake sources are `customer`, `owner_app` and `sent_through_deputy`. The check ignores the last.

@@ -1,6 +1,6 @@
 # Technical Proposal: FRD-03 Harmless and reliable
 
-Status: Approved (2026-11-18)
+Status: Draft
 
 Per-FRD TP for [FRD-03](../frd/FRD-03-harmless-and-reliable.md). It builds on [TP-01](TP-01-batched-notice.md) (`Tick`, `NoticeSession`, `Notifier`, `notice_state`) and [TP-02](TP-02-owner-controls.md) (settings, quiet periods). It consumes Intake's `SyncStatusView` and `MessageStored` as published and the cross-cutting [TP.md](../../../../docs/tp/TP.md) (TD-7, TD-2, TD-0) without change.
 
@@ -88,9 +88,10 @@ Notice texts added by this TP (English defaults; the code and the numbers travel
 | `provider_reachable` | `The provider is reachable again.` | `code` |
 | `send_needs_owner`, `held_after_retry` | `A send that was waiting for the provider was held, because the chat changed. Nothing was sent. If the draft is still right, say go again. Ask what is pending.` | `code`, `reason` |
 | `send_needs_owner`, `window_closed` | `A send failed. The provider's retry time is after WhatsApp's 24-hour window for that customer closes. Nothing was sent. The customer must write first. Ask what is pending.` | `code`, `reason` |
+| `send_needs_owner`, `retry_failed` | `A send that was waiting for the provider failed when Deputy tried it again. Nothing was delivered. Ask what is pending, then draft again or say go again.` | `code`, `reason` |
 | `send_needs_owner`, `owner_reply_unlinked` | `A reply from your number could not be matched to any chat, so Deputy stopped every send to be safe. Open WhatsApp and see which customer you answered. If that customer is waiting here, drop or change the draft. Then say send as is. Ask what is pending.` | `code`, `reason` |
 
-The last three notices are urgent and not batched: each event raises one notice (an unlinked reply and a held or failed queued send are rare and each stops a send). They follow the same gates as every notice: notices on, push ready, quiet periods, one delivery at a time. They hold no chat, no name and no count. Sources: Drafts publishes `SendNeedsOwner { reason: "held_after_retry" | "window_closed", at }` after commit (Drafts TP-03 TD-3); Intake publishes `OwnerReplyUnlinked { at }` (Intake TP-02). Both are small signals with no chat and no text, defined in the shared kernel so Notify imports nothing from Drafts or Intake's code. Owner decision D30: the texts say why and what to do.
+The last four notices are urgent and not batched: each event raises one notice (an unlinked reply and a held or failed queued send are rare and each stops a send). They follow the same gates as every notice: notices on, push ready, quiet periods, one delivery at a time. They hold no chat, no name and no count. Sources: Drafts publishes `SendNeedsOwner { reason: "held_after_retry" | "window_closed" | "retry_failed", at }` (L7) after commit (Drafts TP-03 TD-3); Intake publishes `OwnerReplyUnlinked { at }` (Intake TP-02). Both are small signals with no chat and no text, defined in the shared kernel (`src/shared/signals.ts`, L8) so Notify imports nothing from Drafts or Intake's code. Owner decision D30: the texts say why and what to do.
 
 Neither points to the inbox: the FRD fixes their wording. They hold no customer data.
 

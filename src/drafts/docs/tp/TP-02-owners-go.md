@@ -1,6 +1,6 @@
 # Technical Proposal: The owner's go (Drafts FRD-02)
 
-Status: Approved (2026-11-18). Follows the cross-cutting TP (`docs/tp/TP.md`) and builds on TP-01 (the `Draft` aggregate, the `drafts` table, the unit of work). "Cross-cutting TD-n" means a decision there.
+Status: Draft. Follows the cross-cutting TP (`docs/tp/TP.md`) and builds on TP-01 (the `Draft` aggregate, the `drafts` table, the unit of work). "Cross-cutting TD-n" means a decision there.
 
 ## Context
 
@@ -116,6 +116,7 @@ interface OrderChanger {                      // Drafts-side outbound port; Orde
     Promise<{ ok: true; detail: string } | { ok: false; reason: string }>;
   delete(orderRef: string, ownerWords: string, confirm: boolean):
     Promise<{ ok: true; detail: string } | { ok: false; reason: string } | { pending: string }>;
+  chatOf(orderRef: string): Promise<string | null>;   // the order's chat, read from Orders before the command is logged (L7); null: unknown order
 }
 ```
 
@@ -173,7 +174,7 @@ CREATE INDEX approvals_by_draft ON approvals (draft_number);
 
 There is no separate send tool, so "send a draft that was never approved" can only mean an `approve_draft` call that fails a check. The refusal texts are fixed and say what is missing: "draft 2 has not been approved: no go names it", "draft 2 is closed (sent)", "the text you showed differs from the draft", "list the drafts and show the owner this text first", "the owner's words do not name draft 2 by its number", "those words are a customer message; ask the owner to say it in their own words".
 
-Two more tools map to `ApproveOrderCommand`: `change_order` `{ order: string, change: object, owner_words: string }` and `delete_order` `{ order: string, confirm: boolean, owner_words: string }` (the cross-cutting TP lists them under Orders; the lead moved their use case to Drafts). Cross-slice calls: Intake `IsCustomerText` (new port, to be added to Intake's published surface), Orders `RecordOrder`, `ChangeOrder` and `DeleteOrder` (through `OrderRecorder` and `OrderChanger`). The tool description and the `instructions` string carry the rules: no go, no send; the go must name the draft; ask again when it does not; one call per draft; no "approve all" (FR-DRAFTS-02-1, FR-DRAFTS-02-2, FR-DRAFTS-02-4).
+`ApproveOrderCommand` reads the order's chat from Orders (`OrderChanger.chatOf`) before it writes the log entry; the tools take no chat input, and an unknown order is refused (L7). Two more tools map to `ApproveOrderCommand`: `change_order` `{ order: string, change: object, owner_words: string }` and `delete_order` `{ order: string, confirm: boolean, owner_words: string }` (the cross-cutting TP lists them under Orders; the lead moved their use case to Drafts). Cross-slice calls: Intake `IsCustomerText` (new port, to be added to Intake's published surface), Orders `RecordOrder`, `ChangeOrder` and `DeleteOrder` (through `OrderRecorder` and `OrderChanger`). The tool description and the `instructions` string carry the rules: no go, no send; the go must name the draft; ask again when it does not; one call per draft; no "approve all" (FR-DRAFTS-02-1, FR-DRAFTS-02-2, FR-DRAFTS-02-4).
 
 ## Threat model
 
