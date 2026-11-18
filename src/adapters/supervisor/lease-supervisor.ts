@@ -29,7 +29,6 @@ export class LeaseSupervisor {
 
   async stop(): Promise<void> {
     this.stopped = true;
-    if (this.acquiring !== null) await this.acquiring;
     if (this.owner) {
       this.owner = false;
       await this.safely("onLost", () => this.d.onLost());
@@ -61,7 +60,9 @@ export class LeaseSupervisor {
   private async acquire(): Promise<void> {
     try {
       await this.d.onAcquired();
-      this.owner = true;
+      // The lease may have moved on while onAcquired ran, or stop() may have been called; what it started must then be stopped.
+      this.owner = !this.stopped && (await this.d.lease.isOwner());
+      if (!this.owner) await this.safely("onLost", () => this.d.onLost());
     } catch (e) {
       console.error("deputy: onAcquired failed, trying again at the next tick:", e);
     } finally {
