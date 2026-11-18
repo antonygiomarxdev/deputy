@@ -29,3 +29,11 @@ Notes:
 - A real Google service-account exchange (no real credentials by instruction), so scope, quota and clock-skew behaviour are untested.
 - `PRAGMA secure_delete` was read back, but physical erasure of freed pages in the file was not inspected.
 - Running the binary on a machine without Bun or Node installed: the binary was run here, where both exist. The `npx` spawn gate needs Node on PATH by definition.
+
+## Kapso field paths awaiting a live check
+
+Open until the owner's live check confirms or replaces them (SPEC-01 Context, L8). The adapter holds the safe reading meanwhile.
+
+| Item | Adapter reads | Why it is open |
+|---|---|---|
+| Sender profile name | nothing: `profileName` is null | `kapso.contact_name` is not in SPEC-01's Context table or in `docs/research/kapso.md`. The reference page shows it on a message record, but it was not confirmed for live deliveries. |

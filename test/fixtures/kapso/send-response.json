@@ -1,0 +1,6 @@
+{
+  "_gate": "send id: messages[0].id follows Meta's send response, which Kapso's page does not show",
+  "messaging_product": "whatsapp",
+  "contacts": [{ "input": "15557654321", "wa_id": "15557654321" }],
+  "messages": [{ "id": "wamid.SENT1" }]
+}
