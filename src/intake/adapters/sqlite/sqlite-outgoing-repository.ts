@@ -55,6 +55,7 @@ export class SqliteOutgoingRepository implements OutgoingRepository {
       failureReason: failureOf(r),
       createdAt: num(r, "created_at"),
       finishedAt: numOrNull(r, "finished_at"),
+      retryAt: numOrNull(r, "retry_at"),
       parts,
     });
   }
@@ -62,8 +63,8 @@ export class SqliteOutgoingRepository implements OutgoingRepository {
   async insert(s: OutgoingSend): Promise<void> {
     const p = s.props;
     await this.ex.run(
-      "INSERT INTO outgoing (send_id, chat_id, text, parts_total, state, failure_reason, created_at, finished_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      [p.sendId, p.chat, p.text, p.parts.length, p.state, p.failureReason, p.createdAt, p.finishedAt],
+      "INSERT INTO outgoing (send_id, chat_id, text, parts_total, state, failure_reason, created_at, finished_at, retry_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [p.sendId, p.chat, p.text, p.parts.length, p.state, p.failureReason, p.createdAt, p.finishedAt, p.retryAt],
     );
     for (const part of p.parts) {
       await this.ex.run(
@@ -84,10 +85,11 @@ export class SqliteOutgoingRepository implements OutgoingRepository {
 
   async saveSend(s: OutgoingSend): Promise<void> {
     const p = s.props;
-    await this.ex.run("UPDATE outgoing SET state = ?, failure_reason = ?, finished_at = ? WHERE send_id = ?", [
+    await this.ex.run("UPDATE outgoing SET state = ?, failure_reason = ?, finished_at = ?, retry_at = ? WHERE send_id = ?", [
       p.state,
       p.failureReason,
       p.finishedAt,
+      p.retryAt,
       p.sendId,
     ]);
   }

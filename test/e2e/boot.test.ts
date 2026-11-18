@@ -16,6 +16,7 @@ test("boots over stdio, serves instructions and tools, and exits fast on stdin c
       "create_draft",
       "change_draft",
       "reject_draft",
+      "approve_draft",
       "list_drafts",
     ]);
     expect(h.protocolErrors).toEqual([]);
