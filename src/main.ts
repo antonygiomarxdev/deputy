@@ -7,6 +7,8 @@ import { migrate } from "./adapters/sqlite/migrate";
 import { createSqliteOwnerLease } from "./adapters/sqlite/sqlite-owner-lease";
 import { LeaseSupervisor } from "./adapters/supervisor/lease-supervisor";
 import sharedSql from "./adapters/sqlite/migrations/0001-shared.sql" with { type: "text" };
+import ownerNumbersSql from "./intake/adapters/sqlite/migrations/0001-owner-numbers.sql" with { type: "text" };
+import devHoldingsSql from "./intake/adapters/sqlite/migrations/0002-dev-holdings.sql" with { type: "text" };
 import { INSTRUCTIONS } from "./composition/mcp/instructions";
 import { compositionTools } from "./composition/mcp/composition-tools";
 import { createMcpServer } from "./composition/mcp/server";
@@ -19,7 +21,11 @@ async function serve(): Promise<number> {
 
   const dbPath = join(dataDir, "deputy.db");
   const db = openBunSqlite({ path: dbPath });
-  const migrated = await migrate(db, [{ name: "0001-shared", sql: sharedSql }], {
+  const migrated = await migrate(db, [
+    { name: "0001-shared", sql: sharedSql },
+    { name: "0001-owner-numbers", sql: ownerNumbersSql },
+    { name: "0002-dev-holdings", sql: devHoldingsSql },
+  ], {
     basePath: dbPath,
     copyTo: (p) => copyFile(dbPath, p),
   });
