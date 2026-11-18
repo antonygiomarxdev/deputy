@@ -76,6 +76,4 @@ Inbox only reads, apart from one owner setting: ignoring a chat. It sends nothin
 
 ## Open questions
 
-1. Should a chat with a draft the owner has not yet approved or rejected stay in "easy questions" across sessions, or return to "needs the owner" after some time?
-2. Is a customer's reply of only "ok" or "thanks" after an answer pending again (R-INBOX-3)? A rule would avoid noise, but it risks hiding a real message. Needs the owner's call.
-3. Does the maximum value of N differ by provider (history the provider holds), and how does Inbox tell the owner when N exceeds it?
+1. Does the maximum value of N differ by provider (history the provider holds), and how does Inbox tell the owner when N exceeds it?

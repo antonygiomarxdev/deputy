@@ -19,7 +19,7 @@ Intake fields used: `status`, `reason`, `failedSince`, `tellOwner` (false for `u
 
 ## Requirements served
 
-FR-NOTIFY-03-1, FR-NOTIFY-03-2, FR-NOTIFY-03-3, FR-NOTIFY-03-4, FR-NOTIFY-03-5, FR-NOTIFY-03-6, FR-NOTIFY-03-7, FR-NOTIFY-03-8.
+FR-NOTIFY-03-1, FR-NOTIFY-03-2, FR-NOTIFY-03-3, FR-NOTIFY-03-4, FR-NOTIFY-03-5, FR-NOTIFY-03-6, FR-NOTIFY-03-7, FR-NOTIFY-03-8, FR-NOTIFY-03-9.
 
 ## Decisions
 
@@ -86,6 +86,11 @@ Notice texts added by this TP (English defaults; the code and the numbers travel
 |---|---|---|
 | `provider_unreachable` | one default text per `reason`, each ending in the local time `since 2026-11-17 14:05` (in the `time_zone` setting, built with `LocalCalendar.localParts`): `unreachable`: `Cannot reach the provider since ...`; `timeout`: `The provider did not answer in time since ...`; `bad_response`: `The provider sent an answer Deputy cannot read since ...`; `credentials`: `The provider does not accept the key since ...`; `quota`: `The provider message quota is used up since ...`; `usage_limit`: `The provider is limiting requests since ...`. | `code`, `since` (ISO UTC), `reason` (an `OutageReason`) |
 | `provider_reachable` | `The provider is reachable again.` | `code` |
+| `send_needs_owner`, `held_after_retry` | `A send that was waiting for the provider was held, because the chat changed. Nothing was sent. If the draft is still right, say go again. Ask what is pending.` | `code`, `reason` |
+| `send_needs_owner`, `window_closed` | `A send failed. The provider's retry time is after WhatsApp's 24-hour window for that customer closes. Nothing was sent. The customer must write first. Ask what is pending.` | `code`, `reason` |
+| `send_needs_owner`, `owner_reply_unlinked` | `A reply from your number could not be matched to any chat, so Deputy stopped every send to be safe. Open WhatsApp and see which customer you answered. If that customer is waiting here, drop or change the draft. Then say send as is. Ask what is pending.` | `code`, `reason` |
+
+The last three notices are urgent and not batched: each event raises one notice (an unlinked reply and a held or failed queued send are rare and each stops a send). They follow the same gates as every notice: notices on, push ready, quiet periods, one delivery at a time. They hold no chat, no name and no count. Sources: Drafts publishes `SendNeedsOwner { reason: "held_after_retry" | "window_closed", at }` after commit (Drafts TP-03 TD-3); Intake publishes `OwnerReplyUnlinked { at }` (Intake TP-02). Both are small signals with no chat and no text, defined in the shared kernel so Notify imports nothing from Drafts or Intake's code. Owner decision D30: the texts say why and what to do.
 
 Neither points to the inbox: the FRD fixes their wording. They hold no customer data.
 
@@ -144,6 +149,7 @@ Assets: the rule that a notice never causes a send (principle 1); the lack of cu
 | FR-NOTIFY-03-8 | Given an outage during a quiet period or with notices off, When `Tick` runs, Then nothing is sent until the quiet period ends or notices are on; a `usage_limit` failure with `tellOwner` false is never announced. | UC |
 | FR-NOTIFY-03-8 | Given every `SyncReason` Intake defines, When the outage reasons are listed, Then each is assigned either to "outage" or "not an outage"; the test fails if Intake adds one that is not assigned. | UC |
 | FR-NOTIFY-03-8 | Given an outage notice, When its envelope is examined, Then it holds only the code, the ISO time and the reason code. | UC |
+| FR-NOTIFY-03-9 | Given a `SendNeedsOwner` of each reason and an `OwnerReplyUnlinked`, When `Tick` runs with notices on and push ready, Then one `send_needs_owner` notice per event is delivered with its reason, the text ends with "Ask what is pending.", and the envelope holds no chat, name or number; with notices off, nothing is sent. | UC |
 
 ## Risks
 

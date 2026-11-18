@@ -62,6 +62,6 @@ R-ORDERS-1, R-ORDERS-7, R-ORDERS-8, R-ORDERS-9, R-ORDERS-13, R-ORDERS-16.
 
 ## Open questions
 
-- Are there rules about which status can follow which (for example from cancelled back to new)?
+- Later, not in v1: an owner setting for rules on which status can follow which. Owner decision D26: by default any status may follow any other.
 - Does the change history count as part of the order for export? This FRD assumes yes.
 - Does the owner want a prompt to record a cancellation reason?

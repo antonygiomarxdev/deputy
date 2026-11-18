@@ -28,6 +28,14 @@ Product decisions made by the owner, and design decisions the lead made while re
 | D20 | 2026-11-17 | **Language.** Deputy speaks to the agent in fixed codes with an English default; the agent says them in the owner's language. Deputy ships no per-language text catalogs. |
 | D21 | 2026-11-17 | **Currency.** Setup suggests the currency from the owner's country and the owner confirms it; a catalog column may override it per product. |
 | D22 | 2026-11-17 | **Catalog import.** Deputy detects the separator, number format and which column is which, and shows the owner the mapping to confirm once. |
+| D23 | 2026-11-18 | **Pending after "ok".** A short reply such as "ok" or "thanks" after an answer does not make a chat pending when the agent is sure the chat is closed. When it is not sure, it asks the owner. |
+| D24 | 2026-11-18 | **Ignored chats.** By default an ignored chat stays ignored until the owner removes it. Later, outside setup, the owner can configure exceptions, for example a mention in a group, and an expiry. |
+| D25 | 2026-11-18 | **Drafts across sessions.** A draft that was not approved still waits in the next session, marked as from an earlier session. The send path re-checks the chat as for any draft. |
+| D26 | 2026-11-18 | **Order defaults, configurable later.** By default: the delivery date is optional, status changes are free, the total is computed from the items, and an export leaves cancelled orders out. Each of these becomes an owner setting later. |
+| D27 | 2026-11-18 | **Natural approval of lessons.** The agent proposes a lesson in plain words with its kind (for example: "here *pesos* means córdobas, so 20 pesos is written C$20", kind currency). The owner answers in plain words; no number is needed. A plain "yes" approves only when exactly one lesson is waiting and the agent just asked about it; otherwise the agent asks which one. Lessons about how Deputy answers on the owner's number (prices, currency names, wording) are the main case. |
+| D28 | 2026-11-18 | **Name length.** A customer name is capped at 80 graphemes by default; the cap becomes an owner setting later. |
+| D29 | 2026-11-18 | **Rate limit (429).** An approved send that gets a 429 waits in a queue per customer chat, so a hold in one chat never stops the others. It is retried at the time the provider gives. Before the retry, every pre-send check runs again (new customer message, owner reply from the app, draft changed); if anything changed, Deputy holds and asks the owner again. If the retry time falls outside WhatsApp's 24-hour customer window, the send fails at once and the owner is told. |
+| D30 | 2026-11-18 | **Unattributed owner reply.** An owner reply that Deputy cannot tie to a chat holds every send, and the notice says clearly why and what the owner must do. |
 
 ## Lead decisions (design, from the reviews)
 

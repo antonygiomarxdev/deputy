@@ -124,6 +124,8 @@ type DraftView = {
   number: number; kind: 'reply' | 'order'; chat: string; state: DraftState;
   text: string; madeAt: string; answers: MessageView | { unavailable: true } | null;
   catalogChanged: boolean; holdReason: string | null; failReason: string | null;
+  fromEarlierSession: boolean;        // D25: madeAt is before this session started
+  retryAt: string | null;             // TP-03: a rate-limited send waits until then
 };
 // Lists drafts in waiting, held, failed, unknown, sending and recording; closed drafts are not listed.
 
@@ -143,7 +145,8 @@ interface WaitingChats {
   run(): Promise<WaitingChat[]>;
 }
 type WaitingChat = { number: number; kind: 'reply' | 'order'; chat: string; writtenAt: string;
-                     state: 'waiting' | 'held' | 'failed' | 'unknown' };
+                     state: 'waiting' | 'held' | 'failed' | 'unknown';
+                     earlierSession: boolean };   // D25: made before this session started
 // approved, sending and recording are reported as "waiting"; no draft text is returned (FR-DRAFTS-01-4).
 ```
 
@@ -282,6 +285,7 @@ ATDD (cross-cutting TD-11): each test below is written first from the FRD line, 
 | FR-DRAFTS-01-3 a draft whose text and answered message contain `</customer_text>` and `&` is listed with `&lt;/customer_text&gt;` and `&amp;`, inside one label, through the shared escape helper | FR-DRAFTS-01-3 | UC |
 | FR-KNOWLEDGE-01-14 through the `list_drafts` MCP adapter, with a fake Knowledge: a reply draft made at T and a catalog saved after T: `CatalogChangedSince` answers changed and the list shows the mark; saved before T gives no mark; `'unknown'` shows `catalog_check_unavailable`; an order draft with a changed snapshotted price shows the mark even when the time check says unchanged; `ListDrafts` itself imports and calls nothing of Knowledge (architecture test) | FR-KNOWLEDGE-01-14 | E, ARCH |
 | FR-DRAFTS-01-4 WaitingChats returns waiting, held, failed and unknown drafts with chat, time and state, and no text | FR-DRAFTS-01-4 | UC |
+| FR-DRAFTS-01-4 a draft made before the session started (fake clock) is listed with `fromEarlierSession` true and `WaitingChats` returns `earlierSession` true; a draft made after is false; the send path checks the chat the same way (D25) | FR-DRAFTS-01-4 | UC |
 | FR-DRAFTS-01-4 two chats with waiting drafts return exactly those two with their written times | FR-DRAFTS-01-4 | UC |
 | FR-DRAFTS-01-5 changing the text of an approved draft returns it to waiting and voids the approval | FR-DRAFTS-01-5 | D (approved is transient), UC (held draft) |
 | FR-DRAFTS-01-6 a rejected draft is closed and a later approval is refused | FR-DRAFTS-01-6 | UC |
@@ -307,4 +311,4 @@ Every FR id of FRD-01 (01-1 to 01-8) appears above.
 
 ## Open questions
 
-None beyond the cross-cutting TP (TD-6). Request to the Intake TP: `ChatExists` also returns `activeWorldIsDev`. Decided here, for the owner to confirm: a draft has no time limit; staleness is judged by the chat check at send time (FR-DRAFTS-03-3), not by age (answers FRD-01 open question 2).
+None beyond the cross-cutting TP (TD-6). Request to the Intake TP: `ChatExists` also returns `activeWorldIsDev`. Decided here: a draft has no time limit; staleness is judged by the chat check at send time (FR-DRAFTS-03-3), not by age (answers FRD-01 open question 2). Owner decision D25: a draft that was not approved still waits in the next session. `ListDrafts` and `WaitingChats` mark it `fromEarlierSession` when `madeAt` is before `sessionStartedAt`, the time this process took the lease (passed in by `main.ts`, read from the `Clock` port). The send path checks the chat as for any draft; the mark changes nothing else.

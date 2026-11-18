@@ -217,5 +217,5 @@ Matching tests for the guard: "Maria" matches "María" and "JOSÉ" matches "jose
 ## Open questions
 
 1. The `pending` string contains customer text. Drafts should relay it unchanged to the agent.
-2. For the owner: status order. Any status may follow any other, with history. Is that what the owner wants (for example delivered back to new)?
+2. Decided (D26): any status may follow any other, with history (for example delivered back to new). A rule on the order of statuses becomes an owner setting later, not in v1.
 3. Does the owner want a prompt for a cancellation reason? Not in v1; `notes` can hold it through a change.

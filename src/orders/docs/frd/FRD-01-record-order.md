@@ -80,6 +80,6 @@ Example:
 
 ## Open questions
 
-- Is the date wanted required for every order, or only for orders that have one? R-ORDERS-4 does not require it.
+- Later, not in v1: an owner setting to require the date wanted. Owner decision D26: by default it is optional.
 - The order draft approval interface is agreed with the Drafts FRDs (FR-DRAFTS-02-9). Confirm the wording with frd-b.
 - Should the owner be able to open a recorded order from the chat it came from?

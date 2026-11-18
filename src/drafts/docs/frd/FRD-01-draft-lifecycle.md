@@ -34,6 +34,7 @@ Example:
 - The owner says "reject 4" and draft 4 does not exist: Deputy says so and changes nothing.
 - The agent creates a draft while the owner is looking at the older draft for that chat: the owner is told the older one was replaced, so they do not approve text that no longer exists.
 - No drafts waiting: the list says so plainly.
+- A draft the owner did not approve is still there in the next session. It is marked as from an earlier session, and the send path checks the chat as for any draft (decision D25).
 
 ## Information
 
@@ -57,5 +58,4 @@ Example:
 ## Open questions
 
 1. Should the draft show exactly what will be sent, including line breaks and any signature line? (PRD open question 1.)
-2. How long may a draft wait before it must be checked against the chat again? (PRD open question 2.)
-3. How is the draft identifier shown so it stays unambiguous when many drafts are waiting?
+2. How is the draft identifier shown so it stays unambiguous when many drafts are waiting?

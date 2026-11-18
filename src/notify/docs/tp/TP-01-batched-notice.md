@@ -148,7 +148,9 @@ export type Notice =
   | { code: "new_messages"; messages: number; chats: number; otherWaiting: number; caveats: Caveat[] }
   | { code: "reminder"; waiting: number; caveats: Caveat[] }
   | { code: "provider_unreachable"; since: Instant; reason: OutageReason }
-  | { code: "provider_reachable" };
+  | { code: "provider_reachable" }
+  | { code: "send_needs_owner"; reason: SendNeedsReason };   // TP-03: urgent, one per event, no counts
+export type SendNeedsReason = "held_after_retry" | "window_closed" | "owner_reply_unlinked";
 ```
 
 A `Notice` has no `string` that can come from outside: codes and caveats are closed unions, the rest are numbers and one instant. FR-NOTIFY-01-5 holds by type. The `Notice` has no field for a chat.

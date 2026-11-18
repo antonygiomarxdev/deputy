@@ -25,6 +25,16 @@ Consequences used below without a choice:
 - Settings live in the shared `settings` table; Inbox reads and writes only its own key (cross-cutting Information).
 - Time arithmetic uses `Instant` (epoch milliseconds, `src/shared`). No time zone enters the pending rule (TD-2).
 
+### TD-4: Who decides that "ok" or "thanks" after an answer closes the chat?
+
+Owner decision D23: a short reply such as "ok" or "thanks" after an answer does not make the chat pending when the agent is sure the chat is closed. When it is not sure, it asks the owner.
+
+- **Option A** The agent judges. Pending detection stays a pure function of times (TD-1). The summary marks each pending chat that follows an answer (`followsAnswer`, TP-02) and the tool description tells the agent the rule: leave such a chat out of what it tells the owner only when the latest customer text plainly closes the chat; otherwise ask. Cost: the outcome depends on the agent. Risk: a wrong judgment hides a real message; the owner can ask for the chat by name and the next summary lists it again.
+- **Option B** Deputy hides short replies by a word list. Cost: a list per language (D20). Risk: it hides "ok, send it" or a complaint, and the owner is never told.
+- **Option C** A length rule (hide any reply under N graphemes). Cost: one number. Risk: "no" and "ok" have the same length.
+
+Chosen: Option A, because meaning is the agent's strength and a code rule would be wrong in some language. `CountWaiting` is unchanged (FR-NOTIFY-01-3 still counts the chat); only what the agent tells the owner changes. Recorded in ADR-011.
+
 ## Requirements served
 
 FR-INBOX-01-1, FR-INBOX-01-2, FR-INBOX-01-3, FR-INBOX-01-4, FR-INBOX-01-5, FR-INBOX-01-6, FR-INBOX-01-7, FR-INBOX-01-8, FR-INBOX-01-9, FR-INBOX-01-10, FR-INBOX-01-11, FR-INBOX-01-12, FR-INBOX-01-13, FR-INBOX-01-14. Related: FR-NOTIFY-01-3, FR-NOTIFY-01-4 (Notify reads `CountWaiting`).
@@ -262,5 +272,4 @@ ATDD: each test is titled with its FR id and written before the code. Layers: UC
 
 ## Open questions
 
-1. For the owner: is a customer's "ok" or "thanks" after an answer pending again? Recommendation: yes, keep it pending (v1 as written). A rule that hides short replies would need a word list per language (D20) and could hide "ok, send it" or a real complaint; a wrong hide breaks principle 3, a wrong show costs one line in the list. The owner can ignore a chat that is only chatter. It changes only `PendingPolicy`.
-2. Does Kapso expose its retention? If it does, `ProviderHistoryLimit` reads it instead of the constant. No change elsewhere.
+1. Does Kapso expose its retention? If it does, `ProviderHistoryLimit` reads it instead of the constant. No change elsewhere.
