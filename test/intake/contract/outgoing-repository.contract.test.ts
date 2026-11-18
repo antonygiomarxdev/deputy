@@ -36,12 +36,14 @@ for (const subject of subjects) {
     test("saveSend keeps the state, the failure reason and the finish time", async () => {
       const send = twoParts();
       await s.repos.outgoing.insert(send);
-      send.failNothingAccepted("rate_limited", 700);
+      expect((await s.repos.outgoing.find(send.props.sendId))?.props.retryAt).toBeNull();
+      send.failNothingAccepted("rate_limited", 700, 40_700);
       await s.repos.outgoing.saveSend(send);
       expect((await s.repos.outgoing.find(send.props.sendId))?.props).toMatchObject({
         state: "failed",
         failureReason: "rate_limited",
         finishedAt: 700,
+        retryAt: 40_700,
       });
     });
 

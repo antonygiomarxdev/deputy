@@ -12,6 +12,7 @@ import type { CatchUp } from "./ports/catch-up";
 import type { GetSyncStatus } from "./ports/get-sync-status";
 import { CheckProviderAccessUseCase } from "./application/check-provider-access";
 import { FindOutgoingUseCase } from "./application/find-outgoing";
+import { MarkInterruptedSendsUseCase } from "./application/mark-interrupted-sends";
 import { SendTextUseCase } from "./application/send-text";
 import { GetMessagesUseCase } from "./application/get-messages";
 import { IsCustomerTextUseCase } from "./application/is-customer-text";
@@ -26,6 +27,7 @@ import type { CheckProviderAccess } from "./ports/check-provider-access";
 import type { ChatExists } from "./ports/chat-exists";
 import type { EventPublisher } from "./ports/event-publisher";
 import type { FindOutgoing } from "./ports/find-outgoing";
+import type { MarkInterruptedSends } from "./ports/mark-interrupted-sends";
 import type { SendText } from "./ports/send-text";
 import type { GetMessages } from "./ports/get-messages";
 import type { IntakeConnectionConfig } from "./ports/intake-connection-config";
@@ -49,6 +51,7 @@ export type { ListRejections } from "./ports/list-rejections";
 export type { ReadChat } from "./ports/read-chat";
 export type { SendText, SendTextResult } from "./ports/send-text";
 export type { FindOutgoing, FindOutgoingResult } from "./ports/find-outgoing";
+export type { MarkInterruptedSends } from "./ports/mark-interrupted-sends";
 export type { ChatExists } from "./ports/chat-exists";
 export type { IsCustomerText } from "./ports/is-customer-text";
 export type { ListChats } from "./ports/list-chats";
@@ -92,6 +95,7 @@ export interface IntakeRuntime {
   listRejections: ListRejections;
   sendText: SendText;
   findOutgoing: FindOutgoing;
+  markInterruptedSends: MarkInterruptedSends;
 }
 
 /** Every use case that needs the resolved provider. SPEC-03 and SPEC-04 add theirs. */
@@ -117,6 +121,7 @@ export function createIntakeRuntime(d: IntakeRuntimeDeps): IntakeRuntime {
     listRejections: new ListRejectionsUseCase(d.repos),
     sendText: new SendTextUseCase({ lease: d.lease, provider: d.provider, unitOfWork: d.unitOfWork, store, clock: d.clock }),
     findOutgoing: new FindOutgoingUseCase({ lease: d.lease, unitOfWork: d.unitOfWork, clock: d.clock }),
+    markInterruptedSends: new MarkInterruptedSendsUseCase({ lease: d.lease, unitOfWork: d.unitOfWork }),
   };
 }
 
