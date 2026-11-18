@@ -201,7 +201,6 @@ Result mapping in `driveSend` (transaction 4):
 | `failed` `credentials` | `finishFailed("fail_credentials")` | `failed` | `failed` |
 | `failed` `rejected` or `unsupported_chat` | `finishFailed("fail_rejected")` | `failed` | `failed` |
 | `failed` `quota` | `finishFailed("fail_rejected")` | `failed` (the log reason is `quota`) | `failed` |
-| `rate_limited` with no `retryAt` (the provider gave no `Retry-After`) | `finishFailed("fail_rejected")` | `failed` (the log reason is `quota`) | `failed` |
 | `rate_limited`, `retryAt` after the customer's latest message plus `CUSTOMER_WINDOW_MS` | `failWindowClosed` | `failed` | `failed` with `fail_window_closed` |
 | `rate_limited`, inside the window | `queueRetry`, `RetryScheduler.schedule(chat, number, retryAt)` | `sending` with reason `send_queued` | `queued` |
 | `unknown`, `partsSent` 0 | `finishUnknown("unknown_first_part")` | `unknown` | `unknown` |
