@@ -11,6 +11,7 @@ import { ProviderError, type Cursor, type Provider } from "../ports/provider";
 import type { RunCoordinator } from "./run-coordinator";
 import type { StoreMessages } from "./store-messages";
 import type { StorageFailureLog } from "./storage-failure-log";
+import { probeGap } from "./gap-probe";
 import { readAll, RunBudget, RunStopped, RunTotals, sweepConversations, sweepOutbound } from "./sweeps";
 
 export interface CatchUpDeps {
@@ -81,14 +82,20 @@ export class CatchUpUseCase implements CatchUp {
       await sweepOutbound({ ...sweep, from: fromOutbound, providerNow });
 
       const finishedAt = clock.now();
-      state.complete(finishedAt);
+      const gap = await probeGap({ listings: totals.listings, messages: this.d.reads.messages, provider: provider.name });
+      if (gap === null) {
+        state.complete(finishedAt);
+      } else {
+        state.setGap(gap);
+        state.fail("possible_gap", finishedAt);
+      }
       await uow.run(async (r) => {
         await r.syncState.save(state);
         const started = state.props.runStartedAt;
-        if (started !== null) await r.rejections.resolveRecoverableBefore(started, finishedAt);
+        if (gap === null && started !== null) await r.rejections.resolveRecoverableBefore(started, finishedAt);
       });
 
-      this.publish(totals, "complete", null, finishedAt);
+      this.publish(totals, gap === null ? "complete" : "failed", gap === null ? null : "possible_gap", finishedAt);
       return { kind: "finished", status: await this.d.status.execute(), stored: totals.stored };
     } catch (e) {
       return this.failed(e, state, totals);
