@@ -161,6 +161,19 @@ describe("ReceiveLiveDelivery", () => {
     });
   });
 
+  test("a MessageStored subscriber that throws does not skip OwnerReplyUnlinked", async () => {
+    provider.deliver(providerMessage({ providerMessageId: "echo", direction: "outbound", from: null, counterpart: null }));
+    const seen: string[] = [];
+    const flaky: EventPublisher = {
+      publish(e) {
+        if (e.name === "MessageStored") throw new Error("subscriber bug");
+        seen.push(e.name);
+      },
+    };
+    expect((await build({ publisher: flaky }).execute(request)).kind).toBe("stored");
+    expect(seen).toEqual(["OwnerReplyUnlinked"]);
+  });
+
   test("not the owner: refused, nothing read or stored", async () => {
     isOwner = false;
     provider.deliver(providerMessage());
