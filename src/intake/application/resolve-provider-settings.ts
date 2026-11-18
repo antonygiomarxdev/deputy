@@ -20,19 +20,21 @@ export class ResolveProviderSettingsUseCase implements ResolveProviderSettings {
     }
 
     const mode = c.receivingMode || null;
-    if (mode !== null && mode !== "live" && mode !== "catch-up") {
-      return { ok: false, message: `receiving_mode must be catch-up or live, got '${mode}'` };
-    }
     const live = mode === "live" && provider === "kapso";
+    const blank = (v: string | null | { reveal(): string }) => v === null || (typeof v === "string" ? v : v.reveal()).trim() === "";
 
     if (provider === "kapso") {
       const missing = [
-        c.kapso.apiKey ? null : "api key",
-        c.kapso.phoneNumberId ? null : "phone number id",
-        live && !c.kapso.webhookSecret ? "webhook secret" : null,
+        blank(c.kapso.apiKey) ? "api key" : null,
+        blank(c.kapso.phoneNumberId) ? "phone number id" : null,
+        live && blank(c.kapso.webhookSecret) ? "webhook secret" : null,
         (await this.deps.owners.load()).business() ? null : "business number",
       ].filter((m) => m !== null);
       if (missing.length > 0) return { ok: false, message: `Kapso needs: ${missing.join(", ")}. Run Setup.` };
+    }
+
+    if (mode !== null && mode !== "live" && mode !== "catch-up") {
+      return { ok: false, message: `receiving_mode must be catch-up or live, got '${mode}'` };
     }
 
     return { ok: true, provider, receiving: live ? "live" : "catch_up", notices };
