@@ -38,7 +38,7 @@ export interface Transaction {
 
 /** What a pure read may use: no write method, and no transaction (so no write lock). */
 export interface ReadTransaction {
-  readonly drafts: Pick<DraftRepository, "get" | "openFor" | "listOpen">;
+  readonly drafts: Pick<DraftRepository, "get" | "openFor" | "listOpen" | "hasDraftText">;
 }
 
 export interface UnitOfWork {
@@ -80,4 +80,17 @@ export interface OrderPreparer {
     order: OrderInput,
   ): Promise<{ ok: true; payload: string; summary: string } | { ok: false; reasons: string[] }>;
   revalidate(payload: string): Promise<{ catalogChanged: boolean }>;
+}
+
+/** Intake's IsCustomerText: does the text equal a stored customer message, in any chat? */
+export interface CustomerTextCheck {
+  isCustomerText(words: string): Promise<boolean>;
+}
+
+export interface TextDigest {
+  sha256(text: string): string;
+}
+
+export interface Ids {
+  next(): string;
 }
