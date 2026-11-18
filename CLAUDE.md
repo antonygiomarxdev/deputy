@@ -6,7 +6,7 @@ Deputy is an MCP server over stdio that gives an agent (Claude Code first) the o
 - `bun install`: install dependencies (`bun.lock` is committed).
 - `bun test`: unit, adapter-contract, architecture and end-to-end tests (the end-to-end tests spawn `bun src/main.ts serve` over stdio).
 - `bun run typecheck`: `tsc --noEmit`. Run it with the tests before committing.
-- `bun src/main.ts serve`: start the server. Data lives in `DEPUTY_DATA_DIR` (default `data/`, gitignored) as `deputy.db`; config in `DEPUTY_CONFIG_DIR` (default `~/.deputy`).
+- `bun src/main.ts serve`: start the server. Data lives in `DEPUTY_DATA_DIR` (default `data/`, gitignored) as `deputy.db`; config in `DEPUTY_CONFIG_DIR` (default `~/.deputy`). `DEPUTY_PORT` sets the loopback listener port (1 to 65535, default 8788). `DEPUTY_SECRET_SERVICE` renames the OS secret-store service (default `deputy`): it is a test isolation hook (the e2e harness sets a random one so tests never read the developer's real secrets), not an owner setting.
 - Never write to stdout from the server: it is the MCP transport. Log with `console.error`.
 
 Layout (ports and adapters; ADR-000 in `docs/adr/`):

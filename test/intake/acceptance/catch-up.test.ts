@@ -8,10 +8,11 @@ import { GetSyncStatusUseCase } from "../../../src/intake/application/get-sync-s
 import { RunCoordinator } from "../../../src/intake/application/run-coordinator";
 import { StorageFailureLog } from "../../../src/intake/application/storage-failure-log";
 import { StoreMessages } from "../../../src/intake/application/store-messages";
+import { OVERLAP_MS } from "../../../src/intake/domain/constants";
 import { OwnerNumbers } from "../../../src/intake/domain/owner-numbers";
 import type { IntakeRepos, IntakeUnitOfWork } from "../../../src/intake/ports/intake-unit-of-work";
 import type { IntakeSettingsRepository } from "../../../src/intake/ports/intake-settings-repository";
-import type { Provider, ProviderMessage } from "../../../src/intake/ports/provider";
+import { ProviderError, type Provider, type ProviderMessage } from "../../../src/intake/ports/provider";
 import { parseChatId } from "../../../src/shared/chat-id";
 import { PhoneNumber } from "../../../src/shared/phone-number";
 import { FakeClock } from "../../support/fake-clock";
@@ -190,7 +191,7 @@ describe("CatchUp", () => {
     ]);
     provider.calls.length = 0;
     await build().execute({ trigger: "timer" });
-    const reads = provider.calls.filter((c) => c.kind === "messages");
+    const reads = provider.calls.filter((c) => c.kind === "messages" && "conversationRef" in c.scope);
     expect(reads.map((c) => (c.cursor === null ? null : String(c.cursor)))).toEqual([null, "2"]);
     expect(await rows()).toEqual(["old", "mid", "n2", "n1"]);
   });
@@ -250,5 +251,167 @@ describe("CatchUp", () => {
     } finally {
       sqlite.cleanup();
     }
+  });
+
+  describe("sweep 2, windows and a lost lease", () => {
+    const timeout = () => new ProviderError("timeout", null, false);
+    const run = (useCase = build()) => useCase.execute({ trigger: "timer" });
+    // a run stopped by an error is not mapped to a status yet (SPEC-03 Task 4), so only its saved state is checked
+    const runAndStop = (useCase = build()) => useCase.execute({ trigger: "timer" }).catch(() => undefined);
+    const outboundCalls = () => provider.calls.filter((c) => c.kind === "messages" && "outbound" in c.scope);
+
+    test("FR-INTAKE-04-4: sweep 2 stores an owner echo that did not move the conversation", async () => {
+      provider.serverTime = 10_000;
+      provider.hold("c1", "5491123456789", [msg("a", 100)]);
+      await run();
+      provider.serverTime = 20_000;
+      provider.outbound = [echo("echo-1", 15_000)];
+      const second = await run();
+      expect(second).toMatchObject({ kind: "finished", stored: 1 });
+      expect((await store.repos.messages.find({ provider: "kapso", providerMessageId: "echo-1" }))?.props).toMatchObject({
+        source: "owner_app",
+        history: false,
+      });
+    });
+
+    test("FR-INTAKE-03-4: a known message does not stop the paging; two earlier ones are stored", async () => {
+      provider.serverTime = 10_000;
+      await run();
+      await store.unitOfWork.run((r) =>
+        new StoreMessages({ clock }).store(r, { provider: "kapso", events: [{ kind: "message", message: msg("c", 15_000) }] }),
+      );
+      provider.serverTime = 20_000;
+      provider.pageSize = 1;
+      provider.hold("c1", "5491123456789", [msg("a", 12_000), msg("b", 13_000), msg("c", 15_000)]);
+      expect(await run()).toMatchObject({ kind: "finished", stored: 2 });
+      expect(await rows()).toEqual(["a", "b", "c"]);
+    });
+
+    test("FR-INTAKE-03-20: a run stopped after half the conversations resumes from the saved mark", async () => {
+      provider.serverTime = 400_000_000;
+      provider.hold("c1", "5491123456789", [msg("m1", 100_000_000)]);
+      provider.hold("c2", "5491123456789", [msg("m2", 200_000_000)]);
+      provider.hold("c3", "5491123456789", [msg("m3", 300_000_000)]);
+      let failing = true;
+      provider.onCall = (c) => {
+        if (failing && c.kind === "messages" && "conversationRef" in c.scope && c.scope.conversationRef === "c2") throw timeout();
+      };
+      await runAndStop();
+      expect((await store.repos.syncState.load("kapso"))?.props.markConversations).toBe(100_000_000);
+      expect(await rows()).toEqual(["m1"]);
+
+      failing = false;
+      provider.calls.length = 0;
+      expect(await run()).toMatchObject({ kind: "finished" });
+      expect(provider.calls[0]).toEqual({ kind: "conversations", activeAfter: 100_000_000 - OVERLAP_MS, cursor: null });
+      expect(await rows()).toEqual(["m1", "m2", "m3"]);
+    });
+
+    describe("sweep 2 stopped after page 1 of 3", () => {
+      beforeEach(async () => {
+        provider.serverTime = 10_000;
+        provider.pageSize = 2;
+        provider.outbound = [1, 2, 3, 4, 5].map((n) => echo(`e${n}`, n * 100));
+        let outboundSeen = 0;
+        provider.onCall = (c) => {
+          if (c.kind === "messages" && "outbound" in c.scope && ++outboundSeen === 2) throw timeout();
+        };
+        await runAndStop();
+        provider.onCall = null;
+        provider.calls.length = 0;
+      });
+
+      test("the saved cursor makes the next run request page 2 first", async () => {
+        expect((await store.repos.syncState.load("kapso"))?.props.outboundResume).toMatchObject({ cursor: "2", from: null, runStart: 10_000 });
+        provider.serverTime = 20_000; // the provider clock has moved on since the stopped run
+        expect(await run()).toMatchObject({ kind: "finished" });
+        expect(outboundCalls()[0]).toMatchObject({ cursor: "2" });
+        expect(await rows()).toEqual(["e1", "e2", "e3", "e4", "e5"]);
+        // the resumed window was opened by the first run, so its mark is that run's start, not this one's
+        expect((await store.repos.syncState.load("kapso"))?.props).toMatchObject({ outboundResume: null, markOutbound: 10_000 });
+      });
+
+      test("a provider that refuses the cursor makes the window start again, losing and duplicating nothing", async () => {
+        let refused = false;
+        provider.onCall = (c) => {
+          if (!refused && c.kind === "messages" && "outbound" in c.scope && c.cursor === "2") {
+            refused = true;
+            throw new ProviderError("bad_response", null, false);
+          }
+        };
+        expect(await run()).toMatchObject({ kind: "finished" });
+        expect(outboundCalls().map((c) => (c.cursor === null ? null : String(c.cursor)))).toEqual(["2", null, "2", "4"]);
+        expect(await rows()).toEqual(["e1", "e2", "e3", "e4", "e5"]);
+      });
+    });
+
+    test("sweep 2 stops at the page that holds an item older than its window", async () => {
+      provider.serverTime = 2_000_000;
+      await run(); // markOutbound 2,000,000: the next outbound window starts at 1,400,000
+      provider.serverTime = 3_000_000;
+      provider.pageSize = 2;
+      provider.outbound = [
+        echo("e1", 2_900_000),
+        echo("e2", 2_800_000),
+        echo("e3", 2_000_000),
+        echo("e4", 1_000_000), // page 2 holds this item, older than the window: sweep 2 stops here
+        echo("e5", 500_000), // page 3: never requested
+      ];
+      provider.calls.length = 0;
+      await run();
+      expect(outboundCalls().map((c) => (c.cursor === null ? null : String(c.cursor)))).toEqual([null, "2"]);
+      expect(await rows()).toEqual(["e4", "e3", "e2", "e1"]);
+    });
+
+    test("a provider clock one hour off loses nothing: marks use provider time, order uses sentAt", async () => {
+      const skew = 3_600_000;
+      provider.serverTime = 1_000_000 + skew;
+      provider.hold("c1", "5491123456789", [msg("a", 900_000 + skew)]);
+      await run();
+      provider.serverTime = 1_060_000 + skew;
+      provider.hold("c1", "5491123456789", [msg("a", 900_000 + skew), msg("c", 1_050_000 + skew), msg("b", 1_020_000 + skew)]);
+      expect(await run()).toMatchObject({ kind: "finished", stored: 2 });
+      expect(await rows()).toEqual(["a", "b", "c"]);
+      expect((await store.repos.syncState.load("kapso"))?.props).toMatchObject({ markConversations: 1_060_000 + skew, connectedAt: 1_000_000 + skew });
+    });
+
+    test("FR-INTAKE-03-2: after ten days off the run reads from the mark minus the overlap, and day 9 is stored", async () => {
+      const d0 = 100 * DAY;
+      provider.serverTime = d0;
+      provider.hold("c1", "5491123456789", [msg("a", d0 - 1_000)]);
+      await run();
+      provider.serverTime = d0 + 10 * DAY;
+      provider.hold("c1", "5491123456789", [msg("a", d0 - 1_000), msg("day9", d0 + 9 * DAY)]);
+      provider.calls.length = 0;
+      expect(await run()).toMatchObject({ kind: "finished", stored: 1 });
+      expect(provider.calls[0]).toEqual({ kind: "conversations", activeAfter: d0 - OVERLAP_MS, cursor: null });
+      expect(await rows()).toEqual(["a", "day9"]);
+    });
+
+    test("FR-INTAKE-03-16: a message that arrived live is stored once when a later run lists it", async () => {
+      provider.serverTime = 10_000;
+      await run();
+      await store.unitOfWork.run((r) =>
+        new StoreMessages({ clock }).store(r, { provider: "kapso", events: [{ kind: "message", message: msg("live", 15_000) }] }),
+      );
+      provider.serverTime = 20_000;
+      provider.hold("c1", "5491123456789", [msg("live", 15_000)]);
+      expect(await run()).toMatchObject({ kind: "finished", stored: 0 });
+      expect(await rows()).toEqual(["live"]);
+    });
+
+    test("a lost lease stops the run at the next page: no more writes, no finish", async () => {
+      store = new InMemoryIntakeStore({ isOwner: async () => isOwner });
+      provider.serverTime = 400_000_000;
+      provider.hold("c1", "5491123456789", [msg("m1", 100_000_000)]);
+      provider.hold("c2", "5491123456789", [msg("m2", 200_000_000)]);
+      provider.onCall = (c) => {
+        if (c.kind === "messages" && "conversationRef" in c.scope && c.scope.conversationRef === "c2") isOwner = false;
+      };
+      expect(await run()).toEqual({ kind: "refused", reason: "not_owner" });
+      expect(await rows()).toEqual(["m1"]);
+      expect(finished()).toHaveLength(0);
+      expect((await store.repos.syncState.load("kapso"))?.props).toMatchObject({ lastSuccessAt: null, markConversations: 100_000_000 });
+    });
   });
 });

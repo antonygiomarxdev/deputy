@@ -3,13 +3,14 @@ import { UNATTRIBUTED_CHAT } from "../../../shared/chat-id";
 import type { Instant } from "../../../shared/instant";
 import { messageIdKey, type MessageId } from "../../../shared/message-id";
 import type { ProviderName } from "../../../shared/provider-name";
+import type { OwnerLease } from "../../../shared/owner-lease";
 import type { SendId } from "../../../shared/send-id";
 import type { ChatState } from "../../domain/chat-state";
 import { Message, type Mark, type MessageVersion } from "../../domain/message";
 import { SyncState, type SyncStateProps } from "../../domain/sync-state";
 import type { RejectionNote, RejectionReason } from "../../domain/rejection-note";
 import type { ChatSeen, ChatStateRepository } from "../../ports/chat-state-repository";
-import type { IntakeRepos, IntakeUnitOfWork } from "../../ports/intake-unit-of-work";
+import { LeaseLostError, type IntakeRepos, type IntakeUnitOfWork } from "../../ports/intake-unit-of-work";
 import type { MessageRepository } from "../../ports/message-repository";
 import type { OutgoingRepository } from "../../ports/outgoing-repository";
 import { REJECTION_MAX_AGE_MS, REJECTION_MAX_ROWS, type RejectionRepository } from "../../ports/rejection-repository";
@@ -59,6 +60,9 @@ const newest = (items: Stored[]): Stored | undefined => items.sort((a, b) => byS
 
 /** The repositories and the unit of work over one state object; the unit of work restores a copy when `work` throws. */
 export class InMemoryIntakeStore {
+  /** With a lease, the unit of work refuses to run when it is not ours (the SQLite adapter always checks). */
+  constructor(private readonly lease?: OwnerLease) {}
+
   private state: State = {
     nextSeq: 1,
     messages: new Map(),
@@ -82,6 +86,8 @@ export class InMemoryIntakeStore {
 
   readonly unitOfWork: IntakeUnitOfWork = {
     run: async (work) => {
+      // like the SQLite unit of work: no write unless the lease is ours
+      if (this.lease !== undefined && !(await this.lease.isOwner())) throw new LeaseLostError("the owner lease is not ours");
       const before = copyState(this.state);
       try {
         return await work(this.repos);
