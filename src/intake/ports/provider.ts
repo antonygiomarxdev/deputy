@@ -9,6 +9,11 @@ export const MAX_PART = 4_000;
 
 export type Cursor = string & { readonly __cursor: true };
 
+/** The one place a string becomes a Cursor: adapters build cursors they own the format of. */
+export function toCursor(s: string): Cursor {
+  return s as Cursor;
+}
+
 export interface Page<T> {
   items: readonly T[]; // newest first
   next: Cursor | null; // null: the listing is exhausted
@@ -93,4 +98,9 @@ export interface Provider {
   }): ParsedDelivery;
   /** The connected business number, when the provider offers it; null otherwise. */
   businessNumber(signal: AbortSignal): Promise<PhoneNumber | null>;
+}
+
+/** A caller bug, not an expected failure: every listing asks for at least one item. */
+export function assertLimit(limit: number): void {
+  if (!Number.isInteger(limit) || limit < 1) throw new RangeError(`limit must be a whole number of 1 or more, got ${limit}`);
 }

@@ -1,0 +1,12 @@
+{
+  "id": "wamid.HIST1",
+  "timestamp": "1690000000",
+  "type": "text",
+  "from": "15557654321",
+  "text": { "body": "An old question" },
+  "kapso": {
+    "direction": "inbound",
+    "origin": "history_sync",
+    "whatsapp_conversation_id": "conv-1"
+  }
+}

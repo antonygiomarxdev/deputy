@@ -1,0 +1,14 @@
+{
+  "id": "wamid.ECHO1",
+  "timestamp": "1700000400",
+  "type": "text",
+  "from": "15550001111",
+  "to": "15557654321",
+  "text": { "body": "Yes, until 6 pm." },
+  "kapso": {
+    "direction": "outbound",
+    "status": "delivered",
+    "origin": "business_app",
+    "whatsapp_conversation_id": "conv-1"
+  }
+}

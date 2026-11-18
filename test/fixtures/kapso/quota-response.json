@@ -1,0 +1,4 @@
+{
+  "_gate": "quota: HTTP 402 is not documented for these endpoints",
+  "error": { "message": "monthly message limit reached" }
+}
