@@ -47,17 +47,24 @@ claude mcp add deputy -- bun /ruta/absoluta/a/deputy/src/main.ts serve
 | `DEPUTY_CONFIG_DIR` (por defecto `~/.deputy`) | Guarda `config.json` y `secrets.env`. |
 | `DEPUTY_PORT` (por defecto `8788`) | Puerto del receptor de entregas en vivo. Reservado: la recepción en vivo aún no está construida. |
 
-`config.json` acepta `provider` (`kapso` o `dev`; vacío significa `dev`), `receiving_mode` (`catch-up` o `live`) y, para Kapso, `kapso_phone_number_id`. Los secretos se leen del almacén de secretos del sistema operativo y luego de `secrets.env` (líneas `nombre=valor`): `kapso-api-key` y `kapso-webhook-secret` (solo para `live`). Los comandos de configuración que escriben estos archivos aún no existen, así que por ahora edítalos a mano. La validación de arranque que se niega a seguir si falta algo, lo nombra y nunca imprime un secreto ya existe (`ResolveProviderSettings`), pero `serve` todavía no la llama.
+`config.json` acepta `provider` (`kapso` o `dev`; vacío significa `dev`), `receiving_mode` (`catch-up` o `live`) y, para Kapso, `kapso_phone_number_id`. Los secretos se leen del almacén de secretos del sistema operativo y luego de `secrets.env` (líneas `nombre=valor`): `kapso-api-key` y `kapso-webhook-secret` (solo para `live`). `serve` todavía no lee ninguno de los dos (los lectores ya existen y están probados). Los comandos de configuración que los escriben tampoco existen, así que por ahora edítalos a mano. La validación de arranque que se niega a seguir si falta algo, lo nombra y nunca imprime un secreto ya existe (`ResolveProviderSettings`), pero `serve` todavía no la llama.
 
 ## Seguridad
 
-Cada mensaje de un cliente es entrada no confiable para tu agente. Las reglas de Deputy:
+Cada mensaje de un cliente es entrada no confiable para tu agente. Estas son reglas de diseño, construidas rebanada por rebanada.
 
-1. El texto del cliente llega al agente etiquetado como dato, nunca como instrucción.
-2. Nada se envía sin `approve_draft` y tu visto bueno que nombre el borrador.
-3. Solo tus propios números cuentan como tú. Los cambios a esos números pasan por la línea de comandos, nunca por una herramienta del agente, y quedan en un registro de solo añadir.
-4. Deputy solo protege su propio camino de envío: un agente con otras herramientas puede saltárselo. Úsalo con un agente cuyas herramientas controles.
-5. Los secretos se muestran como `[secret]` en todas partes y nunca van en errores ni logs.
+Vigentes hoy:
+
+1. Los secretos se muestran como `[secret]` en todas partes y nunca van en errores ni logs.
+2. Los cambios a tus números de dueño quedan en un registro de solo añadir: la base de datos rechaza editarlo o borrarlo.
+
+Aún no construidas:
+
+3. Que el texto del cliente llegue al agente etiquetado como dato, nunca como instrucción.
+4. Que nada se envíe sin `approve_draft` y tu visto bueno que nombre el borrador.
+5. Que solo tus propios números cuenten como tú, y que los cambios a ellos pasen solo por la línea de comandos, nunca por una herramienta del agente.
+
+Límite conocido: Deputy solo protege su propio camino de envío, así que un agente con otras herramientas puede saltárselo. Úsalo con un agente cuyas herramientas controles.
 
 ## Desarrollo
 

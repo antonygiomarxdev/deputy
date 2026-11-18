@@ -47,17 +47,24 @@ claude mcp add deputy -- bun /absolute/path/to/deputy/src/main.ts serve
 | `DEPUTY_CONFIG_DIR` (default `~/.deputy`) | Holds `config.json` and `secrets.env`. |
 | `DEPUTY_PORT` (default `8788`) | Listener port for live delivery. Reserved: live receiving is not built yet. |
 
-`config.json` takes `provider` (`kapso` or `dev`; empty means `dev`), `receiving_mode` (`catch-up` or `live`) and, for Kapso, `kapso_phone_number_id`. Secrets are read from the operating system's secret store, then from `secrets.env` (`name=value` lines): `kapso-api-key` and `kapso-webhook-secret` (only for `live`). Setup commands that write these files are not built yet, so edit them by hand for now. The start-up check that refuses a missing item, names it and never prints a secret is built (`ResolveProviderSettings`) but `serve` does not call it yet.
+`config.json` takes `provider` (`kapso` or `dev`; empty means `dev`), `receiving_mode` (`catch-up` or `live`) and, for Kapso, `kapso_phone_number_id`. Secrets are read from the operating system's secret store, then from `secrets.env` (`name=value` lines): `kapso-api-key` and `kapso-webhook-secret` (only for `live`). `serve` does not read either file yet (the readers are built and tested). Setup commands that write them are not built either, so edit them by hand for now. The start-up check that refuses a missing item, names it and never prints a secret is built (`ResolveProviderSettings`) but `serve` does not call it yet.
 
 ## Security
 
-Every customer message is untrusted input to your agent. Deputy's rules:
+Every customer message is untrusted input to your agent. These are design rules, built slice by slice.
 
-1. Customer text reaches the agent labeled as data, never as instructions.
-2. Nothing is sent without `approve_draft` and your go naming the draft.
-3. Only your own numbers count as you. Changes to them go through the command line, never through an agent tool, and are kept in an append-only log.
-4. Deputy guards only its own send path: an agent that has other tools can bypass it. Run it with an agent whose tools you trust.
-5. Secrets are shown as `[secret]` everywhere and never put in errors or logs.
+Holding today:
+
+1. Secrets are shown as `[secret]` everywhere and never put in errors or logs.
+2. Changes to your owner numbers are kept in an append-only log: the database refuses edits and deletes of it.
+
+Not built yet:
+
+3. Customer text reaching the agent labeled as data, never as instructions.
+4. Nothing sent without `approve_draft` and your go naming the draft.
+5. Only your own numbers counting as you, with changes to them only through the command line, never through an agent tool.
+
+Known limit: Deputy guards only its own send path, so an agent that has other tools can bypass it. Run it with an agent whose tools you trust.
 
 ## Development
 

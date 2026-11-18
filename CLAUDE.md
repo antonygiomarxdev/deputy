@@ -16,7 +16,7 @@ Layout (ports and adapters; ADR-000 in `docs/adr/`):
 - `src/composition/`: the MCP server, its `instructions` and the tools that span slices. Only `src/main.ts` imports it.
 - `src/main.ts`: the composition root, and the only place an adapter is built.
 - `test/architecture/` enforces those import rules; `test/support/` holds fakes and the end-to-end harness.
-- `business/`: the owner's profile and catalog template. `examples/` has filled-in examples.
+- `business/` and `examples/`: owner templates (profile, catalog) and filled-in examples. No code reads them yet.
 
 New provider = implement `Provider` in `src/intake/ports/provider.ts`, put the adapter in `src/intake/adapters/<name>/` and build it in `src/main.ts`. New SQL migrations are numbered files under an `adapters/sqlite/migrations/` folder, appended to the list in `src/main.ts` (a file's position is its `user_version`).
 
