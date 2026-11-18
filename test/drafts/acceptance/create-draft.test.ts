@@ -41,12 +41,19 @@ describe("FR-DRAFTS-01-1", () => {
       time += 100;
     };
     const r = await value(h.createDraft.run({ kind: "reply", chat: "chat-a", text: "  It costs 10\n" }));
-    expect(r).toMatchObject({ number: 1, kind: "reply", state: "waiting", text: "  It costs 10\n", replaced: null });
+    expect(r).toMatchObject({ number: 1, kind: "reply", state: "waiting", chat: "chat-a", madeAt: 1_100, text: "  It costs 10\n", replaced: null });
     expect(r.answers).toMatchObject({ id: "dev:m1", text: "How much is the cake?" });
     const stored = (await h.store.unitOfWork.run((tx) => tx.drafts.get(1)))?.snapshot();
     expect(stored?.basis).toEqual({ messageId: { provider: "dev", providerMessageId: "m1" }, sentAt: 900 });
     expect(stored?.checkedThrough.storedAt).toBe(1_000);
     expect(stored?.madeAt).toBe(1_100);
+  });
+
+  test("an order draft answers no message", async () => {
+    const h = makeDrafts(base);
+    const r = await value(h.createDraft.run({ kind: "order", chat: "chat-a", order: { summary: "2 cakes" } }));
+    expect(r.answers).toBeNull();
+    expect((await h.store.unitOfWork.run((tx) => tx.drafts.get(r.number)))?.snapshot().answers).toBeNull();
   });
 
   test("a reply and an order draft share one numbering, and a closed draft never lowers it", async () => {
