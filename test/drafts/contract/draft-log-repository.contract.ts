@@ -87,6 +87,13 @@ export function draftLogRepositoryContract(name: string, make: () => DraftLogRep
       expect(await log.approvalEntryIdFor("s1")).toBe(first as number);
     });
 
+    test("sentWithApproval keeps a sent entry that has no pointer, with no approval", async () => {
+      const log = make();
+      await log.append([entry({ kind: "sent", sendId: "s1", approvalEntryId: null }), entry({ kind: "proposed", draft: 2 })]);
+      const rows = await log.sentWithApproval();
+      expect(rows.map((r) => [r.sent.draft, r.approval])).toEqual([[1, null]]);
+    });
+
     test("scrubOrder is the one update path: it marks order entries and is counted once", async () => {
       const log = make();
       await log.append([

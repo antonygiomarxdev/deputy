@@ -1,3 +1,4 @@
+import { Secret } from "../../../src/intake/domain/secret";
 import { beforeEach, describe, expect, test } from "bun:test";
 import { InMemoryIntakeStore } from "../../../src/intake/adapters/memory/in-memory-intake-store";
 import { RecordingEventPublisher } from "../../../src/intake/adapters/memory/recording-event-publisher";
@@ -79,7 +80,7 @@ describe("SendText", () => {
     const events = new RecordingEventPublisher();
     const lease = new InMemoryOwnerLease(holder, clock, "me");
     const live = new ReceiveLiveDeliveryUseCase({
-      lease, provider, receiving: "live", webhookSecret: "s", unitOfWork: store.unitOfWork, store: service, events, clock, failures: new StorageFailureLog(),
+      lease, provider, receiving: "live", webhookSecret: new Secret("s"), unitOfWork: store.unitOfWork, store: service, events, clock, failures: new StorageFailureLog(),
     });
     provider.deliver(echo("wamid.SENT1"));
     expect((await live.execute({ rawBody: new Uint8Array(), headers: new Map() })).kind).toBe("stored");

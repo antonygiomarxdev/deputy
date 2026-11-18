@@ -4,6 +4,9 @@ import type { OwnerLease } from "../shared/owner-lease";
 import { ApproveDraftUseCase } from "./application/approve-draft";
 import { ApproveOrderCommandUseCase } from "./application/approve-order-command";
 import { ChangeDraftUseCase } from "./application/change-draft";
+import { CheckApprovalsUseCase } from "./application/check-approvals";
+import { OnOrderDeletedUseCase } from "./application/on-order-deleted";
+import { ReadDraftLogUseCase } from "./application/read-draft-log";
 import { CreateDraftUseCase } from "./application/create-draft";
 import { ListDraftsUseCase } from "./application/list-drafts";
 import { RejectDraftUseCase } from "./application/reject-draft";
@@ -14,12 +17,16 @@ import type {
   ApproveResult,
   ChangeDraft,
   ChangeDraftResult,
+  CheckApprovals,
   CreateDraft,
   CreateDraftResult,
   DraftView,
   ListDrafts,
+  LogEntryView,
   MessageView,
+  OnOrderDeleted,
   Outcome,
+  ReadDraftLog,
   RejectDraft,
   WaitingChat,
   WaitingChats,
@@ -33,13 +40,17 @@ export type {
   ApproveResult,
   ChangeDraft,
   ChangeDraftResult,
+  CheckApprovals,
   CreateDraft,
   CreateDraftResult,
   DraftView,
   ListDrafts,
+  LogEntryView,
   MessageView,
   Outcome,
+  OnOrderDeleted,
   OrderInput,
+  ReadDraftLog,
   RejectDraft,
   WaitingChat,
   WaitingChats,
@@ -64,6 +75,9 @@ export function createDrafts(deps: DraftsDeps): {
   changeDraft: ChangeDraft;
   rejectDraft: RejectDraft;
   waitingChats: WaitingChats;
+  readDraftLog: ReadDraftLog;
+  checkApprovals: CheckApprovals;
+  onOrderDeleted: OnOrderDeleted;
 } {
   const { clock, lease, unitOfWork, chats, orders, sessionStartedAt } = deps;
   return {
@@ -72,6 +86,9 @@ export function createDrafts(deps: DraftsDeps): {
     changeDraft: new ChangeDraftUseCase({ clock, lease, unitOfWork, orders }),
     rejectDraft: new RejectDraftUseCase({ clock, lease, unitOfWork }),
     waitingChats: new WaitingChatsUseCase({ unitOfWork, sessionStartedAt }),
+    readDraftLog: new ReadDraftLogUseCase({ unitOfWork }),
+    checkApprovals: new CheckApprovalsUseCase({ unitOfWork }),
+    onOrderDeleted: new OnOrderDeletedUseCase({ clock, lease, unitOfWork }),
   };
 }
 

@@ -68,6 +68,19 @@ describe("order drafts (FR-DRAFTS-02-9)", () => {
     expect(h.sender.calls).toEqual([]);
   });
 
+  test("a second go after a failed order gets its own approval and send id, and records the order", async () => {
+    const h = makeDrafts({ chats });
+    await listedOrder(h);
+    h.recorder.queue.push({ ok: false, kind: "refused", reason: "out of stock" });
+    expect(await goOrder(h, "go 1")).toMatchObject({ ok: true, value: { outcome: "failed" } });
+    await h.listDrafts.run({}); // the failure cleared the shown mark
+    expect(await goOrder(h, "go 1 again")).toMatchObject({ ok: true, value: { outcome: "recorded", orderId: "order-1" } });
+    const rows = await h.store.unitOfWork.run((tx) => tx.approvals.forDraft(1), { requireLease: false });
+    expect(rows.map((a) => a.sendId)).toEqual(["deputy:ap1", "deputy:ap2"]);
+    expect(h.recorder.calls).toHaveLength(2);
+    expect(h.sender.calls).toEqual([]);
+  });
+
   test("a refusal from Orders makes the draft failed with that reason, and a new go is needed", async () => {
     const h = makeDrafts({ chats });
     await listedOrder(h);
