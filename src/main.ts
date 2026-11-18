@@ -9,6 +9,11 @@ import { LeaseSupervisor } from "./adapters/supervisor/lease-supervisor";
 import sharedSql from "./adapters/sqlite/migrations/0001-shared.sql" with { type: "text" };
 import ownerNumbersSql from "./intake/adapters/sqlite/migrations/0001-owner-numbers.sql" with { type: "text" };
 import devHoldingsSql from "./intake/adapters/sqlite/migrations/0002-dev-holdings.sql" with { type: "text" };
+import messagesSql from "./intake/adapters/sqlite/migrations/0003-messages.sql" with { type: "text" };
+import outgoingSql from "./intake/adapters/sqlite/migrations/0004-outgoing.sql" with { type: "text" };
+import catchupStatusSql from "./intake/adapters/sqlite/migrations/0005-catchup-status.sql" with { type: "text" };
+import draftsSql from "./drafts/adapters/sqlite/migrations/0001-drafts.sql" with { type: "text" };
+import draftsLogSql from "./drafts/adapters/sqlite/migrations/0002-log.sql" with { type: "text" };
 import { INSTRUCTIONS } from "./composition/mcp/instructions";
 import { compositionTools } from "./composition/mcp/composition-tools";
 import { createMcpServer } from "./composition/mcp/server";
@@ -25,6 +30,11 @@ async function serve(): Promise<number> {
     { name: "0001-shared", sql: sharedSql },
     { name: "0001-owner-numbers", sql: ownerNumbersSql },
     { name: "0002-dev-holdings", sql: devHoldingsSql },
+    { name: "0003-messages", sql: messagesSql },
+    { name: "0004-outgoing", sql: outgoingSql },
+    { name: "0005-catchup-status", sql: catchupStatusSql },
+    { name: "0001-drafts", sql: draftsSql },
+    { name: "0002-log", sql: draftsLogSql },
   ], {
     basePath: dbPath,
     copyTo: (p) => copyFile(dbPath, p),

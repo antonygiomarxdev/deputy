@@ -50,7 +50,7 @@ for (const subject of subjects) {
     test("recompute twice gives the same row; providerId stays the first seen; the profile name is kept", async () => {
       await add({});
       await s.repos.chats.recompute(CHAT, false, 1, seen);
-      await s.repos.chats.setProfileName(CHAT, false, "Ana");
+      await s.repos.chats.setProfileName(CHAT, false, "Ana", 10);
       const first = await s.repos.chats.get(CHAT, false);
       await s.repos.chats.recompute(CHAT, false, 1, { providerId: "541123456789", conversationRef: null });
       const second = await s.repos.chats.get(CHAT, false);

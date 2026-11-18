@@ -1,3 +1,4 @@
+import { UNATTRIBUTED_CHAT } from "../../shared/chat-id";
 import type { ChatId } from "../../shared/chat-id";
 import type { Instant } from "../../shared/instant";
 import type { Mark } from "./message";
@@ -15,5 +16,11 @@ export interface ChatState {
   readonly lastAnswerSource: "owner_app" | "sent_through_deputy" | null;
   readonly lastUnattributedAt: Instant | null;
   readonly profileName: string | null;
+  readonly profileNameAt: Instant | null;
   readonly updatedAt: Instant;
+}
+
+export function chatMarkOf(chat: ChatId): Mark {
+  if (chat.startsWith("group:")) return "group_chat";
+  return chat === UNATTRIBUTED_CHAT ? "not_attributable" : "normal";
 }

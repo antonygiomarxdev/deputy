@@ -6,6 +6,7 @@ import type { ProviderName } from "../../../shared/provider-name";
 import type { SendId } from "../../../shared/send-id";
 import type { ChatState } from "../../domain/chat-state";
 import { Message, type Mark, type MessageVersion } from "../../domain/message";
+import { SyncState, type SyncStateProps } from "../../domain/sync-state";
 import type { RejectionNote, RejectionReason } from "../../domain/rejection-note";
 import type { ChatSeen, ChatStateRepository } from "../../ports/chat-state-repository";
 import type { IntakeRepos, IntakeUnitOfWork } from "../../ports/intake-unit-of-work";
@@ -29,7 +30,7 @@ interface State {
   rejections: Rejection[];
   nextRejectionId: number;
   pruned: number;
-  sync: Map<ProviderName, { connectedAt: Instant | null; liveVerifiedAt: Instant | null }>;
+  sync: Map<ProviderName, SyncStateProps>;
   outgoingParts: Map<string, { sendId: SendId; part: number }>;
 }
 
@@ -145,6 +146,22 @@ export class InMemoryIntakeStore {
       async hasCustomerTextNorm(norm) {
         return [...s().messages.values()].some((m) => m.message.props.source === "customer" && m.message.textNorm === norm);
       },
+      async newestStoredBefore(provider, scope, before) {
+        const times = [...s().messages.values()]
+          .map((m) => m.message.props)
+          .filter((p) => p.id.provider === provider && p.sentAt < before)
+          .filter((p) => ("conversationRef" in scope ? p.conversationRef === scope.conversationRef : p.source !== "customer"))
+          .map((p) => p.sentAt);
+        return times.length === 0 ? null : Math.max(...times);
+      },
+      async newestStoredAt(provider) {
+        const times = [...s().messages.values()].filter((m) => m.message.props.id.provider === provider).map((m) => m.message.props.sentAt);
+        return times.length === 0 ? null : Math.max(...times);
+      },
+      async oldestStoredAt(provider) {
+        const times = [...s().messages.values()].filter((m) => m.message.props.id.provider === provider).map((m) => m.message.props.sentAt);
+        return times.length === 0 ? null : Math.min(...times);
+      },
       async newestUnattributedStoredAt(dev) {
         const stored = world(dev).filter((m) => m.message.props.mark === "not_attributable").map((m) => m.message.props.storedAt);
         return stored.length === 0 ? null : Math.max(...stored);
@@ -175,12 +192,15 @@ export class InMemoryIntakeStore {
           lastAnswerSource: source === "owner_app" || source === "sent_through_deputy" ? source : null,
           lastUnattributedAt: unattributed.length === 0 ? null : Math.max(...unattributed),
           profileName: old?.profileName ?? null,
+          profileNameAt: old?.profileNameAt ?? null,
           updatedAt: now,
         });
       },
-      async setProfileName(chat, dev, name) {
+      async setProfileName(chat, dev, name, sentAt) {
         const old = s().chats.get(key(chat, dev));
-        if (old !== undefined) s().chats.set(key(chat, dev), { ...old, profileName: name });
+        if (old !== undefined && (old.profileNameAt === null || old.profileNameAt < sentAt)) {
+          s().chats.set(key(chat, dev), { ...old, profileName: name, profileNameAt: sentAt });
+        }
       },
       async list(q) {
         return [...s().chats.values()]
@@ -222,16 +242,31 @@ export class InMemoryIntakeStore {
 
   private syncRepository(): SyncStateRepository {
     const s = (): State => this.state;
-    const row = (p: ProviderName) => s().sync.get(p) ?? { connectedAt: null, liveVerifiedAt: null };
+    const later = (a: Instant | null, b: Instant | null): Instant | null => (a === null ? b : b === null ? a : Math.max(a, b));
     return {
       async connectedAt(p) {
-        return row(p).connectedAt;
+        return s().sync.get(p)?.connectedAt ?? null;
       },
       async markLiveVerified(p, at) {
-        s().sync.set(p, { ...row(p), liveVerifiedAt: at });
+        s().sync.set(p, { ...(s().sync.get(p) ?? SyncState.initial(p).props), liveVerifiedAt: at });
       },
       async liveVerifiedAt(p) {
-        return row(p).liveVerifiedAt;
+        return s().sync.get(p)?.liveVerifiedAt ?? null;
+      },
+      async load(p) {
+        const row = s().sync.get(p);
+        return row === undefined ? null : SyncState.rehydrate(row);
+      },
+      async save(state) {
+        const n = state.props;
+        const old = s().sync.get(n.provider);
+        s().sync.set(n.provider, {
+          ...n,
+          connectedAt: old?.connectedAt ?? n.connectedAt,
+          markConversations: later(old?.markConversations ?? null, n.markConversations),
+          markOutbound: later(old?.markOutbound ?? null, n.markOutbound),
+          liveVerifiedAt: old?.liveVerifiedAt ?? null,
+        });
       },
     };
   }
