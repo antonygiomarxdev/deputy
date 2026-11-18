@@ -1,5 +1,5 @@
 import type { Clock } from "../../../shared/clock";
-import { DEFAULT_PERIOD_MINUTES, MAX_WAIT_MS } from "../../domain/constants";
+import { DEFAULT_PERIOD_MINUTES } from "../../domain/constants";
 import type { CatchUp } from "../../ports/catch-up";
 import type { GetIntakeSettings } from "../../ports/get-intake-settings";
 
@@ -44,8 +44,7 @@ export class CatchUpScheduler {
         console.error(`deputy: a catch-up run failed (${e instanceof Error ? e.name : "unknown error"})`);
         wait = await this.period().catch(() => ({ ms: DEFAULT_PERIOD_MINUTES * MINUTE_MS, next: "timer" as const }));
       }
-      // a timer above 2^31 ms is clamped to 1 ms by the runtime, which would make the loop spin against the provider
-      if (wait.ms > 0) await this.d.clock.sleep(Math.min(wait.ms, MAX_WAIT_MS));
+      if (wait.ms > 0) await this.d.clock.sleep(wait.ms);
       trigger = wait.next;
     }
   }

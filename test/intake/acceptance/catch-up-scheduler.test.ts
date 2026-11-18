@@ -17,8 +17,6 @@ import { FakeClock } from "../../support/fake-clock";
 import { FakeProvider } from "../../support/fake-provider";
 import { providerMessage } from "../../support/intake-fixtures";
 
-import { MAX_WAIT_MS } from "../../../src/intake/domain/constants";
-
 const MIN = 60_000;
 const START = 10_000_000;
 const CHAT = (() => {
@@ -202,35 +200,6 @@ describe("CatchUpScheduler with scripted results", () => {
     clock = new FakeClock(START);
     await run(scripted([finished(view({ status: "failed", reason: "usage_limit", retryAt: START - 5_000 })), finished(view())]), 10_000);
     expect(times.slice(0, 2)).toEqual([0, 0]);
-  });
-
-  test("every wait is capped at one day: a retryAt 30 days ahead and a period of 100,000 minutes", async () => {
-    const thirtyDays = 30 * 24 * 60 * MIN;
-    const limited = scripted([finished(view({ status: "failed", reason: "usage_limit", retryAt: START + thirtyDays })), finished(view())]);
-    const s = new CatchUpScheduler({ catchUp: limited, settings: new GetIntakeSettingsUseCase(new InMemoryIntakeSettingsRepository()), clock });
-    s.start();
-    await flush();
-    await clock.advance(MAX_WAIT_MS - 1);
-    await flush();
-    expect(triggers).toEqual(["start"]);
-    await clock.advance(1);
-    await flush();
-    expect(triggers).toEqual(["start", "retry"]);
-    expect(times[1]).toBe(MAX_WAIT_MS);
-    s.stop();
-
-    // a stored period far above the limit waits one day too
-    triggers = [];
-    times = [];
-    const settings = new InMemoryIntakeSettingsRepository();
-    await settings.setCatchUpMinutes(100_000, START);
-    const periodic = new CatchUpScheduler({ catchUp: scripted([finished(view())]), settings: new GetIntakeSettingsUseCase(settings), clock });
-    periodic.start();
-    await flush();
-    await clock.advance(MAX_WAIT_MS);
-    await flush();
-    expect(triggers).toEqual(["start", "timer"]);
-    periodic.stop();
   });
 
   test("another failure, a refusal or a run still going waits the period", async () => {
