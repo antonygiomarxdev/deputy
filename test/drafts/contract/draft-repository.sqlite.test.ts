@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { openBunSqlite } from "../../../src/adapters/sqlite/bun-sqlite-database";
 import { migrate } from "../../../src/adapters/sqlite/migrate";
 import { SqliteUnitOfWork } from "../../../src/drafts/adapters/sqlite/sqlite-unit-of-work";
-import type { DraftRepository, UnitOfWork } from "../../../src/drafts/ports/outbound";
+import type { Transaction, UnitOfWork } from "../../../src/drafts/ports/outbound";
 import { draftRepositoryContract } from "./draft-repository.contract";
 
 const root = join(import.meta.dir, "..", "..", "..");
@@ -24,12 +24,13 @@ draftRepositoryContract("SQLite", (lease): UnitOfWork => {
     [
       { name: "0001-shared", sql: sql("src/adapters/sqlite/migrations/0001-shared.sql") },
       { name: "0001-drafts", sql: sql("src/drafts/adapters/sqlite/migrations/0001-drafts.sql") },
+      { name: "0002-log", sql: sql("src/drafts/adapters/sqlite/migrations/0002-log.sql") },
     ],
     { basePath: ":memory:", copyTo: async () => {} },
   );
   const inner = new SqliteUnitOfWork(db, lease);
   return {
-    async run<T>(work: (tx: { drafts: DraftRepository }) => Promise<T>, options?: { requireLease?: boolean }) {
+    async run<T>(work: (tx: Transaction) => Promise<T>, options?: { requireLease?: boolean }) {
       await ready;
       return inner.run(work, options);
     },

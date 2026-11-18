@@ -81,6 +81,12 @@ export function draftLogRepositoryContract(name: string, make: () => DraftLogRep
       expect(rows[0]?.approval?.id).toBe(approved as number);
     });
 
+    test("approvalEntryIdFor returns the earliest approved entry of a send id", async () => {
+      const log = make();
+      const [first] = await log.append([entry({ kind: "approved", sendId: "s1" }), entry({ kind: "approved", sendId: "s1" })]);
+      expect(await log.approvalEntryIdFor("s1")).toBe(first as number);
+    });
+
     test("scrubOrder is the one update path: it marks order entries and is counted once", async () => {
       const log = make();
       await log.append([
