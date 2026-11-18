@@ -18,6 +18,7 @@ Product decisions made by the owner, and design decisions the lead made while re
 | D10 | 2026-11-17 | **Media in v1.** Deputy stores that a media message arrived and its type. If the provider gives a transcript, it is shown as customer text. |
 | D11 | 2026-11-17 | **Known limit.** Deputy offers no way to send except an approved draft. An agent with other tools could bypass Deputy; the documents say so instead of claiming it is impossible. |
 | D12 | 2026-11-17 | **Receiving.** By default Deputy checks the provider when the session opens and then periodically while it is open (default every 2 minutes, minimum 1). No public address is needed. Live delivery is an optional advanced setting. Setup asks the owner which mode they want and explains the difference. |
+| D13 | 2026-11-17 | **Document chain.** After the FRDs comes a cross-cutting TP, then 1..N TPs per FRD with an ADR for each choice, then one spec per FRD, then implementation with ATDD. The FRDs' Given/When/Then tests are acceptance criteria. |
 
 ## Lead decisions (design, from the reviews)
 
