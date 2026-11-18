@@ -42,20 +42,22 @@ export function checkArchitecture(root: string): Violation[] {
     return [base, `${base}.ts`, `${base}/index.ts`].find((c) => known.has(c)) ?? null;
   };
 
-  // Classes exported from adapter folders or the composition folder: only main.ts may `new` them.
-  const adapterClasses = new Set<string>();
-  for (const [file, src] of sources) {
-    if (file.split("/").includes("adapters") || file.startsWith("src/composition/")) {
-      for (const m of src.matchAll(/export\s+(?:abstract\s+)?class\s+(\w+)/g)) adapterClasses.add(m[1] as string);
-    }
-  }
+  // Names a file imports (`{ X }` or `{ X as Y }`, the local name) from a file under an `adapters/` folder.
+  const importedAdapters = (file: string, src: string): string[] =>
+    [...src.matchAll(/import\s+(?:type\s+)?\{([^}]*)\}\s*from\s*["'](\.[^"']*)["']/g)].flatMap((m) => {
+      const target = resolve(file, m[2] as string);
+      if (!target?.split("/").includes("adapters")) return [];
+      return (m[1] as string).split(",").map((n) => (n.split(/\s+as\s+/).pop() ?? "").trim()).filter(Boolean);
+    });
 
   for (const [file, src] of sources) {
     const from = locate(file);
     const add = (rule: string, specifier: string) => out.push({ rule, file, specifier });
 
-    for (const cls of adapterClasses) {
-      if (file !== "src/main.ts" && new RegExp(`\\bnew\\s+${cls}\\s*\\(`).test(src)) add("adapter-instantiated", cls);
+    if (file !== "src/main.ts") {
+      for (const cls of importedAdapters(file, src)) {
+        if (new RegExp(`\\bnew\\s+${cls}\\s*\\(`).test(src)) add("adapter-instantiated", cls);
+      }
     }
     if (file !== CUSTOMER_TEXT_HELPER && src.includes("<customer_text")) add("customer-text-label", "<customer_text");
 
