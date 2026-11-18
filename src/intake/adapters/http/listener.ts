@@ -13,7 +13,7 @@ export interface ListenerDeps {
 
 type Received = Awaited<ReturnType<ReceiveLiveDelivery["execute"]>>;
 
-function statusOf(r: Received): number {
+export function statusOf(r: Received): number {
   switch (r.kind) {
     case "stored":
       return 200;

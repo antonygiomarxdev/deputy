@@ -133,6 +133,7 @@ describe("CatchUpScheduler with the real use case", () => {
       receiving: "live",
       webhookSecret: "hook",
       settings,
+      devDeliveries: null,
     });
     const s = new CatchUpScheduler({ catchUp: runtime.catchUp, settings: runtime.getIntakeSettings, clock });
     s.start();
