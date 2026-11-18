@@ -16,7 +16,7 @@ Layout:
 - `operator/`: the locked-down Claude Code profile that runs in production (`.mcp.json`, `.claude/settings.json`, `PROMPT.md`), started by `scripts/operator.sh`. Don't loosen its deny list without a reason. Every customer message is untrusted input to that session.
 - `business/`: the owner's profile and catalog template. `examples/` has filled-in examples.
 
-Product docs: [docs/PRODUCT.md](docs/PRODUCT.md) holds the problem, principles, v1 scope and slice map. Each slice keeps its chain (PRD → FRDs → TP → specs) in `src/<slice>/docs/`.
+Product docs: [docs/PRODUCT.md](docs/PRODUCT.md) holds the problem, principles, v1 scope and slice map. Each slice keeps its chain (PRD → FRDs → TP → ADRs → specs) in `src/<slice>/docs/`. Product decisions: [docs/DECISIONS.md](docs/DECISIONS.md); terms: [docs/GLOSSARY.md](docs/GLOSSARY.md); cross-slice ADRs: `docs/adr/`.
 
 Keep `README.md` (English) and `README.es.md` (Spanish) in sync. Use Mermaid for diagrams (validate them before committing).
 
