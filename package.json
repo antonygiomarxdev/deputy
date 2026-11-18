@@ -1,11 +1,11 @@
 {
   "name": "deputy",
   "version": "0.1.0",
-  "description": "Let your Claude Code agent answer WhatsApp for you. A Claude Code channel with pluggable providers (Meta Cloud API direct, Kapso) and a catalog/orders store (CSV or Google Sheets).",
+  "description": "Let your Claude Code agent answer WhatsApp for you. A Claude Code channel with pluggable providers (Kapso, and a dev provider for local testing).",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "test": "npm run build && node --test test/*.test.mjs"
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "serve": "bun src/main.ts serve"
   },
   "keywords": [
     "claude-code",
@@ -18,20 +18,15 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",
+    "libphonenumber-js": "1.13.16",
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@types/node": "^26.6.6",
-    "tsx": "^4.23.15",
+    "@changesets/cli": "^2.29.0",
+    "@types/bun": "^1.3.0",
     "typescript": "^7.0.2"
   },
   "type": "module",
-  "bin": {
-    "deputy": "dist/server.js"
-  },
-  "engines": {
-    "node": ">=20.11"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/antonygiomarxdev/deputy.git"
