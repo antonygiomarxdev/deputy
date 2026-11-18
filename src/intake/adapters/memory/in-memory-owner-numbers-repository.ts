@@ -18,3 +18,7 @@ export class InMemoryOwnerNumbersRepository implements OwnerNumbersRepository {
     return [...this.entries];
   }
 }
+
+export function createInMemoryOwnerNumbersRepository(): InMemoryOwnerNumbersRepository {
+  return new InMemoryOwnerNumbersRepository();
+}
