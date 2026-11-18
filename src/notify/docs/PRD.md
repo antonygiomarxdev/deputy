@@ -27,7 +27,7 @@ A notice is short, batched, and made of counts only, for example "3 new messages
 - **R-NOTIFY-11.** If a notice cannot be delivered, the failure does not stop messages from being stored, and does not stop the inbox from listing them.
 - **R-NOTIFY-12.** The same message is never counted as new in two notices. (A chat that is still waiting is counted again as waiting, see R-NOTIFY-14.)
 - **R-NOTIFY-13.** Messages found by the catch-up at session start produce one notice, not one per message.
-- **R-NOTIFY-14.** Chats still unanswered keep appearing, as a count, in later notices. A notice does not depend on the agent remembering them, so nothing is lost if the agent forgets or its context is compacted.
+- **R-NOTIFY-14.** Chats still unanswered keep appearing, as a count, in later notices. A notice does not depend on the agent remembering them, so nothing is lost if the agent forgets or its context is compacted. While unanswered chats that the owner has not ignored exist, a reminder notice (counts only) is sent even when no new message arrived. The reminder period is separate from the batching period; the default is 30 minutes and the owner can change or pause it.
 - **R-NOTIFY-15.** The owner can tell Deputy to ignore a chat. An ignored chat is left out of notices, new and waiting alike, until the owner tells Deputy to stop ignoring it. Ignoring is only ever the owner's explicit command, never Deputy's own judgment.
 
 ## Principles honored
@@ -72,6 +72,5 @@ A notice is short, batched, and made of counts only, for example "3 new messages
 
 1. Should a message that looks like an order break the batching period and notify sooner? This PRD assumes not.
 2. Push in Claude Code is a research-preview feature that needs a special start-up option (product overview, section 9). If it changes or is removed, should Notify fall back to anything, or simply do nothing?
-3. Is a notice sent when there are no new messages but chats are still waiting (a reminder), or do waiting chats only ride along with the next notice that has new messages? This PRD assumes the latter.
-4. Which slice stores the list of ignored chats, and how is it shown to the owner? Notify only honors it.
-5. What range of batching periods can the owner choose, and does it depend on the provider?
+3. Which slice stores the list of ignored chats, and how is it shown to the owner? Notify only honors it.
+4. What range of batching periods can the owner choose, and does it depend on the provider?

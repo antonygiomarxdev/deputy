@@ -52,7 +52,7 @@ Delivery and trust
 
 - **R-INTAKE-16.** Messages retrieved by catch-up come only over the provider's authenticated access. Anything else that claims to be a catch-up is not accepted.
 - **R-INTAKE-17.** Each time Intake stores a new message it emits a "message stored" signal for the Notify slice. A catch-up that stores messages emits one signal for the whole group.
-- **R-INTAKE-18.** Intake receives messages live only while Deputy is running. Messages that arrive while it is not running are stored at the next catch-up (R-INTAKE-8, R-INTAKE-9). No promise is made about speed beyond that.
+- **R-INTAKE-18.** While Deputy is running, Intake brings itself up to date by itself: a catch-up when the session opens, then periodically (default every 2 minutes; the owner can change it, minimum 1 minute), staying within the provider's request limits. Live delivery from the provider is an optional setting the owner can turn on; periodic catch-up keeps running with it as the safety net. Messages that arrive while Deputy is not running are stored at the next catch-up (R-INTAKE-8, R-INTAKE-9). A message can appear up to one catch-up period after it arrived.
 
 ## Principles honored
 
@@ -61,7 +61,7 @@ Delivery and trust
 - **Principle 4 (agent-agnostic):** Intake runs on pull. Catch-up on start and on demand needs no push support from the agent.
 - **Principle 5 (it knows what the owner knows):** R-INTAKE-15 gives later slices the chat history from before Deputy was connected.
 - **Principle 6 (official APIs only):** R-INTAKE-1 limits v1 to a provider that uses the official WhatsApp Business route. No unofficial bridge.
-- **Principle 7 (fair use):** R-INTAKE-8 and R-INTAKE-11 read from the provider on the owner's attended sessions only, not in a continuous polling loop, and stay within the provider's message and request limits.
+- **Principle 7 (fair use):** R-INTAKE-8 and R-INTAKE-11 read from the provider on the owner's attended sessions only, and R-INTAKE-18 checks periodically only while a session is open, within the provider's message and request limits.
 - **Principle 8 (the owner's data stays the owner's):** data stays on the owner's machine unless the owner chooses their own spreadsheet. Every stored message lives on the owner's machine (R-INTAKE-4). Intake sends nothing about customers anywhere else.
 
 Safety requirements from the product overview:
@@ -110,7 +110,7 @@ Safety requirements from the product overview:
 
 These come from [PRODUCT.md section 10](../../../docs/PRODUCT.md) and are answered by the Kapso research task, not guessed here.
 
-1. How does Kapso report an owner reply made in the WhatsApp Business app: as a live event, through its message listing, or both, and with which fields? This decides whether R-INTAKE-12 gets live replies or only catch-up ones.
+1. How does Kapso report an owner reply made in the WhatsApp Business app: as a live event, through its message listing, or both, and with which fields? The message listing marks them (origin "business_app", checked live 2026-11-17), so catch-up gets them; which live event carries them is still unchecked.
 2. Can Kapso list messages received while no session was open, and from how far back? This decides whether R-INTAKE-8 holds for the full retention window or a shorter one.
 3. Does the free plan keep Coexistence long term? If not, the provider requirement R-INTAKE-1 needs revisiting.
 4. How does Kapso identify a message sent through its API when it is reported back (R-INTAKE-14)?
