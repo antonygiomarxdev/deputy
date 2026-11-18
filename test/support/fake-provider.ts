@@ -32,6 +32,8 @@ export class FakeProvider implements Provider {
   readonly calls: ListCall[] = [];
   /** Runs at the start of every listing; a throw fails that call (scripted errors). */
   onCall: ((c: ListCall) => void | Promise<void>) | null = null;
+  /** Runs after a listing has been read and before it is returned: what changes now is missed by that call. */
+  afterCall: ((c: ListCall) => void | Promise<void>) | null = null;
 
   constructor(readonly name: ProviderName = "kapso") {}
 
@@ -72,7 +74,9 @@ export class FakeProvider implements Provider {
     const active = this.conversations
       .filter((c) => q.activeAfter === null || c.lastActiveAt >= q.activeAfter)
       .sort((a, b) => b.lastActiveAt - a.lastActiveAt);
-    return this.page(active, q.cursor);
+    const page = this.page(active, q.cursor);
+    await this.afterCall?.(call);
+    return page;
   }
 
   async listMessages(
@@ -83,7 +87,9 @@ export class FakeProvider implements Provider {
     this.calls.push(call);
     await this.onCall?.(call);
     const all = "outbound" in q.scope ? this.outbound : (this.messages.get(q.scope.conversationRef) ?? []);
-    return this.page([...all].sort((a, b) => b.sentAt - a.sentAt), q.cursor);
+    const page = this.page([...all].sort((a, b) => b.sentAt - a.sentAt), q.cursor);
+    await this.afterCall?.(call);
+    return page;
   }
 
   /** Every sendText call. */
