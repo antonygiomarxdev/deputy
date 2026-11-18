@@ -7,6 +7,7 @@ import type { PhoneNumberParser } from "../../ports/phone-number-parser";
 import {
   ProviderError,
   REQUEST_TIMEOUT_MS,
+  assertLimit,
   toCursor,
   type Cursor,
   type Page,
@@ -75,6 +76,7 @@ export class KapsoProvider implements Provider {
     q: { activeAfter: Instant | null; cursor: Cursor | null; limit: number },
     signal: AbortSignal,
   ): Promise<Page<ProviderConversation>> {
+    assertLimit(q.limit);
     const params = this.params({ limit: String(q.limit) }, q.cursor);
     if (q.activeAfter !== null) params.set("last_active_after", new Date(q.activeAfter).toISOString());
     const r = await this.request("GET", `/platform/v1/whatsapp/conversations?${params}`, null, signal, false);
@@ -91,6 +93,7 @@ export class KapsoProvider implements Provider {
     q: { scope: { conversationRef: string } | { outbound: true }; cursor: Cursor | null; limit: number },
     signal: AbortSignal,
   ): Promise<Page<ProviderMessage>> {
+    assertLimit(q.limit);
     const scope: Record<string, string> =
       "conversationRef" in q.scope ? { conversation_id: q.scope.conversationRef } : { direction: "outbound" };
     const params = this.params({ ...scope, limit: String(q.limit) }, q.cursor);

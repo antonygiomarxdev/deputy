@@ -340,3 +340,9 @@ describe("KapsoProvider", () => {
     expect(await without.provider.businessNumber(signal)).toBeNull();
   });
 });
+
+test("KapsoProvider refuses a limit below 1 at the port", async () => {
+  const { provider } = kapso();
+  await expect(provider.listConversations({ activeAfter: null, cursor: null, limit: 0 }, signal)).rejects.toThrow(RangeError);
+  await expect(provider.listMessages({ scope: { outbound: true }, cursor: null, limit: 0 }, signal)).rejects.toThrow(RangeError);
+});
