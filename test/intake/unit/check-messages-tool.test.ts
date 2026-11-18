@@ -73,6 +73,7 @@ describe("check_messages", () => {
       readChat: { execute: async () => null },
       listRejections: { execute: async () => ({ notes: [], prunedCount: 0, unrecovered: 0 }) },
       catchUp,
+      getOwnerNumbers: { execute: async () => ({ numbers: [] }) },
     }).find((t) => t.name === "check_messages");
     if (!found) throw new Error("check_messages missing");
     return { found, asked };

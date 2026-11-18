@@ -7,11 +7,17 @@ import type { Clock } from "../shared/clock";
 import type { OwnerLease } from "../shared/owner-lease";
 import { ChatExistsUseCase } from "./application/chat-exists";
 import { CatchUpUseCase, type CatchUpDeps, type RunResult } from "./application/catch-up";
+import { CatchUpChatUseCase } from "./application/catch-up-chat";
 import { RunCoordinator } from "./application/run-coordinator";
 import { GetSyncStatusUseCase, type GetSyncStatusDeps } from "./application/get-sync-status";
 import type { CatchUp } from "./ports/catch-up";
+import type { CatchUpChat } from "./ports/catch-up-chat";
 import type { GetSyncStatus } from "./ports/get-sync-status";
 import { CheckProviderAccessUseCase } from "./application/check-provider-access";
+import type { Secret } from "./domain/secret";
+import { ApplyPendingChangesUseCase } from "./application/apply-pending-changes";
+import { DescribeNumberUseCase } from "./application/describe-number";
+import { GetOwnerNumbersUseCase } from "./application/get-owner-numbers";
 import { FindOutgoingUseCase } from "./application/find-outgoing";
 import { MarkInterruptedSendsUseCase } from "./application/mark-interrupted-sends";
 import { SendTextUseCase } from "./application/send-text";
@@ -27,6 +33,10 @@ import { StoreMessages } from "./application/store-messages";
 import type { CheckProviderAccess } from "./ports/check-provider-access";
 import type { ChatExists } from "./ports/chat-exists";
 import type { EventPublisher } from "./ports/event-publisher";
+import type { ApplyPendingChanges } from "./ports/apply-pending-changes";
+import type { DescribeNumber } from "./ports/describe-number";
+import type { GetOwnerNumbers } from "./ports/get-owner-numbers";
+import type { PhoneNumberParser } from "./ports/phone-number-parser";
 import type { FindOutgoing } from "./ports/find-outgoing";
 import type { MarkInterruptedSends } from "./ports/mark-interrupted-sends";
 import type { SendText } from "./ports/send-text";
@@ -53,6 +63,9 @@ export type { ReadChat } from "./ports/read-chat";
 export type { SendText, SendTextResult } from "./ports/send-text";
 export type { FindOutgoing, FindOutgoingResult } from "./ports/find-outgoing";
 export type { MarkInterruptedSends } from "./ports/mark-interrupted-sends";
+export type { ApplyPendingChanges } from "./ports/apply-pending-changes";
+export type { DescribeNumber } from "./ports/describe-number";
+export type { GetOwnerNumbers, OwnerNumbersView } from "./ports/get-owner-numbers";
 export type { ChatExists } from "./ports/chat-exists";
 export type { IsCustomerText } from "./ports/is-customer-text";
 export type { ListChats } from "./ports/list-chats";
@@ -83,7 +96,7 @@ export interface IntakeRuntimeDeps {
   lease: OwnerLease;
   provider: Provider;
   receiving: "catch_up" | "live";
-  webhookSecret: string | null;
+  webhookSecret: Secret | null;
   settings: IntakeSettingsRepository;
 }
 
@@ -96,6 +109,7 @@ export interface IntakeRuntime {
   getMessages: GetMessages;
   listRejections: ListRejections;
   catchUp: CatchUp;
+  catchUpChat: CatchUpChat;
   getSyncStatus: GetSyncStatus;
   getIntakeSettings: GetIntakeSettings;
   sendText: SendText;
@@ -147,6 +161,16 @@ export function createIntakeRuntime(d: IntakeRuntimeDeps): IntakeRuntime {
       status: getSyncStatus,
       failures,
     }),
+    catchUpChat: new CatchUpChatUseCase({
+      provider: d.provider,
+      clock: d.clock,
+      lease: d.lease,
+      uow: d.unitOfWork,
+      reads: d.repos,
+      store,
+      publisher: d.events,
+      coordinator,
+    }),
     getSyncStatus,
     getIntakeSettings: new GetIntakeSettingsUseCase(d.settings),
     sendText: new SendTextUseCase({ lease: d.lease, provider: d.provider, unitOfWork: d.unitOfWork, store, clock: d.clock }),
@@ -156,6 +180,7 @@ export function createIntakeRuntime(d: IntakeRuntimeDeps): IntakeRuntime {
 }
 
 export type { CatchUp } from "./ports/catch-up";
+export type { CatchUpChat } from "./ports/catch-up-chat";
 export type { GetSyncStatus, SyncStatusView } from "./ports/get-sync-status";
 export type { CatchUpFinished } from "./domain/events";
 export { RunCoordinator } from "./application/run-coordinator";
@@ -180,4 +205,30 @@ export function createGetIntakeSettings(settings: IntakeSettingsRepository): Get
 
 export function createSetIntakeSettings(deps: SetIntakeSettingsDeps): SetIntakeSettings {
   return new SetIntakeSettingsUseCase(deps);
+}
+
+export interface OwnerNumberCommandsDeps {
+  repos: IntakeRepos;
+  owners: OwnerNumbersRepository;
+  unitOfWork: IntakeUnitOfWork;
+  parser: PhoneNumberParser;
+  settings: Pick<IntakeSettingsRepository, "getCountry">;
+  lease: OwnerLease;
+  clock: Clock;
+}
+
+/**
+ * The owner-number commands. They need no provider, and the first one runs before the provider is chosen:
+ * a pending business number must be applied before ResolveProviderSettings looks for it.
+ */
+export function createOwnerNumberCommands(d: OwnerNumberCommandsDeps): {
+  applyPendingChanges: ApplyPendingChanges;
+  getOwnerNumbers: GetOwnerNumbers;
+  describeNumber: DescribeNumber;
+} {
+  return {
+    applyPendingChanges: new ApplyPendingChangesUseCase({ lease: d.lease, unitOfWork: d.unitOfWork, parser: d.parser, settings: d.settings, clock: d.clock }),
+    getOwnerNumbers: new GetOwnerNumbersUseCase(d.owners),
+    describeNumber: new DescribeNumberUseCase({ parser: d.parser, owners: d.owners, messages: d.repos.messages }),
+  };
 }

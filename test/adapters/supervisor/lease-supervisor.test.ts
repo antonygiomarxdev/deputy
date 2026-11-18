@@ -140,3 +140,86 @@ test("a lease taken over while onAcquired ran: not owner, and what it started is
   expect(a.calls.lost).toBe(1);
   await a.s.stop();
 });
+
+function withTick(token: string, onTick: () => Promise<void>) {
+  const { clock, holder } = setup();
+  let acquired = 0;
+  let lost = 0;
+  const s = new LeaseSupervisor({
+    lease: new InMemoryOwnerLease(holder, clock, token),
+    clock,
+    onAcquired: async () => void acquired++,
+    onLost: async () => void lost++,
+    onTick,
+  });
+  return { s, clock, holder, counts: () => ({ acquired, lost }) };
+}
+
+test("onTick runs after each renewal while this process is the owner", async () => {
+  let ticks = 0;
+  const { s, clock } = withTick("a", async () => void ticks++);
+  s.start();
+  await tick();
+  // the first tick takes the lease and runs onAcquired: the process is not the owner yet
+  expect(ticks).toBe(0);
+  await clock.advance(10_000);
+  await tick();
+  expect(ticks).toBe(1);
+  await clock.advance(10_000);
+  await tick();
+  expect(ticks).toBe(2);
+  await s.stop();
+});
+
+test("onTick does not run while another process owns the lease, nor while onAcquired is still running", async () => {
+  let ticks = 0;
+  const { s, holder, clock } = withTick("b", async () => void ticks++);
+  holder.token = "a";
+  holder.heartbeat = clock.now();
+  s.start();
+  await tick();
+  expect(ticks).toBe(0);
+  await s.stop();
+
+  let ticksDuring = 0;
+  let finish: () => void = () => {};
+  const slow = setup();
+  const t = new LeaseSupervisor({
+    lease: new InMemoryOwnerLease(slow.holder, slow.clock, "a"),
+    clock: slow.clock,
+    onAcquired: () => new Promise<void>((r) => (finish = r)),
+    onLost: async () => {},
+    onTick: async () => void ticksDuring++,
+  });
+  t.start();
+  await tick();
+  await slow.clock.advance(10_000);
+  await tick();
+  expect(ticksDuring).toBe(0);
+  finish();
+  await tick();
+  await slow.clock.advance(10_000);
+  await tick();
+  expect(ticksDuring).toBe(1);
+  await t.stop();
+});
+
+test("a throwing onTick is logged and called again at the next tick", async () => {
+  const log = spyOn(console, "error").mockImplementation(() => {});
+  let calls = 0;
+  const { s, clock } = withTick("a", async () => {
+    calls++;
+    throw new Error("boom");
+  });
+  s.start();
+  await tick();
+  await clock.advance(10_000);
+  await tick();
+  await clock.advance(10_000);
+  await tick();
+  expect(calls).toBe(2);
+  expect(log).toHaveBeenCalled();
+  log.mockRestore();
+  expect(s.isOwner).toBe(true);
+  await s.stop();
+});

@@ -12,6 +12,7 @@ test("boots over stdio, serves instructions and tools, and exits fast on stdin c
       "status",
       "get_chat",
       "rejected_deliveries",
+      "list_owner_numbers",
       "check_messages",
       "create_draft",
       "change_draft",

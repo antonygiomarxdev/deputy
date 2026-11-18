@@ -7,7 +7,6 @@ import { createSecretStore } from "./adapters/secrets/secret-store";
 import { openBunSqlite } from "./adapters/sqlite/bun-sqlite-database";
 import { migrate } from "./adapters/sqlite/migrate";
 import { createSqliteOwnerLease } from "./adapters/sqlite/sqlite-owner-lease";
-import { LEASE_RENEW_MS } from "./shared/lease-constants";
 import { LeaseSupervisor } from "./adapters/supervisor/lease-supervisor";
 import sharedSql from "./adapters/sqlite/migrations/0001-shared.sql" with { type: "text" };
 import ownerNumbersSql from "./intake/adapters/sqlite/migrations/0001-owner-numbers.sql" with { type: "text" };
@@ -30,7 +29,7 @@ import { LibphonenumberParser } from "./intake/adapters/phone/libphonenumber-par
 import { SqliteIntakeUnitOfWork } from "./intake/adapters/sqlite/sqlite-intake-unit-of-work";
 import { createSqliteIntakeRepos } from "./intake/adapters/sqlite/sqlite-intake-repos";
 import { SqliteOwnerNumbersRepository } from "./intake/adapters/sqlite/sqlite-owner-numbers-repository";
-import { createIntake, createIntakeRuntime, type IntakeEvent, type Provider } from "./intake/index";
+import { createIntake, createIntakeRuntime, createOwnerNumberCommands, type IntakeEvent, type Provider } from "./intake/index";
 import { IntakeChatReader } from "./drafts/adapters/intake/intake-chat-reader";
 import { Sha256Digest } from "./drafts/adapters/crypto/sha256-digest";
 import { UuidIds } from "./drafts/adapters/crypto/uuid-ids";
@@ -97,9 +96,22 @@ async function serve(): Promise<number> {
     secrets: createSecretStore({ os: { get: (service, name) => Bun.secrets.get({ service: process.env["DEPUTY_SECRET_SERVICE"] ?? service, name }) }, configDir }),
   });
   const owners = new SqliteOwnerNumbersRepository(db);
+  const reads = createSqliteIntakeRepos(db);
+  const ownerNumbers = createOwnerNumberCommands({
+    repos: reads,
+    owners,
+    unitOfWork: new SqliteIntakeUnitOfWork(db, lease),
+    parser: new LibphonenumberParser(),
+    settings: new SqliteIntakeSettingsRepository(db),
+    lease,
+    clock,
+  });
+  // a pending business number must be applied before ResolveProviderSettings looks for one; only the owner may apply it
+  if (await lease.tryAcquire()) await ownerNumbers.applyPendingChanges.execute();
   const resolved = await createIntake({ config, owners }).resolveProviderSettings.execute();
   if (!resolved.ok) {
     console.error(`deputy: ${resolved.message}`);
+    await lease.release();
     db.close();
     return 1;
   }
@@ -113,6 +125,7 @@ async function serve(): Promise<number> {
     // ResolveProviderSettings has refused a missing key or phone number id already; this only narrows the types
     if (connection.kapso.apiKey === null || connection.kapso.phoneNumberId === null) {
       console.error("deputy: Kapso needs its api key and phone number id. Run Setup.");
+      await lease.release();
       db.close();
       return 1;
     }
@@ -128,14 +141,14 @@ async function serve(): Promise<number> {
 
   const events = new InProcessEventBus<IntakeEvent>();
   const intake = createIntakeRuntime({
-    repos: createSqliteIntakeRepos(db),
+    repos: reads,
     unitOfWork: new SqliteIntakeUnitOfWork(db, lease),
     events,
     clock,
     lease,
     provider,
     receiving: resolved.receiving,
-    webhookSecret: connection.kapso.webhookSecret?.reveal() ?? null,
+    webhookSecret: connection.kapso.webhookSecret,
     settings: new SqliteIntakeSettingsRepository(db),
   });
   const scheduler = new CatchUpScheduler({ catchUp: intake.catchUp, settings: intake.getIntakeSettings, clock });
@@ -176,28 +189,19 @@ async function serve(): Promise<number> {
     ownerLine: `deputy: owner of ${dataDir} (config ${configDir}, provider ${resolved.provider})`,
     log: (line) => console.error(line),
   });
-  // while this process owns the data, a `sent` record that could not be written is tried again every 10 seconds
-  let retryTimer: ReturnType<typeof setInterval> | null = null;
-  const stopRetrying = () => {
-    if (retryTimer !== null) clearInterval(retryTimer);
-    retryTimer = null;
-  };
   const supervisor = new LeaseSupervisor({
     lease,
     clock,
-    onAcquired: async () => {
-      await hooks.onAcquired();
-      stopRetrying();
-      retryTimer = setInterval(() => {
-        approvals.retryPendingOutcomes.run().catch((e: unknown) => {
-          console.error(`deputy: retrying the unwritten send records failed (${e instanceof Error ? e.name : "unknown error"})`);
-        });
-      }, LEASE_RENEW_MS);
-      retryTimer.unref();
-    },
-    onLost: async () => {
-      stopRetrying();
-      await hooks.onLost();
+    onAcquired: hooks.onAcquired,
+    onLost: hooks.onLost,
+    // every tick while this process owns the data: owner-number changes the terminal left pending, and `sent` records
+    // that could not be written (retried here, never by sending again)
+    onTick: async () => {
+      try {
+        await ownerNumbers.applyPendingChanges.execute();
+      } finally {
+        await approvals.retryPendingOutcomes.run();
+      }
     },
   });
 
@@ -210,7 +214,12 @@ async function serve(): Promise<number> {
         isOwner: () => supervisor.isOwner,
         sections: [async () => formatSyncStatus(await intake.getSyncStatus.execute())],
       }),
-      ...intakeTools({ readChat: intake.readChat, listRejections: intake.listRejections, catchUp: intake.catchUp }),
+      ...intakeTools({
+        readChat: intake.readChat,
+        listRejections: intake.listRejections,
+        catchUp: intake.catchUp,
+        getOwnerNumbers: ownerNumbers.getOwnerNumbers,
+      }),
       ...draftsTools(drafts),
       ...logTools(drafts),
       // Orders is not wired yet, so change_order and delete_order would only ever refuse: only the go that sends is offered
