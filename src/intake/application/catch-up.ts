@@ -1,16 +1,17 @@
 import type { Clock } from "../../shared/clock";
 import type { OwnerLease } from "../../shared/owner-lease";
-import { CALLER_WAIT_MS, OVERLAP_MS, PAGE_SIZE } from "../domain/constants";
+import { CALLER_WAIT_MS, OVERLAP_MS, PAGE_SIZE, RUN_BUDGET_MS } from "../domain/constants";
 import type { IntakeEvent } from "../domain/events";
-import { SyncState } from "../domain/sync-state";
+import { SyncState, type StoredReason } from "../domain/sync-state";
 import type { CatchUp } from "../ports/catch-up";
 import type { EventPublisher } from "../ports/event-publisher";
 import type { GetSyncStatus, SyncStatusView } from "../ports/get-sync-status";
 import { LeaseLostError, type IntakeRepos, type IntakeUnitOfWork } from "../ports/intake-unit-of-work";
-import type { Cursor, Provider } from "../ports/provider";
+import { ProviderError, type Cursor, type Provider } from "../ports/provider";
 import type { RunCoordinator } from "./run-coordinator";
 import type { StoreMessages } from "./store-messages";
-import { readAll, RunTotals, sweepConversations, sweepOutbound } from "./sweeps";
+import type { StorageFailureLog } from "./storage-failure-log";
+import { readAll, RunBudget, RunStopped, RunTotals, sweepConversations, sweepOutbound } from "./sweeps";
 
 export interface CatchUpDeps {
   provider: Provider;
@@ -23,6 +24,18 @@ export interface CatchUpDeps {
   publisher: EventPublisher;
   coordinator: RunCoordinator<RunResult>;
   status: GetSyncStatus;
+  failures: StorageFailureLog;
+}
+
+/** Failure mapping (TP-03): provider kinds keep their name, a rate limit is usage_limit with its wait, anything else thrown is storage. */
+function failureOf(e: unknown): { reason: StoredReason; retryAfterMs: number | null } {
+  if (e instanceof RunStopped) return { reason: e.reason, retryAfterMs: null };
+  if (e instanceof ProviderError) {
+    return e.kind === "rate_limited"
+      ? { reason: "usage_limit", retryAfterMs: e.retryAfterMs }
+      : { reason: e.kind, retryAfterMs: null };
+  }
+  return { reason: "storage", retryAfterMs: null };
 }
 
 export type RunResult = { kind: "finished"; status: SyncStatusView; stored: number } | { kind: "refused"; reason: "not_owner" };
@@ -41,24 +54,31 @@ export class CatchUpUseCase implements CatchUp {
     const { provider, clock, uow } = this.d;
     const signal = new AbortController().signal;
     const totals = new RunTotals();
+    const now = clock.now();
+    const budget = new RunBudget(clock, now + RUN_BUDGET_MS, totals);
+    let state = SyncState.initial(provider.name);
     try {
-      const now = clock.now();
-      const state = (await this.d.reads.syncState.load(provider.name)) ?? SyncState.initial(provider.name);
+      state = (await this.d.reads.syncState.load(provider.name)) ?? state;
+      state.markAttempt(now);
       const from = state.props.markConversations === null ? null : state.props.markConversations - OVERLAP_MS;
       const fromOutbound = state.props.markOutbound === null ? null : state.props.markOutbound - OVERLAP_MS;
 
       const first = await provider.listConversations({ activeAfter: from, cursor: null, limit: PAGE_SIZE }, signal);
+      budget.check();
       const providerNow = first.serverTime;
       state.begin({ providerTime: providerNow, now });
       // connectedAt is saved before anything is stored: the history rule reads it
       await uow.run((r) => r.syncState.save(state));
 
-      const conversations = await readAll(first, (cursor: Cursor) =>
-        provider.listConversations({ activeAfter: from, cursor, limit: PAGE_SIZE }, signal),
+      const conversations = await readAll(
+        first,
+        (cursor: Cursor) => provider.listConversations({ activeAfter: from, cursor, limit: PAGE_SIZE }, signal),
+        budget,
       );
-      await sweepConversations({ provider, uow, store: this.d.store, signal, totals, state, conversations, from });
+      const sweep = { provider, uow, store: this.d.store, signal, totals, budget, state };
+      await sweepConversations({ ...sweep, conversations, from });
       state.completeConversations(providerNow);
-      await sweepOutbound({ provider, uow, store: this.d.store, signal, totals, state, from: fromOutbound, providerNow });
+      await sweepOutbound({ ...sweep, from: fromOutbound, providerNow });
 
       const finishedAt = clock.now();
       state.complete(finishedAt);
@@ -71,13 +91,31 @@ export class CatchUpUseCase implements CatchUp {
       this.publish(totals, "complete", null, finishedAt);
       return { kind: "finished", status: await this.d.status.execute(), stored: totals.stored };
     } catch (e) {
-      if (e instanceof LeaseLostError) return { kind: "refused", reason: "not_owner" };
-      throw e;
+      return this.failed(e, state, totals);
     }
   }
 
+  /** A failed run keeps what it stored and its marks, records why, and says so like a finished one. */
+  private async failed(e: unknown, state: SyncState, totals: RunTotals): Promise<RunResult> {
+    if (e instanceof LeaseLostError) return { kind: "refused", reason: "not_owner" };
+    const now = this.d.clock.now();
+    const { reason, retryAfterMs } = failureOf(e);
+    if (reason === "storage") this.d.failures.record(now);
+    console.error(`deputy: catch-up stopped (${reason})`);
+    state.fail(reason, now, retryAfterMs);
+    try {
+      await this.d.uow.run((r) => r.syncState.save(state));
+    } catch (saveError) {
+      if (saveError instanceof LeaseLostError) return { kind: "refused", reason: "not_owner" };
+      this.d.failures.record(now);
+      console.error("deputy: could not record the failed catch-up");
+    }
+    this.publish(totals, "failed", reason, now);
+    return { kind: "finished", status: await this.d.status.execute(), stored: totals.stored };
+  }
+
   /** Each event is published on its own: a subscriber that throws must not stop the next one. */
-  private publish(totals: RunTotals, status: "complete" | "failed", reason: null, finishedAt: number): void {
+  private publish(totals: RunTotals, status: "complete" | "failed", reason: StoredReason | null, finishedAt: number): void {
     const { provider, publisher } = this.d;
     const summaries = totals.summaries();
     const events: IntakeEvent[] = [];

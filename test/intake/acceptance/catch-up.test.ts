@@ -52,6 +52,7 @@ describe("CatchUp", () => {
 
   const build = (over: { provider?: Provider; uow?: IntakeUnitOfWork; reads?: IntakeRepos; settings?: IntakeSettingsRepository } = {}) => {
     const coordinator = new RunCoordinator<RunResult>(clock);
+    const failures = new StorageFailureLog();
     const prov = over.provider ?? provider;
     const reads = over.reads ?? store.repos;
     const status = new GetSyncStatusUseCase({
@@ -59,7 +60,7 @@ describe("CatchUp", () => {
       reads,
       settings: over.settings ?? new InMemoryIntakeSettingsRepository(),
       coordinator,
-      failures: new StorageFailureLog(),
+      failures,
       clock,
     });
     return new CatchUpUseCase({
@@ -72,6 +73,7 @@ describe("CatchUp", () => {
       publisher,
       coordinator,
       status,
+      failures,
     });
   };
   const messageStored = () => publisher.published.filter((e) => e.name === "MessageStored");
