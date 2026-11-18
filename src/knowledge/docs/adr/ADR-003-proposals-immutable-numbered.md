@@ -1,7 +1,7 @@
 # ADR-003: Proposals are immutable and numbered; the owner's words must contain the number
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-KNOWLEDGE-01-10 and FR-KNOWLEDGE-01-11: applying takes the proposal identifier and the owner's words, refuses words that do not identify the proposal ("the Drafts rule"), and the go binds to the old and new values shown. The same mechanism serves lessons (FR-KNOWLEDGE-02-5a) and the wipe (FR-KNOWLEDGE-03-8). From TP-01 TD-3; it follows cross-cutting TD-6 and Drafts ADR-003.

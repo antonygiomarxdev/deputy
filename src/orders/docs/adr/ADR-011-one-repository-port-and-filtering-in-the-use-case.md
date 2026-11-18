@@ -1,7 +1,7 @@
 # ADR-011: One repository port, and filtering in the use case
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 R-ORDERS-10: every behavior is the same with either store. Cross-cutting TD-3 puts orders behind one repository with a SQLite and a spreadsheet adapter. From Orders TP-03 TD-1.

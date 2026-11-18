@@ -1,7 +1,7 @@
 # ADR-010: Bun and TypeScript, shipped as a compiled binary, zod validation, slice folders
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 The repo runs on Bun with no build step. Tool arguments are cast as `Record<string, any>` today, which is untrusted input without validation (`docs/research/codebase.md`). `zod` is already a dependency. A non-technical owner should not have to install a runtime (PRODUCT section 8: setup in 30 minutes). Owner decision D17: v1 ships as a compiled binary and the package name stays open until launch. From TP TD-10.

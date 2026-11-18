@@ -1,7 +1,7 @@
 # ADR-001: A prepared order travels as a stateless payload
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 Drafts holds an order draft as an opaque string and later asks Orders to record it (Drafts TP-01, TP-02). The owner approves exactly what was shown (FR-ORDERS-01-12). From Orders TP-01 TD-1.

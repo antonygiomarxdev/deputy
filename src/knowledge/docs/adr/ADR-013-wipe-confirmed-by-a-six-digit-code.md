@@ -1,7 +1,7 @@
 # ADR-013: A wipe is confirmed with a random six-digit code that expires in ten minutes
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-KNOWLEDGE-03-4: Deputy states what will be deleted and deletes nothing until the owner confirms in a way that names the action. FR-KNOWLEDGE-03-8: one way to wipe, taking the owner's words, refusing without them. The owner speaks any language (D20), and draft and proposal numbers are small integers the owner says all day. From TP-03 TD-3 and ADR-003.

@@ -1,6 +1,6 @@
 # Technical Proposal: Where orders live, and export (Orders FRD-03)
 
-Status: Draft
+Status: Approved (2026-11-18)
 
 Builds on TP-01 (the `OrderRepository` port and `StoreResult`) and TP-02 (history, delete, outbox). "Cross-cutting TD-n" means a decision in `docs/tp/TP.md`.
 

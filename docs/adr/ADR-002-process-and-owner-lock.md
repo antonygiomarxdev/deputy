@@ -1,7 +1,7 @@
 # ADR-002: One owner process per data folder, chosen by a lease row in SQLite
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 A stdio server lives as long as its client session, and two sessions mean two processes. Both would poll, send notices, bind the port and write the same data (`docs/research/agents.md` Q3). PRODUCT says Deputy is not always on. A lock file with a pid (the first proposal) has a takeover race between two losers, fails when the owner deletes the file, suffers pid reuse, and needs a read-only open of a WAL database that is unverified on Windows. From TP TD-2.

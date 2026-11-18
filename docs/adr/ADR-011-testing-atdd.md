@@ -1,7 +1,7 @@
 # ADR-011: ATDD with FR-named tests, a fake Kapso server and an injected clock
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 D13: the FRDs' Given/When/Then lines are acceptance criteria and become tests first. Rate limits, pagination, echoes and outages cannot be produced on demand with a live number. The existing e2e harness spawns the server over stdio. From TP TD-11.

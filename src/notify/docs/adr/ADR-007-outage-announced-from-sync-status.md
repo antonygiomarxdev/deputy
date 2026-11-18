@@ -1,7 +1,7 @@
 # ADR-007: Provider outages are announced from Intake's sync status, once per streak
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 When the provider cannot be reached for longer than one catch-up period, the owner gets one fixed notice, and one more when it recovers (FR-NOTIFY-03-8). From TP-03 TD-2.

@@ -1,7 +1,7 @@
 # ADR-006: What counts as new since the draft
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-DRAFTS-03-3: Deputy checks whether, since the draft was made, the owner answered from the app or the customer wrote again, using the source Intake recorded. From TP-03 TD-1. Intake stores a provider sent time and a local stored time per message. A late echo can be stored after the draft with a sent time before it. Intake sets the `history` flag from the origin label or an old sent time, and its origin labels are untested. Intake keeps dev and real messages in separate worlds (flag `dev`), and reports the time of an owner echo it cannot tie to a chat as `unattributedStoredAt`.

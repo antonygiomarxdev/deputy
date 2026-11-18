@@ -1,5 +1,7 @@
 # FRD-02: The inbox summary
 
+Status: Approved (2026-11-18)
+
 ## Summary
 
 The owner asks "what's pending?" and the agent shows every pending chat in exactly one group, oldest first, with who, how long, and a short excerpt. Deputy first catches up, and warns when the record may be incomplete. It works at any time, without push. See the [Inbox PRD](../PRD.md).

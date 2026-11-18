@@ -1,6 +1,6 @@
 # Technical Proposal: Pending detection (Inbox FRD-01)
 
-Status: Draft
+Status: Approved (2026-11-18)
 
 Follows the cross-cutting TP (`docs/tp/TP.md`). "Cross-cutting TD-n" means a decision there. This TP holds the Inbox domain core that TP-02 and TP-03 build on: the pending rule, the window, the settings aggregate and the chat scan.
 

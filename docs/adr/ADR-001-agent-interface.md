@@ -1,7 +1,7 @@
 # ADR-001: One MCP server over stdio; tools and instructions are the core
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 Deputy must work with any agent that speaks MCP (principle 4). Only tools are confirmed in every client checked; `instructions` are confirmed for Claude Code, Codex and Gemini CLI. Claude Code channel push needs `--dangerously-load-development-channels` and may change (`docs/research/agents.md`). From TP TD-1.

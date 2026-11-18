@@ -1,6 +1,6 @@
 # Technical Proposal: Ignore a chat (Inbox FRD-03)
 
-Status: Draft
+Status: Approved (2026-11-18)
 
 Follows the cross-cutting TP (`docs/tp/TP.md`) and builds on TP-01 (`ChatScanner`, `PendingPolicy`) and TP-02 (the count line). "Cross-cutting TD-n" means a decision there.
 

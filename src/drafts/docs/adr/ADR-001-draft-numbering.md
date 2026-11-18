@@ -1,7 +1,7 @@
 # ADR-001: Draft numbers come from a counter row
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-DRAFTS-01-1 asks for identifiers that are unique, never reused, shared by reply and order drafts (L5), and short enough for "go on 3". The domain must know the number when it builds the draft and its log entries, and must do no I/O. From TP-01 TD-1. The cross-cutting TP (TD-3) asks for plain SQL that another database adapter can run.

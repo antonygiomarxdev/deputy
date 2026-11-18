@@ -1,7 +1,7 @@
 # ADR-002: New messages are recounted at send time against Inbox's pending set
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 A notice must not count a chat the owner already answered, an ignored chat, or a stored dev message, and must never say "new messages from 0 chats" (FR-NOTIFY-01-11, FR-NOTIFY-02-7). Intake's hint says what was stored, not what is still pending. From TP-01 TD-2.

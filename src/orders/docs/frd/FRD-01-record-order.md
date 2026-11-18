@@ -1,5 +1,7 @@
 # FRD-01: Record an order from a chat
 
+Status: Approved (2026-11-18)
+
 ## Summary
 
 The agent prepares an order from the conversation and the catalog, shows it in full, and Deputy records it only after the owner's go. Missing details block recording. Recording never messages the customer. See the [slice PRD](../PRD.md).

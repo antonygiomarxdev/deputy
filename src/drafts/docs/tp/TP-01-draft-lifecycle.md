@@ -1,6 +1,6 @@
 # Technical Proposal: Draft lifecycle (Drafts FRD-01)
 
-Status: proposed. Follows the cross-cutting TP (`docs/tp/TP.md`); "cross-cutting TD-n" always means a decision there. This TP also holds the domain model, state machine and the `drafts` table that TP-02, TP-03 and TP-04 build on.
+Status: Approved (2026-11-18). Follows the cross-cutting TP (`docs/tp/TP.md`); "cross-cutting TD-n" always means a decision there. This TP also holds the domain model, state machine and the `drafts` table that TP-02, TP-03 and TP-04 build on.
 
 ## Context
 

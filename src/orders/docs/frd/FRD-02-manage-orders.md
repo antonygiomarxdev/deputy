@@ -1,5 +1,7 @@
 # FRD-02: List, change and delete orders
 
+Status: Approved (2026-11-18)
+
 ## Summary
 
 The owner lists and filters orders, changes their status, corrects their details, and deletes them. Changes keep a history. Cancelling is a status and keeps the order. Deleting removes it and needs confirmation. See the [slice PRD](../PRD.md).

@@ -1,6 +1,6 @@
 # Technical Proposal: Learned knowledge (Knowledge FRD-02)
 
-Status: Draft
+Status: Approved (2026-11-18)
 
 Follows the cross-cutting TP (`docs/tp/TP.md`) and TP-01 of this slice, which defines the proposal mechanism (TP-01 TD-3, ADR-003), the `proposals` and `knowledge_log` tables and the `OwnerWordsPolicy`. "Cross-cutting TD-n" means a decision there.
 

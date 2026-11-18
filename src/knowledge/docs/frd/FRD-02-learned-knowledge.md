@@ -1,5 +1,7 @@
 # FRD-02: Learned knowledge
 
+Status: Approved (2026-11-18)
+
 ## Summary
 
 Deputy proposes lessons from what the owner approved or corrected, and keeps one only after the owner confirms it. The owner can list, edit and delete lessons. The agent uses all kept lessons when it drafts. The catalog wins when a lesson disagrees. See the [slice PRD](../PRD.md).

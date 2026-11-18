@@ -1,5 +1,7 @@
 # FRD-03: Safe send and outcome
 
+Status: Approved (2026-11-18)
+
 ## Summary
 
 Before a send, Deputy checks that the chat is up to date and that the owner has not already answered from the phone. After the send, the owner learns whether it worked. See [the slice PRD](../PRD.md).

@@ -1,7 +1,7 @@
 # ADR-008: Corrections are a patch, and items are kept by position
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-ORDERS-02-4, FR-ORDERS-02-6, FR-ORDERS-02-8 and FR-ORDERS-01-14: corrections keep a history, must leave the order valid, and must not re-price items from the current catalog. From Orders TP-02 TD-2.

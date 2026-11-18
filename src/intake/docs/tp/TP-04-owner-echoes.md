@@ -1,6 +1,6 @@
 # Technical Proposal: Intake FRD-04, Owner replies and source
 
-Status: proposed. Written 2026-11-17. Cross-cutting TP: `docs/tp/TP.md`, in particular TD-4 (`SendText`, `FindOutgoing`) and TD-8 (owner numbers change only from the terminal). FRD: `../frd/FRD-04-owner-echoes.md`. Decisions L2 and L4 apply. The `Provider` port and `StoreMessages` are in TP-01 and TP-02.
+Status: Approved (2026-11-18). Written 2026-11-17. Cross-cutting TP: `docs/tp/TP.md`, in particular TD-4 (`SendText`, `FindOutgoing`) and TD-8 (owner numbers change only from the terminal). FRD: `../frd/FRD-04-owner-echoes.md`. Decisions L2 and L4 apply. The `Provider` port and `StoreMessages` are in TP-01 and TP-02.
 
 ## Context
 

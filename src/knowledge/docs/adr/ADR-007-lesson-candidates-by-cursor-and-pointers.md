@@ -1,7 +1,7 @@
 # ADR-007: Lesson candidates are found by a log cursor and stored as pointers
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-KNOWLEDGE-02-1: Knowledge reads the drafts log and is not told by Drafts. FR-KNOWLEDGE-02-2 and FR-KNOWLEDGE-02-3: an approval (unchanged or corrected) or a rejection can lead to a proposed lesson. The log grows without limit and the owner may not look for days. From TP-02 TD-1.

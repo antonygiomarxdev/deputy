@@ -1,7 +1,7 @@
 # ADR-011: The agent judges a closing "ok" or "thanks"
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 Owner decision D23: a short reply such as "ok" or "thanks" after an answer does not make a chat pending when the agent is sure the chat is closed. When it is not sure, it asks the owner. A word list per language (D20) would be wrong somewhere and would hide real messages such as "ok, send it". From TP-01 TD-4.

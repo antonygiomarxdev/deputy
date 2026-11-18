@@ -1,5 +1,7 @@
 # FRD-03: Where orders live, and export
 
+Status: Approved (2026-11-18)
+
 ## Summary
 
 The owner chooses where orders are stored: on their own machine (default) or in their own spreadsheet. Behavior is the same in both. Order data goes nowhere else. The owner can export all orders. See the [slice PRD](../PRD.md).

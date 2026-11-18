@@ -1,6 +1,6 @@
 # Technical Proposal: Safe send and outcome (Drafts FRD-03)
 
-Status: proposed. Follows the cross-cutting TP (`docs/tp/TP.md`) and continues TP-02 at step 3 of `ApproveDraft`. "Cross-cutting TD-n" means a decision there.
+Status: Approved (2026-11-18). Follows the cross-cutting TP (`docs/tp/TP.md`) and continues TP-02 at step 3 of `ApproveDraft`. "Cross-cutting TD-n" means a decision there.
 
 ## Context
 

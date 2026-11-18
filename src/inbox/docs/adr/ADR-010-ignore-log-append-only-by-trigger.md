@@ -1,7 +1,7 @@
 # ADR-010: The ignore log is append-only by trigger
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 L4 and FR-INBOX-03-11: each ignore and un-ignore is logged with its time and the owner's words, and the owner can list them. The cross-cutting TP uses triggers to keep `drafts_log` append-only (TD-3). From TP-03 TD-3.

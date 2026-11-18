@@ -1,7 +1,7 @@
 # ADR-001: Pending is computed on demand from Intake's chat state
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 Inbox must say which chats wait for a reply (FR-INBOX-01-1 to 01-4) and must never be wrong about an owner reply made from the phone (R-INBOX-2, principle 2). FRD-01 says pending status "is worked out each time, not stored". Intake already keeps, per chat, the newest customer time and the newest answer time and source, recomputed inside the store transaction (cross-cutting TD-3, Intake TP-02). From TP-01 TD-1.

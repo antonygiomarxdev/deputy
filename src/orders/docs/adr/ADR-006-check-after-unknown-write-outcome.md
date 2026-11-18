@@ -1,7 +1,7 @@
 # ADR-006: After an unknown write outcome, check the store before saying anything
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 A spreadsheet write can time out after the row was stored (FR-ORDERS-01-8, FR-ORDERS-01-16). From Orders TP-01 TD-6.

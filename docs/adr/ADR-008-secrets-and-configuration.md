@@ -1,7 +1,7 @@
 # ADR-008: Sensitive settings and secrets change only from the owner's terminal
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 D6: the owner enters secrets outside the agent conversation. FR-SETUP-03-1 and FR-SETUP-03-4: the agent never holds a secret and sees only a partial echo. Some settings change trust boundaries: `provider = dev` opens unsigned test entry points, and the owner numbers decide which messages count as the owner's. Today secrets sit in `.env` inside the repo. From TP TD-8.

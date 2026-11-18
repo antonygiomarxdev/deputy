@@ -1,6 +1,6 @@
 # Technical Proposal: List, change and delete orders (Orders FRD-02)
 
-Status: Draft
+Status: Approved (2026-11-18)
 
 Builds on TP-01 (the `Order` aggregate, `OrderRepository`, `WriteSerializer`, ids and the payload). "Cross-cutting TD-n" means a decision in `docs/tp/TP.md`.
 

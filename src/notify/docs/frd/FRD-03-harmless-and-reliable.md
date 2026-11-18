@@ -1,5 +1,7 @@
 # FRD-03: Harmless and reliable
 
+Status: Approved (2026-11-18)
+
 ## Summary
 
 A notice never sends, approves or loses anything. Without push, or when a notice fails, the inbox still shows every message. See [the slice PRD](../PRD.md).

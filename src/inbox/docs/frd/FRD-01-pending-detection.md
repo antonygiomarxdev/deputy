@@ -1,5 +1,7 @@
 # FRD-01: Pending detection
 
+Status: Approved (2026-11-18)
+
 ## Summary
 
 Deputy decides which chats are waiting for a reply. A chat is pending when the customer wrote last, recently, and nobody has answered. A reply the owner made from the phone always clears it. See the [Inbox PRD](../PRD.md).

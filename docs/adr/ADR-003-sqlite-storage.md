@@ -1,7 +1,7 @@
 # ADR-003: One SQLite file for Deputy's data; owner files stay files
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-DRAFTS-02-12 needs "mark approval used and draft sending" as one step that cannot be done twice. FR-INTAKE-02-7 needs a stored message never repeated. The current JSONL, CSV and `state.json` have no transactions, write non-atomically, and trim the seen-id list at 500, which breaks once catch-up replays old ids (`docs/research/codebase.md`, C15). `bun:sqlite` is built in. From TP TD-3.

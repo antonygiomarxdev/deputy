@@ -1,7 +1,7 @@
 # ADR-012: The 24-hour window is counted from the customer's latest message
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 Owner decision D29: if the retry time falls outside WhatsApp's 24-hour customer window, the send fails at once and the owner is told. Deputy needs to know when the window closes. Intake already keeps the customer's latest message per chat (`lastCustomerAt`) and Drafts reads it through `ChatReader.describe(chat).latestCustomer`. From TP-03 TD-3.

@@ -1,7 +1,7 @@
 # ADR-007: Orders checks that the owner's words identify one order
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-ORDERS-02-4a and FR-ORDERS-02-5: a change or delete is refused when the words do not identify one order. Drafts checks that the words are non-empty and not copied, not that they name the order. From Orders TP-02 TD-1.

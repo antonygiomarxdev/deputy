@@ -1,6 +1,6 @@
 # Technical Proposal: Intake FRD-02, Receive, verify and store
 
-Status: proposed. Written 2026-11-17. Cross-cutting TP: `docs/tp/TP.md`. FRD: `../frd/FRD-02-receive-and-store.md`. Shared types and the `Provider` port are in `TP-01-providers.md`.
+Status: Approved (2026-11-18). Written 2026-11-17. Cross-cutting TP: `docs/tp/TP.md`. FRD: `../frd/FRD-02-receive-and-store.md`. Shared types and the `Provider` port are in `TP-01-providers.md`.
 
 ## Context
 

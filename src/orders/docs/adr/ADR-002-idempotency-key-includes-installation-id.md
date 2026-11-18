@@ -1,7 +1,7 @@
 # ADR-002: The idempotency key is the installation id plus the draft number
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 Recording is idempotent on the approved draft (FR-ORDERS-01-7). Draft numbers restart if the owner wipes the data folder, while a spreadsheet keeps its old orders. From Orders TP-01 TD-2.

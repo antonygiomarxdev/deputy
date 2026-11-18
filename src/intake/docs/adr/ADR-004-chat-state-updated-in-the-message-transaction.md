@@ -1,7 +1,7 @@
 # ADR-004: The chat state projection is recomputed in the same transaction that stores messages
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 Inbox and Drafts read, per chat, the last customer message and the last answer with its source. Cross-cutting TD-3 says `Chat` is a projection and `MessageStored` events feed it. An event published after commit can be lost by a crash, and an out-of-order message can arrive after a newer one. From the Intake TP-02, TD-2.

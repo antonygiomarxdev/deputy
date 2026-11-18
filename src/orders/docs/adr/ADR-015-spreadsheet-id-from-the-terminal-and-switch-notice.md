@@ -1,7 +1,7 @@
 # ADR-015: The spreadsheet id comes from the terminal; a switch leaves a notice
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 Orders may go to the owner's own spreadsheet (D7). The id is a destination for personal data. FR-ORDERS-03-2 and FR-ORDERS-03-5b. From Orders TP-03 TD-5.

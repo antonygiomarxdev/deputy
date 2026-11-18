@@ -1,7 +1,7 @@
 # ADR-012: The catalog is read with papaparse and a confirmed mapping; Google sign-in uses jose
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 Deputy serves owners in many countries. Their catalog files differ in separator (`,` or `;` or tab), number format (`1.234,50` or `1,234.50`), header language and column order. D21: Setup suggests the currency from the owner's country and the owner confirms it; a column may override it per product. D22: Deputy detects the separator, the number format and which column is which, and the owner confirms the mapping once. The old code read only comma files with English and Spanish headers (a hand-written parser) and signed Google tokens with a hand-written JWT helper. From TP TD-12.

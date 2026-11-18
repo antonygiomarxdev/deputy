@@ -1,7 +1,7 @@
 # ADR-011: A rate-limited send is queued per chat and retried with every check
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 Owner decision D29: an approved send that gets a 429 waits in a queue per customer chat, so a hold in one chat never stops the others. It is retried at the time the provider gives. Before the retry, every pre-send check runs again. If anything changed, Deputy holds and asks the owner again. This replaces "429 is failed and needs a new go". A 429 means the provider refused before it processed the request, so a retry cannot double a message. From TP-03 TD-3.

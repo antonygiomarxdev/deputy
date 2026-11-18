@@ -1,6 +1,6 @@
 # Technical Proposal: The inbox summary (Inbox FRD-02)
 
-Status: Draft
+Status: Approved (2026-11-18)
 
 Follows the cross-cutting TP (`docs/tp/TP.md`) and builds on TP-01 (`PendingPolicy`, `ChatScanner`, `PendingWindow`). "Cross-cutting TD-n" means a decision there.
 

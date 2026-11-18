@@ -1,7 +1,7 @@
 # ADR-005: The agent resolves items; Orders checks the reference
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 Each item has a catalog reference or the explicit "not in catalog" mark, and the owner decides about the mark (FR-ORDERS-01-2, FR-ORDERS-01-3). From Orders TP-01 TD-5.

@@ -1,6 +1,6 @@
 # Technical Proposal: Record an order from a chat (Orders FRD-01)
 
-Status: Draft
+Status: Approved (2026-11-18)
 
 Follows the cross-cutting TP (`docs/tp/TP.md`, "cross-cutting TD-n" below) and the settled Drafts TPs. This TP owns the `Order` aggregate, the prepare and record use cases, and the `OrderRepository` port. TP-02 adds change and delete. TP-03 adds the two storage adapters and export.
 

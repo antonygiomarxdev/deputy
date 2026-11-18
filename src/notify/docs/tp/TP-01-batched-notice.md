@@ -1,6 +1,6 @@
 # Technical Proposal: FRD-01 The batched notice
 
-Status: Draft
+Status: Approved (2026-11-18)
 
 Per-FRD TP for [FRD-01](../frd/FRD-01-batched-notice.md). It consumes the cross-cutting TP ([TP.md](../../../../docs/tp/TP.md): TD-0, TD-2, TD-7) and does not change it. This TP defines the Notify domain core that TP-02 and TP-03 build on.
 

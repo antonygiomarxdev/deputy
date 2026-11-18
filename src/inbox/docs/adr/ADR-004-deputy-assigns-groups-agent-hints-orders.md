@@ -1,7 +1,7 @@
 # ADR-004: Deputy assigns the groups; the agent only hints which chats are orders
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 R-INBOX-4 says every pending chat is in exactly one group and none is omitted, with the precedence needs the owner, orders, easy questions. FR-INBOX-02-6 says the agent judges whether a chat looks like an order, while "easy questions" needs a draft that Drafts reports waiting. The agent writes the final summary text. From TP-02 TD-1.

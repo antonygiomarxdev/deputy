@@ -1,5 +1,7 @@
 # FRD-01: Draft lifecycle
 
+Status: Approved (2026-11-18)
+
 ## Summary
 
 The agent prepares a reply for a chat. Deputy keeps it as a draft that waits for the owner. The owner can see, edit, reject or approve it. See [the slice PRD](../PRD.md).

@@ -1,5 +1,7 @@
 # FRD-03: Ignore a chat
 
+Status: Approved (2026-11-18)
+
 ## Summary
 
 The owner can tell the agent to ignore a chat, for example a friend or a supplier who writes often. The chat stops appearing as pending, the summary reminds the owner how many chats are ignored, and the owner can undo it. See the [Inbox PRD](../PRD.md).

@@ -1,7 +1,7 @@
 # ADR-007: The reason a draft is held is derived from Intake's times
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-INBOX-02-15 asks the summary to show why a draft is held: "you answered from the app" or "the customer wrote again". Drafts' `WaitingChats` returns the state and time of each draft and no reason (Drafts TP-01); that TP is settled. From TP-02 TD-4.

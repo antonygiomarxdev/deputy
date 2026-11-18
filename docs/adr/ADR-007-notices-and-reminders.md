@@ -1,7 +1,7 @@
 # ADR-007: Counts-only notices from a scheduler in the owner process
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 D5: notices carry counts only, are batched (default 10 minutes) and repeated as reminders (default 30 minutes). FR-NOTIFY-01-1 sends them to the agent session, not to WhatsApp. Push exists only where the agent supports it (principle 4). From TP TD-7.

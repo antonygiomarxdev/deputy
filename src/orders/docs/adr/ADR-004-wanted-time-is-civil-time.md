@@ -1,7 +1,7 @@
 # ADR-004: The date and time wanted are civil date and time, with no zone
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 Deputy serves owners in many countries and time zones. Orders are filtered by the date wanted (R-ORDERS-7). From Orders TP-01 TD-4.

@@ -1,7 +1,7 @@
 # ADR-010: A change of wording is a new proposal, and a decided draft stays closed
 
 ## Status
-Proposed
+Accepted (2026-11-18)
 
 ## Context
 FR-KNOWLEDGE-02-5b: a confirmation binds to the exact wording shown last; if the wording changes, a new confirmation that holds the new wording is needed. Edge case: a declined lesson is not proposed again for the same draft. From TP-02 TD-4 and the proposal rule of ADR-003.
