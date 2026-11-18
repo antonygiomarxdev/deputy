@@ -47,6 +47,13 @@ export class SqliteApprovalRepository implements ApprovalRepository {
     ]);
   }
 
+  async scrubOrderDraft(draft: DraftNumber): Promise<void> {
+    await this.db.run(
+      "UPDATE approvals SET text = 'deleted', owner_words = 'deleted', text_hash = 'deleted' WHERE draft_number = ? AND draft_number IN (SELECT number FROM drafts WHERE kind = 'order')",
+      [draft],
+    );
+  }
+
   async forDraft(draft: DraftNumber): Promise<Approval[]> {
     return (await this.db.query("SELECT * FROM approvals WHERE draft_number = ? ORDER BY rowid", [draft])).map(toApproval);
   }

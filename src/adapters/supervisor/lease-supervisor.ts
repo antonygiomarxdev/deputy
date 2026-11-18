@@ -9,6 +9,8 @@ export interface LeaseSupervisorDeps {
   onAcquired(): Promise<void>;
   /** Stops the scheduler and the listener. */
   onLost(): Promise<void>;
+  /** Recurring work. Called after each renewal while this process is the owner; a throw goes to stderr and the next tick calls it again. */
+  onTick?(): Promise<void>;
 }
 
 export class LeaseSupervisor {
@@ -55,6 +57,8 @@ export class LeaseSupervisor {
       return;
     }
     if (!this.owner && this.acquiring === null) this.acquiring = this.acquire();
+    const onTick = this.d.onTick;
+    if (this.owner && onTick !== undefined) await this.safely("onTick", () => onTick.call(this.d));
   }
 
   private async acquire(): Promise<void> {

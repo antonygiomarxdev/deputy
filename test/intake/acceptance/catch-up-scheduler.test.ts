@@ -1,3 +1,4 @@
+import { Secret } from "../../../src/intake/domain/secret";
 import { beforeEach, describe, expect, test } from "bun:test";
 import { InMemoryIntakeSettingsRepository } from "../../../src/intake/adapters/memory/in-memory-intake-settings-repository";
 import { InMemoryIntakeStore } from "../../../src/intake/adapters/memory/in-memory-intake-store";
@@ -131,7 +132,7 @@ describe("CatchUpScheduler with the real use case", () => {
       lease: { isOwner: async () => true },
       provider,
       receiving: "live",
-      webhookSecret: "hook",
+      webhookSecret: new Secret("hook"),
       settings,
     });
     const s = new CatchUpScheduler({ catchUp: runtime.catchUp, settings: runtime.getIntakeSettings, clock });

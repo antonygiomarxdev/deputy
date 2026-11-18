@@ -92,6 +92,8 @@ export class InMemoryDraftLog implements DraftLogRepository {
 class InMemoryApprovals implements ApprovalRepository {
   private rows: Approval[] = [];
 
+  constructor(private readonly isOrderDraft: (number: number) => boolean) {}
+
   save(): Approval[] {
     return [...this.rows];
   }
@@ -110,6 +112,11 @@ class InMemoryApprovals implements ApprovalRepository {
     this.rows = this.rows.map((r) => (r.draftNumber === draft && r.voidedAt === null ? { ...r, voidedAt: at, voidReason: reason } : r));
   }
 
+  async scrubOrderDraft(draft: number): Promise<void> {
+    if (!this.isOrderDraft(draft)) return;
+    this.rows = this.rows.map((r) => (r.draftNumber === draft ? { ...r, text: "deleted", ownerWords: "deleted", textHash: "deleted" } : r));
+  }
+
   async forDraft(draft: number): Promise<Approval[]> {
     return this.rows.filter((r) => r.draftNumber === draft);
   }
@@ -121,7 +128,7 @@ export class InMemoryDrafts {
   private counter = 0;
   private tail: Promise<unknown> = Promise.resolve();
   readonly log = new InMemoryDraftLog(() => this.drafts.values());
-  private readonly approvals = new InMemoryApprovals();
+  private readonly approvals = new InMemoryApprovals((n) => this.drafts.get(n)?.kind === "order");
   readonly unitOfWork: UnitOfWork;
 
   constructor(private readonly lease: OwnerLease) {
@@ -181,6 +188,13 @@ export class InMemoryDrafts {
           .map((s) => Draft.rehydrate(s)),
       hasDraftText: async (normalized) =>
         [...this.drafts.values()].some((s) => s.proposedNorm === normalized || s.currentNorm === normalized),
+      scrubOrderDraft: async (number) => {
+        const s = this.drafts.get(number);
+        if (s?.kind !== "order") return;
+        this.drafts.set(number, {
+          ...s, currentText: "deleted", proposedText: "deleted", currentNorm: "deleted", proposedNorm: "deleted", orderPayload: null, revision: s.revision + 1,
+        });
+      },
       save: async (draft) => {
         const s = draft.snapshot();
         const stored = this.drafts.get(s.number);

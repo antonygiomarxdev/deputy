@@ -5,6 +5,7 @@ import { ApproveDraftUseCase } from "./application/approve-draft";
 import { ApproveOrderCommandUseCase } from "./application/approve-order-command";
 import { ChangeDraftUseCase } from "./application/change-draft";
 import { CheckApprovalsUseCase } from "./application/check-approvals";
+import { OnOrderDeletedUseCase } from "./application/on-order-deleted";
 import { ReadDraftLogUseCase } from "./application/read-draft-log";
 import { CreateDraftUseCase } from "./application/create-draft";
 import { ListDraftsUseCase } from "./application/list-drafts";
@@ -23,6 +24,7 @@ import type {
   ListDrafts,
   LogEntryView,
   MessageView,
+  OnOrderDeleted,
   Outcome,
   ReadDraftLog,
   RejectDraft,
@@ -46,6 +48,7 @@ export type {
   LogEntryView,
   MessageView,
   Outcome,
+  OnOrderDeleted,
   OrderInput,
   ReadDraftLog,
   RejectDraft,
@@ -74,6 +77,7 @@ export function createDrafts(deps: DraftsDeps): {
   waitingChats: WaitingChats;
   readDraftLog: ReadDraftLog;
   checkApprovals: CheckApprovals;
+  onOrderDeleted: OnOrderDeleted;
 } {
   const { clock, lease, unitOfWork, chats, orders, sessionStartedAt } = deps;
   return {
@@ -84,6 +88,7 @@ export function createDrafts(deps: DraftsDeps): {
     waitingChats: new WaitingChatsUseCase({ unitOfWork, sessionStartedAt }),
     readDraftLog: new ReadDraftLogUseCase({ unitOfWork }),
     checkApprovals: new CheckApprovalsUseCase({ unitOfWork }),
+    onOrderDeleted: new OnOrderDeletedUseCase({ clock, lease, unitOfWork }),
   };
 }
 
