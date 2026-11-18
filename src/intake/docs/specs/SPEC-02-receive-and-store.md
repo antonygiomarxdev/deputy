@@ -17,7 +17,7 @@ Points the TPs left open, settled by the lead in L8 (`docs/DECISIONS.md`, 2026-1
 3. A counterpart that cannot be parsed as a number puts the message in the chat `unattributed`.
 4. `catchup_status` is created here because `live_verified_at` lives in it. A live delivery that arrives before the first catch-up creates the row with `status = 'failed'` and `reason = NULL`; SPEC-03 reads a row whose `last_attempt_at` is null as "not yet run".
 5. `MessageRepository.listChat` takes `{ limit?, storedSince? }` (TP-02 lists `{ limit, before? }` but its `ReadChat` semantics need these two). `ChatStateRepository.recompute` takes `now` and what the store saw.
-6. The profile name of a chat is the one of the newest customer message that carried one, newest by arrival, because the table keeps no name per message.
+6. The profile name of a chat is the one of the customer message that carried one and was sent last (`sentAt`, not arrival: a newest-first listing page must not leave its oldest name), because the table keeps no name per message. `chats.profile_name_at` holds the `sentAt` of the message the current name came from, and a name replaces it only when the incoming message was sent later (L10).
 7. `OwnerReplyUnlinked` is published for a newly stored, non-history message with mark `not_attributable`.
 
 ## Files
@@ -145,7 +145,7 @@ export interface ChatState {
   readonly lastCustomerAt: Instant | null; readonly lastCustomerMessageId: string | null;
   readonly lastAnswerAt: Instant | null; readonly lastAnswerSource: "owner_app" | "sent_through_deputy" | null;
   readonly lastUnattributedAt: Instant | null;
-  readonly profileName: string | null; readonly updatedAt: Instant;
+  readonly profileName: string | null; readonly profileNameAt: Instant | null; readonly updatedAt: Instant;
 }
 // The chat mark is group_chat for a "group:" chat, not_attributable for UNATTRIBUTED_CHAT, else normal.
 
@@ -195,7 +195,8 @@ export interface ChatSeen { providerId: string | null; conversationRef: string |
 export interface ChatStateRepository {
   /** Recomputes the row from messages. providerId is kept once set (the first seen); conversationRef takes the newest non-null. */
   recompute(chat: ChatId, dev: boolean, now: Instant, seen: ChatSeen): Promise<void>;
-  setProfileName(chat: ChatId, dev: boolean, name: string): Promise<void>;
+  /** Sets the name only when `sentAt` is later than the sent time of the message its current name came from (`profile_name_at`). */
+  setProfileName(chat: ChatId, dev: boolean, name: string, sentAt: Instant): Promise<void>;
   list(q: { dev: boolean; customerMessageSince?: Instant }): Promise<ChatState[]>;
   get(chat: ChatId, dev: boolean): Promise<ChatState | null>;
 }
@@ -355,7 +356,7 @@ Files appended to the `main.ts` list (positions 4 to 6; SPEC-01 holds positions 
 | 5 | `src/intake/adapters/sqlite/migrations/0004-outgoing.sql` |
 | 6 | `src/intake/adapters/sqlite/migrations/0005-catchup-status.sql` |
 
-`0003-messages.sql` holds the `messages`, `message_versions`, `chats`, `rejections` and `rejection_pruned` statements of TP-02 "Information" exactly, with two added columns (Context point 1): `provider_sender TEXT` on `messages` and `provider_id TEXT` on `chats`. Every index of that block is created with them.
+`0003-messages.sql` holds the `messages`, `message_versions`, `chats`, `rejections` and `rejection_pruned` statements of TP-02 "Information" exactly, with three added columns (Context points 1 and 6): `provider_sender TEXT` on `messages`, and `provider_id TEXT` and `profile_name_at INTEGER` on `chats`. Every index of that block is created with them.
 
 `0004-outgoing.sql` holds `outgoing`, `outgoing_parts` and `source_changes` exactly as in Intake TP-04 "Information". They are created here because `StoreMessages` reads `outgoing_parts` to match a provider id (TP-04 TD-1); SPEC-04 builds the use cases that write them.
 

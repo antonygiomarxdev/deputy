@@ -50,6 +50,7 @@ CREATE TABLE chats (
   last_answer_source       TEXT CHECK (last_answer_source IN ('owner_app','sent_through_deputy')),
   last_unattributed_at     INTEGER,
   profile_name             TEXT,                 -- untrusted display hint, at most 80 graphemes (D28)
+  profile_name_at          INTEGER,              -- sent_at of the message the name came from; only a later message replaces it
   updated_at               INTEGER NOT NULL,
   PRIMARY KEY (chat_id, dev)
 );
