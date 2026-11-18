@@ -64,7 +64,7 @@ Aún no construidas:
 4. Que nada se envíe sin `approve_draft` y tu visto bueno que nombre el borrador.
 5. Que solo tus propios números cuenten como tú, y que los cambios a ellos pasen solo por la línea de comandos, nunca por una herramienta del agente.
 
-Límite conocido: Deputy solo protege su propio camino de envío, así que un agente con otras herramientas puede saltárselo. Úsalo con un agente cuyas herramientas controles.
+Límite conocido: Deputy solo controla su propio camino de envío. Un agente que tenga otras herramientas, como una terminal, podría llegar al proveedor sin pasar por Deputy; elige y limita las herramientas del agente.
 
 ## Desarrollo
 

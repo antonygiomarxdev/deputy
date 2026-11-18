@@ -1,12 +1,17 @@
 import type { Clock } from "../shared/clock";
 import type { Instant } from "../shared/instant";
 import type { OwnerLease } from "../shared/owner-lease";
+import { ApproveDraftUseCase } from "./application/approve-draft";
+import { ApproveOrderCommandUseCase } from "./application/approve-order-command";
 import { ChangeDraftUseCase } from "./application/change-draft";
 import { CreateDraftUseCase } from "./application/create-draft";
 import { ListDraftsUseCase } from "./application/list-drafts";
 import { RejectDraftUseCase } from "./application/reject-draft";
 import { WaitingChatsUseCase } from "./application/waiting-chats";
 import type {
+  ApproveDraft,
+  ApproveOrderCommand,
+  ApproveResult,
   ChangeDraft,
   ChangeDraftResult,
   CreateDraft,
@@ -19,9 +24,13 @@ import type {
   WaitingChat,
   WaitingChats,
 } from "./ports/inbound";
-import type { ChatReader, OrderInput, OrderPreparer, UnitOfWork } from "./ports/outbound";
+import type { ChatReader, CustomerTextCheck, Ids, OrderChanger, OrderInput, OrderPreparer, OrderRecorder, TextDigest, UnitOfWork } from "./ports/outbound";
+import type { Sender } from "./ports/sender";
 
 export type {
+  ApproveDraft,
+  ApproveOrderCommand,
+  ApproveResult,
   ChangeDraft,
   ChangeDraftResult,
   CreateDraft,
@@ -63,5 +72,29 @@ export function createDrafts(deps: DraftsDeps): {
     changeDraft: new ChangeDraftUseCase({ clock, lease, unitOfWork, orders }),
     rejectDraft: new RejectDraftUseCase({ clock, lease, unitOfWork }),
     waitingChats: new WaitingChatsUseCase({ unitOfWork, sessionStartedAt }),
+  };
+}
+
+export interface ApprovalDeps {
+  clock: Clock;
+  lease: OwnerLease;
+  unitOfWork: UnitOfWork;
+  customerText: CustomerTextCheck;
+  sender: Sender;
+  orderRecorder: OrderRecorder;
+  orderChanger: OrderChanger;
+  digest: TextDigest;
+  ids: Ids;
+}
+
+/**
+ * The owner's go: the one path that sends (approve_draft) and the order commands. Built apart from createDrafts so that
+ * main.ts offers these tools only once a real sender exists: a tool that can never send must not be offered.
+ */
+export function createApprovals(deps: ApprovalDeps): { approveDraft: ApproveDraft; approveOrderCommand: ApproveOrderCommand } {
+  const { clock, lease, unitOfWork, customerText, sender, orderRecorder, orderChanger, digest, ids } = deps;
+  return {
+    approveDraft: new ApproveDraftUseCase({ clock, lease, unitOfWork, customerText, sender, recorder: orderRecorder, digest, ids }),
+    approveOrderCommand: new ApproveOrderCommandUseCase({ clock, lease, unitOfWork, customerText, changer: orderChanger }),
   };
 }

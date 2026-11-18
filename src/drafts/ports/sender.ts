@@ -1,7 +1,7 @@
 import type { ChatId } from "../../shared/chat-id";
 import type { Instant } from "../../shared/instant";
 
-/** Used only by application/approve-draft.ts; Intake's SendText sits behind it. */
+/** Used only by application/approve-draft.ts; Intake's send use case sits behind it. */
 export interface Sender {
   send(
     chat: ChatId,
