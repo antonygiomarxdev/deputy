@@ -2,6 +2,8 @@ import { FakeChatReader } from "../../../src/drafts/adapters/memory/fake-chat-re
 import { FakeOrderPreparer } from "../../../src/drafts/adapters/memory/fake-order-preparer";
 import { InMemoryDrafts } from "../../../src/drafts/adapters/memory/in-memory-drafts";
 import { CreateDraftUseCase } from "../../../src/drafts/application/create-draft";
+import { ListDraftsUseCase } from "../../../src/drafts/application/list-drafts";
+import { WaitingChatsUseCase } from "../../../src/drafts/application/waiting-chats";
 import type { ChatMessage, UnitOfWork } from "../../../src/drafts/ports/outbound";
 import type { Clock } from "../../../src/shared/clock";
 import { FakeClock } from "../../support/fake-clock";
@@ -23,6 +25,7 @@ export function makeDrafts(
     chats?: Record<string, readonly ChatMessage[]>;
     activeWorldIsDev?: boolean;
     clock?: Clock;
+    sessionStartedAt?: number;
     unitOfWork?: (store: InMemoryDrafts) => UnitOfWork;
   } = {},
 ) {
@@ -34,5 +37,8 @@ export function makeDrafts(
   const orders = new FakeOrderPreparer();
   const unitOfWork = o.unitOfWork?.(store) ?? store.unitOfWork;
   const createDraft = new CreateDraftUseCase({ clock, lease, unitOfWork, chats, orders });
-  return { holder, clock, store, chats, orders, createDraft };
+  const sessionStartedAt = o.sessionStartedAt ?? 0;
+  const listDrafts = new ListDraftsUseCase({ lease, unitOfWork, chats, orders, sessionStartedAt });
+  const waitingChats = new WaitingChatsUseCase({ unitOfWork, sessionStartedAt });
+  return { holder, clock, store, chats, orders, createDraft, listDrafts, waitingChats };
 }
