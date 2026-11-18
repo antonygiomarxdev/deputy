@@ -30,6 +30,10 @@ draftRepositoryContract("SQLite", (lease): UnitOfWork => {
   );
   const inner = new SqliteUnitOfWork(db, lease);
   return {
+    read: async (work) => {
+      await ready;
+      return inner.read(work);
+    },
     async run<T>(work: (tx: Transaction) => Promise<T>, options?: { requireLease?: boolean }) {
       await ready;
       return inner.run(work, options);

@@ -1,7 +1,7 @@
 import type { OwnerLease } from "../../../shared/owner-lease";
 import type { SqlDatabase } from "../../../shared/sql-database";
 import { LeaseLost } from "../../domain/errors";
-import type { Transaction, UnitOfWork } from "../../ports/outbound";
+import type { ReadTransaction, Transaction, UnitOfWork } from "../../ports/outbound";
 import { SqliteDraftLogRepository } from "./sqlite-draft-log-repository";
 import { SqliteDraftRepository } from "./sqlite-draft-repository";
 
@@ -10,6 +10,10 @@ export class SqliteUnitOfWork implements UnitOfWork {
     private readonly db: SqlDatabase,
     private readonly lease: OwnerLease,
   ) {}
+
+  read<T>(work: (tx: ReadTransaction) => Promise<T>): Promise<T> {
+    return work({ drafts: new SqliteDraftRepository(this.db) });
+  }
 
   run<T>(work: (tx: Transaction) => Promise<T>, options?: { requireLease?: boolean }): Promise<T> {
     return this.db.transaction(async (tx) => {

@@ -43,3 +43,5 @@ export function createCatchUp(deps: CatchUpDeps): CatchUp {
 export function createGetSyncStatus(deps: GetSyncStatusDeps): GetSyncStatus {
   return new GetSyncStatusUseCase(deps);
 }
+export type { ChatExists } from "./ports/chat-exists";
+export type { ReadChat } from "./ports/read-chat";
