@@ -30,8 +30,8 @@ export class CreateDraftUseCase implements CreateDraft {
     const checkedStoredAt = clock.now(); // before describe: anything stored after this is "new since the draft"
     const info = await chats.describe(chat);
     if (info === null) return refuse({ code: "chat_not_found" });
-    if (!info.hasCustomerMessage || info.latest === null) return refuse({ code: "no_customer_message" });
     if (!info.activeWorldIsDev && !info.hasNonDevMessage) return refuse({ code: "dev_messages_only" });
+    if (!info.hasCustomerMessage || info.latest === null) return refuse({ code: "no_customer_message" });
 
     let text: string;
     let orderPayload: string | null = null;
