@@ -40,8 +40,8 @@ const liveApproval = (n: number): Approval => ({
   voidReason: null,
 });
 
-function inState(state: DraftState, approval: Approval | null = null): Draft {
-  return Draft.rehydrate({ ...propose().draft.snapshot(), state, approval });
+function inState(state: DraftState, approval: Approval | null = null, shownVersion: number | null = null): Draft {
+  return Draft.rehydrate({ ...propose().draft.snapshot(), state, approval, shownVersion });
 }
 
 const change = (text: string) => ({ text, orderPayload: null, ownerWords: "w", now: 1200 });
@@ -76,7 +76,7 @@ describe("FR-DRAFTS-01-1 and -2", () => {
 
 describe("FR-DRAFTS-01-5", () => {
   test("changeText with a live approval voids it", () => {
-    const d = inState("waiting", liveApproval(5));
+    const d = inState("waiting", liveApproval(5), 1);
     const r = d.changeText(change("Edited"));
     expect(r.ok).toBe(true);
     if (r.ok) {
