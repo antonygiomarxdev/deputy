@@ -9,6 +9,13 @@ export interface FakeKapsoOptions {
   messages?: Record<string, unknown>[];
   phoneNumberRecord?: unknown;
   sendResponse?: unknown;
+  /**
+   * The provider clock. With it, the server counts requests per fixed minute of that clock, answers `X-RateLimit-Remaining` from the
+   * count, `Date` from the clock and 429 (with Retry-After) once `perMinute` is passed. Without it, the old fixed behavior stays.
+   */
+  now?: () => number;
+  /** Requests allowed per fixed minute when `now` is given. Default 100 (the plan limit). */
+  perMinute?: number;
 }
 
 export interface SentRequest {
@@ -34,6 +41,8 @@ export function startFakeKapso(o: FakeKapsoOptions) {
     phoneNumberRecord: o.phoneNumberRecord ?? { data: { display_phone_number: null } },
     sendResponse: o.sendResponse ?? { messages: [{ id: "wamid.SENT1" }] },
     remaining: 99,
+    windows: new Map<number, number>(),
+    rejected: 0,
     delayMs: {} as Partial<Record<Route, number>>,
     forced: {} as Partial<Record<Route, Forced>>,
     sent: [] as SentRequest[],
@@ -74,8 +83,23 @@ export function startFakeKapso(o: FakeKapsoOptions) {
       if (forced !== undefined) {
         return Response.json(forced.body ?? {}, { status: forced.status, headers: forced.headers ?? {} });
       }
-      state.remaining -= 1;
-      const headers = { Date: SERVER_DATE, "X-RateLimit-Remaining": String(state.remaining) };
+      let headers: Record<string, string>;
+      if (o.now === undefined) {
+        state.remaining -= 1;
+        headers = { Date: SERVER_DATE, "X-RateLimit-Remaining": String(state.remaining) };
+      } else {
+        const t = o.now();
+        const window = Math.floor(t / 60_000);
+        const count = (state.windows.get(window) ?? 0) + 1;
+        state.windows.set(window, count);
+        const limit = o.perMinute ?? 100;
+        if (count > limit) {
+          state.rejected += 1;
+          const retry = Math.ceil(((window + 1) * 60_000 - t) / 1000);
+          return Response.json({}, { status: 429, headers: { "Retry-After": String(retry), Date: new Date(t).toUTCString() } });
+        }
+        headers = { Date: new Date(t).toUTCString(), "X-RateLimit-Remaining": String(limit - count) };
+      }
 
       if (route === "conversations") {
         const activeAfter = url.searchParams.get("last_active_after");
@@ -102,6 +126,12 @@ export function startFakeKapso(o: FakeKapsoOptions) {
   return {
     url: `http://127.0.0.1:${server.port}`,
     state,
+    /** Uses up `n` requests of the current minute, as other traffic on the same number would. Needs `now`. */
+    burn(n: number) {
+      if (o.now === undefined) throw new Error("burn needs the injected clock");
+      const window = Math.floor(o.now() / 60_000);
+      state.windows.set(window, (state.windows.get(window) ?? 0) + n);
+    },
     force(route: Route, f: Forced) {
       state.forced[route] = f;
     },

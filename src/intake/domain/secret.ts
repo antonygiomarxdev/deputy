@@ -9,6 +9,11 @@ export class Secret {
     return this.#value;
   }
 
+  /** Lets a check ask whether a key is missing without anyone outside the adapters reading it. */
+  isBlank(): boolean {
+    return this.#value.trim() === "";
+  }
+
   toString(): string {
     return "[secret]";
   }

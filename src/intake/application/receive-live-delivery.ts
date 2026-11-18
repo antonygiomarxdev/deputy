@@ -1,6 +1,7 @@
 import type { Clock } from "../../shared/clock";
 import type { OwnerLease } from "../../shared/owner-lease";
 import type { IntakeEvent } from "../domain/events";
+import type { Secret } from "../domain/secret";
 import type { RejectionReason } from "../domain/rejection-note";
 import type { EventPublisher } from "../ports/event-publisher";
 import { LeaseLostError, type IntakeUnitOfWork } from "../ports/intake-unit-of-work";
@@ -15,7 +16,7 @@ export interface ReceiveLiveDeliveryDeps {
   /** The resolved receiving mode; dev ignores it (dev entry points are always on). */
   receiving: "catch_up" | "live";
   /** The Kapso webhook secret, or null when none is configured. */
-  webhookSecret: string | null;
+  webhookSecret: Secret | null;
   unitOfWork: IntakeUnitOfWork;
   store: StoreMessages;
   events: EventPublisher;
@@ -33,7 +34,7 @@ export class ReceiveLiveDeliveryUseCase implements ReceiveLiveDelivery {
     if (!(await this.d.lease.isOwner())) return { kind: "refused", reason: "not_owner" };
     if (provider.name !== "dev" && this.d.receiving !== "live") return { kind: "live_off" };
 
-    const parsed = provider.verifyAndParse({ rawBody: req.rawBody, headers: req.headers, secret: this.d.webhookSecret });
+    const parsed = provider.verifyAndParse({ rawBody: req.rawBody, headers: req.headers, secret: this.d.webhookSecret?.reveal() ?? null });
     try {
       if (parsed.kind !== "ok") {
         const reason: RejectionReason = parsed.kind;
