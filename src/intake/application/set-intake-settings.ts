@@ -1,6 +1,6 @@
 import type { Clock } from "../../shared/clock";
 import type { OwnerLease } from "../../shared/owner-lease";
-import { MIN_PERIOD_MINUTES } from "../domain/constants";
+import { MAX_PERIOD_MINUTES, MIN_PERIOD_MINUTES } from "../domain/constants";
 import type { IntakeSettingsRepository } from "../ports/intake-settings-repository";
 import type { PhoneNumberParser } from "../ports/phone-number-parser";
 import type { SetIntakeSettings } from "../ports/set-intake-settings";
@@ -28,10 +28,13 @@ export class SetIntakeSettingsUseCase implements SetIntakeSettings {
       return { ok: true, value: q.value };
     }
     if (!Number.isInteger(q.value)) {
-      return { ok: false, reason: "not_an_integer", minimum: MIN_PERIOD_MINUTES, kept: await this.d.settings.getCatchUpMinutes() };
+      return { ok: false, reason: "not_an_integer", minimum: MIN_PERIOD_MINUTES, maximum: MAX_PERIOD_MINUTES, kept: await this.d.settings.getCatchUpMinutes() };
     }
     if (q.value < MIN_PERIOD_MINUTES) {
-      return { ok: false, reason: "below_minimum", minimum: MIN_PERIOD_MINUTES, kept: await this.d.settings.getCatchUpMinutes() };
+      return { ok: false, reason: "below_minimum", minimum: MIN_PERIOD_MINUTES, maximum: MAX_PERIOD_MINUTES, kept: await this.d.settings.getCatchUpMinutes() };
+    }
+    if (q.value > MAX_PERIOD_MINUTES) {
+      return { ok: false, reason: "above_maximum", minimum: MIN_PERIOD_MINUTES, maximum: MAX_PERIOD_MINUTES, kept: await this.d.settings.getCatchUpMinutes() };
     }
     await this.d.settings.setCatchUpMinutes(q.value, now);
     return { ok: true, value: q.value };

@@ -159,10 +159,19 @@ describe("intake settings", () => {
 
   test("FR-INTAKE-03-21: a period below one minute is refused and the period is unchanged", async () => {
     await minutes(5);
-    expect(await minutes(0.5)).toEqual({ ok: false, reason: "not_an_integer", minimum: 1, kept: 5 });
-    expect(await minutes(0)).toEqual({ ok: false, reason: "below_minimum", minimum: 1, kept: 5 });
-    expect(await minutes(-3)).toEqual({ ok: false, reason: "below_minimum", minimum: 1, kept: 5 });
+    expect(await minutes(0.5)).toEqual({ ok: false, reason: "not_an_integer", minimum: 1, maximum: 1440, kept: 5 });
+    expect(await minutes(0)).toEqual({ ok: false, reason: "below_minimum", minimum: 1, maximum: 1440, kept: 5 });
+    expect(await minutes(-3)).toEqual({ ok: false, reason: "below_minimum", minimum: 1, maximum: 1440, kept: 5 });
     expect(await settings.getCatchUpMinutes()).toBe(5);
+  });
+
+  test("a period above one day is refused with the maximum and the old value kept; one day is accepted", async () => {
+    await minutes(5);
+    expect(await minutes(1441)).toEqual({ ok: false, reason: "above_maximum", minimum: 1, maximum: 1440, kept: 5 });
+    expect(await minutes(100_000)).toMatchObject({ ok: false, reason: "above_maximum" });
+    expect(await settings.getCatchUpMinutes()).toBe(5);
+    expect(await minutes(1440)).toEqual({ ok: true, value: 1440 });
+    expect(await settings.getCatchUpMinutes()).toBe(1440);
   });
 
   test("one minute is accepted and shown", async () => {
@@ -193,8 +202,10 @@ describe("intake settings", () => {
     expect(await country("XX")).toEqual({ ok: false, reason: "unknown_country", kept: null });
   });
 
-  test("the change time is the clock's", async () => {
+  test("the change time is the clock's, for the period and for the country", async () => {
     await minutes(4);
     expect(settings.changedAt.get("catch_up_minutes")).toBe(NOW);
+    await country("NI");
+    expect(settings.changedAt.get("country")).toBe(NOW);
   });
 });
