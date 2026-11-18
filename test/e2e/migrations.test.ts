@@ -13,6 +13,7 @@ const TABLES_BY_MIGRATION = [
   ["catchup_status"],
   ["draft_counter", "drafts"],
   ["drafts_log"],
+  ["approvals"],
 ];
 
 test("booting migrates every slice, in order, and creates each table", async () => {
