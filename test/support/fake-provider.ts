@@ -86,8 +86,16 @@ export class FakeProvider implements Provider {
     return this.page([...all].sort((a, b) => b.sentAt - a.sentAt), q.cursor);
   }
 
-  sendText(_req: { to: PhoneNumber; text: string }, _s: AbortSignal): Promise<{ providerMessageId: string; serverTime: Instant }> {
-    return Promise.reject(new Error("FakeProvider: sendText is not scripted"));
+  /** Every sendText call. */
+  readonly sent: Array<{ to: PhoneNumber; text: string }> = [];
+  /** One entry per call, in order: a result, or an error to throw. When it runs out, a send succeeds with an id of its own. */
+  sendScript: Array<{ providerMessageId: string; serverTime: Instant } | Error> = [];
+
+  async sendText(req: { to: PhoneNumber; text: string }, _s: AbortSignal): Promise<{ providerMessageId: string; serverTime: Instant }> {
+    this.sent.push(req);
+    const next = this.sendScript.shift();
+    if (next instanceof Error) throw next;
+    return next ?? { providerMessageId: `wamid.SENT${this.sent.length}`, serverTime: this.serverTime };
   }
 
   businessNumber(): Promise<PhoneNumber | null> {
