@@ -21,7 +21,8 @@ export class InMemoryOwnerLease implements LeaseControl {
 
   async tryAcquire(): Promise<boolean> {
     const now = this.clock.now();
-    const free = this.holder.token === null || this.holder.heartbeat < now - LEASE_TTL_MS;
+    // heartbeat 0 is a released lease; at exactly the TTL the lease has expired
+    const free = this.holder.token === null || this.holder.heartbeat === 0 || this.holder.heartbeat <= now - LEASE_TTL_MS;
     if (this.holder.token === this.token || free) {
       this.holder.token = this.token;
       this.holder.heartbeat = now;
