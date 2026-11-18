@@ -31,7 +31,7 @@ export class FakeProvider implements Provider {
   outbound: ProviderMessage[] = [];
   readonly calls: ListCall[] = [];
   /** Runs at the start of every listing; a throw fails that call (scripted errors). */
-  onCall: ((c: ListCall) => void) | null = null;
+  onCall: ((c: ListCall) => void | Promise<void>) | null = null;
 
   constructor(readonly name: ProviderName = "kapso") {}
 
@@ -68,7 +68,7 @@ export class FakeProvider implements Provider {
   ): Promise<Page<ProviderConversation>> {
     const call: ListCall = { kind: "conversations", activeAfter: q.activeAfter, cursor: q.cursor };
     this.calls.push(call);
-    this.onCall?.(call);
+    await this.onCall?.(call);
     const active = this.conversations
       .filter((c) => q.activeAfter === null || c.lastActiveAt >= q.activeAfter)
       .sort((a, b) => b.lastActiveAt - a.lastActiveAt);
@@ -81,7 +81,7 @@ export class FakeProvider implements Provider {
   ): Promise<Page<ProviderMessage>> {
     const call: ListCall = { kind: "messages", scope: q.scope, cursor: q.cursor };
     this.calls.push(call);
-    this.onCall?.(call);
+    await this.onCall?.(call);
     const all = "outbound" in q.scope ? this.outbound : (this.messages.get(q.scope.conversationRef) ?? []);
     return this.page([...all].sort((a, b) => b.sentAt - a.sentAt), q.cursor);
   }
