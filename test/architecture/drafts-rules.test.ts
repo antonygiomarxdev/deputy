@@ -15,7 +15,7 @@ export function knowledgeImportsInDraftsApplication(files: Sources): string[] {
 /** Only src/main.ts may import src/composition/mcp/. */
 export function compositionMcpImportsOutsideMain(files: Sources): string[] {
   return [...files]
-    .filter(([file]) => file !== "src/main.ts")
+    .filter(([file]) => file !== "src/main.ts" && !file.startsWith("src/main/"))
     .flatMap(([file, src]) =>
       listImports(src)
         .filter((s) => s.startsWith("."))
@@ -62,9 +62,10 @@ describe("drafts rules, on inline sources", () => {
     expect(knowledgeImportsInDraftsApplication(files)).toHaveLength(3);
   });
 
-  test("an import of composition/mcp outside main.ts is found; main.ts and composition itself are fine", () => {
+  test("an import of composition/mcp outside the composition root is found; src/main.ts, src/main/ and composition itself are fine", () => {
     const files = new Map([
       ["src/main.ts", 'import { s } from "./composition/mcp/server";'],
+      ["src/main/tools.ts", 'import { s } from "../composition/mcp/server";'],
       ["src/composition/mcp/server.ts", 'import { t } from "./composition-tools";'],
       ["src/drafts/adapters/x.ts", 'import { s } from "../../composition/mcp/server";'],
       ["src/intake/index.ts", 'export * from "../composition/mcp/instructions";'],
@@ -107,7 +108,7 @@ describe("drafts rules, on the real src/", () => {
     expect(sendTextOutsideIntakeSender(realSources())).toEqual([]);
   });
 
-  test("only src/main.ts imports src/composition/mcp/", () => {
+  test("only src/main.ts and src/main/ import src/composition/mcp/", () => {
     expect(compositionMcpImportsOutsideMain(realSources())).toEqual([]);
   });
 });
