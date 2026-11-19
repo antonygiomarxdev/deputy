@@ -8,7 +8,7 @@ import type { ProviderName } from "../../../shared/provider-name";
 import { normalizeText } from "../../../shared/text";
 import { Message, type MessageVersion, type SourceChange } from "../../domain/message";
 import type { MessageRepository } from "../../ports/message-repository";
-import { markOf, providerOf, sourceOf } from "./decode";
+import { markFromRow, providerOf, sourceOf } from "./decode";
 
 function toMessage(r: SqlRow, versions: readonly MessageVersion[]): Message {
   const chat = parseChatId(str(r, "chat_id"));
@@ -29,7 +29,7 @@ function toMessage(r: SqlRow, versions: readonly MessageVersion[]): Message {
       storedAt: num(r, "stored_at"),
       origin: strOrNull(r, "origin"),
       source: sourceOf(r),
-      mark: markOf(r),
+      mark: markFromRow(r),
       history: flag(r, "history"),
       dev: flag(r, "dev"),
       edited: flag(r, "edited"),

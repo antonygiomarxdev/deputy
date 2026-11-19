@@ -1,15 +1,10 @@
-import { num, str, strOrNull } from "../../../adapters/sqlite/row";
+import { num, str, strOrNull, timeOrNull } from "../../../adapters/sqlite/row";
 import type { Instant } from "../../../shared/instant";
 import type { SqlExecutor, SqlRow } from "../../../shared/sql-database";
 import type { Approval } from "../../domain/approval";
 import type { DraftNumber } from "../../domain/draft";
 import { fromIso, toIso } from "../../domain/time";
 import type { ApprovalRepository } from "../../ports/outbound";
-
-const timeOrNull = (r: SqlRow, c: string): Instant | null => {
-  const v = strOrNull(r, c);
-  return v === null ? null : fromIso(v);
-};
 
 function toApproval(r: SqlRow): Approval {
   return {
@@ -20,9 +15,9 @@ function toApproval(r: SqlRow): Approval {
     textHash: str(r, "text_hash"),
     ownerWords: str(r, "owner_words"),
     approvedAt: fromIso(str(r, "approved_at")),
-    usedAt: timeOrNull(r, "used_at"),
+    usedAt: timeOrNull(r, "used_at", fromIso),
     sendId: str(r, "send_id"),
-    voidedAt: timeOrNull(r, "voided_at"),
+    voidedAt: timeOrNull(r, "voided_at", fromIso),
     voidReason: strOrNull(r, "void_reason"),
   };
 }

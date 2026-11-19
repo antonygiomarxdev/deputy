@@ -1,10 +1,12 @@
 import { Database } from "bun:sqlite";
-import { afterEach, expect, test } from "bun:test";
+import { afterEach, expect, test, setDefaultTimeout } from "bun:test";
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { startFakeKapso } from "../support/fake-kapso-server";
-import { call, removeHarnessDirs, startServer, waitForOwner, writeConfig, type Harness } from "../support/harness";
+import { call, removeHarnessDirs, startServer, waitForOwner, writeConfig, type Harness, E2E_TIMEOUT_MS } from "../support/harness";
 import { url } from "../support/live";
+
+setDefaultTimeout(E2E_TIMEOUT_MS);
 
 const started: Harness[] = [];
 const fakes: { stop(): void }[] = [];

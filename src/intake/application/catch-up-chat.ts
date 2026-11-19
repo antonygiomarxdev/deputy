@@ -4,17 +4,18 @@ import type { OwnerLease } from "../../shared/owner-lease";
 import { PhoneNumber } from "../../shared/phone-number";
 import { CALLER_WAIT_MS, CHAT_LOOKUP_WINDOW_MS, OVERLAP_MS, PAGE_SIZE } from "../domain/constants";
 import { chatMarkOf, type ChatState } from "../domain/chat-state";
-import type { IntakeEvent } from "../domain/events";
 import type { CatchUpChat } from "../ports/catch-up-chat";
 import type { EventPublisher } from "../ports/event-publisher";
 import { LeaseLostError, type IntakeRepos, type IntakeUnitOfWork } from "../ports/intake-unit-of-work";
 import { ProviderError, type Cursor, type Provider, type ProviderConversation } from "../ports/provider";
 import type { ChatStateView } from "../ports/views";
 import { toChatStateView } from "./chat-state-view";
-import { publishEach } from "./publish-each";
+import { publishEach, storedEvents } from "./publish-each";
+import { PageWalk, walkPages } from "./page-walk";
+import { RunBudget, RunStopped, RunTotals } from "./run-state";
 import type { RunCoordinator } from "./run-coordinator";
 import type { StoreMessages } from "./store-messages";
-import { PageWalk, RunBudget, RunStopped, RunTotals, storePage } from "./sweeps";
+import { storePage } from "./sweeps";
 
 export interface CatchUpChatDeps {
   provider: Provider;
@@ -92,16 +93,15 @@ export class CatchUpChatUseCase implements CatchUpChat {
       if (ref !== null) {
         const newest = before === null ? null : latestOf(before);
         const from = newest === null ? null : newest - OVERLAP_MS;
-        let cursor: Cursor | null = null;
-        const walk = new PageWalk();
-        for (;;) {
-          walk.request(cursor);
-          const page = await provider.listMessages({ scope: { conversationRef: ref }, cursor, limit: PAGE_SIZE }, signal);
-          await storePage(sweep, page.items);
-          const reachedOlder = from !== null && page.items.some((m) => m.sentAt < from);
-          if (reachedOlder || page.next === null) break;
-          cursor = page.next;
-        }
+        await walkPages({
+          budget: sweep.budget,
+          start: null,
+          from,
+          fetch: (cursor) => provider.listMessages({ scope: { conversationRef: ref }, cursor, limit: PAGE_SIZE }, signal),
+          onPage: async (page) => {
+            await storePage(sweep, page.items);
+          },
+        });
       }
       const outbound = await provider.listMessages({ scope: { outbound: true }, cursor: null, limit: PAGE_SIZE }, signal);
       await storePage(sweep, outbound.items);
@@ -130,12 +130,7 @@ export class CatchUpChatUseCase implements CatchUpChat {
   }
 
   private publish(totals: RunTotals): void {
-    const at = this.d.clock.now();
-    const summaries = totals.summaries();
-    const events: IntakeEvent[] = [];
-    if (summaries.length > 0) events.push({ name: "MessageStored", origin: "catch_up", items: summaries, at });
-    if (totals.unlinkedOwnerReplies > 0) events.push({ name: "OwnerReplyUnlinked", at });
-    publishEach(this.d.publisher, events);
+    publishEach(this.d.publisher, storedEvents("catch_up", totals.summaries(), totals.unlinkedOwnerReplies, this.d.clock.now()));
   }
 
   private async view(chat: ChatId, dev: boolean): Promise<ChatStateView> {

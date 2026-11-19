@@ -1,4 +1,4 @@
-import { flag, num, numOrNull, str, strOrNull } from "../../../adapters/sqlite/row";
+import { flag, num, numOrNull, str, strOrNull, timeOrNull } from "../../../adapters/sqlite/row";
 import type { ChatId } from "../../../shared/chat-id";
 import { messageIdKey, type MessageId } from "../../../shared/message-id";
 import type { ProviderName } from "../../../shared/provider-name";
@@ -18,10 +18,6 @@ const isKind = (v: string): v is DraftKind => v === "reply" || v === "order";
 const isState = (v: string): v is DraftState => [...OPEN_STATES, ...CLOSED_STATES].includes(v as DraftState);
 
 const isoOrNull = (at: number | null): string | null => (at === null ? null : toIso(at));
-const timeOrNull = (r: SqlRow, c: string): number | null => {
-  const v = strOrNull(r, c);
-  return v === null ? null : fromIso(v);
-};
 
 function parseMessageKey(key: string): MessageId {
   const cut = key.indexOf(":");
@@ -71,8 +67,8 @@ export function fromRow(r: SqlRow): DraftSnapshot {
     orderPayload: strOrNull(r, "order_payload"),
     orderId: strOrNull(r, "order_id"),
     replacedBy: numOrNull(r, "replaced_by"),
-    closedAt: timeOrNull(r, "closed_at"),
-    retryAt: timeOrNull(r, "retry_at"),
+    closedAt: timeOrNull(r, "closed_at", fromIso),
+    retryAt: timeOrNull(r, "retry_at", fromIso),
     attempts: num(r, "attempts"),
     approval: null,
   };

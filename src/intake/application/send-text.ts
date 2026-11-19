@@ -9,23 +9,10 @@ import { OutgoingSend, type SendFailure } from "../domain/outgoing-send";
 import { LeaseLostError, type IntakeRepos, type IntakeUnitOfWork } from "../ports/intake-unit-of-work";
 import { ProviderError, type Provider, type ProviderMessage } from "../ports/provider";
 import type { SendText, SendTextResult } from "../ports/send-text";
+import { recorded } from "./recorded-send";
 import type { StoreMessages } from "./store-messages";
 
-
 const REFUSAL: Record<string, SendFailure> = { credentials: "credentials", unreachable: "unreachable", quota: "quota" };
-
-/** What an earlier call with the same send id recorded: nothing is sent again. */
-function recorded(send: OutgoingSend): SendTextResult {
-  const p = send.props;
-  const sent = p.parts.filter((x) => x.state === "sent");
-  if (p.state === "sent") return { kind: "sent", providerMessageIds: sent.map((x) => x.providerMessageId ?? "") };
-  if (p.state === "failed") {
-    if (p.failureReason === "rate_limited") return { kind: "rate_limited", retryAt: p.retryAt ?? p.finishedAt ?? p.createdAt };
-    const reason = p.failureReason;
-    return { kind: "failed", reason: reason === "credentials" || reason === "unreachable" || reason === "quota" ? reason : "rejected" };
-  }
-  return { kind: "unknown", partsSent: sent.length, partsTotal: p.parts.length };
-}
 
 export interface SendTextDeps {
   lease: OwnerLease;
@@ -35,19 +22,33 @@ export interface SendTextDeps {
   clock: Clock;
 }
 
+/** A send recorded as pending, with the destination its parts go to. */
+type Started = { send: OutgoingSend; to: PhoneNumber; from: string | null; providerId: string };
+
 export class SendTextUseCase implements SendText {
   constructor(private readonly d: SendTextDeps) {}
 
   async execute(q: { sendId: SendId; chat: ChatId; text: string }): Promise<SendTextResult> {
-    const { lease, provider, unitOfWork: uow, store, clock } = this.d;
-    if (!(await lease.isOwner())) return { kind: "refused", reason: "not_owner" };
+    if (!(await this.d.lease.isOwner())) return { kind: "refused", reason: "not_owner" };
     if (q.text.trim() === "") return { kind: "failed", reason: "rejected" };
 
-    let start: { result: SendTextResult } | { send: OutgoingSend; to: PhoneNumber; from: string | null; providerId: string };
+    const start = await this.begin(q);
+    if ("result" in start) return start.result;
+    const halted = await this.sendParts(start);
+    if (halted !== null) return halted;
+
+    start.send.markAllSentIfComplete(this.d.clock.now());
+    await this.persist(start.send, this.d.provider.name);
+    return recorded(start.send);
+  }
+
+  /** Records the send as pending in one transaction, or answers with what an earlier call with the same send id recorded. */
+  private async begin(q: { sendId: SendId; chat: ChatId; text: string }): Promise<{ result: SendTextResult } | Started> {
+    const { unitOfWork: uow, clock } = this.d;
     try {
-      start = await uow.run(async (r) => {
+      return await uow.run(async (r): Promise<{ result: SendTextResult } | Started> => {
         const dest = await this.destination(r, q.chat);
-        if (dest === null) return { result: { kind: "failed", reason: "unsupported_chat" } as const };
+        if (dest === null) return { result: { kind: "failed", reason: "unsupported_chat" } };
         const existing = await r.outgoing.find(q.sendId);
         if (existing !== null) return { result: recorded(existing) };
         const send = OutgoingSend.create({ sendId: q.sendId, chat: q.chat, text: q.text, createdAt: clock.now() });
@@ -55,12 +56,15 @@ export class SendTextUseCase implements SendText {
         return { send, ...dest };
       });
     } catch (e) {
-      if (e instanceof LeaseLostError) return { kind: "refused", reason: "not_owner" };
+      if (e instanceof LeaseLostError) return { result: { kind: "refused", reason: "not_owner" } };
       throw e;
     }
-    if ("result" in start) return start.result;
-    const { send, to, from, providerId } = start;
+  }
 
+  /** Sends the parts in order, each one recorded before the next. Null when every part was accepted; otherwise how it stopped. */
+  private async sendParts(start: Started): Promise<SendTextResult | null> {
+    const { provider, unitOfWork: uow, store, clock } = this.d;
+    const { send, to, from, providerId } = start;
     for (const part of send.props.parts) {
       let accepted: { providerMessageId: string; serverTime: number };
       try {
@@ -82,10 +86,7 @@ export class SendTextUseCase implements SendText {
         return this.stopped(send, part.index, null, clock.now());
       }
     }
-
-    send.markAllSentIfComplete(clock.now());
-    await this.persist(send, provider.name);
-    return recorded(send);
+    return null;
   }
 
   /** The chat's destination, or null when the chat is not one a send can go to. */
