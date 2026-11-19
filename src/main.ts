@@ -183,6 +183,7 @@ async function serve(): Promise<number> {
     receive: intake.receiveLiveDelivery,
     port,
     host: "127.0.0.1",
+    devProvider: resolved.provider === "dev",
     extraRoutes: devRoutes({
       provider: resolved.provider,
       deliver: intake.deliverDevMessage,

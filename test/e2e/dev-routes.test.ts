@@ -127,3 +127,18 @@ test("FR-INTAKE-01-9: under Kapso every /dev path is a 404 with a dev_entry_refu
   expect(rejected.match(/dev_entry_refused/g)).toHaveLength(3);
   expect(rejected).not.toContain("should not land");
 });
+
+test("a web page cannot plant a message: an Origin, a plain-text body or a foreign Host is refused and nothing is stored", async () => {
+  const h = await boot();
+  const body = JSON.stringify({ chat: "50530000001", from: "50530000001", text: "planted by a page" });
+  const send = (path: string, headers: Record<string, string>) => fetch(url(h, path), { method: "POST", headers, body });
+  const json = { "content-type": "application/json" };
+  expect((await send("/dev/deliver", { ...json, origin: "https://evil.example" })).status).toBe(403);
+  expect((await send("/dev/deliver", { "content-type": "text/plain" })).status).toBe(415);
+  expect((await send("/dev/deliver", { ...json, host: "evil.example" })).status).toBe(403);
+  // the dev webhook secret is a public constant: a page could sign with it, so the dev webhook is checked too
+  expect((await send("/webhook", { ...json, host: "evil.example", "x-webhook-signature": "sha256=00" })).status).toBe(403);
+  expect((await send("/webhook", { ...json, origin: "https://evil.example" })).status).toBe(403);
+  expect((await call(h.client, "get_chat", { chat: "+50530000001" })).isError).toBe(true);
+  expect((await send("/dev/deliver", json)).status).toBe(200);
+});
