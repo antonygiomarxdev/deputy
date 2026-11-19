@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { DraftLogRepository } from "../../../src/drafts/ports/log";
-import { LogUnavailable } from "../../../src/drafts/domain/errors";
+import { LogUnavailable, StaleDraft } from "../../../src/drafts/domain/errors";
 import { makeDrafts, message } from "./harness";
 
 const chats = { "chat-a": [message("a1", "customer", "I want two cakes", 900)] };
@@ -219,6 +219,23 @@ describe("ApproveOrderCommand (FR-DRAFTS-02-10)", () => {
       ok: false,
       refusal: { code: "not_owner" },
     });
+    expect(h.changer.calls).toEqual([]);
+  });
+});
+
+describe("ApproveOrderCommand refusals", () => {
+  test("a stale draft raised while the command is logged is stale_draft, not a crash, and no Orders method is called", async () => {
+    const h = makeDrafts({
+      chats,
+      orderChats,
+      unitOfWork: (store) => ({
+        read: (work) => store.unitOfWork.read(work),
+        run: (work, o) =>
+          store.unitOfWork.run((tx) => work({ ...tx, log: { ...tx.log, append: async () => { throw new StaleDraft(7); } } }), o),
+      }),
+    });
+    const out = await h.approveOrderCommand.run({ command: "change", orderRef: "o-1", change: { status: "ready" }, ownerWords: "mark o-1 ready" });
+    expect(out).toEqual({ ok: false, refusal: { code: "stale_draft", number: 7 } });
     expect(h.changer.calls).toEqual([]);
   });
 });

@@ -4,24 +4,15 @@ import type { Instant } from "../../shared/instant";
 import type { OwnerLease } from "../../shared/owner-lease";
 import type { Approval } from "../domain/approval";
 import { Draft, type DraftChange, type DraftKind } from "../domain/draft";
-import { LeaseLost, LogUnavailable, StaleDraft } from "../domain/errors";
+import { LogUnavailable } from "../domain/errors";
 import { toLogEntries } from "../domain/log-mapper";
 import type { Refusal } from "../domain/refusals";
 import type { ApproveDraft, ApproveResult, Outcome } from "../ports/inbound";
 import type { CustomerTextCheck, Ids, OrderRecorder, TextDigest, UnitOfWork } from "../ports/outbound";
 import type { Sender } from "../ports/sender";
 import { checkOwnerWords } from "./check-owner-words";
+import { refuse, refusalOfError } from "./refusal-of-error";
 import type { PendingOutcomes } from "./pending-outcomes";
-
-const refuse = (refusal: Refusal): Outcome<never> => ({ ok: false, refusal });
-
-/** Maps the errors a unit of work throws to the refusal the owner sees. Anything else is a bug and propagates. */
-function refusalOfError(e: unknown): Outcome<never> {
-  if (e instanceof LogUnavailable) return refuse({ code: "log_unavailable" });
-  if (e instanceof StaleDraft) return refuse({ code: "stale_draft", number: e.draft });
-  if (e instanceof LeaseLost) return refuse({ code: "not_owner" });
-  throw e;
-}
 
 type SendDeps = { clock: Clock; unitOfWork: UnitOfWork; sender: Sender; recorder: OrderRecorder; pending: PendingOutcomes };
 
