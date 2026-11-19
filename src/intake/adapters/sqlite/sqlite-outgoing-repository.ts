@@ -9,15 +9,9 @@ import {
   OutgoingSend,
   type OutgoingPart,
   type SendFailure,
-  type SendState,
 } from "../../domain/outgoing-send";
 import type { OutgoingRepository } from "../../ports/outgoing-repository";
-
-function stateOf(r: SqlRow): SendState {
-  const s = str(r, "state");
-  if (s !== "pending" && s !== "sent" && s !== "failed" && s !== "unknown") throw new Error(`send state '${s}'`);
-  return s;
-}
+import { providerOf, stateOf } from "./decode";
 
 function failureOf(r: SqlRow): SendFailure | null {
   const f = strOrNull(r, "failure_reason");
@@ -26,11 +20,6 @@ function failureOf(r: SqlRow): SendFailure | null {
     throw new Error(`failure reason '${f}'`);
   }
   return f;
-}
-
-function providerOf(p: string): ProviderName {
-  if (p !== "kapso" && p !== "dev") throw new Error(`provider '${p}'`);
-  return p;
 }
 
 export class SqliteOutgoingRepository implements OutgoingRepository {
@@ -121,6 +110,6 @@ export class SqliteOutgoingRepository implements OutgoingRepository {
        ORDER BY m.sent_at, m.seq`,
       [chat, text, since],
     );
-    return rows.map((r) => ({ provider: providerOf(str(r, "provider")), providerMessageId: str(r, "provider_message_id") }));
+    return rows.map((r) => ({ provider: providerOf(r), providerMessageId: str(r, "provider_message_id") }));
   }
 }

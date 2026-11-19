@@ -3,12 +3,11 @@ import { num, numOrNull, str, strOrNull } from "../../../adapters/sqlite/row";
 import type { Instant } from "../../../shared/instant";
 import type { ProviderName } from "../../../shared/provider-name";
 import type { SqlExecutor, SqlRow } from "../../../shared/sql-database";
-import { SyncState, type OutboundResume, type StoredReason, type SyncStateProps } from "../../domain/sync-state";
+import { STORED_REASONS, SyncState, type OutboundResume, type StoredReason, type SyncStateProps } from "../../domain/sync-state";
 import type { SyncStateRepository } from "../../ports/sync-state-repository";
+import { providerOf } from "./decode";
 
-const reasonSchema = z.enum([
-  "unreachable", "credentials", "quota", "usage_limit", "timeout", "bad_response", "possible_gap", "catching_up", "storage",
-]);
+const reasonSchema = z.enum(STORED_REASONS);
 const resumeSchema = z.object({ cursor: z.string(), from: z.number().nullable(), runStart: z.number() });
 
 function reasonOf(r: SqlRow): StoredReason | null {
@@ -22,8 +21,7 @@ function resumeOf(r: SqlRow): OutboundResume | null {
 }
 
 function toProps(r: SqlRow): SyncStateProps {
-  const provider = str(r, "provider");
-  if (provider !== "kapso" && provider !== "dev") throw new Error(`provider '${provider}'`);
+  const provider = providerOf(r);
   const status = str(r, "status");
   if (status !== "complete" && status !== "failed") throw new Error(`status '${status}'`);
   const gapStored = numOrNull(r, "gap_stored_at");
