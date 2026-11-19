@@ -108,7 +108,7 @@ describe("FR-DRAFTS-04-2 and -4", () => {
     await h.approveDraft.run({ number: 1, shownText: "ten", ownerWords: "  Yes, go ahead with 1, thanks!  " });
     const log = await entries(h);
     const approved = log.find((e) => e.kind === "approved");
-    expect(approved).toMatchObject({ ownerWords: "  Yes, go ahead with 1, thanks!  ", sendId: "deputy:ap1" });
+    expect(approved).toMatchObject({ ownerWords: "Yes, go ahead with 1, thanks!", sendId: "deputy:ap1" });
     for (const kind of ["sending", "sent"] as const) {
       expect(log.find((e) => e.kind === kind)).toMatchObject({ approvalEntryId: approved?.id, sendId: "deputy:ap1" });
     }

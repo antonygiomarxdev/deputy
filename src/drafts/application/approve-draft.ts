@@ -30,7 +30,9 @@ export class ApproveDraftUseCase implements ApproveDraft {
 
   async run(input: Parameters<ApproveDraft["run"]>[0]): Promise<Outcome<ApproveResult>> {
     const { clock, lease, unitOfWork, digest, ids } = this.deps;
-    const { number, shownText, ownerWords } = input;
+    const { number, shownText } = input;
+    // trimmed once here, as change and reject do: the trimmed words are the ones the rule checks and the approval stores
+    const ownerWords = input.ownerWords.trim();
     if (!(await lease.isOwner())) return refuse({ code: "not_owner" });
 
     const first = await unitOfWork.read((tx) => tx.drafts.get(number));
