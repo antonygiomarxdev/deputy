@@ -159,4 +159,22 @@ describe("StoreMessages", () => {
     const state = await store.repos.chats.get(CHAT, false);
     expect(state).toMatchObject({ lastCustomerAt: null, lastUnattributedAt: 700 });
   });
+
+  test("a delete of a message never stored is ignored", async () => {
+    const out = await run([{ kind: "delete", providerMessageId: "ghost" }]);
+    expect(out).toMatchObject({ ignored: 1, stored: 0 });
+    expect(await find("ghost")).toBeNull();
+  });
+
+  test("a report stored as an owner echo before its send was recorded is reclassified as Deputy's send when it arrives again", async () => {
+    await run([ownerEcho({ providerMessageId: "late", text: "hola", sentAt: 800 })]);
+    expect((await find("late"))?.props.source).toBe("owner_app");
+    const sendId = parseSendId("s2");
+    if (!sendId) throw new Error("send id");
+    store.addOutgoingPart("kapso", "late", sendId, 1);
+    const out = await run([ownerEcho({ providerMessageId: "late", text: "hola", sentAt: 800 })]);
+    expect(out).toMatchObject({ stored: 0, duplicates: 1 });
+    expect((await find("late"))?.props.source).toBe("sent_through_deputy");
+    expect(await store.repos.chats.get(CHAT, false)).toMatchObject({ lastAnswerSource: "sent_through_deputy" });
+  });
 });
