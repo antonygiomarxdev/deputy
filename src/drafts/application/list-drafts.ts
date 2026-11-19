@@ -3,13 +3,10 @@ import { messageIdKey } from "../../shared/message-id";
 import type { Instant } from "../../shared/instant";
 import type { OwnerLease } from "../../shared/owner-lease";
 import type { DraftSnapshot } from "../domain/draft";
-import { LeaseLost, StaleDraft } from "../domain/errors";
-import type { Refusal } from "../domain/refusals";
 import { toIso } from "../domain/time";
 import type { DraftView, ListDrafts, MessageView, Outcome } from "../ports/inbound";
+import { refuse, refusalOfError } from "./refusal-of-error";
 import type { ChatReader, OrderPreparer, UnitOfWork } from "../ports/outbound";
-
-const refuse = (refusal: Refusal): Outcome<never> => ({ ok: false, refusal });
 
 export class ListDraftsUseCase implements ListDrafts {
   constructor(
@@ -35,9 +32,7 @@ export class ListDraftsUseCase implements ListDrafts {
         return open.map((d) => d.snapshot());
       });
     } catch (e) {
-      if (e instanceof LeaseLost) return refuse({ code: "not_owner" });
-      if (e instanceof StaleDraft) return refuse({ code: "stale_draft", number: e.draft });
-      throw e;
+      return refusalOfError(e);
     }
 
     const views: DraftView[] = [];

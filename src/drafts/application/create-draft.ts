@@ -4,15 +4,12 @@ import { messageIdKey } from "../../shared/message-id";
 import type { OwnerLease } from "../../shared/owner-lease";
 import { Draft } from "../domain/draft";
 import type { DraftEvent } from "../domain/events";
-import { LeaseLost, LogUnavailable, StaleDraft } from "../domain/errors";
 import { toLogEntries } from "../domain/log-mapper";
-import type { Refusal } from "../domain/refusals";
 import { toIso } from "../domain/time";
 import { voidApprovals, withLiveApproval } from "./live-approval";
+import { refuse, refusalOfError } from "./refusal-of-error";
 import type { CreateDraft, CreateDraftResult, MessageView, Outcome } from "../ports/inbound";
 import type { ChatMessage, ChatReader, OrderPreparer, UnitOfWork } from "../ports/outbound";
-
-const refuse = (refusal: Refusal): Outcome<never> => ({ ok: false, refusal });
 
 const view = (m: ChatMessage): MessageView => ({ id: messageIdKey(m.id), sentAt: toIso(m.sentAt), text: m.text, source: m.source });
 
@@ -97,10 +94,7 @@ export class CreateDraftUseCase implements CreateDraft {
         };
       });
     } catch (e) {
-      if (e instanceof LogUnavailable) return refuse({ code: "log_unavailable" });
-      if (e instanceof StaleDraft) return refuse({ code: "stale_draft", number: e.draft });
-      if (e instanceof LeaseLost) return refuse({ code: "not_owner" });
-      throw e;
+      return refusalOfError(e);
     }
   }
 }

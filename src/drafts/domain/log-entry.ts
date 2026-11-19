@@ -38,3 +38,11 @@ export interface LogEntry extends NewLogEntry {
   readonly id: number;
   readonly scrubbed: boolean;
 }
+
+/** A new entry with every optional field null: a caller sets only the fields its kind uses. */
+export function blankLogEntry(fields: Pick<NewLogEntry, "at" | "kind" | "chat"> & Partial<NewLogEntry>): NewLogEntry {
+  return {
+    draft: null, draftKind: null, proposedText: null, finalText: null, reason: null,
+    ownerWords: null, approvalEntryId: null, sendId: null, orderRef: null, ...fields,
+  };
+}
