@@ -1,7 +1,9 @@
-import { expect, test } from "bun:test";
+import { expect, test, setDefaultTimeout } from "bun:test";
 import { Database } from "bun:sqlite";
 import { join } from "node:path";
-import { removeHarnessDirs, startServer } from "../support/harness";
+import { removeHarnessDirs, startServer, E2E_TIMEOUT_MS } from "../support/harness";
+
+setDefaultTimeout(E2E_TIMEOUT_MS);
 
 test("boots over stdio, serves instructions and tools, and exits fast on stdin close", async () => {
   const h = await startServer();

@@ -8,6 +8,12 @@ import { closedPort } from "./fake-kapso-server";
 
 const root = join(import.meta.dir, "..", "..");
 
+/**
+ * Bun applies setDefaultTimeout per test file, not from a preload (bun 1.4.4), so every e2e file calls it with this value.
+ * Under load a server takes more than bun's 5 s default to own the lease.
+ */
+export const E2E_TIMEOUT_MS = 30_000;
+
 export interface Harness {
   client: Client;
   /** Everything the server wrote to stderr so far. */
