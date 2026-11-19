@@ -22,7 +22,7 @@ export function approvalTools(u: { approveDraft: ApproveDraft; approveOrderComma
       "Send a draft, or record an order draft, after the owner's go. No go, no send: the owner's words must name the draft by its number. " +
       "If the owner's reply does not name the draft, ask again and name the drafts. One call per draft: there is no approve-all and no standing permission. " +
       "Show the owner the text from list_drafts first, and pass that exact text as `shown_text`.",
-    input: { number: z.number().int().min(1), shown_text: z.string(), owner_words: z.string().min(1).max(1000) },
+    input: { number: z.number().int().min(1), shown_text: z.string(), owner_words: z.string() },
     async run(a) {
       return outcome(u.approveDraft.run({ number: a.number, shownText: a.shown_text, ownerWords: a.owner_words }), (r) => {
         // a failed or unknown outcome is an error result, so the agent cannot skip it as a success

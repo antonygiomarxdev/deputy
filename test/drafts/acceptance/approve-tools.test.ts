@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { z } from "zod";
 import { approvalTools } from "../../../src/drafts/adapters/mcp/approval-tools";
 import { draftsTools } from "../../../src/drafts/adapters/mcp/draft-tools";
 import type { ApproveDraft, ApproveOrderCommand } from "../../../src/drafts/ports/inbound";
@@ -114,5 +115,13 @@ describe("the answers", () => {
     expect(del).toMatchObject({ isError: false, text: "delete o-1? confirm" });
     const chg = await all.find((t) => t.name === "change_order")?.run({ order: "o-1", change: { status: "x" }, owner_words: "change o-1" });
     expect(chg).toMatchObject({ isError: false, text: "Orders refused: order is closed" });
+  });
+});
+
+describe("the approve tool's owner words", () => {
+  test("FR-DRAFTS-02-3: the tool does not cap the raw words, so 1000 characters plus a space reach the rule that trims and counts", () => {
+    const schema = z.object(byName("approve_draft").input);
+    const padded = `3${"x".repeat(999)} `;
+    expect(schema.safeParse({ number: 3, shown_text: "t", owner_words: padded }).success).toBe(true);
   });
 });

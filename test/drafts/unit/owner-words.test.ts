@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { OWNER_WORDS_MAX, ownerWordsShape } from "../../../src/drafts/domain/owner-words";
+import { OWNER_WORDS_MAX } from "../../../src/shared/owner-words";
+import { ownerWordsShape } from "../../../src/drafts/domain/owner-words";
 import { normalizeText, wholeNumberTokens } from "../../../src/shared/text";
 
 describe("ownerWordsShape", () => {
@@ -36,6 +37,13 @@ describe("ownerWordsShape", () => {
 
   test("a null number (an order command) skips the number check", () => {
     expect(ownerWordsShape("cancel it", null)).toEqual({ ok: true });
+  });
+
+  test("the words are trimmed before they are counted, the same for approve, change and reject: 1000 characters with spaces around are ok", () => {
+    const padded = (n: number) => `3${"x".repeat(n - 1)}`;
+    expect(ownerWordsShape(`${padded(1000)} `, 3)).toEqual({ ok: true });
+    expect(ownerWordsShape(`  ${padded(1000)}  `, 3)).toEqual({ ok: true });
+    expect(ownerWordsShape(`${padded(1000)}x `, 3)).toEqual({ ok: false, code: "words_empty" });
   });
 });
 
