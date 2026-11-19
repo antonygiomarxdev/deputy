@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { Approval } from "../../../src/drafts/domain/approval";
 import { StaleDraft } from "../../../src/drafts/domain/errors";
-import type { UnitOfWork } from "../../../src/drafts/ports/outbound";
+import type { UnitOfWork } from "../../../src/drafts/ports/store";
 import type { ChatId } from "../../../src/shared/chat-id";
 import type { OwnerLease } from "../../../src/shared/owner-lease";
 import { normalizeText } from "../../../src/shared/text";

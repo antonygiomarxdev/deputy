@@ -2,14 +2,16 @@ import { parseChatId, type ChatId } from "../../shared/chat-id";
 import type { Clock } from "../../shared/clock";
 import type { Instant } from "../../shared/instant";
 import type { OwnerLease } from "../../shared/owner-lease";
-import { Draft, type DraftKind, type DraftNumber, type DraftSnapshot } from "../domain/draft";
+import { Draft, isInFlight, type DraftKind, type DraftNumber, type DraftSnapshot } from "../domain/draft";
 import type { DraftEvent } from "../domain/events";
 import { toLogEntries } from "../domain/log-mapper";
 import { voidApprovals, withLiveApproval } from "./live-approval";
 import { messageView } from "./message-view";
 import { refuse, refusalOfError } from "./refusal-of-error";
 import type { CreateDraft, CreateDraftResult, Outcome } from "../ports/inbound";
-import type { ChatMessage, ChatReader, OrderPreparer, Transaction, UnitOfWork } from "../ports/outbound";
+import type { ChatMessage, ChatReader } from "../ports/chat";
+import type { OrderPreparer } from "../ports/orders";
+import type { Transaction, UnitOfWork } from "../ports/store";
 
 type Input = Parameters<CreateDraft["run"]>[0];
 type Deps = { clock: Clock; lease: OwnerLease; unitOfWork: UnitOfWork; chats: ChatReader; orders: OrderPreparer };
@@ -126,7 +128,7 @@ async function openPrevious(tx: Transaction, chat: ChatId, kind: DraftKind): Pro
   const existing = open === null ? null : await withLiveApproval(tx, open);
   if (existing === null) return { ok: true, value: null };
   const before = existing.snapshot();
-  if (before.state === "sending" || before.state === "recording") return refuse({ code: "send_in_progress", number: before.number });
+  if (isInFlight(before.state)) return refuse({ code: "send_in_progress", number: before.number });
   if (before.state === "unknown") return refuse({ code: "outcome_unknown_open", number: before.number });
   if (before.state !== "waiting" && before.state !== "held" && before.state !== "failed") {
     return refuse({ code: "draft_closed", number: before.number, state: before.state });

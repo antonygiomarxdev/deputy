@@ -3,7 +3,7 @@ import { InMemoryDrafts } from "../../../src/drafts/adapters/memory/in-memory-dr
 import { OnOrderDeletedUseCase } from "../../../src/drafts/application/on-order-deleted";
 import { Draft } from "../../../src/drafts/domain/draft";
 import type { LogEntry, NewLogEntry } from "../../../src/drafts/domain/log-entry";
-import type { UnitOfWork } from "../../../src/drafts/ports/outbound";
+import type { UnitOfWork } from "../../../src/drafts/ports/store";
 import type { ChatId } from "../../../src/shared/chat-id";
 import type { OwnerLease } from "../../../src/shared/owner-lease";
 import { FakeClock } from "../../support/fake-clock";

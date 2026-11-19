@@ -1,4 +1,4 @@
-import type { OrderChanger } from "../../ports/outbound";
+import type { OrderChanger } from "../../ports/orders";
 
 /** Until the Orders slice is wired: no order is known, so every command is refused as an unknown order. */
 export class UnavailableOrderChanger implements OrderChanger {

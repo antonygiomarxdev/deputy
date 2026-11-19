@@ -4,7 +4,7 @@ import type { Draft, DraftChange } from "../domain/draft";
 import type { DraftEvent } from "../domain/events";
 import { toLogEntries } from "../domain/log-mapper";
 import type { Outcome } from "../ports/inbound";
-import type { Transaction } from "../ports/outbound";
+import type { Transaction } from "../ports/store";
 import { refusalOfChange } from "./draft-change-refusal";
 import { refuse } from "./refusal-of-error";
 import { voidApprovals, withLiveApproval } from "./live-approval";

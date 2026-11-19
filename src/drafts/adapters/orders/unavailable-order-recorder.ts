@@ -1,4 +1,4 @@
-import type { OrderRecorder } from "../../ports/outbound";
+import type { OrderRecorder } from "../../ports/orders";
 
 /** Until the Orders slice is wired: no order draft exists (none can be prepared), so nothing reaches here. */
 export class UnavailableOrderRecorder implements OrderRecorder {

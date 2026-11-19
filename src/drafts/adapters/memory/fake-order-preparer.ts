@@ -1,5 +1,5 @@
 import type { ChatId } from "../../../shared/chat-id";
-import type { OrderInput, OrderPreparer } from "../../ports/outbound";
+import type { OrderInput, OrderPreparer } from "../../ports/orders";
 
 /** Accepts every order except one with a `fail` key, which it refuses with that key's value as the reason. */
 export class FakeOrderPreparer implements OrderPreparer {

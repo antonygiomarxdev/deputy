@@ -1,4 +1,4 @@
-import type { OrderRecorder } from "../../ports/outbound";
+import type { OrderRecorder } from "../../ports/orders";
 
 type Answer = Awaited<ReturnType<OrderRecorder["record"]>>;
 

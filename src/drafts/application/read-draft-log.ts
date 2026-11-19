@@ -3,7 +3,7 @@ import { messageIdKey } from "../../shared/message-id";
 import type { LogEntry } from "../domain/log-entry";
 import { toIso } from "../domain/time";
 import type { LogEntryView, ReadDraftLog } from "../ports/inbound";
-import type { UnitOfWork } from "../ports/outbound";
+import type { UnitOfWork } from "../ports/store";
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;

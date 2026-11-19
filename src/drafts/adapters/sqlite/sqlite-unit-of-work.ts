@@ -1,7 +1,7 @@
 import type { OwnerLease } from "../../../shared/owner-lease";
 import type { SqlDatabase } from "../../../shared/sql-database";
 import { LeaseLost } from "../../domain/errors";
-import type { ReadTransaction, Transaction, UnitOfWork } from "../../ports/outbound";
+import type { ReadTransaction, Transaction, UnitOfWork } from "../../ports/store";
 import { SqliteApprovalRepository } from "./sqlite-approval-repository";
 import { SqliteDraftLogRepository } from "./sqlite-draft-log-repository";
 import { SqliteDraftRepository } from "./sqlite-draft-repository";

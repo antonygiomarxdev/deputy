@@ -1,6 +1,6 @@
 import type { ChatId } from "../../../shared/chat-id";
 import { messageIdKey, type MessageId } from "../../../shared/message-id";
-import type { ChatInfo, ChatMessage, ChatReader } from "../../ports/outbound";
+import type { ChatInfo, ChatMessage, ChatReader } from "../../ports/chat";
 
 /** Built from a list of messages per chat. `calls` records the order of the calls made on it. */
 export class FakeChatReader implements ChatReader {

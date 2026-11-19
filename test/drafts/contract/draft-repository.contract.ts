@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { Draft, type DraftKind, type DraftNumber } from "../../../src/drafts/domain/draft";
 import { LeaseLost, LogUnavailable, StaleDraft } from "../../../src/drafts/domain/errors";
-import type { UnitOfWork } from "../../../src/drafts/ports/outbound";
+import type { UnitOfWork } from "../../../src/drafts/ports/store";
 import type { ChatId } from "../../../src/shared/chat-id";
 import type { MessageId } from "../../../src/shared/message-id";
 import type { OwnerLease } from "../../../src/shared/owner-lease";

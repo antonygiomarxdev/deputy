@@ -1,6 +1,6 @@
 import { ApprovalAudit } from "../domain/approval-audit";
 import type { CheckApprovals } from "../ports/inbound";
-import type { UnitOfWork } from "../ports/outbound";
+import type { UnitOfWork } from "../ports/store";
 
 export class CheckApprovalsUseCase implements CheckApprovals {
   constructor(private readonly deps: { unitOfWork: UnitOfWork }) {}
