@@ -78,7 +78,7 @@ test("a streamed body with no Content-Length is counted and refused above the li
       sent += chunk.byteLength;
     },
   });
-  const res = await fetch(url(h, "/webhook"), { method: "POST", body: stream, duplex: "half" } as RequestInit);
+  const res = await fetch(url(h, "/webhook"), { method: "POST", headers: { "content-type": "application/json" }, body: stream, duplex: "half" } as RequestInit);
   expect(res.status).toBe(413);
 });
 
@@ -132,7 +132,7 @@ test("hermetic: the server reads secrets from the namespace the harness sets, no
     );
     const sign = (secret: string) => new Bun.CryptoHasher("sha256", secret).update(raw).digest("hex");
     const post = (secret: string) =>
-      fetch(url(h, "/webhook"), { method: "POST", headers: { "x-webhook-signature": sign(secret), "x-webhook-event": "whatsapp.message.received" }, body: new Blob([raw.slice().buffer]) });
+      fetch(url(h, "/webhook"), { method: "POST", headers: { "content-type": "application/json", "x-webhook-signature": sign(secret), "x-webhook-event": "whatsapp.message.received" }, body: new Blob([raw.slice().buffer]) });
     // secrets.env holds "hook-secret"; the namespaced OS entry wins, which proves the namespace is the one read
     expect((await post("os-hook")).status).toBe(200);
     expect((await post("hook-secret")).status).toBe(401);

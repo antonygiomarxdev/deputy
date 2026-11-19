@@ -104,20 +104,23 @@ export async function waitForOwner(h: Harness, timeoutMs = 5_000): Promise<void>
 }
 
 /**
- * What `/dev/hold` will do (SPEC-01 Task 12): the dev provider holds an owner's reply from the WhatsApp app, written while
- * Deputy was off. The server finds it with `check_messages`.
+ * The dev provider holds an owner's reply from the WhatsApp app, written while Deputy was off (`POST /dev/hold`, `owner: true`).
+ * The server finds it with `check_messages`.
  */
-export function holdOwnerReply(h: Harness, r: { chat: string; text: string; sentAt?: number; id?: string }): void {
-  const db = new Database(join(h.dataDir, "deputy.db"));
-  try {
-    db.run(
-      `INSERT INTO dev_holdings (provider_message_id, conversation_ref, counterpart, sender, direction, type, text, origin, sent_at, owner_mark)
-       VALUES (?, ?, ?, NULL, 'outbound', 'text', ?, 'business_app', ?, 1)`,
-      [r.id ?? `dev-out-held-${crypto.randomUUID()}`, `dev:${r.chat}`, r.chat, r.text, r.sentAt ?? Date.now()],
-    );
-  } finally {
-    db.close();
-  }
+export async function holdOwnerReply(h: Harness, r: { chat: string; text: string; sentAt?: number; id?: string }): Promise<void> {
+  const res = await fetch(`http://127.0.0.1:${h.port}/dev/hold`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      chat: r.chat,
+      from: r.chat,
+      text: r.text,
+      owner: true,
+      sentAt: r.sentAt ?? Date.now(),
+      ...(r.id === undefined ? {} : { providerMessageId: r.id }),
+    }),
+  });
+  if (res.status !== 204) throw new Error(`/dev/hold answered ${res.status}`);
 }
 
 /** What `deputy config` writes: a row the running server applies under its lease. */

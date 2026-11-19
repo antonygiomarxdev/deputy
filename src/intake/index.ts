@@ -5,6 +5,8 @@ import type { IntakeSettingsRepository } from "./ports/intake-settings-repositor
 import type { SetIntakeSettings } from "./ports/set-intake-settings";
 import type { Clock } from "../shared/clock";
 import type { OwnerLease } from "../shared/owner-lease";
+import { DeliverDevMessageUseCase } from "./application/deliver-dev-message";
+import type { DevDeliverySource } from "./ports/deliver-dev-message";
 import { ChatExistsUseCase } from "./application/chat-exists";
 import { CatchUpUseCase, type CatchUpDeps, type RunResult } from "./application/catch-up";
 import { CatchUpChatUseCase } from "./application/catch-up-chat";
@@ -98,9 +100,12 @@ export interface IntakeRuntimeDeps {
   receiving: "catch_up" | "live";
   webhookSecret: Secret | null;
   settings: IntakeSettingsRepository;
+  /** What the dev provider can hold and sign; null under Kapso. */
+  devDeliveries: DevDeliverySource | null;
 }
 
 export interface IntakeRuntime {
+  deliverDevMessage: DeliverDevMessageUseCase;
   receiveLiveDelivery: ReceiveLiveDelivery;
   readChat: ReadChat;
   chatExists: ChatExists;
@@ -131,8 +136,7 @@ export function createIntakeRuntime(d: IntakeRuntimeDeps): IntakeRuntime {
     failures,
     clock: d.clock,
   });
-  return {
-    receiveLiveDelivery: new ReceiveLiveDeliveryUseCase({
+  const receiveLiveDelivery = new ReceiveLiveDeliveryUseCase({
       lease: d.lease,
       provider: d.provider,
       receiving: d.receiving,
@@ -142,6 +146,15 @@ export function createIntakeRuntime(d: IntakeRuntimeDeps): IntakeRuntime {
       events: d.events,
       clock: d.clock,
       failures,
+    });
+  return {
+    receiveLiveDelivery,
+    deliverDevMessage: new DeliverDevMessageUseCase({
+      provider: d.provider.name,
+      source: d.devDeliveries,
+      receive: receiveLiveDelivery,
+      unitOfWork: d.unitOfWork,
+      clock: d.clock,
     }),
     readChat: new ReadChatUseCase(d.repos),
     chatExists: new ChatExistsUseCase({ repos: d.repos, provider: d.provider.name }),

@@ -19,7 +19,9 @@ import draftsLogSql from "./drafts/adapters/sqlite/migrations/0002-log.sql" with
 import outgoingRetrySql from "./intake/adapters/sqlite/migrations/0006-outgoing-retry.sql" with { type: "text" };
 import draftsApprovalsSql from "./drafts/adapters/sqlite/migrations/0003-approvals.sql" with { type: "text" };
 import { FileConnectionConfig } from "./intake/adapters/config/file-connection-config";
+import { DevDeliveries } from "./intake/adapters/dev/dev-deliveries";
 import { DevProvider } from "./intake/adapters/dev/dev-provider";
+import { devRoutes } from "./intake/adapters/http/dev-routes";
 import { LiveListener } from "./intake/adapters/http/listener";
 import { KapsoProvider } from "./intake/adapters/kapso/kapso-provider";
 import { formatSyncStatus, intakeTools } from "./intake/adapters/mcp/intake-tools";
@@ -119,8 +121,10 @@ async function serve(): Promise<number> {
 
   const connection = await config.read();
   let provider: Provider;
+  let devProvider: DevProvider | null = null;
   if (resolved.provider === "dev") {
-    provider = new DevProvider({ db, clock });
+    devProvider = new DevProvider({ db, clock });
+    provider = devProvider;
   } else {
     // ResolveProviderSettings has refused a missing key or phone number id already; this only narrows the types
     if (connection.kapso.apiKey === null || connection.kapso.phoneNumberId === null) {
@@ -150,6 +154,7 @@ async function serve(): Promise<number> {
     receiving: resolved.receiving,
     webhookSecret: connection.kapso.webhookSecret,
     settings: new SqliteIntakeSettingsRepository(db),
+    devDeliveries: devProvider === null ? null : new DevDeliveries(devProvider),
   });
   const scheduler = new CatchUpScheduler({ catchUp: intake.catchUp, settings: intake.getIntakeSettings, clock });
 
@@ -178,6 +183,13 @@ async function serve(): Promise<number> {
     receive: intake.receiveLiveDelivery,
     port,
     host: "127.0.0.1",
+    devProvider: resolved.provider === "dev",
+    extraRoutes: devRoutes({
+      provider: resolved.provider,
+      deliver: intake.deliverDevMessage,
+      hold: devProvider === null ? null : async (q) => void (await devProvider.hold(q)),
+      receive: intake.receiveLiveDelivery,
+    }),
   });
   const listens = resolved.provider === "dev" || resolved.receiving === "live";
 
