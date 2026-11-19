@@ -239,3 +239,12 @@ describe("ApproveOrderCommand refusals", () => {
     expect(h.changer.calls).toEqual([]);
   });
 });
+
+describe("the order command's owner words are stored trimmed", () => {
+  test("the order_command log entry carries the trimmed words, not the raw padded ones", async () => {
+    const h = makeDrafts({ chats, orderChats });
+    const out = await h.approveOrderCommand.run({ command: "change", orderRef: "o-1", change: { status: "ready" }, ownerWords: "  mark o-1 ready  " });
+    expect(out.ok).toBe(true);
+    expect((await logOf(h)).find((e) => e.kind === "order_command")).toMatchObject({ ownerWords: "mark o-1 ready" });
+  });
+});

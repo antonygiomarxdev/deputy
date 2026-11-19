@@ -19,13 +19,15 @@ export class ApproveOrderCommandUseCase implements ApproveOrderCommand {
 
   async run(input: Input): Promise<Outcome<Value>> {
     const { clock, lease, unitOfWork, changer } = this.deps;
+    // trimmed once here: the rule checks, the log and Orders all get the same words
+    const ownerWords = input.ownerWords.trim();
     if (!(await lease.isOwner())) return refuse({ code: "not_owner" });
-    const words = await checkOwnerWords(this.deps, input.ownerWords, null);
+    const words = await checkOwnerWords(this.deps, ownerWords, null);
     if (words) return refuse(words);
 
     // a delete that is not confirmed asks Orders what it would do and logs nothing
     if (input.command === "delete" && !input.confirm) {
-      const answer = await changer.delete(input.orderRef, input.ownerWords, false);
+      const answer = await changer.delete(input.orderRef, ownerWords, false);
       if ("pending" in answer) return { ok: true, value: { approved: false, pendingDelete: answer.pending } };
       return answer.ok ? refused("delete needs confirmation") : refused(answer.reason);
     }
@@ -39,7 +41,7 @@ export class ApproveOrderCommandUseCase implements ApproveOrderCommand {
     const entry = blankLogEntry({
       at: clock.now(), kind: "order_command", chat,
       reason: input.command === "change" ? `changed: ${keys.join(", ")}` : "delete",
-      ownerWords: input.ownerWords, orderRef: input.orderRef,
+      ownerWords, orderRef: input.orderRef,
     });
     let logEntryId: number | undefined;
     try {
@@ -54,8 +56,8 @@ export class ApproveOrderCommandUseCase implements ApproveOrderCommand {
 
     const answer =
       input.command === "change"
-        ? await changer.change(input.orderRef, input.change, input.ownerWords)
-        : await changer.delete(input.orderRef, input.ownerWords, true);
+        ? await changer.change(input.orderRef, input.change, ownerWords)
+        : await changer.delete(input.orderRef, ownerWords, true);
     if ("pending" in answer) return { ok: true, value: { approved: false, pendingDelete: answer.pending } };
     if (!answer.ok) await this.logFailure(input.orderRef, chat, entry.at);
     return { ok: true, value: { approved: true, logEntryId, result: answer } };
