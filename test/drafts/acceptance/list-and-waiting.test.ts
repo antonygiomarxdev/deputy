@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { Draft, type DraftState } from "../../../src/drafts/domain/draft";
+import { LogUnavailable } from "../../../src/drafts/domain/errors";
 import type { ChatId } from "../../../src/shared/chat-id";
 import { makeDrafts, message } from "./harness";
 
@@ -121,5 +122,15 @@ describe("WaitingChats", () => {
     await seed(h, 2, "chat-b", "waiting", 6_000);
     h.holder.token = "other";
     expect((await h.waitingChats.run()).map((w) => w.earlierSession)).toEqual([true, false]);
+  });
+});
+
+describe("ListDrafts refusals", () => {
+  test("FR-DRAFTS-01-3: a drafts log that cannot be written while listing is log_unavailable, not a crash", async () => {
+    const h = makeDrafts({
+      chats,
+      unitOfWork: (store) => ({ read: store.unitOfWork.read, run: async () => { throw new LogUnavailable(); } }),
+    });
+    expect(await h.listDrafts.run({})).toEqual({ ok: false, refusal: { code: "log_unavailable" } });
   });
 });
