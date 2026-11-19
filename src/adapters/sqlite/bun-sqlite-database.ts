@@ -1,5 +1,6 @@
 import { Database } from "bun:sqlite";
 import type { SqlDatabase, SqlExecutor, SqlRow, SqlValue } from "../../shared/sql-database";
+import { createSerializer } from "../serial";
 
 export interface OpenOptions {
   path: string;
@@ -27,13 +28,8 @@ export function openBunSqlite(o: OpenOptions): SqlDatabase & { close(): void } {
   db.run("PRAGMA secure_delete = ON");
   const direct = executor(db);
 
-  // One promise chain: a call from another caller never lands inside an open transaction.
-  let chain: Promise<unknown> = Promise.resolve();
-  function enqueue<T>(fn: () => Promise<T>): Promise<T> {
-    const p = chain.then(fn);
-    chain = p.catch(() => undefined);
-    return p;
-  }
+  // One queue: a call from another caller never lands inside an open transaction.
+  const enqueue = createSerializer();
 
   return {
     query: (sql, params) => enqueue(() => direct.query(sql, params)),
