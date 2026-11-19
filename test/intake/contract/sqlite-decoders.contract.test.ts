@@ -40,7 +40,7 @@ describe("SQLite row decoders reject a corrupt row", () => {
     await expect(s.repos.messages.find({ provider: "kapso", providerMessageId: "m1" })).rejects.toThrow("source 'bogus'");
   });
 
-  test("markOf: a message row with an unknown mark", async () => {
+  test("markFromRow: a message row with an unknown mark", async () => {
     await s.repos.messages.insertIfNew(receive({ providerMessageId: "m1" }));
     await corrupt(s.db, "UPDATE messages SET mark = 'bogus' WHERE provider_message_id = 'm1'");
     await expect(s.repos.messages.find({ provider: "kapso", providerMessageId: "m1" })).rejects.toThrow("mark 'bogus'");
