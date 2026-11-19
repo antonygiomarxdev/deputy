@@ -2,6 +2,7 @@ import { parseChatId, UNATTRIBUTED_CHAT } from "../../shared/chat-id";
 import type { Clock } from "../../shared/clock";
 import type { OwnerLease } from "../../shared/owner-lease";
 import { LeaseLost } from "../domain/errors";
+import { blankLogEntry } from "../domain/log-entry";
 import type { OnOrderDeleted } from "../ports/inbound";
 import type { UnitOfWork } from "../ports/outbound";
 
@@ -22,10 +23,7 @@ export class OnOrderDeletedUseCase implements OnOrderDeleted {
           await tx.approvals.scrubOrderDraft(event.draftNumber);
         }
         await tx.log.append([
-          {
-            at: clock.now(), kind: "order_deleted", draft: null, draftKind: null, chat: parseChatId(event.chat) ?? UNATTRIBUTED_CHAT,
-            proposedText: null, finalText: null, reason: null, ownerWords: null, approvalEntryId: null, sendId: null, orderRef: event.orderId,
-          },
+          blankLogEntry({ at: clock.now(), kind: "order_deleted", chat: parseChatId(event.chat) ?? UNATTRIBUTED_CHAT, orderRef: event.orderId }),
         ]);
         return { scrubbed };
       });
