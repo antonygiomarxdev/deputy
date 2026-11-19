@@ -1,3 +1,4 @@
+import { Database } from "bun:sqlite";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
@@ -59,8 +60,30 @@ export async function startServer(
   };
 }
 
-export function removeHarnessDirs(h: Harness): void {
-  rmSync(join(h.dataDir, ".."), { recursive: true, force: true });
+/**
+ * Removes the folders a server used. It never throws: on Windows a data file can stay busy for a moment after the process
+ * ends (EBUSY), and a cleanup error thrown from afterEach would hide the assertion that failed in the test. It retries, and when
+ * the folder will not go it says so on stderr and leaves it, so the test's own failure is what gets reported.
+ */
+export function removeHarnessDirs(
+  h: Pick<Harness, "dataDir">,
+  o: { remove?: (path: string) => void; attempts?: number; delayMs?: number } = {},
+): void {
+  const remove = o.remove ?? ((p: string) => rmSync(p, { recursive: true, force: true }));
+  const attempts = o.attempts ?? 10;
+  const path = join(h.dataDir, "..");
+  for (let i = 1; ; i++) {
+    try {
+      remove(path);
+      return;
+    } catch (e) {
+      if (i >= attempts) {
+        console.error(`harness cleanup left ${path} behind after ${attempts} tries: ${e instanceof Error ? e.message : String(e)}`);
+        return;
+      }
+      Bun.sleepSync(o.delayMs ?? 100);
+    }
+  }
 }
 
 export function writeConfig(dir: string, obj: Record<string, unknown>): void {
@@ -77,5 +100,32 @@ export async function waitForOwner(h: Harness, timeoutMs = 5_000): Promise<void>
   while (!h.stderr().includes("deputy: owner of")) {
     if (Date.now() > until) throw new Error(`the server never became owner; stderr: ${h.stderr()}`);
     await new Promise((r) => setTimeout(r, 25));
+  }
+}
+
+/**
+ * What `/dev/hold` will do (SPEC-01 Task 12): the dev provider holds an owner's reply from the WhatsApp app, written while
+ * Deputy was off. The server finds it with `check_messages`.
+ */
+export function holdOwnerReply(h: Harness, r: { chat: string; text: string; sentAt?: number; id?: string }): void {
+  const db = new Database(join(h.dataDir, "deputy.db"));
+  try {
+    db.run(
+      `INSERT INTO dev_holdings (provider_message_id, conversation_ref, counterpart, sender, direction, type, text, origin, sent_at, owner_mark)
+       VALUES (?, ?, ?, NULL, 'outbound', 'text', ?, 'business_app', ?, 1)`,
+      [r.id ?? `dev-out-held-${crypto.randomUUID()}`, `dev:${r.chat}`, r.chat, r.text, r.sentAt ?? Date.now()],
+    );
+  } finally {
+    db.close();
+  }
+}
+
+/** What `deputy config` writes: a row the running server applies under its lease. */
+export function insertPendingChange(h: Harness, key: "owner_numbers" | "business_number" | "owner_number_remove", value: string, command: string): void {
+  const db = new Database(join(h.dataDir, "deputy.db"));
+  try {
+    db.run("INSERT INTO pending_changes (key, value, command, at) VALUES (?, ?, ?, ?)", [key, value, command, Date.now()]);
+  } finally {
+    db.close();
   }
 }
