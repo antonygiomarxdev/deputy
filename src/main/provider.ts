@@ -13,7 +13,7 @@ export type ChosenProvider =
   | { ok: false; message: string };
 
 /** The dev provider, or Kapso built from the connection file. ResolveProviderSettings already refused a missing key or phone number id. */
-export function chooseProvider(name: ProviderName, connection: Connection, db: SqlDatabase, clock: Clock): ChosenProvider {
+export function chooseProvider(name: ProviderName, connection: Connection, kapsoBaseUrl: string, db: SqlDatabase, clock: Clock): ChosenProvider {
   if (name === "dev") {
     const devProvider = new DevProvider({ db, clock });
     return { ok: true, name, provider: devProvider, devProvider };
@@ -26,7 +26,7 @@ export function chooseProvider(name: ProviderName, connection: Connection, db: S
     name,
     devProvider: null,
     provider: new KapsoProvider({
-      baseUrl: process.env["DEPUTY_KAPSO_BASE_URL"] ?? "https://api.kapso.ai",
+      baseUrl: kapsoBaseUrl,
       graphVersion: "v24.0",
       apiKey: connection.kapso.apiKey,
       phoneNumberId: connection.kapso.phoneNumberId,

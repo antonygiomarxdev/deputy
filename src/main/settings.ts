@@ -1,12 +1,13 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { createSecretStore } from "../adapters/secrets/secret-store";
-import { FileConnectionConfig } from "../intake/adapters/config/file-connection-config";
 
 export interface Settings {
   port: number;
   dataDir: string;
   configDir: string;
+  /** Test isolation hook: renames the OS secret-store service, so tests never read the developer's real secrets. */
+  secretService: string | null;
+  kapsoBaseUrl: string;
 }
 
 /** DEPUTY_PORT: a whole number from 1 to 65535, default 8788; anything else is refused, never turned into NaN. */
@@ -22,14 +23,8 @@ export function readSettings(): { ok: true; settings: Settings } | { ok: false; 
       port,
       dataDir: process.env["DEPUTY_DATA_DIR"] ?? "data",
       configDir: process.env["DEPUTY_CONFIG_DIR"] ?? join(homedir(), ".deputy"),
+      secretService: process.env["DEPUTY_SECRET_SERVICE"] ?? null,
+      kapsoBaseUrl: process.env["DEPUTY_KAPSO_BASE_URL"] ?? "https://api.kapso.ai",
     },
   };
-}
-
-/** The connection config file and its secrets, read from the OS secret store under DEPUTY_SECRET_SERVICE. */
-export function connectionConfig(configDir: string): FileConnectionConfig {
-  return new FileConnectionConfig({
-    configDir,
-    secrets: createSecretStore({ os: { get: (service, name) => Bun.secrets.get({ service: process.env["DEPUTY_SECRET_SERVICE"] ?? service, name }) }, configDir }),
-  });
 }

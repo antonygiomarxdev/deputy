@@ -7,7 +7,8 @@ import { intakeWiring, ownerNumberWiring } from "./intake";
 import { draftsWiring } from "./drafts";
 import { superviseLease, untilShutdown } from "./lifecycle";
 import { mcpServer } from "./tools";
-import { connectionConfig, readSettings } from "./settings";
+import { connectionConfig } from "./connection";
+import { readSettings } from "./settings";
 
 /** The start sequence, top to bottom. A refusal logs one line, releases the lease if it is held, closes the database and returns 1. */
 export async function serve(): Promise<number> {
@@ -27,7 +28,7 @@ export async function serve(): Promise<number> {
 
   const clock = new SystemClock();
   const lease = createSqliteOwnerLease(db, clock, () => crypto.randomUUID());
-  const config = connectionConfig(settings.configDir);
+  const config = connectionConfig(settings.configDir, settings.secretService);
   const { owners, reads, ownerNumbers } = ownerNumberWiring({ db, lease, clock });
   // a pending business number must be applied before ResolveProviderSettings looks for one; only the owner may apply it
   if (await lease.tryAcquire()) await ownerNumbers.applyPendingChanges.execute();
@@ -42,7 +43,7 @@ export async function serve(): Promise<number> {
   for (const notice of resolved.notices) console.error(`deputy: ${notice}`);
 
   const connection = await config.read();
-  const chosen = chooseProvider(resolved.provider, connection, db, clock);
+  const chosen = chooseProvider(resolved.provider, connection, settings.kapsoBaseUrl, db, clock);
   if (!chosen.ok) {
     console.error(`deputy: ${chosen.message}`);
     await lease.release();
