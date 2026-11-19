@@ -126,7 +126,13 @@ export function approvalTools(u: { approveDraft: ApproveDraft; approveOrderComma
         // a failed or unknown outcome is an error result, so the agent cannot skip it as a success
         switch (r.outcome) {
           case "sent":
-            return { text: `draft ${r.number} was sent`, structured: { ...r }, isError: false };
+            return {
+              text: r.logged
+                ? `draft ${r.number} was sent`
+                : `draft ${r.number} was sent, but its record could not be written yet; Deputy will keep trying, and check_approvals lists it until it is written`,
+              structured: { ...r },
+              isError: false,
+            };
           case "recorded":
             return { text: `order draft ${r.number} was recorded as order ${r.orderId}`, structured: { ...r }, isError: false };
           case "failed":
