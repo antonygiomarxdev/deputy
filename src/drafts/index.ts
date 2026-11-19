@@ -59,6 +59,7 @@ export type { OrderInput } from "./ports/orders";
 export type { DraftEvent } from "./domain/events";
 export type { Refusal } from "./domain/refusals";
 export { refusalText } from "./domain/refusals";
+export { refusalResult } from "./adapters/mcp/results";
 
 export interface DraftsDeps {
   clock: Clock;

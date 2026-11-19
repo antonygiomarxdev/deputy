@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { approvalTools, draftsTools } from "../../../src/drafts/adapters/mcp/drafts-tools";
+import { approvalTools } from "../../../src/drafts/adapters/mcp/approval-tools";
+import { draftsTools } from "../../../src/drafts/adapters/mcp/draft-tools";
 import type { ApproveDraft, ApproveOrderCommand } from "../../../src/drafts/ports/inbound";
 import { createApprovals } from "../../../src/drafts/index";
 import { makeDrafts, message } from "./harness";

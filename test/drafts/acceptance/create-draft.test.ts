@@ -83,6 +83,14 @@ describe("FR-DRAFTS-01-1", () => {
     expect(await h.store.log.page({ limit: 10 })).toEqual([]);
   });
 
+  test("a refused empty reply burns no draft number: the next draft gets number 1", async () => {
+    const h = makeDrafts(base);
+    const refused = await h.createDraft.run({ kind: "reply", chat: "chat-a", text: "  \n" });
+    expect(refused.ok ? null : refused.refusal.code).toBe("empty_text");
+    const next = await h.createDraft.run({ kind: "reply", chat: "chat-a", text: "Hi" });
+    expect(next.ok ? next.value.number : null).toBe(1);
+  });
+
   test("not_owner: a process without the lease stores nothing", async () => {
     const h = makeDrafts(base);
     h.holder.token = "other";

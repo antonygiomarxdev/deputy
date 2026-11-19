@@ -48,8 +48,10 @@ function toMessage(r: SqlRow): ProviderMessage {
 /** What a delivery body says about its message. A held copy and a verified webhook both read it here, so they cannot disagree. */
 function readBody(b: DevDeliveryBody, clock: Clock) {
   const outbound = b.owner === true;
+  const direction: "inbound" | "outbound" = outbound ? "outbound" : "inbound";
   return {
     outbound,
+    direction,
     origin: outbound ? "business_app" : b.history === true ? "history_sync" : "cloud_api",
     type: b.type ?? "text",
     sentAt: b.sentAt ?? clock.now(),
@@ -72,7 +74,7 @@ export class DevProvider implements Provider {
       kind: f.outbound ? "out" : "in",
       chat: b.chat,
       sender: b.from,
-      direction: f.outbound ? "outbound" : "inbound",
+      direction: f.direction,
       type: f.type,
       text: b.text,
       transcript: b.transcript ?? null,
@@ -151,7 +153,7 @@ export class DevProvider implements Provider {
             conversationRef: b.chat,
             from: b.from,
             counterpart: b.chat,
-            direction: f.outbound ? "outbound" : "inbound",
+            direction: f.direction,
             type: f.type,
             text: b.text,
             transcript: b.transcript ?? null,
