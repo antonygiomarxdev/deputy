@@ -2,7 +2,7 @@ import type { Clock } from "../../shared/clock";
 import { LeaseLost, LogUnavailable, StaleDraft } from "../domain/errors";
 import type { RetryPendingOutcomes } from "../ports/inbound";
 import type { UnitOfWork } from "../ports/outbound";
-import { commit, sentStep } from "./approve-draft";
+import { commit, sentStep } from "./send-pipeline";
 import type { PendingOutcomes } from "./pending-outcomes";
 
 export class RetryPendingOutcomesUseCase implements RetryPendingOutcomes {
