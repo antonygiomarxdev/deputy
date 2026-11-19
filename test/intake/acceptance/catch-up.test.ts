@@ -346,6 +346,32 @@ describe("CatchUp", () => {
         expect(outboundCalls().map((c) => (c.cursor === null ? null : String(c.cursor)))).toEqual(["2", null, "2", "4"]);
         expect(await rows()).toEqual(["e1", "e2", "e3", "e4", "e5"]);
       });
+
+      test("a bad_response on a later page does not restart the window from the beginning", async () => {
+        provider.onCall = (c) => {
+          if (c.kind === "messages" && "outbound" in c.scope && c.cursor === "4") throw new ProviderError("bad_response", null, false);
+        };
+        await runAndStop();
+        // a restart would request the first page again (null) and read the same pages once more
+        expect(outboundCalls().map((c) => (c.cursor === null ? null : String(c.cursor)))).toEqual(["2", "4"]);
+      });
+    });
+
+    test("sweep 2 does not stop at a page whose oldest item is exactly at the window start", async () => {
+      provider.serverTime = 2_000_000;
+      await run(); // markOutbound 2,000,000: the next outbound window starts at 2,000,000 - OVERLAP_MS
+      provider.serverTime = 3_000_000;
+      provider.pageSize = 2;
+      provider.outbound = [
+        echo("e1", 2_900_000),
+        echo("e2", 2_800_000),
+        echo("e3", 2_000_000),
+        echo("e4", 2_000_000 - OVERLAP_MS), // exactly the window start: not older, so page 3 is read
+        echo("e5", 500_000), // older: this page ends the window
+      ];
+      provider.calls.length = 0;
+      await run();
+      expect(outboundCalls().map((c) => (c.cursor === null ? null : String(c.cursor)))).toEqual([null, "2", "4"]);
     });
 
     test("sweep 2 stops at the page that holds an item older than its window", async () => {

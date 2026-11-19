@@ -87,6 +87,17 @@ export function draftLogRepositoryContract(name: string, make: () => DraftLogRep
       expect(await log.approvalEntryIdFor("s1")).toBe(first as number);
     });
 
+    test("sentWithApproval returns the sent entries in id order", async () => {
+      const log = make();
+      const [a1] = await log.append([entry({ kind: "approved", sendId: "s1" })]);
+      const [a2] = await log.append([entry({ kind: "approved", sendId: "s2" })]);
+      await log.append([
+        entry({ kind: "sent", sendId: "s2", approvalEntryId: a2 as number }),
+        entry({ kind: "sent", sendId: "s1", approvalEntryId: a1 as number }),
+      ]);
+      expect((await log.sentWithApproval()).map((r) => r.sent.sendId)).toEqual(["s2", "s1"]);
+    });
+
     test("sentWithApproval keeps a sent entry that has no pointer, with no approval", async () => {
       const log = make();
       await log.append([entry({ kind: "sent", sendId: "s1", approvalEntryId: null }), entry({ kind: "proposed", draft: 2 })]);
