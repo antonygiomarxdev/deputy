@@ -202,6 +202,16 @@ describe("FindOutgoing", () => {
     expect(await find.execute({ sendId: sid("s1"), chat, since: SINCE, text })).toEqual({ kind: "ambiguous", candidates: 2 });
   });
 
+  test("a text that splits into fewer parts than the send has is none, even if its one piece has a candidate", async () => {
+    const part = "a".repeat(MAX_PART);
+    await unknownSend("s1", part + "b");
+    await put(staff("p1", part, SINCE + 1_000));
+    expect(await find.execute({ sendId: sid("s1"), chat, since: SINCE, text: part })).toEqual({ kind: "none" });
+    expect(await sourceOf("p1")).toBe("owner_app");
+    expect(store.sourceChanges()).toEqual([]);
+    expect((await store.repos.outgoing.find(sid("s1")))?.props.state).toBe("unknown");
+  });
+
   test("without the lease it is refused, and no transaction is even opened", async () => {
     await unknownSend("s1", "Hello");
     holder.token = "someone else";
