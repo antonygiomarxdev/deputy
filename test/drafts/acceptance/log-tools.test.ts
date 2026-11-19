@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { logTools } from "../../../src/drafts/adapters/mcp/drafts-tools";
+import { logTools } from "../../../src/drafts/adapters/mcp/log-tools";
 import type { CheckApprovals, LogEntryView, ReadDraftLog } from "../../../src/drafts/ports/inbound";
 
 const entry = (over: Partial<LogEntryView> = {}): LogEntryView => ({

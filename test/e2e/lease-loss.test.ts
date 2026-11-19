@@ -1,8 +1,10 @@
 import { Database } from "bun:sqlite";
-import { afterEach, expect, test } from "bun:test";
+import { afterEach, expect, test, setDefaultTimeout } from "bun:test";
 import { join } from "node:path";
-import { call, removeHarnessDirs, startServer, waitForOwner, type Harness } from "../support/harness";
+import { call, removeHarnessDirs, startServer, waitForOwner, type Harness, E2E_TIMEOUT_MS } from "../support/harness";
 import { postDelivery, url } from "../support/live";
+
+setDefaultTimeout(E2E_TIMEOUT_MS);
 
 const open: Harness[] = [];
 afterEach(async () => {

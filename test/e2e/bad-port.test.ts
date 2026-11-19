@@ -1,7 +1,10 @@
-import { expect, test } from "bun:test";
+import { expect, test, setDefaultTimeout } from "bun:test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { E2E_TIMEOUT_MS } from "../support/harness";
+
+setDefaultTimeout(E2E_TIMEOUT_MS);
 
 const main = join(import.meta.dir, "..", "..", "src", "main.ts");
 

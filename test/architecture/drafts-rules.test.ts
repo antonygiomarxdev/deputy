@@ -91,10 +91,10 @@ describe("send-path rules, on inline sources", () => {
   test("a mention of SendText outside intake-sender.ts is found", () => {
     const files = new Map([
       ["src/drafts/adapters/intake/intake-sender.ts", 'import type { SendText } from "../../../intake/index";'],
-      ["src/drafts/adapters/mcp/drafts-tools.ts", 'import type { SendText } from "../../../intake/index";'],
+      ["src/drafts/adapters/mcp/draft-tools.ts", 'import type { SendText } from "../../../intake/index";'],
       ["src/drafts/application/ok.ts", "export const x = 1; // only SendTextResult is named here"],
     ]);
-    expect(sendTextOutsideIntakeSender(files)).toEqual(["src/drafts/adapters/mcp/drafts-tools.ts mentions SendText"]);
+    expect(sendTextOutsideIntakeSender(files)).toEqual(["src/drafts/adapters/mcp/draft-tools.ts mentions SendText"]);
   });
 });
 

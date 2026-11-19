@@ -21,6 +21,8 @@ export type DraftState =
 export const OPEN_STATES: readonly DraftState[] = ["waiting", "held", "failed", "unknown", "sending", "recording"];
 export const CLOSED_STATES: readonly DraftState[] = ["sent", "recorded", "rejected", "replaced"];
 const IN_FLIGHT: readonly DraftState[] = ["sending", "recording"];
+export const isClosed = (state: DraftState): boolean => CLOSED_STATES.includes(state);
+export const isInFlight = (state: DraftState): boolean => IN_FLIGHT.includes(state);
 const APPROVABLE: readonly DraftState[] = ["waiting", "held", "failed", "unknown"];
 export type MessageMark = { readonly messageId: MessageId; readonly sentAt: Instant };
 export type Mark = { readonly sentAt: Instant; readonly storedAt: Instant };
@@ -59,8 +61,8 @@ export type DraftChange = { readonly ok: true; readonly events: readonly DraftEv
 
 /** The state gate shared by every change: closed, in flight, and (unless allowed) unknown. */
 function gate(state: DraftState, unknownAllowed: boolean): Refused | null {
-  if (CLOSED_STATES.includes(state)) return { ok: false, reason: "closed" };
-  if (state === "sending" || state === "recording") return { ok: false, reason: "in_flight" };
+  if (isClosed(state)) return { ok: false, reason: "closed" };
+  if (isInFlight(state)) return { ok: false, reason: "in_flight" };
   if (state === "unknown" && !unknownAllowed) return { ok: false, reason: "unknown_open" };
   return null;
 }
@@ -186,8 +188,8 @@ export class Draft {
     textHash: string;
     now: Instant;
   }): ApproveChange {
-    if (CLOSED_STATES.includes(this.s.state)) return { ok: false, reason: "closed" };
-    if (IN_FLIGHT.includes(this.s.state)) return { ok: false, reason: "in_flight" };
+    if (isClosed(this.s.state)) return { ok: false, reason: "closed" };
+    if (isInFlight(this.s.state)) return { ok: false, reason: "in_flight" };
     if (this.s.approval !== null && this.s.approval.voidedAt === null) return { ok: false, reason: "already_approved" };
     if (this.s.shownVersion !== this.s.textVersion) return { ok: false, reason: "not_shown" };
     if (input.shownText !== this.s.currentText) return { ok: false, reason: "text_differs" };

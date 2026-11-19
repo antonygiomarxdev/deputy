@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { customerText } from "../../adapters/mcp/customer-text";
 import { defineTool, type ToolDefinition } from "../../adapters/mcp/tool";
-import { refusalText, type DraftView, type ListDrafts } from "../../drafts/index";
+import { customerText } from "../../adapters/mcp/customer-text";
+import { refusalResult, type DraftView, type ListDrafts } from "../../drafts/index";
 
 /** For each time (ISO text, one per draft), whether the catalog changed since. Knowledge answers it; until it is wired, "unknown". */
 export type CatalogChangedSince = (since: string[]) => Promise<("changed" | "unchanged" | "unknown")[]>;
@@ -14,10 +14,7 @@ export function listDraftsTool(u: { listDrafts: ListDrafts; catalogChangedSince:
     input: { chat: z.string().min(1).optional() },
     async run(a) {
       const out = await u.listDrafts.run(a.chat === undefined ? {} : { chat: a.chat });
-      if (!out.ok) {
-        const text = refusalText(out.refusal);
-        return { text, structured: { ...out.refusal, refusalText: text }, isError: true };
-      }
+      if (!out.ok) return refusalResult(out.refusal);
       const drafts = out.value;
       if (drafts.length === 0) return { text: "no drafts waiting", structured: { drafts: [] }, isError: false };
 

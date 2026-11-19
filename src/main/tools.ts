@@ -1,6 +1,8 @@
 import type { LeaseSupervisor } from "../adapters/supervisor/lease-supervisor";
 import { formatSyncStatus, intakeTools } from "../intake/adapters/mcp/intake-tools";
-import { approvalTools, draftsTools, logTools } from "../drafts/adapters/mcp/drafts-tools";
+import { approvalTools } from "../drafts/adapters/mcp/approval-tools";
+import { draftsTools } from "../drafts/adapters/mcp/draft-tools";
+import { logTools } from "../drafts/adapters/mcp/log-tools";
 import { createApprovals, createDrafts } from "../drafts/index";
 import type { GetOwnerNumbers, IntakeRuntime } from "../intake/index";
 import { listDraftsTool } from "../composition/mcp/list-drafts-tool";

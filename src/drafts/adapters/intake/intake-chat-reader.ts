@@ -1,7 +1,7 @@
 import type { ChatId } from "../../../shared/chat-id";
 import { messageIdKey, type MessageId } from "../../../shared/message-id";
 import type { ChatExists, ReadChat } from "../../../intake/index";
-import type { ChatInfo, ChatMessage, ChatReader } from "../../ports/outbound";
+import type { ChatInfo, ChatMessage, ChatReader } from "../../ports/chat";
 
 type IntakeMessage = NonNullable<Awaited<ReturnType<ReadChat["execute"]>>>["messages"][number];
 

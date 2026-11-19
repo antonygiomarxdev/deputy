@@ -15,6 +15,7 @@ import {
 } from "../../ports/provider";
 import { verifyHmacSha256Hex } from "../hmac";
 import { DEV_SIGNATURE_HEADER, DEV_WEBHOOK_SECRET, devDeliverySchema, type DevDeliveryBody } from "./dev-delivery";
+import { DevHoldingsRepository } from "./dev-holdings-repository";
 
 const MAX_PAGE = 100;
 
@@ -44,27 +45,42 @@ function toMessage(r: SqlRow): ProviderMessage {
   };
 }
 
+/** What a delivery body says about its message. A held copy and a verified webhook both read it here, so they cannot disagree. */
+function readBody(b: DevDeliveryBody, clock: Clock) {
+  const outbound = b.owner === true;
+  const direction: "inbound" | "outbound" = outbound ? "outbound" : "inbound";
+  return {
+    outbound,
+    direction,
+    origin: outbound ? "business_app" : b.history === true ? "history_sync" : "cloud_api",
+    type: b.type ?? "text",
+    sentAt: b.sentAt ?? clock.now(),
+  };
+}
+
 export class DevProvider implements Provider {
   readonly name = "dev";
+  private readonly holdings: DevHoldingsRepository;
 
-  constructor(private readonly d: { db: SqlDatabase; clock: Clock }) {}
+  constructor(private readonly d: { db: SqlDatabase; clock: Clock }) {
+    this.holdings = new DevHoldingsRepository(d.db);
+  }
 
   /** Copies a delivery body into dev_holdings as a real provider would; returns whether it was new. */
   async hold(b: DevDeliveryBody): Promise<{ providerMessageId: string; isNew: boolean }> {
-    const outbound = b.owner === true;
-    const origin = outbound ? "business_app" : b.history === true ? "history_sync" : "cloud_api";
-    return this.insert({
+    const f = readBody(b, this.d.clock);
+    return this.holdings.insert({
       id: b.providerMessageId ?? null,
-      kind: outbound ? "out" : "in",
+      kind: f.outbound ? "out" : "in",
       chat: b.chat,
       sender: b.from,
-      direction: outbound ? "outbound" : "inbound",
-      type: b.type ?? "text",
+      direction: f.direction,
+      type: f.type,
       text: b.text,
       transcript: b.transcript ?? null,
-      origin,
-      sentAt: b.sentAt ?? this.d.clock.now(),
-      ownerMark: outbound,
+      origin: f.origin,
+      sentAt: f.sentAt,
+      ownerMark: f.outbound,
     });
   }
 
@@ -74,13 +90,7 @@ export class DevProvider implements Provider {
     assertLimit(q.limit);
     const limit = Math.min(q.limit, MAX_PAGE);
     const offset = offsetOf(q.cursor);
-    const rows = await this.d.db.query(
-      `SELECT conversation_ref, MAX(sent_at) AS last FROM dev_holdings
-       WHERE conversation_ref IS NOT NULL
-       GROUP BY conversation_ref HAVING (? IS NULL OR MAX(sent_at) >= ?)
-       ORDER BY last DESC, conversation_ref LIMIT ? OFFSET ?`,
-      [q.activeAfter, q.activeAfter, limit + 1, offset],
-    );
+    const rows = await this.holdings.conversations(q.activeAfter, offset, limit);
     const items = rows.slice(0, limit).map((r) => ({
       ref: str(r, "conversation_ref"),
       counterpart: str(r, "conversation_ref"),
@@ -96,20 +106,13 @@ export class DevProvider implements Provider {
     assertLimit(q.limit);
     const limit = Math.min(q.limit, MAX_PAGE);
     const offset = offsetOf(q.cursor);
-    const [where, params] =
-      "conversationRef" in q.scope
-        ? ["conversation_ref = ?", [q.scope.conversationRef]]
-        : ["direction = 'outbound'", []];
-    const rows = await this.d.db.query(
-      `SELECT * FROM dev_holdings WHERE ${where} ORDER BY sent_at DESC, seq DESC LIMIT ? OFFSET ?`,
-      [...params, limit + 1, offset],
-    );
+    const rows = await this.holdings.messages(q.scope, offset, limit);
     return this.page(rows.slice(0, limit).map(toMessage), rows.length > limit, offset + limit);
   }
 
   async sendText(req: { to: PhoneNumber; text: string }): Promise<{ providerMessageId: string; serverTime: Instant }> {
     const serverTime = this.d.clock.now();
-    const { providerMessageId } = await this.insert({
+    const { providerMessageId } = await this.holdings.insert({
       id: null,
       kind: "out",
       chat: req.to.digits,
@@ -139,7 +142,7 @@ export class DevProvider implements Provider {
     const parsed = devDeliverySchema.safeParse(json);
     if (!parsed.success) return { kind: "malformed" };
     const b = parsed.data;
-    const outbound = b.owner === true;
+    const f = readBody(b, this.d.clock);
     return {
       kind: "ok",
       events: [
@@ -150,16 +153,16 @@ export class DevProvider implements Provider {
             conversationRef: b.chat,
             from: b.from,
             counterpart: b.chat,
-            direction: outbound ? "outbound" : "inbound",
-            type: b.type ?? "text",
+            direction: f.direction,
+            type: f.type,
             text: b.text,
             transcript: b.transcript ?? null,
-            sentAt: b.sentAt ?? this.d.clock.now(),
-            origin: outbound ? "business_app" : b.history === true ? "history_sync" : "cloud_api",
+            sentAt: f.sentAt,
+            origin: f.origin,
             group: false,
             edited: false,
             profileName: null,
-            devOwnerMark: outbound,
+            devOwnerMark: f.outbound,
           },
         },
       ],
@@ -172,35 +175,5 @@ export class DevProvider implements Provider {
 
   private page<T>(items: T[], more: boolean, nextOffset: number): Page<T> {
     return { items, next: more ? toCursor(String(nextOffset)) : null, serverTime: this.d.clock.now(), remaining: null };
-  }
-
-  private async insert(h: {
-    id: string | null;
-    kind: "in" | "out";
-    chat: string;
-    sender: string | null;
-    direction: "inbound" | "outbound";
-    type: string;
-    text: string;
-    transcript: string | null;
-    origin: string;
-    sentAt: Instant;
-    ownerMark: boolean;
-  }): Promise<{ providerMessageId: string; isNew: boolean }> {
-    return this.d.db.transaction(async (tx) => {
-      const placeholder = h.id ?? `dev-pending-${crypto.randomUUID()}`;
-      const r = await tx.run(
-        `INSERT INTO dev_holdings
-           (provider_message_id, conversation_ref, counterpart, sender, direction, type, text, transcript, origin, sent_at, owner_mark)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT(provider_message_id) DO NOTHING`,
-        [placeholder, h.chat, h.chat, h.sender, h.direction, h.type, h.text, h.transcript, h.origin, h.sentAt, h.ownerMark ? 1 : 0],
-      );
-      if (r.changes === 0) return { providerMessageId: placeholder, isNew: false };
-      if (h.id !== null) return { providerMessageId: h.id, isNew: true };
-      const id = `dev-${h.kind}-${r.lastInsertId}`;
-      await tx.run("UPDATE dev_holdings SET provider_message_id = ? WHERE seq = ?", [id, r.lastInsertId]);
-      return { providerMessageId: id, isNew: true };
-    });
   }
 }

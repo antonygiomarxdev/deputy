@@ -1,70 +1,18 @@
-import type { ChatId } from "../../../shared/chat-id";
-import { UNATTRIBUTED_CHAT } from "../../../shared/chat-id";
 import type { Instant } from "../../../shared/instant";
-import { messageIdKey, type MessageId } from "../../../shared/message-id";
-import type { ProviderName } from "../../../shared/provider-name";
 import type { OwnerLease } from "../../../shared/owner-lease";
+import type { ProviderName } from "../../../shared/provider-name";
 import type { SendId } from "../../../shared/send-id";
-import type { ChatState } from "../../domain/chat-state";
-import { Message, type Mark, type MessageVersion, type SourceChange } from "../../domain/message";
-import { OutgoingSend, type OutgoingSendProps } from "../../domain/outgoing-send";
-import type { PendingChange, PendingChangesReader } from "../../ports/pending-changes-reader";
-import { SyncState, type SyncStateProps } from "../../domain/sync-state";
-import type { RejectionNote, RejectionReason } from "../../domain/rejection-note";
-import type { ChatSeen, ChatStateRepository } from "../../ports/chat-state-repository";
+import type { SourceChange } from "../../domain/message";
+import type { PendingChange } from "../../ports/pending-changes-reader";
 import { LeaseLostError, type IntakeRepos, type IntakeUnitOfWork } from "../../ports/intake-unit-of-work";
-import type { MessageRepository } from "../../ports/message-repository";
-import type { OutgoingRepository } from "../../ports/outgoing-repository";
-import { REJECTION_MAX_AGE_MS, REJECTION_MAX_ROWS, type RejectionRepository } from "../../ports/rejection-repository";
-import type { SyncStateRepository } from "../../ports/sync-state-repository";
 import { InMemoryOwnerNumbersRepository } from "./in-memory-owner-numbers-repository";
-
-interface Stored {
-  seq: number;
-  message: Message;
-}
-interface Rejection extends RejectionNote {
-  id: number;
-}
-interface State {
-  nextSeq: number;
-  messages: Map<string, Stored>;
-  chats: Map<string, ChatState>;
-  rejections: Rejection[];
-  nextRejectionId: number;
-  pruned: number;
-  sync: Map<ProviderName, SyncStateProps>;
-  outgoingParts: Map<string, { sendId: SendId; part: number }>;
-  sends: Map<string, OutgoingSendProps>;
-  sourceChanges: SourceChange[];
-  pending: (PendingChange & { appliedAt: Instant | null })[];
-}
-
-const copyMessage = (m: Message): Message => Message.rehydrate(m.props, m.versions);
-
-function copyState(s: State): State {
-  return {
-    nextSeq: s.nextSeq,
-    messages: new Map([...s.messages].map(([k, v]) => [k, { seq: v.seq, message: copyMessage(v.message) }])),
-    chats: new Map(s.chats),
-    rejections: s.rejections.map((r) => ({ ...r })),
-    nextRejectionId: s.nextRejectionId,
-    pruned: s.pruned,
-    sync: new Map([...s.sync].map(([k, v]) => [k, { ...v }])),
-    outgoingParts: new Map(s.outgoingParts),
-    sends: new Map(s.sends),
-    sourceChanges: [...s.sourceChanges],
-    pending: s.pending.map((p) => ({ ...p })),
-  };
-}
-
-function chatMark(chat: ChatId): Mark {
-  if (chat.startsWith("group:")) return "group_chat";
-  return chat === UNATTRIBUTED_CHAT ? "not_attributable" : "normal";
-}
-
-const bySent = (a: Stored, b: Stored): number => a.message.props.sentAt - b.message.props.sentAt || a.seq - b.seq;
-const newest = (items: Stored[]): Stored | undefined => items.sort((a, b) => bySent(b, a))[0];
+import { copyState, type State } from "./in-memory-state";
+import { inMemoryMessageRepository } from "./in-memory-message-repository";
+import { inMemoryChatRepository } from "./in-memory-chat-state-repository";
+import { inMemoryRejectionRepository } from "./in-memory-rejection-repository";
+import { inMemorySyncRepository } from "./in-memory-sync-state-repository";
+import { inMemoryOutgoingRepository } from "./in-memory-outgoing-repository";
+import { inMemoryPendingChanges } from "./in-memory-pending-changes-reader";
 
 /** The repositories and the unit of work over one state object; the unit of work restores a copy when `work` throws. */
 export class InMemoryIntakeStore {
@@ -85,15 +33,17 @@ export class InMemoryIntakeStore {
     pending: [],
   };
   readonly owners = new InMemoryOwnerNumbersRepository();
+  // the repositories read the state through this accessor: a rollback replaces the state object
+  private readonly s = (): State => this.state;
 
   readonly repos: IntakeRepos = {
-    messages: this.messageRepository(),
-    chats: this.chatRepository(),
-    rejections: this.rejectionRepository(),
-    syncState: this.syncRepository(),
-    outgoing: this.outgoingRepository(),
+    messages: inMemoryMessageRepository(this.s),
+    chats: inMemoryChatRepository(this.s),
+    rejections: inMemoryRejectionRepository(this.s),
+    syncState: inMemorySyncRepository(this.s),
+    outgoing: inMemoryOutgoingRepository(this.s),
     owners: this.owners,
-    pending: this.pendingRepository(),
+    pending: inMemoryPendingChanges(this.s),
   };
 
   readonly unitOfWork: IntakeUnitOfWork = {
@@ -123,260 +73,5 @@ export class InMemoryIntakeStore {
   /** Test seam: the source_changes rows written so far. */
   sourceChanges(): readonly SourceChange[] {
     return this.state.sourceChanges;
-  }
-
-  private pendingRepository(): PendingChangesReader {
-    const s = (): State => this.state;
-    return {
-      async takeOwnerNumberChanges() {
-        return s()
-          .pending.filter((p) => p.appliedAt === null)
-          .sort((a, b) => a.at - b.at || a.id - b.id)
-          .map(({ appliedAt: _applied, ...change }) => change);
-      },
-      async markApplied(id, at) {
-        const row = s().pending.find((p) => p.id === id);
-        if (row !== undefined) row.appliedAt = at;
-      },
-    };
-  }
-
-  private messageRepository(): MessageRepository {
-    const s = (): State => this.state;
-    const world = (dev: boolean): Stored[] => [...s().messages.values()].filter((m) => m.message.props.dev === dev);
-    return {
-      async insertIfNew(m) {
-        const key = messageIdKey(m.props.id);
-        if (s().messages.has(key)) return "duplicate";
-        s().messages.set(key, { seq: s().nextSeq++, message: copyMessage(m) });
-        return "stored";
-      },
-      async find(id) {
-        const found = s().messages.get(messageIdKey(id));
-        return found === undefined ? null : copyMessage(found.message);
-      },
-      async findMany(ids) {
-        return ids.flatMap((id) => {
-          const found = s().messages.get(messageIdKey(id));
-          return found === undefined ? [] : [copyMessage(found.message)];
-        });
-      },
-      async saveEdit(id: MessageId, version: MessageVersion, text: string) {
-        const found = s().messages.get(messageIdKey(id));
-        if (found === undefined) return;
-        found.message = Message.rehydrate({ ...found.message.props, text, edited: true }, [
-          ...found.message.versions,
-          version,
-        ]);
-      },
-      async markDeleted(id) {
-        s().messages.get(messageIdKey(id))?.message.markDeletedBySender();
-      },
-      async listChat(chat, q) {
-        const all = [...s().messages.values()].filter((m) => m.message.props.chat === chat).sort(bySent);
-        const limit = q.limit;
-        const keep =
-          limit === undefined
-            ? all
-            : all.filter(
-                (m, i) => i >= all.length - limit || (q.storedSince !== undefined && m.message.props.storedAt >= q.storedSince),
-              );
-        return keep.map((m) => copyMessage(m.message));
-      },
-      async reclassify(id, change) {
-        // the SQLite adapter's NOT NULL column refuses a change with no time: both writes or neither
-        if (!Number.isFinite(change.at)) throw new Error("a source change needs a time");
-        const found = s().messages.get(messageIdKey(id));
-        if (found === undefined || !found.message.reclassifyAsDeputySend(change.sendId, change.at).ok) return;
-        s().sourceChanges.push(change);
-      },
-      async countCustomerMessages(chat) {
-        return [...s().messages.values()].filter((m) => m.message.props.chat === chat && m.message.props.source === "customer" && !m.message.props.dev).length;
-      },
-      async chatExists(chat) {
-        const mine = [...s().messages.values()].filter((m) => m.message.props.chat === chat);
-        return { exists: mine.length > 0, hasNonDevMessage: mine.some((m) => !m.message.props.dev) };
-      },
-      async hasCustomerTextNorm(norm) {
-        return [...s().messages.values()].some((m) => m.message.props.source === "customer" && m.message.textNorm === norm);
-      },
-      async newestStoredBefore(provider, scope, before) {
-        const times = [...s().messages.values()]
-          .map((m) => m.message.props)
-          .filter((p) => p.id.provider === provider && p.sentAt < before)
-          .filter((p) => ("conversationRef" in scope ? p.conversationRef === scope.conversationRef : p.source === "owner_app" || p.source === "sent_through_deputy"))
-          .map((p) => p.sentAt);
-        return times.length === 0 ? null : Math.max(...times);
-      },
-      async newestStoredAt(provider) {
-        const times = [...s().messages.values()].filter((m) => m.message.props.id.provider === provider).map((m) => m.message.props.sentAt);
-        return times.length === 0 ? null : Math.max(...times);
-      },
-      async oldestStoredAt(provider) {
-        const times = [...s().messages.values()].filter((m) => m.message.props.id.provider === provider).map((m) => m.message.props.sentAt);
-        return times.length === 0 ? null : Math.min(...times);
-      },
-      async newestUnattributedStoredAt(dev) {
-        const stored = world(dev).filter((m) => m.message.props.mark === "not_attributable").map((m) => m.message.props.storedAt);
-        return stored.length === 0 ? null : Math.max(...stored);
-      },
-    };
-  }
-
-  private chatRepository(): ChatStateRepository {
-    const s = (): State => this.state;
-    const key = (chat: ChatId, dev: boolean): string => `${chat}|${dev ? 1 : 0}`;
-    return {
-      async recompute(chat: ChatId, dev: boolean, now: Instant, seen: ChatSeen) {
-        const mine = [...s().messages.values()].filter((m) => m.message.props.chat === chat && m.message.props.dev === dev);
-        const customer = newest(mine.filter((m) => m.message.props.source === "customer" && m.message.props.mark === "normal"));
-        const answer = newest(mine.filter((m) => m.message.props.source === "owner_app" || m.message.props.source === "sent_through_deputy"));
-        const unattributed = mine.filter((m) => m.message.props.mark === "not_attributable").map((m) => m.message.props.sentAt);
-        const old = s().chats.get(key(chat, dev));
-        const source = answer?.message.props.source;
-        s().chats.set(key(chat, dev), {
-          chat,
-          dev,
-          mark: chatMark(chat),
-          conversationRef: seen.conversationRef ?? old?.conversationRef ?? null,
-          providerId: old?.providerId ?? seen.providerId,
-          lastCustomerAt: customer?.message.props.sentAt ?? null,
-          lastCustomerMessageId: customer?.message.props.id.providerMessageId ?? null,
-          lastAnswerAt: answer?.message.props.sentAt ?? null,
-          lastAnswerSource: source === "owner_app" || source === "sent_through_deputy" ? source : null,
-          lastUnattributedAt: unattributed.length === 0 ? null : Math.max(...unattributed),
-          profileName: old?.profileName ?? null,
-          profileNameAt: old?.profileNameAt ?? null,
-          updatedAt: now,
-        });
-      },
-      async setProfileName(chat, dev, name, sentAt) {
-        const old = s().chats.get(key(chat, dev));
-        if (old !== undefined && (old.profileNameAt === null || old.profileNameAt < sentAt)) {
-          s().chats.set(key(chat, dev), { ...old, profileName: name, profileNameAt: sentAt });
-        }
-      },
-      async list(q) {
-        return [...s().chats.values()]
-          .filter((c) => c.dev === q.dev)
-          .filter((c) => q.customerMessageSince === undefined || (c.lastCustomerAt !== null && c.lastCustomerAt >= q.customerMessageSince))
-          .sort((a, b) => (a.chat < b.chat ? -1 : a.chat > b.chat ? 1 : 0));
-      },
-      async get(chat, dev) {
-        return s().chats.get(key(chat, dev)) ?? null;
-      },
-    };
-  }
-
-  private rejectionRepository(): RejectionRepository {
-    const s = (): State => this.state;
-    return {
-      async add(at: Instant, reason: RejectionReason, recoverable: boolean) {
-        s().rejections.push({ id: s().nextRejectionId++, at, reason, recoverable, resolvedAt: null });
-        const before = s().rejections.length;
-        s().rejections = s().rejections.filter((r) => r.at >= at - REJECTION_MAX_AGE_MS);
-        s().rejections = s().rejections.slice(-REJECTION_MAX_ROWS);
-        s().pruned += before - s().rejections.length;
-      },
-      async list() {
-        const notes = [...s().rejections].reverse().map(({ at, reason, recoverable, resolvedAt }) => ({ at, reason, recoverable, resolvedAt }));
-        return {
-          notes,
-          prunedCount: s().pruned,
-          unrecovered: notes.filter((n) => n.recoverable && n.resolvedAt === null).length,
-        };
-      },
-      async resolveRecoverableBefore(runStartedAt, at) {
-        s().rejections = s().rejections.map((r) =>
-          r.recoverable && r.resolvedAt === null && r.at < runStartedAt ? { ...r, resolvedAt: at } : r,
-        );
-      },
-    };
-  }
-
-  private syncRepository(): SyncStateRepository {
-    const s = (): State => this.state;
-    const later = (a: Instant | null, b: Instant | null): Instant | null => (a === null ? b : b === null ? a : Math.max(a, b));
-    return {
-      async connectedAt(p) {
-        return s().sync.get(p)?.connectedAt ?? null;
-      },
-      async markLiveVerified(p, at) {
-        s().sync.set(p, { ...(s().sync.get(p) ?? SyncState.initial(p).props), liveVerifiedAt: at });
-      },
-      async liveVerifiedAt(p) {
-        return s().sync.get(p)?.liveVerifiedAt ?? null;
-      },
-      async load(p) {
-        const row = s().sync.get(p);
-        return row === undefined ? null : SyncState.rehydrate(row);
-      },
-      async save(state) {
-        const n = state.props;
-        const old = s().sync.get(n.provider);
-        s().sync.set(n.provider, {
-          ...n,
-          connectedAt: old?.connectedAt ?? n.connectedAt,
-          markConversations: later(old?.markConversations ?? null, n.markConversations),
-          markOutbound: later(old?.markOutbound ?? null, n.markOutbound),
-          liveVerifiedAt: old?.liveVerifiedAt ?? null,
-        });
-      },
-    };
-  }
-
-  private outgoingRepository(): OutgoingRepository {
-    const s = (): State => this.state;
-    return {
-      async find(sendId) {
-        const props = s().sends.get(sendId);
-        return props === undefined ? null : OutgoingSend.rehydrate(props);
-      },
-      async insert(send) {
-        if (s().sends.has(send.props.sendId)) throw new Error("send id already used");
-        s().sends.set(send.props.sendId, send.props);
-      },
-      async savePart(send, part, provider) {
-        const stored = s().sends.get(send.props.sendId);
-        const found = send.props.parts.find((x) => x.index === part);
-        if (stored === undefined || found === undefined) throw new Error("no such send or part");
-        if (found.providerMessageId !== null) {
-          const key = `${provider}:${found.providerMessageId}`;
-          const taken = s().outgoingParts.get(key);
-          if (taken !== undefined && (taken.sendId !== send.props.sendId || taken.part !== part)) throw new Error("provider id already linked");
-          s().outgoingParts.set(key, { sendId: send.props.sendId, part });
-        }
-        s().sends.set(stored.sendId, { ...stored, parts: stored.parts.map((x) => (x.index === part ? found : x)) });
-      },
-      async saveSend(send) {
-        const stored = s().sends.get(send.props.sendId);
-        if (stored === undefined) throw new Error("no such send");
-        const { state, failureReason, finishedAt, retryAt } = send.props;
-        s().sends.set(stored.sendId, { ...stored, state, failureReason, finishedAt, retryAt });
-      },
-      async findByProviderId(provider, providerMessageId) {
-        return s().outgoingParts.get(`${provider}:${providerMessageId}`) ?? null;
-      },
-      async markPendingAsUnknown() {
-        let changed = 0;
-        for (const [id, props] of s().sends) {
-          if (props.state !== "pending") continue;
-          const sent = OutgoingSend.rehydrate(props);
-          sent.markPendingUnknown();
-          s().sends.set(id, sent.props);
-          changed++;
-        }
-        return changed;
-      },
-      async candidatesForPart(chat, text, since) {
-        return [...s().messages.values()]
-          .filter((m) => {
-            const p = m.message.props;
-            return p.chat === chat && p.source === "owner_app" && p.text === text && p.sentAt >= since && !s().outgoingParts.has(messageIdKey(p.id));
-          })
-          .sort(bySent)
-          .map((m) => m.message.props.id);
-      },
-    };
   }
 }

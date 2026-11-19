@@ -3,7 +3,7 @@ import type { ChatId } from "../../../shared/chat-id";
 import type { SqlExecutor } from "../../../shared/sql-database";
 import { Draft, OPEN_STATES, type DraftKind, type DraftNumber } from "../../domain/draft";
 import { StaleDraft } from "../../domain/errors";
-import type { DraftRepository } from "../../ports/outbound";
+import type { DraftRepository } from "../../ports/store";
 import { COLUMNS, fromRow, toValues } from "./draft-row";
 
 const OPEN_LIST = OPEN_STATES.map((s) => `'${s}'`).join(",");

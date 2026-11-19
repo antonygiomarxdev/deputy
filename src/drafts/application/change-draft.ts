@@ -1,15 +1,11 @@
 import type { Clock } from "../../shared/clock";
 import type { OwnerLease } from "../../shared/owner-lease";
 import { parseOwnerWords } from "../../shared/owner-words";
-import { LeaseLost, LogUnavailable, StaleDraft } from "../domain/errors";
-import { toLogEntries } from "../domain/log-mapper";
-import type { Refusal } from "../domain/refusals";
 import type { ChangeDraft, ChangeDraftResult, Outcome } from "../ports/inbound";
-import type { OrderPreparer, UnitOfWork } from "../ports/outbound";
-import { refusalOfChange } from "./draft-change-refusal";
-import { voidApprovals, withLiveApproval } from "./live-approval";
-
-const refuse = (refusal: Refusal): Outcome<never> => ({ ok: false, refusal });
+import type { OrderPreparer } from "../ports/orders";
+import type { UnitOfWork } from "../ports/store";
+import { applyDraftChange } from "./apply-draft-change";
+import { refuse, refusalOfError } from "./refusal-of-error";
 
 export class ChangeDraftUseCase implements ChangeDraft {
   constructor(private readonly deps: { clock: Clock; lease: OwnerLease; unitOfWork: UnitOfWork; orders: OrderPreparer }) {}
@@ -37,26 +33,17 @@ export class ChangeDraftUseCase implements ChangeDraft {
       }
 
       return await unitOfWork.run(async (tx): Promise<Outcome<ChangeDraftResult>> => {
-        const loaded = await tx.drafts.get(number);
-        if (loaded === null) return refuse({ code: "draft_not_found", number });
-        const draft = await withLiveApproval(tx, loaded);
-        const before = draft.snapshot();
-        const now = clock.now();
-        const changed = draft.changeText({ text, orderPayload, ownerWords: words, now });
-        if (!changed.ok) return refuse(refusalOfChange(number, before.state, changed.reason));
-        await tx.drafts.save(draft);
-        const approvalEntryId = await voidApprovals(tx, changed.events, number, now);
-        await tx.log.append(toLogEntries(changed.events, { approvalEntryId }));
+        const applied = await applyDraftChange(tx, clock, number, (draft, now) =>
+          draft.changeText({ text, orderPayload, ownerWords: words, now }),
+        );
+        if (!applied.ok) return applied;
         return {
           ok: true,
-          value: { number, state: "waiting", approvalVoided: changed.events.some((e) => e.type === "ApprovalVoided") },
+          value: { number, state: "waiting", approvalVoided: applied.value.some((e) => e.type === "ApprovalVoided") },
         };
       });
     } catch (e) {
-      if (e instanceof LogUnavailable) return refuse({ code: "log_unavailable" });
-      if (e instanceof StaleDraft) return refuse({ code: "stale_draft", number: e.draft });
-      if (e instanceof LeaseLost) return refuse({ code: "not_owner" });
-      throw e;
+      return refusalOfError(e);
     }
   }
 }

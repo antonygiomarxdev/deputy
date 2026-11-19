@@ -11,10 +11,12 @@ import { ProviderError, type Cursor, type Provider } from "../ports/provider";
 import type { RunCoordinator } from "./run-coordinator";
 import type { StoreMessages } from "./store-messages";
 import type { StorageFailureLog } from "./storage-failure-log";
-import { publishEach } from "./publish-each";
+import { publishEach, storedEvents } from "./publish-each";
 import { probeGap } from "./gap-probe";
+import { readAll } from "./page-walk";
 import { buildSyncStatusView } from "./status-view";
-import { readAll, RunBudget, RunStopped, RunTotals, sweepConversations, sweepOutbound } from "./sweeps";
+import { RunBudget, RunStopped, RunTotals } from "./run-state";
+import { sweepConversations, sweepOutbound } from "./sweeps";
 
 export interface CatchUpDeps {
   provider: Provider;
@@ -99,7 +101,7 @@ export class CatchUpUseCase implements CatchUp {
         if (gap === null && started !== null) await r.rejections.resolveRecoverableBefore(started, finishedAt);
       });
 
-      this.publish(totals, gap === null ? "complete" : "failed", gap === null ? null : "possible_gap", finishedAt);
+      this.publishRunEvents(totals, gap === null ? "complete" : "failed", gap === null ? null : "possible_gap", finishedAt);
       return { kind: "finished", status: await this.d.status.execute(), stored: totals.stored };
     } catch (e) {
       return this.failed(e, loaded, totals);
@@ -123,7 +125,7 @@ export class CatchUpUseCase implements CatchUp {
         console.error("deputy: could not record the failed catch-up");
       }
     }
-    this.publish(totals, "failed", reason, now);
+    this.publishRunEvents(totals, "failed", reason, now);
     return { kind: "finished", status: await this.statusAfterFailure(reason, now, retryAfterMs), stored: totals.stored };
   }
 
@@ -148,12 +150,9 @@ export class CatchUpUseCase implements CatchUp {
     }
   }
 
-  private publish(totals: RunTotals, status: "complete" | "failed", reason: StoredReason | null, finishedAt: number): void {
+  private publishRunEvents(totals: RunTotals, status: "complete" | "failed", reason: StoredReason | null, finishedAt: number): void {
     const { provider, publisher } = this.d;
-    const summaries = totals.summaries();
-    const events: IntakeEvent[] = [];
-    if (summaries.length > 0) events.push({ name: "MessageStored", origin: "catch_up", items: summaries, at: finishedAt });
-    if (totals.unlinkedOwnerReplies > 0) events.push({ name: "OwnerReplyUnlinked", at: finishedAt });
+    const events: IntakeEvent[] = storedEvents("catch_up", totals.summaries(), totals.unlinkedOwnerReplies, finishedAt);
     events.push({
       name: "CatchUpFinished",
       provider: provider.name,

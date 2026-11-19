@@ -1,7 +1,10 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test, setDefaultTimeout } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
 import { join, posix } from "node:path";
 import { listImports } from "./imports";
+import { E2E_TIMEOUT_MS } from "../support/harness";
+
+setDefaultTimeout(E2E_TIMEOUT_MS);
 
 export interface Violation {
   rule: string;

@@ -2,18 +2,12 @@ import type { Instant } from "../../shared/instant";
 import type { ProviderName } from "../../shared/provider-name";
 import { RATE_LIMIT_DEFAULT_WAIT_MS, TELL_OWNER_AFTER_MS } from "./constants";
 
-export type SyncReason =
-  | "not_yet_run"
-  | "unreachable"
-  | "credentials"
-  | "quota"
-  | "usage_limit"
-  | "timeout"
-  | "bad_response"
-  | "possible_gap"
-  | "catching_up"
-  | "storage";
-export type StoredReason = Exclude<SyncReason, "not_yet_run">;
+/** Every reason a stored sync state can carry. The SQLite decoder reads its schema from this list: add a reason here only. */
+export const STORED_REASONS = [
+  "unreachable", "credentials", "quota", "usage_limit", "timeout", "bad_response", "possible_gap", "catching_up", "storage",
+] as const;
+export type StoredReason = (typeof STORED_REASONS)[number];
+export type SyncReason = "not_yet_run" | StoredReason;
 
 export interface OutboundResume {
   readonly cursor: string;

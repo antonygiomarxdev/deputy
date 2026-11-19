@@ -8,6 +8,12 @@ import { closedPort } from "./fake-kapso-server";
 
 const root = join(import.meta.dir, "..", "..");
 
+/**
+ * Bun applies setDefaultTimeout per test file, not from a preload (bun 1.4.4), so every e2e file calls it with this value.
+ * Under load a server takes more than bun's 5 s default to own the lease.
+ */
+export const E2E_TIMEOUT_MS = 30_000;
+
 export interface Harness {
   client: Client;
   /** Everything the server wrote to stderr so far. */
@@ -20,6 +26,16 @@ export interface Harness {
   port: number;
   /** Closes stdin and waits for the process; returns how long that took in ms. */
   close(): Promise<number>;
+}
+
+/** Servers started and not yet closed: a test that timed out may leave one running. */
+const live = new Set<Harness>();
+
+/** Closes every server a test started and did not close. The preload runs it after each test. */
+export async function closeLeftoverServers(): Promise<void> {
+  const left = [...live];
+  if (left.length > 0) console.error(`harness closed ${left.length} server(s) a test left running`);
+  for (const h of left) await h.close();
 }
 
 /** `reuse` starts the server again on the folders of an earlier run (for example after seeding the database). */
@@ -44,7 +60,7 @@ export async function startServer(
   const protocolErrors: Error[] = [];
   client.onerror = (e) => protocolErrors.push(e);
   await client.connect(transport);
-  return {
+  const h: Harness = {
     client,
     stderr: () => err,
     protocolErrors,
@@ -52,12 +68,15 @@ export async function startServer(
     configDir,
     port,
     async close() {
+      live.delete(h);
       const t0 = performance.now();
       await transport.close();
       const ms = performance.now() - t0;
       return ms;
     },
   };
+  live.add(h);
+  return h;
 }
 
 /**
@@ -94,8 +113,11 @@ export async function call(client: Client, name: string, args: Record<string, un
   return client.callTool({ name, arguments: args });
 }
 
-/** Waits until the server has acquired the lease and started what it starts when it owns it. */
-export async function waitForOwner(h: Harness, timeoutMs = 5_000): Promise<void> {
+/**
+ * Waits until the server has acquired the lease and started what it starts when it owns it. Matches the 30 s test timeout
+ * in preload.ts: under load a spawned server takes several seconds to reach this line.
+ */
+export async function waitForOwner(h: Harness, timeoutMs = 30_000): Promise<void> {
   const until = Date.now() + timeoutMs;
   while (!h.stderr().includes("deputy: owner of")) {
     if (Date.now() > until) throw new Error(`the server never became owner; stderr: ${h.stderr()}`);

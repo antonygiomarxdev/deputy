@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { TextDigest } from "../../ports/outbound";
+import type { TextDigest } from "../../ports/crypto";
 
 export class Sha256Digest implements TextDigest {
   sha256(text: string): string {

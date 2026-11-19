@@ -1,4 +1,4 @@
-import type { OrderChangeInput, OrderChanger } from "../../ports/outbound";
+import type { OrderChangeInput, OrderChanger } from "../../ports/orders";
 
 /** Counts every call; `beforeAnswer` runs first, so a test can look at what was logged by then. */
 export class FakeOrderChanger implements OrderChanger {

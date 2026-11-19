@@ -3,32 +3,12 @@ import { parseChatId, type ChatId } from "../../../shared/chat-id";
 import type { Instant } from "../../../shared/instant";
 import type { MessageId } from "../../../shared/message-id";
 import { PhoneNumber } from "../../../shared/phone-number";
-import type { ProviderName } from "../../../shared/provider-name";
 import type { SqlDatabase, SqlExecutor, SqlRow } from "../../../shared/sql-database";
-import type { Source } from "../../../shared/source";
+import type { ProviderName } from "../../../shared/provider-name";
 import { normalizeText } from "../../../shared/text";
-import { Message, type Mark, type MessageVersion, type SourceChange } from "../../domain/message";
+import { Message, type MessageVersion, type SourceChange } from "../../domain/message";
 import type { MessageRepository } from "../../ports/message-repository";
-
-function providerOf(r: SqlRow): ProviderName {
-  const p = str(r, "provider");
-  if (p !== "kapso" && p !== "dev") throw new Error(`provider '${p}'`);
-  return p;
-}
-
-function sourceOf(r: SqlRow): Source {
-  const s = str(r, "source");
-  if (s !== "customer" && s !== "owner_app" && s !== "sent_through_deputy") throw new Error(`source '${s}'`);
-  return s;
-}
-
-function markOf(r: SqlRow): Mark {
-  const m = str(r, "mark");
-  if (m !== "normal" && m !== "group_chat" && m !== "sender_unknown" && m !== "not_attributable") {
-    throw new Error(`mark '${m}'`);
-  }
-  return m;
-}
+import { markFromRow, providerOf, sourceOf } from "./decode";
 
 function toMessage(r: SqlRow, versions: readonly MessageVersion[]): Message {
   const chat = parseChatId(str(r, "chat_id"));
@@ -49,7 +29,7 @@ function toMessage(r: SqlRow, versions: readonly MessageVersion[]): Message {
       storedAt: num(r, "stored_at"),
       origin: strOrNull(r, "origin"),
       source: sourceOf(r),
-      mark: markOf(r),
+      mark: markFromRow(r),
       history: flag(r, "history"),
       dev: flag(r, "dev"),
       edited: flag(r, "edited"),
