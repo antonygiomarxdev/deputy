@@ -8,7 +8,7 @@ ADR-000 makes `src/main.ts` the only place an adapter is built. By 2026-11-19 it
 
 ## Decision
 - `src/main.ts` is the entry point only: it reads the command and runs `serve`.
-- `src/main/` is the composition root, one file per responsibility. Each file exports one function that builds and returns what the next one needs:
+- `src/main/` is the composition root, one file per responsibility. Each file exports the functions that build and return what the next step needs; a file exports two when the start order splits its job into phases (Intake owner numbers are applied before the provider is chosen):
   - `settings.ts`: reads and validates the environment (`DEPUTY_PORT`, `DEPUTY_DATA_DIR`, `DEPUTY_CONFIG_DIR`, `DEPUTY_SECRET_SERVICE`, `DEPUTY_KAPSO_BASE_URL`).
   - `database.ts`: the one ordered list of every slice's migration files (TD-3) and opening the database.
   - `provider.ts`: the dev or Kapso provider for the resolved settings.
