@@ -1,5 +1,7 @@
 import { expect, test } from "bun:test";
 import { chatOf, markOf } from "../../../src/intake/domain/chat-of";
+import { chatMarkOf } from "../../../src/intake/domain/chat-state";
+import { UNATTRIBUTED_CHAT, parseChatId, type ChatId } from "../../../src/shared/chat-id";
 import { PhoneNumber } from "../../../src/shared/phone-number";
 import type { ProviderMessage } from "../../../src/intake/ports/provider";
 
@@ -50,4 +52,16 @@ test("markOf order: group, not attributable, sender unknown", () => {
   expect(markOf(pm(), null, chatOf(pm()), false)).toBe("sender_unknown");
   expect(markOf(pm(), sender, chatOf(pm()), false)).toBe("normal");
   expect(markOf(pm({ direction: "outbound" }), null, chatOf(pm()), true)).toBe("normal");
+});
+
+const chatId = (s: string): ChatId => {
+  const c = parseChatId(s);
+  if (c === null) throw new Error(s);
+  return c;
+};
+
+test("chatMarkOf: group chat, unattributed, normal", () => {
+  expect(chatMarkOf(chatId("group:g1"))).toBe("group_chat");
+  expect(chatMarkOf(UNATTRIBUTED_CHAT)).toBe("not_attributable");
+  expect(chatMarkOf(chatId("+541123456789"))).toBe("normal");
 });

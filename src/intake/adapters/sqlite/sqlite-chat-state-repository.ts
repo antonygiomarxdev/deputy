@@ -1,15 +1,9 @@
 import { numOrNull, str, strOrNull, flag } from "../../../adapters/sqlite/row";
-import { UNATTRIBUTED_CHAT, parseChatId, type ChatId } from "../../../shared/chat-id";
+import { parseChatId, type ChatId } from "../../../shared/chat-id";
 import type { Instant } from "../../../shared/instant";
 import type { SqlExecutor, SqlRow } from "../../../shared/sql-database";
-import type { ChatState } from "../../domain/chat-state";
-import type { Mark } from "../../domain/message";
+import { chatMarkOf, type ChatState } from "../../domain/chat-state";
 import type { ChatSeen, ChatStateRepository } from "../../ports/chat-state-repository";
-
-export function chatMark(chat: ChatId): Mark {
-  if (chat.startsWith("group:")) return "group_chat";
-  return chat === UNATTRIBUTED_CHAT ? "not_attributable" : "normal";
-}
 
 function toState(r: SqlRow): ChatState {
   const chat = parseChatId(str(r, "chat_id"));
@@ -21,7 +15,7 @@ function toState(r: SqlRow): ChatState {
   return {
     chat,
     dev: flag(r, "dev"),
-    mark: chatMark(chat),
+    mark: chatMarkOf(chat),
     conversationRef: strOrNull(r, "conversation_ref"),
     providerId: strOrNull(r, "provider_id"),
     lastCustomerAt: numOrNull(r, "last_customer_at"),
@@ -62,7 +56,7 @@ export class SqliteChatStateRepository implements ChatStateRepository {
          last_unattributed_at = excluded.last_unattributed_at,
          updated_at = excluded.updated_at`,
       [
-        chat, d, chatMark(chat), seen.conversationRef, seen.providerId,
+        chat, d, chatMarkOf(chat), seen.conversationRef, seen.providerId,
         chat, d, chat, d, chat, d, chat, d, chat, d,
         now,
       ],
