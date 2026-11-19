@@ -132,6 +132,29 @@ describe("FR-DRAFTS-04-5: a sent entry that cannot be written", () => {
     expect(h.sender.calls).toHaveLength(1);
   });
 
+  test("a tick that comes while the previous run is still in flight is skipped, not overlapped", async () => {
+    const { h, fail, clock } = setup(3);
+    await approve(h, clock);
+    fail.remaining = 0;
+    let appends = 0;
+    let release: () => void = () => {};
+    const gate = new Promise<void>((r) => (release = r));
+    const original = h.store.unitOfWork.run.bind(h.store.unitOfWork);
+    // hold the first retry inside its transaction
+    h.store.unitOfWork.run = async (work, o) => {
+      appends++;
+      await gate;
+      return original(work, o);
+    };
+    const first = h.retryPendingOutcomes.run();
+    await new Promise((r) => setTimeout(r, 5));
+    expect(await h.retryPendingOutcomes.run()).toEqual({ written: 0, pending: 1 });
+    expect(appends).toBe(1);
+    release();
+    expect(await first).toEqual({ written: 1, pending: 0 });
+    expect(await h.retryPendingOutcomes.run()).toEqual({ written: 0, pending: 0 });
+  });
+
   test("a failed write of a result other than sent is log_unavailable and leaves the draft sending", async () => {
     const fail = { remaining: 0 };
     let breakUnknown = false;
