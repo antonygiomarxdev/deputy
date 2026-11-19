@@ -2,4 +2,4 @@
 "deputy": patch
 ---
 
-Listing drafts and approving an order command now refuse a drafts-log or stale-draft error instead of crashing.
+list_drafts and order commands answer a refusal, like the other draft tools, if the log or the draft fails.
