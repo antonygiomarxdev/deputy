@@ -331,6 +331,14 @@ describe("KapsoProvider", () => {
       server.force("send", { status: 401 });
       expect(await failure(provider.sendText({ to, text: "x" }, signal))).toMatchObject({ kind: "credentials", mayHaveBeenAccepted: false });
     });
+
+    test("a 500 on a send is unreachable and may have been accepted", async () => {
+      const { server, provider } = kapso();
+      const to = PhoneNumber.fromInternational("+15557654321");
+      if (to === null) throw new Error("bad number");
+      server.force("send", { status: 500 });
+      expect(await failure(provider.sendText({ to, text: "x" }, signal))).toMatchObject({ kind: "unreachable", mayHaveBeenAccepted: true });
+    });
   });
 
   test("businessNumber parses the display number; no number is null", async () => {
