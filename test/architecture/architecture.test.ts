@@ -21,12 +21,14 @@ const SOURCE_CLASSIFIER = "src/intake/domain/source-classifier.ts";
 const REVEAL_ALLOWED = (file: string) =>
   file.startsWith("src/intake/adapters/") || file === "src/intake/application/receive-live-delivery.ts";
 const CONNECTION_CONFIG = "src/intake/ports/intake-connection-config.ts";
+// ADR-013: the composition root is src/main.ts (the entry point) and src/main/ (its wiring, one file per responsibility).
+const isRoot = (file: string) => file === "src/main.ts" || file.startsWith("src/main/");
 
 function locate(file: string): Loc {
   const parts = file.split("/");
   const first = parts[1] ?? "";
   const second = parts[2] ?? "";
-  if (first === "main.ts") return { kind: "main" };
+  if (first === "main.ts" || first === "main") return { kind: "main" };
   if (first === "shared" || first === "adapters" || first === "composition") return { kind: first };
   return { kind: "slice", slice: first, layer: second, isIndex: parts.length === 3 && second === "index.ts" };
 }
@@ -69,7 +71,7 @@ export function checkArchitecture(root: string): Violation[] {
     const from = locate(file);
     const add = (rule: string, specifier: string) => out.push({ rule, file, specifier });
 
-    if (file !== "src/main.ts") {
+    if (!isRoot(file)) {
       for (const cls of importedAdapters(file, src)) {
         if (new RegExp(`\\bnew\\s+${cls}\\s*\\(`).test(src)) add("adapter-instantiated", cls);
       }
@@ -88,9 +90,10 @@ export function checkArchitecture(root: string): Violation[] {
       if (!target) continue; // non-.ts assets such as .sql
       const to = locate(target);
 
-      if (to.kind === "main") add("imports-main", spec);
+      if (target === "src/main.ts") add("imports-main", spec);
+      if (to.kind === "main" && target.startsWith("src/main/") && !isRoot(file)) add("main-folder-imported-outside", spec);
       if (target === SOURCE_CLASSIFIER && file !== "src/intake/domain/message.ts") add("source-classifier-import", spec);
-      if (to.kind === "composition" && file !== "src/main.ts") add("composition-imported-outside", spec);
+      if (to.kind === "composition" && !isRoot(file)) add("composition-imported-outside", spec);
       const mayUseSharedAdapters =
         from.kind === "adapters" ||
         from.kind === "composition" ||
@@ -165,6 +168,7 @@ describe("checkArchitecture", () => {
     "shared-adapter-imports-slice",
     "adapter-folder-misuse",
     "imports-main",
+    "main-folder-imported-outside",
     "adapter-instantiated",
     "customer-text-label",
     "source-classifier-import",
@@ -187,6 +191,11 @@ describe("checkArchitecture", () => {
   }
   test("fixture adapter-instantiated-other-slice: another slice's adapter class is internal and instantiated", () => {
     expect(found("adapter-instantiated-other-slice")).toEqual(["adapter-instantiated", "cross-slice-internal"]);
+  });
+
+  // ADR-013: the composition root may be spread over src/main.ts and src/main/; nothing else may import the folder.
+  test("fixture main-folder-valid: src/main.ts and src/main/ import each other and build adapters with no violation", () => {
+    expect(found("main-folder-valid")).toEqual([]);
   });
 
   test("fixture secret-reveal-main: main.ts may not reveal a secret either; it hands the Secret over", () => {
