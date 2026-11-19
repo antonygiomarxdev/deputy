@@ -13,12 +13,13 @@ Layout (ports and adapters; ADR-000 in `docs/adr/`):
 - `src/shared/`: the shared kernel (value objects, `Clock`, `OwnerLease`, `SqlDatabase`, text functions, signals). No package and no `bun:` or `node:` import.
 - `src/<slice>/`: one folder per slice (today `intake`, with `drafts` and others following) holding `domain/`, `application/`, `ports/`, `adapters/` and an `index.ts` that is the only file other slices may import.
 - `src/adapters/`: adapters shared by slices (SQLite, clock, supervisor, config, secrets, MCP tool helpers, event bus).
-- `src/composition/`: the MCP server, its `instructions` and the tools that span slices. Only `src/main.ts` imports it.
-- `src/main.ts`: the composition root, and the only place an adapter is built.
+- `src/composition/`: the MCP server, its `instructions` and the tools that span slices. Only the composition root imports it.
+- `src/main.ts`: the entry point; it runs `serve`.
+- `src/main/`: the composition root, one file per responsibility (ADR-013): settings, database and migrations, provider, one file per slice, tools, lifecycle, and `serve.ts` with the start order. The only place an adapter is built.
 - `test/architecture/` enforces those import rules; `test/support/` holds fakes and the end-to-end harness.
 - `business/` and `examples/`: owner templates (profile, catalog) and filled-in examples. No code reads them yet.
 
-New provider = implement `Provider` in `src/intake/ports/provider.ts`, put the adapter in `src/intake/adapters/<name>/` and build it in `src/main.ts`. New SQL migrations are numbered files under an `adapters/sqlite/migrations/` folder, appended to the list in `src/main.ts` (a file's position is its `user_version`).
+New provider = implement `Provider` in `src/intake/ports/provider.ts`, put the adapter in `src/intake/adapters/<name>/` and build it in `src/main/provider.ts`. New SQL migrations are numbered files under an `adapters/sqlite/migrations/` folder, appended to the list in `src/main/database.ts` (a file's position is its `user_version`).
 
 Product docs: [docs/PRODUCT.md](docs/PRODUCT.md) holds the problem, principles, v1 scope and slice map. Each slice keeps its chain (PRD → FRDs → TPs per FRD → ADRs → specs) in `src/<slice>/docs/`; the cross-cutting TP is `docs/tp/TP.md`. Implementation is ATDD: acceptance tests from the FRD first. Product decisions: [docs/DECISIONS.md](docs/DECISIONS.md); terms: [docs/GLOSSARY.md](docs/GLOSSARY.md); cross-slice ADRs: `docs/adr/`.
 
