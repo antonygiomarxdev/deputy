@@ -1,3 +1,4 @@
+import { OWNER_WORDS_MAX } from "../../shared/owner-words";
 import type { DraftState } from "./draft";
 
 export type Refusal =
@@ -49,7 +50,7 @@ export function refusalText(r: Refusal): string {
     case "wrong_kind":
       return `draft ${r.number} is of the other kind`;
     case "words_empty":
-      return "the owner's words are empty or longer than 1000 characters";
+      return `the owner's words are empty or longer than ${OWNER_WORDS_MAX} characters`;
     case "log_unavailable":
       return "the drafts log cannot be written, so nothing was done";
     case "stale_draft":
