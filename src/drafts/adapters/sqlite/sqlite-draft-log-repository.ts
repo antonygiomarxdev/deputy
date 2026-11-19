@@ -1,46 +1,15 @@
-import { flag, num, numOrNull, str, strOrNull } from "../../../adapters/sqlite/row";
+import { num, str } from "../../../adapters/sqlite/row";
 import type { ChatId } from "../../../shared/chat-id";
-import type { SqlExecutor, SqlRow, SqlValue } from "../../../shared/sql-database";
-import type { DraftKind } from "../../domain/draft";
+import type { SqlExecutor, SqlValue } from "../../../shared/sql-database";
 import { LogUnavailable } from "../../domain/errors";
-import type { LogEntry, LogKind, NewLogEntry } from "../../domain/log-entry";
-import { fromIso, toIso } from "../../domain/time";
+import type { LogEntry, NewLogEntry } from "../../domain/log-entry";
+import { toIso } from "../../domain/time";
 import type { DraftLogRepository } from "../../ports/log";
-
-const KINDS: readonly string[] = [
-  "proposed", "replaced", "text_changed", "approved", "approval_voided", "rejected", "held", "owner_choice",
-  "sending", "sent", "failed", "unknown", "recorded", "order_command", "order_deleted",
-];
-const isLogKind = (v: string): v is LogKind => KINDS.includes(v);
-const isDraftKind = (v: string): v is DraftKind => v === "reply" || v === "order";
+import { fromRow } from "./draft-log-row";
 
 const COLUMNS =
   "at, kind, draft_number, draft_kind, chat, proposed_text, final_text, reason, owner_words, approval_entry_id, send_id, order_ref";
 const ROW = `(${COLUMNS.split(",").map(() => "?").join(", ")})`;
-
-function toEntry(r: SqlRow): LogEntry {
-  const kind = str(r, "kind");
-  const draftKind = strOrNull(r, "draft_kind");
-  if (!isLogKind(kind)) throw new Error(`stored log kind '${kind}'`);
-  if (draftKind !== null && !isDraftKind(draftKind)) throw new Error(`stored draft kind '${draftKind}'`);
-  return {
-    id: num(r, "id"),
-    at: fromIso(str(r, "at")),
-    kind,
-    draft: numOrNull(r, "draft_number"),
-    draftKind,
-    // the row mapper is the one place a ChatId is cast: the value was a ChatId when it was written
-    chat: str(r, "chat") as ChatId,
-    proposedText: strOrNull(r, "proposed_text"),
-    finalText: strOrNull(r, "final_text"),
-    reason: strOrNull(r, "reason"),
-    ownerWords: strOrNull(r, "owner_words"),
-    approvalEntryId: numOrNull(r, "approval_entry_id"),
-    sendId: strOrNull(r, "send_id"),
-    orderRef: strOrNull(r, "order_ref"),
-    scrubbed: flag(r, "scrubbed"),
-  };
-}
 
 export class SqliteDraftLogRepository implements DraftLogRepository {
   constructor(private readonly db: SqlExecutor) {}
@@ -82,18 +51,23 @@ export class SqliteDraftLogRepository implements DraftLogRepository {
       `SELECT * FROM drafts_log${where.length ? ` WHERE ${where.join(" AND ")}` : ""} ORDER BY id ${ascending ? "ASC" : "DESC"} LIMIT ?`,
       [...params, f.limit],
     );
-    return rows.map(toEntry);
+    return rows.map(fromRow);
   }
 
+  /** Every `sent` entry with the `approved` entry it points to, in one query: the approval rows are fetched by the same statement. */
   async sentWithApproval(): Promise<{ sent: LogEntry; approval: LogEntry | null }[]> {
-    const sent = (await this.db.query("SELECT * FROM drafts_log WHERE kind = 'sent' ORDER BY id")).map(toEntry);
-    const rows: { sent: LogEntry; approval: LogEntry | null }[] = [];
-    for (const s of sent) {
-      const [a] =
-        s.approvalEntryId === null ? [] : await this.db.query("SELECT * FROM drafts_log WHERE id = ?", [s.approvalEntryId]);
-      rows.push({ sent: s, approval: a ? toEntry(a) : null });
-    }
-    return rows;
+    const rows = (
+      await this.db.query(
+        `SELECT * FROM drafts_log
+          WHERE kind = 'sent'
+             OR id IN (SELECT approval_entry_id FROM drafts_log WHERE kind = 'sent' AND approval_entry_id IS NOT NULL)
+          ORDER BY id`,
+      )
+    ).map(fromRow);
+    const byId = new Map(rows.map((e) => [e.id, e]));
+    return rows
+      .filter((e) => e.kind === "sent")
+      .map((sent) => ({ sent, approval: sent.approvalEntryId === null ? null : (byId.get(sent.approvalEntryId) ?? null) }));
   }
 
   /** Reply drafts in "sending" or "unknown" with no `sent` entry; `since` is the time of the latest `sending` entry. */
