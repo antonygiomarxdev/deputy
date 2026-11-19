@@ -1,5 +1,5 @@
 import type { Approval } from "../../domain/approval";
-import type { ApprovalRepository } from "../../ports/outbound";
+import type { ApprovalRepository } from "../../ports/store";
 
 /** Born used, unique id and sendId, as the SQLite table enforces. */
 export class InMemoryApprovals implements ApprovalRepository {

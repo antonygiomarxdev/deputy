@@ -1,5 +1,5 @@
 import { normalizeText } from "../../../shared/text";
-import type { CustomerTextCheck } from "../../ports/outbound";
+import type { CustomerTextCheck } from "../../ports/chat";
 
 /** True when the words equal one of the stored customer texts after normalization, as Intake's IsCustomerText does. */
 export class FakeCustomerTextCheck implements CustomerTextCheck {

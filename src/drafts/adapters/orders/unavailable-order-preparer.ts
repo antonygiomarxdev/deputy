@@ -1,4 +1,4 @@
-import type { OrderPreparer } from "../../ports/outbound";
+import type { OrderPreparer } from "../../ports/orders";
 
 /** Until the Orders slice is wired: no order can be prepared, so no order draft exists to revalidate. */
 export class UnavailableOrderPreparer implements OrderPreparer {

@@ -1,12 +1,15 @@
 import type { Clock } from "../../shared/clock";
 import type { OwnerLease } from "../../shared/owner-lease";
 import type { Approval } from "../domain/approval";
-import type { Draft } from "../domain/draft";
+import { isClosed, isInFlight, type Draft } from "../domain/draft";
 import { LogUnavailable } from "../domain/errors";
 import { toLogEntries } from "../domain/log-mapper";
 import type { Refusal } from "../domain/refusals";
 import type { ApproveDraft, ApproveResult, Outcome } from "../ports/inbound";
-import type { CustomerTextCheck, Ids, OrderRecorder, TextDigest, UnitOfWork } from "../ports/outbound";
+import type { CustomerTextCheck } from "../ports/chat";
+import type { Ids, TextDigest } from "../ports/crypto";
+import type { OrderRecorder } from "../ports/orders";
+import type { UnitOfWork } from "../ports/store";
 import type { Sender } from "../ports/sender";
 import { checkOwnerWords } from "./check-owner-words";
 import type { PendingOutcomes } from "./pending-outcomes";
@@ -79,8 +82,8 @@ export class ApproveDraftUseCase implements ApproveDraft {
   /** The state checks of step 1, in order. Repeated inside transaction 1, where another caller may have won. */
   private refusalOfState(draft: Draft, shownText: string): Refusal | null {
     const s = draft.snapshot();
-    if (s.state === "sending" || s.state === "recording") return { code: "send_in_progress", number: s.number };
-    if (s.state === "sent" || s.state === "recorded" || s.state === "rejected" || s.state === "replaced") {
+    if (isInFlight(s.state)) return { code: "send_in_progress", number: s.number };
+    if (isClosed(s.state)) {
       return { code: "not_approvable", number: s.number, state: s.state };
     }
     if (s.shownVersion !== s.textVersion) return { code: "not_shown", number: s.number };

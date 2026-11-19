@@ -2,7 +2,8 @@ import type { Clock } from "../../shared/clock";
 import type { OwnerLease } from "../../shared/owner-lease";
 import { parseOwnerWords } from "../../shared/owner-words";
 import type { ChangeDraft, ChangeDraftResult, Outcome } from "../ports/inbound";
-import type { OrderPreparer, UnitOfWork } from "../ports/outbound";
+import type { OrderPreparer } from "../ports/orders";
+import type { UnitOfWork } from "../ports/store";
 import { applyDraftChange } from "./apply-draft-change";
 import { refuse, refusalOfError } from "./refusal-of-error";
 

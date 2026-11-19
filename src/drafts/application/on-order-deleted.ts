@@ -4,7 +4,7 @@ import type { OwnerLease } from "../../shared/owner-lease";
 import { LeaseLost } from "../domain/errors";
 import { blankLogEntry } from "../domain/log-entry";
 import type { OnOrderDeleted } from "../ports/inbound";
-import type { UnitOfWork } from "../ports/outbound";
+import type { UnitOfWork } from "../ports/store";
 
 export class OnOrderDeletedUseCase implements OnOrderDeleted {
   constructor(private readonly deps: { clock: Clock; lease: OwnerLease; unitOfWork: UnitOfWork }) {}

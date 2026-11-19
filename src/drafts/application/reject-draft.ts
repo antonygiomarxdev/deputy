@@ -2,7 +2,7 @@ import type { Clock } from "../../shared/clock";
 import type { OwnerLease } from "../../shared/owner-lease";
 import { parseOwnerWords } from "../../shared/owner-words";
 import type { Outcome, RejectDraft } from "../ports/inbound";
-import type { UnitOfWork } from "../ports/outbound";
+import type { UnitOfWork } from "../ports/store";
 import { applyDraftChange } from "./apply-draft-change";
 import { refuse, refusalOfError } from "./refusal-of-error";
 

@@ -4,7 +4,7 @@ import type { SqlExecutor, SqlRow } from "../../../shared/sql-database";
 import type { Approval } from "../../domain/approval";
 import type { DraftNumber } from "../../domain/draft";
 import { fromIso, toIso } from "../../domain/time";
-import type { ApprovalRepository } from "../../ports/outbound";
+import type { ApprovalRepository } from "../../ports/store";
 
 function toApproval(r: SqlRow): Approval {
   return {

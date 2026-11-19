@@ -3,7 +3,7 @@ import { createSerializer } from "../../../adapters/serial";
 import { Draft, OPEN_STATES, type DraftKind, type DraftNumber, type DraftSnapshot } from "../../domain/draft";
 import { LeaseLost, StaleDraft } from "../../domain/errors";
 import type { ChatId } from "../../../shared/chat-id";
-import type { DraftRepository, Transaction, UnitOfWork } from "../../ports/outbound";
+import type { DraftRepository, Transaction, UnitOfWork } from "../../ports/store";
 import { InMemoryApprovals } from "./in-memory-approvals";
 import { InMemoryDraftLog } from "./in-memory-draft-log";
 

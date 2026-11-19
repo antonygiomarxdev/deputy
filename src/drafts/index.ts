@@ -16,49 +16,46 @@ import { WaitingChatsUseCase } from "./application/waiting-chats";
 import type {
   ApproveDraft,
   ApproveOrderCommand,
-  ApproveResult,
   ChangeDraft,
-  ChangeDraftResult,
   CheckApprovals,
   CreateDraft,
-  CreateDraftResult,
-  DraftView,
   ListDrafts,
-  LogEntryView,
-  MessageView,
   OnOrderDeleted,
-  Outcome,
   ReadDraftLog,
   RejectDraft,
   RetryPendingOutcomes,
-  WaitingChat,
   WaitingChats,
 } from "./ports/inbound";
-import type { ChatReader, CustomerTextCheck, Ids, OrderChanger, OrderInput, OrderPreparer, OrderRecorder, TextDigest, UnitOfWork } from "./ports/outbound";
+import type { ChatReader, CustomerTextCheck } from "./ports/chat";
+import type { Ids, TextDigest } from "./ports/crypto";
+import type { OrderChanger, OrderPreparer, OrderRecorder } from "./ports/orders";
+import type { UnitOfWork } from "./ports/store";
 import type { Sender } from "./ports/sender";
 
 export type {
   ApproveDraft,
   ApproveOrderCommand,
-  ApproveResult,
   ChangeDraft,
-  ChangeDraftResult,
   CheckApprovals,
   CreateDraft,
-  CreateDraftResult,
-  DraftView,
   ListDrafts,
-  LogEntryView,
-  MessageView,
-  Outcome,
   OnOrderDeleted,
-  OrderInput,
   ReadDraftLog,
   RejectDraft,
   RetryPendingOutcomes,
-  WaitingChat,
   WaitingChats,
-};
+} from "./ports/inbound";
+export type {
+  ApproveResult,
+  ChangeDraftResult,
+  CreateDraftResult,
+  DraftView,
+  LogEntryView,
+  MessageView,
+  Outcome,
+  WaitingChat,
+} from "./ports/inbound";
+export type { OrderInput } from "./ports/orders";
 export type { DraftEvent } from "./domain/events";
 export type { Refusal } from "./domain/refusals";
 export { refusalText } from "./domain/refusals";

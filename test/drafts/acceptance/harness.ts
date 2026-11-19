@@ -16,7 +16,8 @@ import { RejectDraftUseCase } from "../../../src/drafts/application/reject-draft
 import { CreateDraftUseCase } from "../../../src/drafts/application/create-draft";
 import { ListDraftsUseCase } from "../../../src/drafts/application/list-drafts";
 import { WaitingChatsUseCase } from "../../../src/drafts/application/waiting-chats";
-import type { ChatMessage, UnitOfWork } from "../../../src/drafts/ports/outbound";
+import type { ChatMessage } from "../../../src/drafts/ports/chat";
+import type { UnitOfWork } from "../../../src/drafts/ports/store";
 import type { Clock } from "../../../src/shared/clock";
 import type { OwnerLease } from "../../../src/shared/owner-lease";
 import { FakeClock } from "../../support/fake-clock";

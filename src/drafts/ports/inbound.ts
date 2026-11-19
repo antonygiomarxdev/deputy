@@ -4,7 +4,7 @@ import type { AuditDefect, AuditGap } from "../domain/approval-audit";
 import type { LogKind } from "../domain/log-entry";
 import type { DraftKind, DraftNumber, DraftState } from "../domain/draft";
 import type { Refusal } from "../domain/refusals";
-import type { OrderChangeInput, OrderInput } from "./outbound";
+import type { OrderChangeInput, OrderInput } from "./orders";
 
 export type Outcome<T> = { readonly ok: true; readonly value: T } | { readonly ok: false; readonly refusal: Refusal };
 

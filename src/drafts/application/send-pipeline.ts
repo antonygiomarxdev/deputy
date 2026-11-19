@@ -6,7 +6,8 @@ import { Draft, type DraftChange, type DraftKind } from "../domain/draft";
 import { LogUnavailable } from "../domain/errors";
 import { toLogEntries } from "../domain/log-mapper";
 import type { ApproveResult, Outcome } from "../ports/inbound";
-import type { OrderRecorder, UnitOfWork } from "../ports/outbound";
+import type { OrderRecorder } from "../ports/orders";
+import type { UnitOfWork } from "../ports/store";
 import type { PendingOutcomes } from "./pending-outcomes";
 import { refuse, refusalOfError } from "./refusal-of-error";
 

@@ -3,7 +3,10 @@ import type { Clock } from "../../shared/clock";
 import type { OwnerLease } from "../../shared/owner-lease";
 import { blankLogEntry, type NewLogEntry } from "../domain/log-entry";
 import type { ApproveOrderCommand, Outcome } from "../ports/inbound";
-import { ORDER_FIELDS, type CustomerTextCheck, type OrderChanger, type UnitOfWork } from "../ports/outbound";
+import { ORDER_FIELDS } from "../domain/order-fields";
+import type { CustomerTextCheck } from "../ports/chat";
+import type { OrderChanger } from "../ports/orders";
+import type { UnitOfWork } from "../ports/store";
 import { checkOwnerWords } from "./check-owner-words";
 import { refuse, refusalOfError } from "./refusal-of-error";
 

@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { openBunSqlite } from "../../../src/adapters/sqlite/bun-sqlite-database";
 import { migrate } from "../../../src/adapters/sqlite/migrate";
 import { SqliteUnitOfWork } from "../../../src/drafts/adapters/sqlite/sqlite-unit-of-work";
-import type { UnitOfWork } from "../../../src/drafts/ports/outbound";
+import type { UnitOfWork } from "../../../src/drafts/ports/store";
 import { makeDrafts, message } from "./harness";
 
 const root = join(import.meta.dir, "..", "..", "..");

@@ -1,7 +1,8 @@
 import { normalizeText } from "../../shared/text";
 import { ownerWordsShape } from "../domain/owner-words";
 import type { Refusal } from "../domain/refusals";
-import type { CustomerTextCheck, UnitOfWork } from "../ports/outbound";
+import type { CustomerTextCheck } from "../ports/chat";
+import type { UnitOfWork } from "../ports/store";
 
 /**
  * OwnerWordsPolicy, steps in order, stopping at the first failure: the shape (empty or too long, then the draft

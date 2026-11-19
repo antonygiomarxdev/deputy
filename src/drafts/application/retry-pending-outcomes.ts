@@ -1,7 +1,7 @@
 import type { Clock } from "../../shared/clock";
 import { LeaseLost, LogUnavailable, StaleDraft } from "../domain/errors";
 import type { RetryPendingOutcomes } from "../ports/inbound";
-import type { UnitOfWork } from "../ports/outbound";
+import type { UnitOfWork } from "../ports/store";
 import { commit, sentStep } from "./send-pipeline";
 import type { PendingOutcomes } from "./pending-outcomes";
 

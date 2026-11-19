@@ -1,4 +1,4 @@
-import type { Ids } from "../../ports/outbound";
+import type { Ids } from "../../ports/crypto";
 
 export class UuidIds implements Ids {
   next(): string {

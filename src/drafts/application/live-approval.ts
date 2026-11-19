@@ -1,7 +1,7 @@
 import type { Instant } from "../../shared/instant";
 import { Draft } from "../domain/draft";
 import type { DraftEvent } from "../domain/events";
-import type { Transaction } from "../ports/outbound";
+import type { Transaction } from "../ports/store";
 
 /** The draft with its live (not voided) approval attached: the drafts row never stores it. */
 export async function withLiveApproval(tx: Pick<Transaction, "approvals">, draft: Draft): Promise<Draft> {
