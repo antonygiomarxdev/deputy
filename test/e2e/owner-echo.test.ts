@@ -31,7 +31,7 @@ const textOf = (r: Awaited<ReturnType<typeof call>>): string => {
 
 test("FR-INTAKE-04-4: a reply the owner wrote from the app while Deputy was off is found by check_messages and shown as the owner's", async () => {
   const h = await boot();
-  holdOwnerReply(h, { chat: CUSTOMER, text: "Yes, until 6 pm.", sentAt: Date.now() });
+  await holdOwnerReply(h, { chat: CUSTOMER, text: "Yes, until 6 pm.", sentAt: Date.now() });
 
   const checked = await call(h.client, "check_messages");
   expect(checked.isError).toBeFalsy();
@@ -46,7 +46,7 @@ test("FR-INTAKE-04-4: a reply the owner wrote from the app while Deputy was off 
 test("FR-INTAKE-04-4: with live delivery on, a reply that only the provider holds is still stored by the next check_messages, after the customer's live message", async () => {
   const h = await boot();
   expect((await postDelivery(h, { chat: CUSTOMER, from: CUSTOMER, text: "Are you open?", sentAt: 1_000, providerMessageId: "dev-in-1" })).status).toBe(200);
-  holdOwnerReply(h, { chat: CUSTOMER, text: "Yes we are.", sentAt: 2_000 });
+  await holdOwnerReply(h, { chat: CUSTOMER, text: "Yes we are.", sentAt: 2_000 });
   expect(textOf(await call(h.client, "check_messages"))).toContain("Stored 1 new message.");
 
   const lines = textOf(await call(h.client, "get_chat", { chat: CHAT })).split("\n");

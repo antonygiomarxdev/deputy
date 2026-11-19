@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { createSqliteOwnerLease } from "../../../src/adapters/sqlite/sqlite-owner-lease";
+import { DevDeliveries } from "../../../src/intake/adapters/dev/dev-deliveries";
 import { DevProvider } from "../../../src/intake/adapters/dev/dev-provider";
 import { RecordingEventPublisher } from "../../../src/intake/adapters/memory/recording-event-publisher";
 import { SqliteIntakeUnitOfWork } from "../../../src/intake/adapters/sqlite/sqlite-intake-unit-of-work";
@@ -49,6 +50,7 @@ beforeEach(async () => {
     receiving: "catch_up",
     webhookSecret: null,
     settings: s.settings,
+    devDeliveries: new DevDeliveries(provider),
   });
   const business = phone(BUSINESS);
   await s.repos.owners.save(OwnerNumbers.of([{ number: business, kind: "business", label: "", addedAt: 1 }]), []);
