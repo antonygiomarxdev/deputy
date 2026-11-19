@@ -1,3 +1,4 @@
+import type { Instant } from "../../shared/instant";
 import type { SqlRow, SqlValue } from "../../shared/sql-database";
 
 export class RowError extends Error {
@@ -34,4 +35,10 @@ export function flag(r: SqlRow, c: string): boolean {
   const v = num(r, c);
   if (v !== 0 && v !== 1) throw new RowError(c, "0 or 1", v);
   return v === 1;
+}
+
+/** A time stored as text, or null. `parse` is the slice's own reader of that text, so the adapter imports no slice. */
+export function timeOrNull(r: SqlRow, c: string, parse: (text: string) => Instant): Instant | null {
+  const v = strOrNull(r, c);
+  return v === null ? null : parse(v);
 }
