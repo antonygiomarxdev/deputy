@@ -9,6 +9,8 @@ import { ApproveDraftUseCase } from "../../../src/drafts/application/approve-dra
 import { ApproveOrderCommandUseCase } from "../../../src/drafts/application/approve-order-command";
 import { CheckApprovalsUseCase } from "../../../src/drafts/application/check-approvals";
 import { ReadDraftLogUseCase } from "../../../src/drafts/application/read-draft-log";
+import { PendingOutcomes } from "../../../src/drafts/application/pending-outcomes";
+import { RetryPendingOutcomesUseCase } from "../../../src/drafts/application/retry-pending-outcomes";
 import { ChangeDraftUseCase } from "../../../src/drafts/application/change-draft";
 import { RejectDraftUseCase } from "../../../src/drafts/application/reject-draft";
 import { CreateDraftUseCase } from "../../../src/drafts/application/create-draft";
@@ -60,11 +62,13 @@ export function makeDrafts(
   const digest = { sha256: (text: string) => `hash(${text})` };
   const recorder = new FakeOrderRecorder();
   const changer = new FakeOrderChanger(o.orderChats ?? {});
-  const approveDraft = new ApproveDraftUseCase({ clock, lease, unitOfWork, customerText, sender, recorder, digest, ids });
+  const pending = new PendingOutcomes();
+  const approveDraft = new ApproveDraftUseCase({ clock, lease, unitOfWork, customerText, sender, recorder, pending, digest, ids });
+  const retryPendingOutcomes = new RetryPendingOutcomesUseCase({ clock, unitOfWork, pending });
   const changeDraft = new ChangeDraftUseCase({ clock, lease, unitOfWork, orders });
   const rejectDraft = new RejectDraftUseCase({ clock, lease, unitOfWork });
   const readDraftLog = new ReadDraftLogUseCase({ unitOfWork });
   const checkApprovals = new CheckApprovalsUseCase({ unitOfWork });
   const approveOrderCommand = new ApproveOrderCommandUseCase({ clock, lease, unitOfWork, customerText, changer });
-  return { holder, clock, store, chats, orders, createDraft, listDrafts, waitingChats, sender, customerText, recorder, changer, approveDraft, approveOrderCommand, changeDraft, rejectDraft, readDraftLog, checkApprovals };
+  return { holder, clock, store, chats, orders, createDraft, listDrafts, waitingChats, sender, customerText, recorder, changer, approveDraft, approveOrderCommand, changeDraft, rejectDraft, readDraftLog, checkApprovals, pending, retryPendingOutcomes };
 }

@@ -122,7 +122,14 @@ export interface CheckApprovals {
   run(): Promise<{ defects: AuditDefect[]; gaps: AuditGap[] }>;
 }
 
-/** Orders' OrderDeleted, delivered through its outbox. `draftNumber` is null when the order is not from this data folder. */
+/**
+ * Orders' OrderDeleted, delivered through its outbox. `draftNumber` is null when the order is not from this data folder.
+ * Idempotence is keyed by the order id, not the event id: any later delivery for an order already scrubbed returns `scrubbed: 0`.
+ */
 export interface OnOrderDeleted {
   run(event: { eventId: string; orderId: string; draftNumber: number | null; chat: string }): Promise<{ scrubbed: number } | { refused: "not_owner" }>;
+}
+
+export interface RetryPendingOutcomes {
+  run(): Promise<{ written: number; pending: number }>;
 }

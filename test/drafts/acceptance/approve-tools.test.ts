@@ -84,6 +84,16 @@ describe("the answers", () => {
     expect(r?.isError).toBe(!ok);
   });
 
+  test("a send whose record could not be written says so, and the owner is told it will be retried", async () => {
+    const approveDraft: ApproveDraft = { run: async () => ({ ok: true, value: { outcome: "sent", number: 3, sendId: "deputy:a", logged: false } }) };
+    const t = tools({ approveDraft }).find((x) => x.name === "approve_draft");
+    const r = await t?.run({ number: 3, shown_text: "x", owner_words: "go 3" });
+    expect(r).toMatchObject({ isError: false, structured: { outcome: "sent", logged: false } });
+    expect(r?.text).toContain("was sent");
+    expect(r?.text).toContain("record could not be written");
+    expect(r?.text).toContain("check_approvals");
+  });
+
   test("a sent draft is reported as sent", async () => {
     const approveDraft: ApproveDraft = { run: async () => ({ ok: true, value: { outcome: "sent", number: 3, sendId: "deputy:a", logged: true } }) };
     const t = tools({ approveDraft }).find((x) => x.name === "approve_draft");

@@ -5,6 +5,8 @@ import { ApproveDraftUseCase } from "./application/approve-draft";
 import { ApproveOrderCommandUseCase } from "./application/approve-order-command";
 import { ChangeDraftUseCase } from "./application/change-draft";
 import { CheckApprovalsUseCase } from "./application/check-approvals";
+import { PendingOutcomes } from "./application/pending-outcomes";
+import { RetryPendingOutcomesUseCase } from "./application/retry-pending-outcomes";
 import { OnOrderDeletedUseCase } from "./application/on-order-deleted";
 import { ReadDraftLogUseCase } from "./application/read-draft-log";
 import { CreateDraftUseCase } from "./application/create-draft";
@@ -28,6 +30,7 @@ import type {
   Outcome,
   ReadDraftLog,
   RejectDraft,
+  RetryPendingOutcomes,
   WaitingChat,
   WaitingChats,
 } from "./ports/inbound";
@@ -52,6 +55,7 @@ export type {
   OrderInput,
   ReadDraftLog,
   RejectDraft,
+  RetryPendingOutcomes,
   WaitingChat,
   WaitingChats,
 };
@@ -108,10 +112,16 @@ export interface ApprovalDeps {
  * The owner's go: the one path that sends (approve_draft) and the order commands. Built apart from createDrafts so that
  * main.ts offers these tools only once a real sender exists: a tool that can never send must not be offered.
  */
-export function createApprovals(deps: ApprovalDeps): { approveDraft: ApproveDraft; approveOrderCommand: ApproveOrderCommand } {
+export function createApprovals(deps: ApprovalDeps): {
+  approveDraft: ApproveDraft;
+  approveOrderCommand: ApproveOrderCommand;
+  retryPendingOutcomes: RetryPendingOutcomes;
+} {
   const { clock, lease, unitOfWork, customerText, sender, orderRecorder, orderChanger, digest, ids } = deps;
+  const pending = new PendingOutcomes();
   return {
-    approveDraft: new ApproveDraftUseCase({ clock, lease, unitOfWork, customerText, sender, recorder: orderRecorder, digest, ids }),
+    approveDraft: new ApproveDraftUseCase({ clock, lease, unitOfWork, customerText, sender, recorder: orderRecorder, pending, digest, ids }),
+    retryPendingOutcomes: new RetryPendingOutcomesUseCase({ clock, unitOfWork, pending }),
     approveOrderCommand: new ApproveOrderCommandUseCase({ clock, lease, unitOfWork, customerText, changer: orderChanger }),
   };
 }

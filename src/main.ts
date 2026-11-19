@@ -194,8 +194,14 @@ async function serve(): Promise<number> {
     clock,
     onAcquired: hooks.onAcquired,
     onLost: hooks.onLost,
+    // every tick while this process owns the data: owner-number changes the terminal left pending, and `sent` records
+    // that could not be written (retried here, never by sending again)
     onTick: async () => {
-      await ownerNumbers.applyPendingChanges.execute();
+      try {
+        await ownerNumbers.applyPendingChanges.execute();
+      } finally {
+        await approvals.retryPendingOutcomes.run();
+      }
     },
   });
 
