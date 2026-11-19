@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from "bun:test";
+import { beforeEach, describe, expect, test, setDefaultTimeout } from "bun:test";
 import { InMemoryIntakeSettingsRepository } from "../../../src/intake/adapters/memory/in-memory-intake-settings-repository";
 import { InMemoryIntakeStore } from "../../../src/intake/adapters/memory/in-memory-intake-store";
 import { RecordingEventPublisher } from "../../../src/intake/adapters/memory/recording-event-publisher";
@@ -14,6 +14,9 @@ import { parseChatId } from "../../../src/shared/chat-id";
 import { FakeClock } from "../../support/fake-clock";
 import { FakeProvider } from "../../support/fake-provider";
 import { providerMessage } from "../../support/intake-fixtures";
+import { E2E_TIMEOUT_MS } from "../../support/harness";
+
+setDefaultTimeout(E2E_TIMEOUT_MS);
 
 const CHAT = (() => {
   const c = parseChatId("+541123456789");

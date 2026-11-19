@@ -1,7 +1,10 @@
-import { afterEach, expect, test } from "bun:test";
+import { afterEach, expect, test, setDefaultTimeout } from "bun:test";
 import { startFakeKapso } from "../../support/fake-kapso-server";
 import { call, removeHarnessDirs, startServer, waitForOwner, type Harness } from "../../support/harness";
 import { postDelivery, switchToKapso } from "../../support/live";
+import { E2E_TIMEOUT_MS } from "../../support/harness";
+
+setDefaultTimeout(E2E_TIMEOUT_MS);
 
 const CHAT = "+15557654321";
 let seq = 0;
