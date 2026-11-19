@@ -1,9 +1,12 @@
-import { expect, test } from "bun:test";
+import { expect, test, setDefaultTimeout } from "bun:test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { openBunSqlite } from "../../../src/adapters/sqlite/bun-sqlite-database";
 import { migrate } from "../../../src/adapters/sqlite/migrate";
+import { E2E_TIMEOUT_MS } from "../../support/harness";
+
+setDefaultTimeout(E2E_TIMEOUT_MS);
 
 const ROUNDS = 40;
 const worker = join(import.meta.dir, "../../support/lease-worker.ts");
