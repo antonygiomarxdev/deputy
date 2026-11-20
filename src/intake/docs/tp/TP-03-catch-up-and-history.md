@@ -1,6 +1,6 @@
 # Technical Proposal: Intake FRD-03, Catch-up and history
 
-Status: Approved (2026-11-18). Written 2026-11-17. Cross-cutting TP: `docs/tp/TP.md`, in particular TD-5 (two sweeps on the provider's clock). FRD: `../frd/FRD-03-catch-up-and-history.md`. The `Provider` port and the store path are in `TP-01-providers.md` and `TP-02-receive-and-store.md`.
+Status: Approved (2026-11-19). Written 2026-11-17. Cross-cutting TP: `docs/tp/TP.md`, in particular TD-5 (two sweeps on the provider's clock). FRD: `../frd/FRD-03-catch-up-and-history.md`. The `Provider` port and the store path are in `TP-01-providers.md` and `TP-02-receive-and-store.md`.
 
 ## Context
 
@@ -43,13 +43,15 @@ FR-INTAKE-03-1, FR-INTAKE-03-2, FR-INTAKE-03-3, FR-INTAKE-03-4, FR-INTAKE-03-5, 
 
 ### TD-1: How is a possible gap detected?
 
-FR-INTAKE-03-15 says: the oldest message the provider returns is newer than the newest message Deputy stored, and the provider has nothing older.
+FR-INTAKE-03-15 says: when a listing is read to its end and its oldest returned message is O, a gap is possible only if Deputy holds a stored message of that scope older than O, and Deputy's coverage mark for that scope, read before this run's sweeps, is null or older than O. A mark at or after O means Deputy already read up to O.
 
 - **Option A** The comparison as the FRD words it, once per run, over all returned messages. Cost: one number to compare. Risk: false alarms. A quiet shop's newest stored message is old; a brand-new conversation's whole listing is newer and exhausted; the first reply the owner ever sends has the same shape.
 - **Option B** Per listing scope. For every listing a run read to its end (one conversation, or the outbound listing), ask whether Deputy already stores a message of that scope older than the oldest one returned. If it does, the provider no longer holds it. Cost: one repository query per exhausted listing. Risk: a conversation not touched in the run is not checked.
 - **Option C** A daily probe: page the whole outbound listing to its end and compare the provider's oldest message with the oldest Deputy stores. Cost: many requests each day on a busy number. Risk: it checks only one kind of message and runs too rarely to name a recent gap.
 
 Chosen: Option B. It raises the status for the FRD's own example (stored 10 days ago, oldest returned 3 days ago, nothing older) and stays silent for quiet periods. The text says "possible". Recorded in ADR-007.
+
+Refined by the coverage mark (2026-11-19, ADR-007). Option B alone reads only the stored side, so the same stretch raised the alarm again on every run while the provider kept dropping it. The probe now also reads the coverage mark: `SyncState.markConversations` for a conversation and `markOutbound` for owner/Deputy, saved in step 2 of the run before the sweeps advance them. A gap needs the pre-run mark null or below O. A mark at or after O means that stretch was already read, so older messages the provider drops are provider retention, not a gap, and the same stretch is not reported again. Accepted limit: with a null mark (before the first catch-up), rows delivered live and older than a short provider retention can raise one `possible_gap`.
 
 ### TD-2: How does a run wait for the rate limit?
 
@@ -128,7 +130,7 @@ Algorithm, one run (`CatchUp`), steps in order:
 2. Load `SyncState`. Read the first page of the conversation listing. Its `serverTime` is `T0`. If `connectedAt` is empty, set and save it to `T0` before anything is stored. `runStart = T0`; `deadline = now + 60 s`.
 3. **Sweep 1.** `from1 = markConversations - overlap`, or none on the first import. List conversations active after `from1` (every page; the listing is newest first). Sort ascending by `lastActiveAt`. For each: list its messages newest first until an item is older than `from1`, or the listing is exhausted. Store each page in its own transaction, oldest item first. After the conversation, save `markConversations = lastActiveAt`. Check the deadline between conversations. When all are done, `markConversations = runStart`.
 4. **Sweep 2.** `from2 = markOutbound - overlap`, or none. List the outbound messages newest first until an item is older than `from2` or the listing is exhausted. Store each page as above and save `outboundResume = { cursor, from2, runStart }` after each page. When the sweep ends, clear the resume and set `markOutbound = runStart`. If the saved resume has the same `from2`, continue from its cursor; if the provider refuses the cursor, restart the window (storing is idempotent). This refines the cross-cutting wording "a page of outbound messages advances the mark": pages arrive newest first, so a mark could not move per page without leaving a hole.
-5. **Gap probe.** For each listing that was read to its end, compare with stored messages of the same scope (TD-1). A hit sets `gap`.
+5. **Gap probe.** For each listing that was read to its end, compare with stored messages of the same scope and with the pre-run coverage mark of that scope (step 2, TD-1). A hit sets `gap`.
 6. **Finish.** No error and no gap: `complete`, `lastSuccessAt = now`. Else `failed` with the reason. Publish one `MessageStored` if any non-history message was stored (FR-INTAKE-03-5), then `CatchUpFinished`. Resolve open `no_identifier` rejection notes older than this run's local start when the run is complete (TP-02).
 
 History flag: for Kapso `history = sentAt < connectedAt || (origin == "history_sync" && source == customer)`; for dev the origin only (TD-3). Owner and Deputy messages after `connected_at` are never history, and consumers must not read the flag as proof of age.
@@ -314,9 +316,9 @@ Layers: UC is a use case with in-memory adapters, a fake provider with scripted 
 | FR-INTAKE-03-10 | Given a fake clock and the default period, When 10 minutes pass with messages arriving at minute 3 and 7, Then runs happen at 0, 2, 4, 6, 8 and 10 and both messages are stored without being asked | UC |
 | FR-INTAKE-03-11 | Given a number connected with 90 days of history, When the first run ends, Then the messages are stored once each with the history flag, including ones whose origin is not labelled `history_sync` but whose time is before `connected_at`; a message sent after `connected_at` is not history | UC |
 | FR-INTAKE-03-12 | Given the history above, When the first run ends, Then no `MessageStored` item counts a history message | UC |
-| FR-INTAKE-03-13 | Given the provider holds only 3 days while 10 days are stored, When the run ends, Then status is `possible_gap` and the text names the WhatsApp Business app; `oldestStoredAt` is exposed | UC |
+| FR-INTAKE-03-13 | Given the provider holds only 3 days while 10 days are stored and the pre-run mark is 10 days ago, When the run ends, Then status is `possible_gap` and the text names the WhatsApp Business app; `oldestStoredAt` is exposed. A stretch the mark already covers is not reported | UC |
 | FR-INTAKE-03-14 | Given the provider does not answer within 15 seconds, When catch-up runs, Then status is `failed`, reason `timeout`, and `ReadInbox` returns with stored data after at most 20 seconds | UC |
-| FR-INTAKE-03-15 | Given the newest stored message is 10 days old and the exhausted listing's oldest item is 3 days old, When the run ends, Then status is `possible_gap` naming both times. Given a quiet shop and a new conversation, Then there is no gap | UC |
+| FR-INTAKE-03-15 | Given the newest stored message is 10 days old, the pre-run mark is 10 days ago, and the exhausted listing's oldest item is 3 days old, When the run ends, Then status is `possible_gap` naming both times. Given a second run with the same listing, Then status is `complete`. Given the mark at O exactly, Then no gap. Given a quiet shop and a new conversation, Then there is no gap | UC |
 | FR-INTAKE-03-16 | Given live delivery is on, When a message arrives live, Then periodic catch-up still runs and later returns it | UC |
 | FR-INTAKE-03-17 | Given a message was stored live, When the next run lists it, Then it is stored once and signalled once; a run that finds nothing emits no signal | UC |
 | FR-INTAKE-03-18 | Given an idle shop, When a periodic run finds nothing new, Then it makes one conversation listing, one message read for each conversation active in the last 10 minutes (the overlap), and one outbound page; with no recent activity that is two requests | AC |

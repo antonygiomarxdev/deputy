@@ -1,6 +1,6 @@
 # FRD-03: Catch-up and history
 
-Status: Approved (2026-11-18)
+Status: Approved (2026-11-19)
 
 ## Summary
 
@@ -19,7 +19,7 @@ R-INTAKE-8, R-INTAKE-9, R-INTAKE-10, R-INTAKE-11, R-INTAKE-15, R-INTAKE-16, R-IN
 - **FR-INTAKE-03-5.** A catch-up (at session start, periodic or asked) that stores one or more new messages emits one "message stored" signal for the whole group, not one per message. A catch-up that stores nothing emits none.
 - **FR-INTAKE-03-6.** Deputy keeps a catch-up status with two values, "complete" and "failed", the time of the last attempt, the time of the last successful catch-up, and the time of the newest stored message. Any slice can read all of them. The status reads "complete" only about the time of the last successful catch-up; a long session may have received nothing live since, and the data is only as fresh as that time. Readers show it as "up to date as of <time>".
 - **FR-INTAKE-03-14.** A catch-up that gets no answer within a set time limit ends with status "failed", reason "timeout". Reads of the inbox then go on with the stored data and the warning. They never wait without end.
-- **FR-INTAKE-03-15.** Deputy detects a possible gap like this: if the oldest message the provider returns is newer than the newest message Deputy had stored before this catch-up, and the provider says it has nothing older, then messages may have been lost in between. The status is "failed", reason "possible gap", and says the owner should check the WhatsApp Business app for the period between those two times. A first catch-up with nothing stored has no gap to detect.
+- **FR-INTAKE-03-15.** Deputy detects a possible gap by its coverage mark, not by message ids. Before a catch-up's sweeps run, Deputy reads the coverage mark of each scope: for a conversation, its markConversations; for the owner's outbound messages, markOutbound. When a listing of one scope is read to its end (the provider says it has nothing older), and its oldest returned message is O, messages may have been lost only if both hold: (a) Deputy holds a stored message of that scope older than O; (b) the mark read before this run is null or older than O. If the mark is at or after O, Deputy had already read up to O: messages older than O that the provider no longer returns are provider retention, not a gap, and the same stretch is not reported again. The status is "failed", reason "possible gap", and says the owner should check the WhatsApp Business app for the period between those two times (from O to the stored message). A first catch-up with nothing stored has no gap to detect.
 - **FR-INTAKE-03-7.** If catch-up cannot finish (provider unreachable, credentials rejected, quota used up, retention shorter than the time away), the status is "failed". The agent is told in plain words which reason applies and how recent the stored data is, for example: "Could not reach Kapso. The newest message I have is from yesterday 18:42."
 - **FR-INTAKE-03-8.** While the status is "failed", Deputy never presents the inbox as complete. Messages stored before the failure stay available, and messages stored partway through a failed catch-up are kept.
 - **FR-INTAKE-03-9.** The owner can ask for catch-up again at any time in a session ("check again"). Running it again is safe: it stores only what is new, and it never duplicates (FRD-02).
@@ -32,7 +32,7 @@ R-INTAKE-8, R-INTAKE-9, R-INTAKE-10, R-INTAKE-11, R-INTAKE-15, R-INTAKE-16, R-IN
 - **FR-INTAKE-03-21.** The catch-up period is an owner setting, kept by Intake. The minimum is 1 minute and the default is 2 minutes. A value below the minimum is refused and the previous value stays. Other slices read the period from Intake.
 - **FR-INTAKE-03-11.** When the owner connects a number, Deputy stores the history the provider has synced (up to 180 days) as ordinary messages with the history flag set. They are de-duplicated and source-marked like any other. Deputy does not filter them by age; the Inbox slice does.
 - **FR-INTAKE-03-12.** History messages are not announced one by one. The first catch-up after connecting stores them with no "message stored" signal for flagged messages.
-- **FR-INTAKE-03-13.** If the provider holds less history than the owner expected, or its retention is shorter than the time away, the status says so, so the owner knows messages may be missing and where to look (the WhatsApp Business app on the phone).
+- **FR-INTAKE-03-13.** If the provider holds less history than the owner expected, or its retention is shorter than the time away, the status says so, so the owner knows messages may be missing and where to look (the WhatsApp Business app on the phone). A stretch Deputy has already read is not reported again as a gap (FR-INTAKE-03-15): retention that drops messages Deputy has read is not a gap.
 
 ## Edge cases
 
@@ -74,7 +74,7 @@ R-INTAKE-8, R-INTAKE-9, R-INTAKE-10, R-INTAKE-11, R-INTAKE-15, R-INTAKE-16, R-IN
 - Given something that claims to be a catch-up arrives without the provider's authenticated access, When Deputy receives it, Then no message from it is stored. Tests FR-INTAKE-03-3.
 - Given the owner connects a number with history from 90 days, When the first catch-up runs, Then the history is stored with the history flag, with no duplicates and no signal. Tests FR-INTAKE-03-11 and FR-INTAKE-03-12.
 - Given the provider does not answer within the time limit, When catch-up runs, Then the status is "failed" with reason "timeout" and the inbox read continues with stored data and a warning. Tests FR-INTAKE-03-14.
-- Given the newest stored message is from 10 days ago and the oldest message the provider returns is from 3 days ago with nothing older, When catch-up ends, Then the status is "failed" with reason "possible gap" naming those two times. Tests FR-INTAKE-03-15.
+- Given the owner was away 10 days, the coverage mark of the conversation is 10 days ago, the newest stored message of it is from 10 days ago, and the listing's oldest returned message is from 3 days ago with nothing older, When the first catch-up runs, Then the status is "failed" with reason "possible gap" naming those two times, and the mark after the run is at least 3 days ago. Given a second catch-up runs right after with the same listing, When it ends, Then the status is "complete": the mark read before it was already at 3 days ago. Given a new conversation whose listing is complete and which has no stored message older than its oldest returned message, When catch-up ends, Then it is never a gap. Tests FR-INTAKE-03-15.
 - Given the last successful catch-up was 6 hours ago, When another slice reads the status, Then it sees "up to date as of" that time. Tests FR-INTAKE-03-6.
 - Given a failed catch-up stored two of five messages, When the status is read, Then it is "failed" and the two messages remain. Tests FR-INTAKE-03-8.
 
