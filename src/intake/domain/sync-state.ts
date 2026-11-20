@@ -32,6 +32,8 @@ export interface SyncStateProps {
   gap: { storedAt: Instant; returnedAt: Instant } | null;
   firstImportCount: number;
   liveVerifiedAt: Instant | null;
+  // local clock: set when this run's end is saved (complete, or any fail); cleared when a run begins. A crashed run leaves it null.
+  finishedAt: Instant | null;
 }
 
 const later = (a: Instant | null, b: Instant): Instant => (a === null || b > a ? b : a);
@@ -58,6 +60,7 @@ export class SyncState {
       gap: null,
       firstImportCount: 0,
       liveVerifiedAt: null,
+      finishedAt: null,
     });
   }
 
@@ -79,7 +82,16 @@ export class SyncState {
   }
 
   begin(i: { providerTime: Instant; now: Instant }): void {
-    this.p = { ...this.p, lastAttemptAt: i.now, runStartedAt: i.now, connectedAt: this.p.connectedAt ?? i.providerTime };
+    this.p = { ...this.p, lastAttemptAt: i.now, runStartedAt: i.now, connectedAt: this.p.connectedAt ?? i.providerTime, finishedAt: null };
+  }
+
+  /**
+   * The coverage marks a gap probe may trust. They count only when the previous run finished all its sweeps (complete, or failed with
+   * possible_gap). A stopped run may have moved a mark past a conversation it never read, so its marks count as null, the old behavior.
+   */
+  coverageMarks(): { conversations: Instant | null; outbound: Instant | null } {
+    const finished = this.p.finishedAt !== null && (this.p.status === "complete" || this.p.reason === "possible_gap");
+    return finished ? { conversations: this.p.markConversations, outbound: this.p.markOutbound } : { conversations: null, outbound: null };
   }
 
   /** Never moves back. */
@@ -110,6 +122,7 @@ export class SyncState {
       status: "complete",
       reason: null,
       lastSuccessAt: now,
+      finishedAt: now,
       failedSince: null,
       rateLimitedSince: null,
       retryAt: null,
@@ -124,6 +137,7 @@ export class SyncState {
       ...this.p,
       status: "failed",
       reason,
+      finishedAt: now,
       failedSince: this.p.failedSince ?? now,
       rateLimitedSince: usageLimit ? (this.p.rateLimitedSince ?? now) : this.p.rateLimitedSince,
       // a retry wait of 0 or less is no wait at all: it counts as absent, or the scheduler would loop

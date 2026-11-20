@@ -52,6 +52,20 @@ for (const subject of subjects) {
       expect((await s.repos.syncState.load("kapso"))?.props.liveVerifiedAt).toBe(555);
     });
 
+    test("finishedAt: a save after begin() clears it, and a save after complete() sets it to the end time", async () => {
+      const state = SyncState.initial("kapso");
+      state.begin({ providerTime: 100, now: 200 });
+      state.complete(300);
+      await s.repos.syncState.save(state);
+      expect((await s.repos.syncState.load("kapso"))?.props.finishedAt).toBe(300);
+      state.begin({ providerTime: 100, now: 400 });
+      await s.repos.syncState.save(state);
+      expect((await s.repos.syncState.load("kapso"))?.props.finishedAt).toBeNull();
+      state.complete(500);
+      await s.repos.syncState.save(state);
+      expect((await s.repos.syncState.load("kapso"))?.props.finishedAt).toBe(500);
+    });
+
     test("a row made by markLiveVerified alone loads as not yet run", async () => {
       await s.repos.syncState.markLiveVerified("kapso", 10);
       const loaded = await s.repos.syncState.load("kapso");

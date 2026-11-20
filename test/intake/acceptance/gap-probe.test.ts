@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test } from "bun:test";
+import { RUN_BUDGET_MS } from "../../../src/intake/domain/constants";
 import { InMemoryIntakeSettingsRepository } from "../../../src/intake/adapters/memory/in-memory-intake-settings-repository";
 import { InMemoryIntakeStore } from "../../../src/intake/adapters/memory/in-memory-intake-store";
 import { RecordingEventPublisher } from "../../../src/intake/adapters/memory/recording-event-publisher";
@@ -8,7 +9,8 @@ import { RunCoordinator } from "../../../src/intake/application/run-coordinator"
 import { StorageFailureLog } from "../../../src/intake/application/storage-failure-log";
 import { StoreMessages } from "../../../src/intake/application/store-messages";
 import { OwnerNumbers } from "../../../src/intake/domain/owner-numbers";
-import type { ProviderMessage } from "../../../src/intake/ports/provider";
+import type { IntakeUnitOfWork } from "../../../src/intake/ports/intake-unit-of-work";
+import { ProviderError, type ProviderMessage } from "../../../src/intake/ports/provider";
 import { PhoneNumber } from "../../../src/shared/phone-number";
 import { FakeClock } from "../../support/fake-clock";
 import { FakeProvider } from "../../support/fake-provider";
@@ -62,8 +64,8 @@ describe("the gap probe", () => {
       failures,
     });
   };
-  const run = async () => {
-    const result = await build().execute({ trigger: "timer" });
+  const run = async (waitMs?: number) => {
+    const result = await build().execute({ trigger: "timer", waitMs });
     if (result.kind !== "finished") throw new Error(`expected finished, got ${result.kind}`);
     return result.status;
   };
@@ -151,5 +153,149 @@ describe("the gap probe", () => {
     provider.hold("c1", "5491123456789", [msg("recent", NOW - 3 * DAY)]);
     await run();
     expect((await store.repos.rejections.list()).unrecovered).toBe(1);
+  });
+});
+
+describe("the gap probe on later runs (FR-INTAKE-03-15, SPEC-03 Task 5 (b) to (d))", () => {
+  let store: InMemoryIntakeStore;
+  let provider: FakeProvider;
+  let clock: FakeClock;
+  let publisher: RecordingEventPublisher;
+
+  beforeEach(async () => {
+    store = new InMemoryIntakeStore();
+    provider = new FakeProvider("kapso");
+    clock = new FakeClock(1_000_000);
+    publisher = new RecordingEventPublisher();
+    provider.serverTime = NOW;
+    const owner = PhoneNumber.fromInternational(OWNER);
+    if (!owner) throw new Error("owner");
+    await store.owners.save(OwnerNumbers.of([{ number: owner, kind: "business", label: "", addedAt: 1 }]), []);
+  });
+
+  const build = (uow: IntakeUnitOfWork = store.unitOfWork) => {
+    const coordinator = new RunCoordinator<RunResult>(clock);
+    const failures = new StorageFailureLog();
+    return new CatchUpUseCase({
+      provider,
+      clock,
+      lease: { isOwner: async () => true },
+      uow,
+      reads: store.repos,
+      store: new StoreMessages({ clock }),
+      publisher,
+      coordinator,
+      status: new GetSyncStatusUseCase({ provider: "kapso", reads: store.repos, settings: new InMemoryIntakeSettingsRepository(), coordinator, failures, clock }),
+      failures,
+    });
+  };
+  const run = async (waitMs?: number) => {
+    const result = await build().execute({ trigger: "timer", waitMs });
+    if (result.kind !== "finished") throw new Error(`expected finished, got ${result.kind}`);
+    return result.status;
+  };
+  const storeDirectly = (...messages: ProviderMessage[]) =>
+    store.unitOfWork.run((r) =>
+      new StoreMessages({ clock }).store(r, { provider: "kapso", events: messages.map((message) => ({ kind: "message" as const, message })) }),
+    );
+
+  test("(b) two runs over the same stretch: the first reports possible_gap, the second is complete, the stretch is not reported again", async () => {
+    await storeDirectly(msg("old", NOW - 10 * DAY));
+    provider.hold("c1", "5491123456789", [msg("recent", NOW - 3 * DAY)], NOW);
+    expect(await run()).toMatchObject({ status: "failed", reason: "possible_gap" });
+    expect(await run()).toMatchObject({ status: "complete", gap: null });
+  });
+
+  test("(c) boundary across runs: the mark was saved at O by an earlier run, so the next run finds no gap", async () => {
+    await storeDirectly(msg("old", NOW - 10 * DAY));
+    provider.serverTime = NOW - 3 * DAY; // an earlier run that read up to 3 days ago
+    expect(await run()).toMatchObject({ status: "complete", gap: null });
+    provider.serverTime = NOW;
+    provider.hold("c1", "5491123456789", [msg("recent", NOW - 3 * DAY)], NOW);
+    expect(await run()).toMatchObject({ status: "complete", gap: null });
+  });
+
+  test("(d) a new conversation with nothing stored older than its oldest item is never a gap, on the first run or any later one", async () => {
+    provider.hold("c2", "5491100000001", [msg("first", NOW - 2 * DAY, "c2", "5491100000001")], NOW);
+    expect(await run()).toMatchObject({ status: "complete", gap: null });
+    expect(await run()).toMatchObject({ status: "complete", gap: null });
+  });
+
+  const day = (n: number) => NOW - n * DAY;
+  const C2 = "5491100000001";
+
+  test("rule A (reviewer-1's scenario): c1 is read, the budget stops before c2, and the gap in c2 is still reported on the next run", async () => {
+    await storeDirectly(msg("c2-old", day(20), "c2", C2));
+    provider.hold("c1", "5491123456789", [msg("c1-new", day(5))], day(5)); // read first: the least recently active
+    provider.hold("c2", C2, [msg("c2-a", day(1), "c2", C2), msg("c2-b", day(6), "c2", C2)], day(1));
+    provider.afterCall = async (c) => {
+      if (c.kind === "messages" && "conversationRef" in c.scope && c.scope.conversationRef === "c1") await clock.advance(RUN_BUDGET_MS);
+    };
+    expect(await run(3 * RUN_BUDGET_MS)).toMatchObject({ status: "failed", reason: "catching_up" });
+    provider.afterCall = null;
+    expect(await run()).toMatchObject({
+      status: "failed",
+      reason: "possible_gap",
+      gap: { storedAt: day(20), returnedAt: day(6) },
+    });
+  });
+
+  test("the outbound mark is read through a whole run: a complete run's mark covers the stretch, so the next run finds no gap", async () => {
+    provider.serverTime = day(2);
+    expect(await run()).toMatchObject({ status: "complete", gap: null });
+    await storeDirectly(echo("old-reply", day(20)));
+    provider.serverTime = NOW;
+    provider.outbound = [echo("reply", day(2) - 5 * 60_000)]; // inside the window that starts at the mark less OVERLAP_MS
+    expect(await run()).toMatchObject({ status: "complete", gap: null });
+  });
+
+  test("a resumed outbound sweep (outboundResume set) finishes the run, and reports no gap when nothing older is stored", async () => {
+    provider.pageSize = 1;
+    provider.outbound = [echo("r1", day(1)), echo("r2", day(2)), echo("r3", day(3))];
+    provider.afterCall = async (c) => {
+      if (c.kind === "messages" && "outbound" in c.scope && c.cursor === null) await clock.advance(RUN_BUDGET_MS);
+    };
+    expect(await run(3 * RUN_BUDGET_MS)).toMatchObject({ status: "failed", reason: "catching_up" });
+    provider.afterCall = null;
+    const saved = (await store.repos.syncState.load("kapso"))?.props.outboundResume;
+    expect(saved).not.toBeNull();
+    expect(await run()).toMatchObject({ status: "complete", gap: null });
+  });
+
+  test("a crashed run does not count as finished: run 2 reads c1 and dies before its failure is saved; run 3 still reports the gap in c2", async () => {
+    await storeDirectly(msg("c2-old", day(20), "c2", C2));
+    provider.serverTime = day(30);
+    expect(await run()).toMatchObject({ status: "complete", gap: null }); // run 1 finished: the marks are day 30
+    provider.hold("c1", "5491123456789", [msg("c1-new", day(5))], day(5)); // read first: moves the mark to day 5 and saves it
+    provider.hold("c2", C2, [msg("c2-a", day(1), "c2", C2), msg("c2-b", day(6), "c2", C2)], day(1));
+    provider.serverTime = NOW;
+    // the process dies: the failure of run 2 is never saved, so the state saved mid-run stays as it was
+    let dying = false;
+    const dyingUow: IntakeUnitOfWork = {
+      run: (work) =>
+        store.unitOfWork.run((r) =>
+          work({
+            ...r,
+            syncState: {
+              ...r.syncState,
+              save: (s) => (dying && s.props.reason !== null ? Promise.reject(new Error("the process died")) : r.syncState.save(s)),
+            },
+          }),
+        ),
+    };
+    provider.onCall = (c) => {
+      if (c.kind === "messages" && "conversationRef" in c.scope && c.scope.conversationRef === "c2") {
+        dying = true;
+        throw new ProviderError("unreachable", null, false);
+      }
+    };
+    await build(dyingUow).execute({ trigger: "timer" });
+    provider.onCall = null;
+    dying = false;
+    expect(await run()).toMatchObject({
+      status: "failed",
+      reason: "possible_gap",
+      gap: { storedAt: day(20), returnedAt: day(6) },
+    });
   });
 });
