@@ -82,6 +82,15 @@ export class SyncState {
     this.p = { ...this.p, lastAttemptAt: i.now, runStartedAt: i.now, connectedAt: this.p.connectedAt ?? i.providerTime };
   }
 
+  /**
+   * The coverage marks a gap probe may trust. They count only when the previous run finished all its sweeps (complete, or failed with
+   * possible_gap). A stopped run may have moved a mark past a conversation it never read, so its marks count as null, the old behavior.
+   */
+  coverageMarks(): { conversations: Instant | null; outbound: Instant | null } {
+    const finished = this.p.status === "complete" || this.p.reason === "possible_gap";
+    return finished ? { conversations: this.p.markConversations, outbound: this.p.markOutbound } : { conversations: null, outbound: null };
+  }
+
   /** Never moves back. */
   advanceConversations(to: Instant): void {
     this.p = { ...this.p, markConversations: later(this.p.markConversations, to) };

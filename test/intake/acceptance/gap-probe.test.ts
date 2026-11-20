@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test } from "bun:test";
+import { RUN_BUDGET_MS } from "../../../src/intake/domain/constants";
 import { InMemoryIntakeSettingsRepository } from "../../../src/intake/adapters/memory/in-memory-intake-settings-repository";
 import { InMemoryIntakeStore } from "../../../src/intake/adapters/memory/in-memory-intake-store";
 import { RecordingEventPublisher } from "../../../src/intake/adapters/memory/recording-event-publisher";
@@ -62,8 +63,8 @@ describe("the gap probe", () => {
       failures,
     });
   };
-  const run = async () => {
-    const result = await build().execute({ trigger: "timer" });
+  const run = async (waitMs?: number) => {
+    const result = await build().execute({ trigger: "timer", waitMs });
     if (result.kind !== "finished") throw new Error(`expected finished, got ${result.kind}`);
     return result.status;
   };
@@ -187,8 +188,8 @@ describe("the gap probe on later runs (FR-INTAKE-03-15, SPEC-03 Task 5 (b) to (d
       failures,
     });
   };
-  const run = async () => {
-    const result = await build().execute({ trigger: "timer" });
+  const run = async (waitMs?: number) => {
+    const result = await build().execute({ trigger: "timer", waitMs });
     if (result.kind !== "finished") throw new Error(`expected finished, got ${result.kind}`);
     return result.status;
   };
@@ -216,6 +217,47 @@ describe("the gap probe on later runs (FR-INTAKE-03-15, SPEC-03 Task 5 (b) to (d
   test("(d) a new conversation with nothing stored older than its oldest item is never a gap, on the first run or any later one", async () => {
     provider.hold("c2", "5491100000001", [msg("first", NOW - 2 * DAY, "c2", "5491100000001")], NOW);
     expect(await run()).toMatchObject({ status: "complete", gap: null });
+    expect(await run()).toMatchObject({ status: "complete", gap: null });
+  });
+
+  const day = (n: number) => NOW - n * DAY;
+  const C2 = "5491100000001";
+
+  test("rule A (reviewer-1's scenario): c1 is read, the budget stops before c2, and the gap in c2 is still reported on the next run", async () => {
+    await storeDirectly(msg("c2-old", day(20), "c2", C2));
+    provider.hold("c1", "5491123456789", [msg("c1-new", day(5))], day(5)); // read first: the least recently active
+    provider.hold("c2", C2, [msg("c2-a", day(1), "c2", C2), msg("c2-b", day(6), "c2", C2)], day(1));
+    provider.afterCall = async (c) => {
+      if (c.kind === "messages" && "conversationRef" in c.scope && c.scope.conversationRef === "c1") await clock.advance(RUN_BUDGET_MS);
+    };
+    expect(await run(3 * RUN_BUDGET_MS)).toMatchObject({ status: "failed", reason: "catching_up" });
+    provider.afterCall = null;
+    expect(await run()).toMatchObject({
+      status: "failed",
+      reason: "possible_gap",
+      gap: { storedAt: day(20), returnedAt: day(6) },
+    });
+  });
+
+  test("the outbound mark is read through a whole run: a complete run's mark covers the stretch, so the next run finds no gap", async () => {
+    provider.serverTime = day(2);
+    expect(await run()).toMatchObject({ status: "complete", gap: null });
+    await storeDirectly(echo("old-reply", day(20)));
+    provider.serverTime = NOW;
+    provider.outbound = [echo("reply", day(2) - 5 * 60_000)]; // inside the window that starts at the mark less OVERLAP_MS
+    expect(await run()).toMatchObject({ status: "complete", gap: null });
+  });
+
+  test("a resumed outbound sweep (outboundResume set) finishes the run, and reports no gap when nothing older is stored", async () => {
+    provider.pageSize = 1;
+    provider.outbound = [echo("r1", day(1)), echo("r2", day(2)), echo("r3", day(3))];
+    provider.afterCall = async (c) => {
+      if (c.kind === "messages" && "outbound" in c.scope && c.cursor === null) await clock.advance(RUN_BUDGET_MS);
+    };
+    expect(await run(3 * RUN_BUDGET_MS)).toMatchObject({ status: "failed", reason: "catching_up" });
+    provider.afterCall = null;
+    const saved = (await store.repos.syncState.load("kapso"))?.props.outboundResume;
+    expect(saved).not.toBeNull();
     expect(await run()).toMatchObject({ status: "complete", gap: null });
   });
 });

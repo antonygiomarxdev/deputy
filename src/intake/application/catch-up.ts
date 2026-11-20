@@ -70,7 +70,7 @@ export class CatchUpUseCase implements CatchUp {
       const from = state.props.markConversations === null ? null : state.props.markConversations - OVERLAP_MS;
       const fromOutbound = state.props.markOutbound === null ? null : state.props.markOutbound - OVERLAP_MS;
       // the sweeps below move the marks: the gap probe compares against these copies, read before them
-      const marksBefore = { conversations: state.props.markConversations, outbound: state.props.markOutbound };
+      const marksBefore = state.coverageMarks();
 
       const first = await provider.listConversations({ activeAfter: from, cursor: null, limit: PAGE_SIZE }, signal);
       budget.check();
