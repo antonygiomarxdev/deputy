@@ -11,6 +11,8 @@ Each message listing in a run (one conversation, or the outbound listing) record
 
 The status is raised only when the coverage mark of that scope, read before this run's sweeps, is null or older than the oldest returned time O. The coverage marks are `markConversations` (one conversation) and `markOutbound` (owner/Deputy), both in `SyncState`. A mark at or after O means Deputy had already read up to O, so messages older than O that the provider no longer returns are provider retention, not a gap, and the same stretch is not reported again on the next run. The sweeps advance the marks, so the probe uses the copies saved before them (SPEC-03, step 2). The returned time is O.
 
+Rule A (2026-11-20): the marks count only when the previous run finished all its sweeps, that is, its saved status was `complete` or it failed with `possible_gap`. Otherwise they count as null, the old behavior. Reason: reviewer-1's finding on PR #115. A budget-stopped run advances the single `markConversations` past a conversation it never read, so the next run hid a real gap in that conversation (a stored message from 20 days ago, lost messages from 8 days ago, a listing back to 6 days ago). With rule A the stopped run's marks are not trusted and that gap is reported.
+
 ## Alternatives
 - Comparing provider message ids (the newest id Deputy stored against the ids the listing returns): rejected. A message the provider deleted would look like a gap, and the id check misses the outage loss: the ids Deputy holds can still appear in the listing around the unread stretch, so no missing id is seen, while the coverage mark shows the stretch Deputy never read.
 - The global comparison of FR-INTAKE-03-15 as written: simple, but false alarms on quiet shops and on the first outbound reply ever sent.
@@ -20,4 +22,6 @@ The status is raised only when the coverage mark of that scope, read before this
 - Easier: no false alarm from a quiet period; the FRD example still raises the status.
 - Harder: one repository query per exhausted listing; a conversation not touched in the run is not checked.
 - Watch: a message deleted on the provider side looks like loss; the text says "possible".
+- Rejected: a mark per conversation (one `SyncState` mark for each conversation). It would give exact per-conversation marks, but it needs a migration of the sync-state table and a row per conversation. Rule A with the single mark covers the same stretch.
+- Accepted limit (rule A): a run stopped early gives one extra `possible_gap` on the next run when the listing and the stored messages show a gap, because the stopped run's marks do not count.
 - Watch: with a null mark (before the first catch-up), rows delivered live and older than a short provider retention can raise one `possible_gap`. Accepted.
