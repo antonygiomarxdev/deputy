@@ -9,7 +9,8 @@ import { RunCoordinator } from "../../../src/intake/application/run-coordinator"
 import { StorageFailureLog } from "../../../src/intake/application/storage-failure-log";
 import { StoreMessages } from "../../../src/intake/application/store-messages";
 import { OwnerNumbers } from "../../../src/intake/domain/owner-numbers";
-import type { ProviderMessage } from "../../../src/intake/ports/provider";
+import type { IntakeUnitOfWork } from "../../../src/intake/ports/intake-unit-of-work";
+import { ProviderError, type ProviderMessage } from "../../../src/intake/ports/provider";
 import { PhoneNumber } from "../../../src/shared/phone-number";
 import { FakeClock } from "../../support/fake-clock";
 import { FakeProvider } from "../../support/fake-provider";
@@ -172,14 +173,14 @@ describe("the gap probe on later runs (FR-INTAKE-03-15, SPEC-03 Task 5 (b) to (d
     await store.owners.save(OwnerNumbers.of([{ number: owner, kind: "business", label: "", addedAt: 1 }]), []);
   });
 
-  const build = () => {
+  const build = (uow: IntakeUnitOfWork = store.unitOfWork) => {
     const coordinator = new RunCoordinator<RunResult>(clock);
     const failures = new StorageFailureLog();
     return new CatchUpUseCase({
       provider,
       clock,
       lease: { isOwner: async () => true },
-      uow: store.unitOfWork,
+      uow,
       reads: store.repos,
       store: new StoreMessages({ clock }),
       publisher,
@@ -259,5 +260,42 @@ describe("the gap probe on later runs (FR-INTAKE-03-15, SPEC-03 Task 5 (b) to (d
     const saved = (await store.repos.syncState.load("kapso"))?.props.outboundResume;
     expect(saved).not.toBeNull();
     expect(await run()).toMatchObject({ status: "complete", gap: null });
+  });
+
+  test("a crashed run does not count as finished: run 2 reads c1 and dies before its failure is saved; run 3 still reports the gap in c2", async () => {
+    await storeDirectly(msg("c2-old", day(20), "c2", C2));
+    provider.serverTime = day(30);
+    expect(await run()).toMatchObject({ status: "complete", gap: null }); // run 1 finished: the marks are day 30
+    provider.hold("c1", "5491123456789", [msg("c1-new", day(5))], day(5)); // read first: moves the mark to day 5 and saves it
+    provider.hold("c2", C2, [msg("c2-a", day(1), "c2", C2), msg("c2-b", day(6), "c2", C2)], day(1));
+    provider.serverTime = NOW;
+    // the process dies: the failure of run 2 is never saved, so the state saved mid-run stays as it was
+    let dying = false;
+    const dyingUow: IntakeUnitOfWork = {
+      run: (work) =>
+        store.unitOfWork.run((r) =>
+          work({
+            ...r,
+            syncState: {
+              ...r.syncState,
+              save: (s) => (dying && s.props.reason !== null ? Promise.reject(new Error("the process died")) : r.syncState.save(s)),
+            },
+          }),
+        ),
+    };
+    provider.onCall = (c) => {
+      if (c.kind === "messages" && "conversationRef" in c.scope && c.scope.conversationRef === "c2") {
+        dying = true;
+        throw new ProviderError("unreachable", null, false);
+      }
+    };
+    await build(dyingUow).execute({ trigger: "timer" });
+    provider.onCall = null;
+    dying = false;
+    expect(await run()).toMatchObject({
+      status: "failed",
+      reason: "possible_gap",
+      gap: { storedAt: day(20), returnedAt: day(6) },
+    });
   });
 });
