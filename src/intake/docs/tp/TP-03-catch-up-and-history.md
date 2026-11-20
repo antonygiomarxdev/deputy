@@ -122,7 +122,7 @@ flowchart LR
   Status["GetSyncStatus"] --> Sync
 ```
 
-Domain: **aggregate `SyncState`** (one per provider). Fields: `status`, `reason`, `lastAttemptAt`, `lastSuccessAt`, `connectedAt`, `markConversations`, `markOutbound`, `outboundResume`, `failedSince`, `rateLimitedSince`, `retryAt`, `gap`. Invariants: `status = complete` implies `reason` is null and `lastSuccessAt` is set; a mark never moves back; `connectedAt` is set once; `rateLimitedSince` is set when the first `usage_limit` of a streak starts and cleared by any complete run. Methods: `begin(providerTime)`, `advanceConversations(to)`, `saveOutboundResume(r)`, `complete(providerTime, now)`, `fail(reason, now, retryAfterMs?)`, `tellOwner(now)`, `view(...)`.
+Domain: **aggregate `SyncState`** (one per provider). Fields: `status`, `reason`, `lastAttemptAt`, `lastSuccessAt`, `connectedAt`, `markConversations`, `markOutbound`, `outboundResume`, `failedSince`, `rateLimitedSince`, `retryAt`, `gap`, `finishedAt`. Invariants: `status = complete` implies `reason` is null and `lastSuccessAt` is set; a mark never moves back; `connectedAt` is set once; `rateLimitedSince` is set when the first `usage_limit` of a streak starts and cleared by any complete run. Methods: `begin(providerTime)`, `advanceConversations(to)`, `saveOutboundResume(r)`, `complete(providerTime, now)`, `fail(reason, now, retryAfterMs?)`, `tellOwner(now)`, `view(...)`.
 
 Algorithm, one run (`CatchUp`), steps in order:
 
@@ -160,7 +160,8 @@ CREATE TABLE catchup_status (
   gap_stored_at      INTEGER,
   gap_returned_at    INTEGER,
   first_import_count INTEGER NOT NULL DEFAULT 0,
-  live_verified_at   INTEGER                  -- local clock; set only after a live signature check passed
+  live_verified_at   INTEGER                  -- local clock; set only after a live signature check passed,
+  finished_at        INTEGER                  -- local clock; set when a run's end is saved, cleared when a run begins; null after a crash (migration 0007)
 );
 
 CREATE TABLE settings (          -- shared table, one owner slice per key (cross-cutting Information)

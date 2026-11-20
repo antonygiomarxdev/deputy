@@ -103,6 +103,7 @@ export interface SyncStateProps {
   gap: { storedAt: Instant; returnedAt: Instant } | null;
   firstImportCount: number;
   liveVerifiedAt: Instant | null;
+  finishedAt: Instant | null;   // local clock: set when a run's end is saved (complete, fail), cleared by begin; null after a crash (migration 0007)
 }
 
 export class SyncState {
@@ -110,17 +111,18 @@ export class SyncState {
   static rehydrate(p: SyncStateProps): SyncState;
   readonly props: SyncStateProps;
   isNotYetRun(): boolean;                                       // lastAttemptAt === null
-  begin(i: { providerTime: Instant; now: Instant }): void;      // lastAttemptAt = runStartedAt = now; connectedAt ??= providerTime
+  begin(i: { providerTime: Instant; now: Instant }): void;      // lastAttemptAt = runStartedAt = now; connectedAt ??= providerTime; finishedAt = null
   advanceConversations(to: Instant): void;                      // never moves back
   completeConversations(runStart: Instant): void;               // markConversations = max(mark, runStart)
   saveOutboundResume(r: OutboundResume): void;
   completeOutbound(runStart: Instant): void;                    // markOutbound = max(mark, runStart); resume = null
   countStored(n: number): void;                                 // adds to firstImportCount while lastSuccessAt is null
-  complete(now: Instant): void;                                 // status complete, reason null, lastSuccessAt = now; clears failedSince, rateLimitedSince, retryAt, gap
+  complete(now: Instant): void;                                 // status complete, reason null, lastSuccessAt = now, finishedAt = now; clears failedSince, rateLimitedSince, retryAt, gap
   fail(reason: StoredReason, now: Instant, retryAfterMs?: number | null): void;
   // failed; failedSince set when it was null; usage_limit sets rateLimitedSince when null and retryAt = now + (retryAfterMs ?? RATE_LIMIT_DEFAULT_WAIT_MS);
-  // any other reason clears retryAt; possible_gap is set through setGap first.
+  // any other reason clears retryAt; possible_gap is set through setGap first. finishedAt = now for every reason: the run's end is saved.
   setGap(g: { storedAt: Instant; returnedAt: Instant }): void;
+  coverageMarks(): { conversations: Instant | null; outbound: Instant | null };  // rule A: the marks if the previous run finished (finishedAt set, and complete or possible_gap), else null
   tellOwner(now: Instant): boolean;                             // false when complete; false for usage_limit while now - rateLimitedSince < TELL_OWNER_AFTER_MS; else true
 }
 
@@ -319,7 +321,7 @@ Provider time between responses is `lastServerTime + (clock.now() - localTimeOfT
 
 ## Data
 
-None added. Files used: `catchup_status` (SPEC-02, `0005-catchup-status.sql`, exactly TP-03 "Information") and `settings` (SPEC-01). The table never holds provider error text.
+Added: `0007-catchup-finished-at.sql`, `ALTER TABLE catchup_status ADD COLUMN finished_at INTEGER` (nullable, local clock; position 7, after `0006-outgoing-retry`). Files used: `catchup_status` (SPEC-02, `0005-catchup-status.sql`, exactly TP-03 "Information") and `settings` (SPEC-01). The table never holds provider error text.
 
 ## Tasks
 
