@@ -1,6 +1,6 @@
 # FRD-03: Catch-up and history
 
-Status: Approved (2026-11-18)
+Status: Approved (2026-11-19)
 
 ## Summary
 
