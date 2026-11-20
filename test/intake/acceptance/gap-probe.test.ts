@@ -153,3 +153,69 @@ describe("the gap probe", () => {
     expect((await store.repos.rejections.list()).unrecovered).toBe(1);
   });
 });
+
+describe("the gap probe on later runs (FR-INTAKE-03-15, SPEC-03 Task 5 (b) to (d))", () => {
+  let store: InMemoryIntakeStore;
+  let provider: FakeProvider;
+  let clock: FakeClock;
+  let publisher: RecordingEventPublisher;
+
+  beforeEach(async () => {
+    store = new InMemoryIntakeStore();
+    provider = new FakeProvider("kapso");
+    clock = new FakeClock(1_000_000);
+    publisher = new RecordingEventPublisher();
+    provider.serverTime = NOW;
+    const owner = PhoneNumber.fromInternational(OWNER);
+    if (!owner) throw new Error("owner");
+    await store.owners.save(OwnerNumbers.of([{ number: owner, kind: "business", label: "", addedAt: 1 }]), []);
+  });
+
+  const build = () => {
+    const coordinator = new RunCoordinator<RunResult>(clock);
+    const failures = new StorageFailureLog();
+    return new CatchUpUseCase({
+      provider,
+      clock,
+      lease: { isOwner: async () => true },
+      uow: store.unitOfWork,
+      reads: store.repos,
+      store: new StoreMessages({ clock }),
+      publisher,
+      coordinator,
+      status: new GetSyncStatusUseCase({ provider: "kapso", reads: store.repos, settings: new InMemoryIntakeSettingsRepository(), coordinator, failures, clock }),
+      failures,
+    });
+  };
+  const run = async () => {
+    const result = await build().execute({ trigger: "timer" });
+    if (result.kind !== "finished") throw new Error(`expected finished, got ${result.kind}`);
+    return result.status;
+  };
+  const storeDirectly = (...messages: ProviderMessage[]) =>
+    store.unitOfWork.run((r) =>
+      new StoreMessages({ clock }).store(r, { provider: "kapso", events: messages.map((message) => ({ kind: "message" as const, message })) }),
+    );
+
+  test("(b) two runs over the same stretch: the first reports possible_gap, the second is complete, the stretch is not reported again", async () => {
+    await storeDirectly(msg("old", NOW - 10 * DAY));
+    provider.hold("c1", "5491123456789", [msg("recent", NOW - 3 * DAY)], NOW);
+    expect(await run()).toMatchObject({ status: "failed", reason: "possible_gap" });
+    expect(await run()).toMatchObject({ status: "complete", gap: null });
+  });
+
+  test("(c) boundary across runs: the mark was saved at O by an earlier run, so the next run finds no gap", async () => {
+    await storeDirectly(msg("old", NOW - 10 * DAY));
+    provider.serverTime = NOW - 3 * DAY; // an earlier run that read up to 3 days ago
+    expect(await run()).toMatchObject({ status: "complete", gap: null });
+    provider.serverTime = NOW;
+    provider.hold("c1", "5491123456789", [msg("recent", NOW - 3 * DAY)], NOW);
+    expect(await run()).toMatchObject({ status: "complete", gap: null });
+  });
+
+  test("(d) a new conversation with nothing stored older than its oldest item is never a gap, on the first run or any later one", async () => {
+    provider.hold("c2", "5491100000001", [msg("first", NOW - 2 * DAY, "c2", "5491100000001")], NOW);
+    expect(await run()).toMatchObject({ status: "complete", gap: null });
+    expect(await run()).toMatchObject({ status: "complete", gap: null });
+  });
+});
