@@ -13,11 +13,11 @@ Last change: 2026-11-24, owner decided ChatGPT must be supported
 The owner, 2026-11-24, in a Claude Code session.
 
 ## What they said
-> aparte de esto, mejorar el tema de que personas no tecnicas lo puedan usar
+The owner asks to improve the product so that non-technical people can use it.
 
-> no solo eso, chatgpt es el mas usado, debemos poder hacer el setup sin tanto problema tamb
+The owner adds that ChatGPT is the most used agent and its setup must work without much trouble.
 
-> normalmente quienes quieren esto son personas no tecnicas
+The owner notes that the people who want this are usually non-technical.
 
 ## The problem behind it
 The README Quick start needs six terminal steps (install Bun, clone, install, add the server by absolute path, set owner numbers, optional tunnel for live mode), two hand-edited files (the config and the secrets file) and eight technical concepts. The Setup slice promises under 30 minutes, which cannot be met: Setup has documents only, the secrets and config commands are not built and there is no binary. Owner numbers are entered in a terminal by design (ADR-006, D19), so they cannot be zero-terminal either.

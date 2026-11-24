@@ -13,9 +13,9 @@ Last change: 2026-11-24, first draft from the owner's words
 The owner, 2026-11-24, in a Claude Code session.
 
 ## What they said
-> deberíamos de tener algo como modos diferentes. Puede ser el modo de asistente que te va a ayudar a contestar, el modo de alguien que te puede ayudar como analista y tener los skills dentro
+The owner asks for different modes, for example an assistant mode that helps answer customers and an analyst mode, with the skills inside each mode.
 
-> todo lo que tenga que ver con tu negocio, que vos lo puedas mantener ahí
+The owner asks that each mode covers everything about the owner's business, kept in one place.
 
 ## The problem behind it
 One agent session mixes answering customers with analysing the business. The owner wants them as separate modes.

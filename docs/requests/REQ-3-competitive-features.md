@@ -13,7 +13,7 @@ Last change: 2026-11-24, first draft from the owner's words
 The owner, 2026-11-24, in a Claude Code session.
 
 ## What they said
-> investiguemos de este tipo de productos que mas cosas podemos agregar
+The owner asks to research comparable products and list what more could be added.
 
 ## The problem behind it
 Without a scan the backlog only holds what the team already thought of.

@@ -13,7 +13,7 @@ Last change: 2026-11-24, first draft from the owner's words
 The owner, 2026-11-24, in a Claude Code session.
 
 ## What they said
-> eso va a entrar antes de todo como prioridad cero también
+The owner says the Conversions API work goes in before everything else, as priority zero.
 
 ## The problem behind it
 Owners who run ads cannot see which ad brought a customer, and Meta cannot optimize for real customers.

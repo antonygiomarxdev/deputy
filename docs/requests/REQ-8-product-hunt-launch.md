@@ -13,7 +13,7 @@ Last change: 2026-11-24, first draft from the owner's words
 The owner, 2026-11-24, in a Claude Code session.
 
 ## What they said
-> luego de eso, agregarlo a product hunt
+The owner asks to list Deputy on Product Hunt once the brand direction exists.
 
 ## The problem behind it
 A listing needs a name, a logo, a gallery and a working demo. Several are missing.
