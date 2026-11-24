@@ -40,7 +40,7 @@ export class IntakeTriageTokenCheck implements TriageTokenCheck { constructor(d:
 `bun test test/drafts/intake-token-check.test.ts`
 
 ## Out of scope
-The handler (SPEC-18), the token and the secret (Intake SPEC-05-20 and SPEC-05-26), and the wiring that passes the Intake export to the handler (the send-tool registration of SPEC-16-2, in PR 215).
+The handler (SPEC-18), the token and the secret (Intake SPEC-05-20 and SPEC-05-26), and the wiring that passes the Intake export to the handler (SPEC-18 adds the field to `pilotWiring`; the registration of SPEC-16-2 spreads `autoSendDeps` unchanged).
 
 ## Open questions
 None.
