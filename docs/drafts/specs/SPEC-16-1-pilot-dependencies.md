@@ -39,7 +39,7 @@ export type PilotWiring = {
   pendingGoes: PendingGoStore;      // SPEC-10-2; SPEC-11 subscribes onOwnerAnswered to it
   autoSendDeps: AutoSendDeps;       // for sendAnswerTool; one object, a later spec adds a field (the token check)
   ownerGoDeps: OwnerGoDeps;         // for sendOwnerGoTool
-  stats: { drafts: () => Promise<DailyCounts[]>; intake: () => Promise<IntakeDayCounts[]> };
+  stats: { drafts: (days: number) => Promise<DailyCounts[]>; intake: (days: number) => Promise<IntakeDayCounts[]> }; // the local days ending today (L16)
 };
 export function pilotWiring(d: { db: SqlDatabase; unitOfWork: UnitOfWork; clock: Clock; chats: ChatReader; readAlwaysAsk: ReadAlwaysAsk; dailyCounts: IntakeDailyCounts; createDraft: CreateDraft; ids: Ids }): PilotWiring;
 ```

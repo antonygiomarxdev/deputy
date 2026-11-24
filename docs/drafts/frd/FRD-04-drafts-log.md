@@ -1,7 +1,6 @@
 # FRD-04: The drafts log
 
-Status: Approved (2026-11-24)
-Approval: content nPxxUgG-EnLU; rests on ../PRD.md hiGOde2AZpUm
+Status: Draft, with amendments from REQ-15 (pending owner approval)
 
 ## Summary
 
@@ -27,6 +26,7 @@ R-DRAFTS-15, R-DRAFTS-16, R-DRAFTS-17, R-DRAFTS-18, R-DRAFTS-22, R-DRAFTS-24.
 | FR-DRAFTS-04-10 | WHEN | When the owner deletes an order, its log entries stay with a "deleted" mark. The owner's words in them are replaced by "deleted" too, and no personal data about the order remains. The order's reference and the fact that it was approved remain. (R-DRAFTS-15) |
 | FR-DRAFTS-04-11 | always | Each automatic send shall be logged as automatic, with its draft and time. (R-DRAFTS-22) |
 | FR-DRAFTS-04-12 | always | Deputy shall count per day the automatic answers, the answers sent with an owner's go and the owner's hand approvals, and shall show the counts to the owner. (R-DRAFTS-24) |
+| FR-DRAFTS-04-13 | WHEN | When the session asks for the pilot counts with a number of days, Deputy shall return the counts for that many local days ending today, from 1 to 30 days with 7 when no number is given, and shall refuse any other number. (R-DRAFTS-24. Proposed, lead decision L16.) |
 
 Example:
 
@@ -60,6 +60,7 @@ Example:
 - Given an approved order, When the log is read, Then the entry holds a reference to the order and the owner's words, and no customer name or address field. (FR-DRAFTS-04-9)
 - Given an order with log entries, When the owner deletes the order, Then its entries show "deleted", the owner's words in them read "deleted", and no personal data about it remains. (FR-DRAFTS-04-10)
 - Given an entry, When the agent tries to change it, Then it is refused. (FR-DRAFTS-04-7)
+- Given automatic answers on three local days, When the session asks for the pilot counts without a number, Then it gets the last 7 local days ending today, and with 1 only today; a number below 1, above 30 or not whole is refused. (FR-DRAFTS-04-13; Proposed, L16)
 
 ## Open questions
 
