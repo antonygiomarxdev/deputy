@@ -51,7 +51,8 @@ export async function startServer(
   const transport = new StdioClientTransport({
     command: process.execPath,
     args: [join(root, "src", "main.ts"), "serve"],
-    env: { DEPUTY_DATA_DIR: dataDir, DEPUTY_CONFIG_DIR: configDir, DEPUTY_PORT: String(port), DEPUTY_SECRET_SERVICE: `deputy-test-${crypto.randomUUID()}`, ...env },
+    // the child must reach the Linux secret service (D-Bus) when one runs, e.g. in CI; the namespace below keeps it isolated
+    env: { ...Object.fromEntries(["DBUS_SESSION_BUS_ADDRESS", "XDG_RUNTIME_DIR"].flatMap((k) => (process.env[k] ? [[k, process.env[k]]] : []))), DEPUTY_DATA_DIR: dataDir, DEPUTY_CONFIG_DIR: configDir, DEPUTY_PORT: String(port), DEPUTY_SECRET_SERVICE: `deputy-test-${crypto.randomUUID()}`, ...env },
     stderr: "pipe",
   });
   let err = "";
