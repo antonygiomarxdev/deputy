@@ -47,7 +47,7 @@ Quoted from: ../frd/FRD-04-pilot-knowledge-files.md
 - `src/intake/ports/is-customer-text.ts` `IsCustomerText`: the shape of the customer-copy check
 - `src/shared/owner-words.ts` `parseOwnerWords`: the session source needs owner words
 - Precedent: SPEC-04-3-save-files.md, the same lease and refusal style
-- Nothing to reuse: `containsWords` in `src/shared/text.ts` is the whole-token containment test to call (FR-INTAKE-05-24), but Intake SPEC-05-13 (PR 206) builds it and it is not on main yet; list it here as a code entry when that PR is merged.
+- Precedent: SPEC-05-13-contains-words.md, which builds `containsWords` in `src/shared/text.ts`, the whole-token containment test this spec calls
 
 ## Tests first
 FR-KNOWLEDGE-04-13, FR-KNOWLEDGE-04-14, FR-KNOWLEDGE-04-15, FR-KNOWLEDGE-04-16, FR-KNOWLEDGE-04-17, FR-KNOWLEDGE-04-18, FR-KNOWLEDGE-04-21, EX-12, EX-13, EX-14, EX-15, EX-16, EX-21, EX-23, DT-1, DT-2, DT-3, DT-4, DT-5, DT-6, DT-7, INV-1, in `test/knowledge/application`, written without the code in view; the checks are fakes and EX-12 runs on a fixed clock set to 2026-11-25.
