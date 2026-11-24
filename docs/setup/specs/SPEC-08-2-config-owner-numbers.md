@@ -22,17 +22,19 @@ R1 is the first row above, R2 the second. The ADR has no row ids, so these label
 | Path | Create or change | Holds |
 |---|---|---|
 | `src/adapters/cli/config.ts` | Create (made by SPEC-08-1; this spec changes it) | the two commands, next to `business-number` |
+| `src/main.ts` | Change | passes `getCountry` from `SqliteIntakeSettingsRepository` to `runConfig` |
 | `test/adapters/cli/config-owner-numbers.test.ts` | Create | the tests below |
 
 ## Reuses
 - Precedent: SPEC-08-1-config-set-business-number.md, the checks, the row, the stored command, the messages and the exit codes
 - `src/intake/adapters/sqlite/sqlite-pending-changes-reader.ts` `KEYS`: `owner_numbers` and `owner_number_remove` are two of the keys it reads
+- `src/intake/adapters/sqlite/sqlite-intake-settings-repository.ts` `getCountry`: the country `ApplyPendingChanges` already uses as the default region
 
 ## Tests first
-Written before the code, without it in view. R2: (1) `owner-numbers "+505 8888 0000"` adds one row with key `owner_numbers`, the value as typed and the command; (2) `remove owner-number "+505 8888 0000"` adds one row with key `owner_number_remove`; (3) neither imports `OwnerLease`. R1: (4) a number without a leading `+`, a number the parser refuses, or a missing value, writes nothing, prints one line and returns 1; (5) a storage error returns 2; (6) the two forms leave the `business_number` row alone.
+Written before the code, without it in view. R2: (1) `owner-numbers "+505 8888 0000"` adds one row with key `owner_numbers`, the value as typed and the command; (2) `remove owner-number "+505 8888 0000"` adds one row with key `owner_number_remove`; (3) neither imports `OwnerLease`. R1: (4) with the country set to NI, `"8888 0000"` is stored and shown as `+50588880000`; with no country set it is refused with the needs-a-country-code line; a number the parser refuses, or a missing value, writes nothing, prints one line and returns 1; (4b) the parsed E.164 form is printed before the row is written; (5) a storage error returns 2; (6) the two forms leave the `business_number` row alone.
 
 ## Build
-`runConfig` (SPEC-08-1) gains `["set","owner-numbers",v]` and `["remove","owner-number",v]`. `v` must start with `+` and `parser.parse(v, null)` must be `ok`, with no country setting; else it prints `deputy: "<v>" is not a phone number; write it with + and the country code.` and returns 1. Otherwise the row is written like SPEC-08-1 with that key, and the one-line message names the key.
+`runConfig` (SPEC-08-1) gains `["set","owner-numbers",v]` and `["remove","owner-number",v]`, and its deps gain `getCountry: () => Promise<string | null>`, built in `main.ts` from `SqliteIntakeSettingsRepository`. `parser.parse(v, await getCountry())` must be `ok`, as `ApplyPendingChanges` parses it (Intake ADR-012: a number typed without a country code uses the owner's country). On `needs_country_code` it prints `deputy: "<v>" needs a country code; write it with + and the country code.`, on `unparseable` `deputy: "<v>" is not a phone number.`, and returns 1. Before the row it prints `deputy: <key> <e164>` with the parsed form. Otherwise the row is written like SPEC-08-1 with that key, and the one-line message names the key.
 
 ## Done when
 `bun test test/adapters/cli/config-owner-numbers.test.ts`

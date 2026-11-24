@@ -32,13 +32,13 @@ R1 is the first row above, R2 the second. The ADR has no row ids, so these label
 - Precedent: SPEC-08-1-config-set-business-number.md, the command shape, the stored command, the messages and the exit codes
 
 ## Tests first
-Written before the code, without it in view, on a temporary config folder. R2: (1) `provider kapso` writes `provider` and keeps every other key; (2) the same for `receiving_mode`, `kapso-phone-number-id` (key `kapso_phone_number_id`) and `orders-spreadsheet` (key `orders_spreadsheet`), and `push on` stores `true` and `push off` stores `false` under `push_on`; a `provider` or `receiving_mode` the reader rejects, or another `push` value, writes nothing and returns 1; (3) a missing file is created; (4) no pending-change row is written and no `OwnerLease` is imported. R1: (5) an unreadable file is left untouched, one line is printed and the code is 2; (6) a missing value prints one line and returns 1.
+Written before the code, without it in view, on a temporary config folder. R2: (1) `provider kapso` writes `provider` and keeps every other key; (2) the same for `receiving_mode`, `kapso-phone-number-id` (key `kapso_phone_number_id`) and `orders-spreadsheet` (key `orders-spreadsheet`, as Orders TP-03 names it), and `push on` stores `true` and `push off` stores `false` under `push_on`; a `provider` or `receiving_mode` the reader rejects, or another `push` value, writes nothing and returns 1; (3) a missing file is created; (4) no pending-change row is written and no `OwnerLease` is imported. R1: (5) an unreadable file is left untouched, one line is printed and the code is 2; (6) a missing value prints one line and returns 1.
 
 ## Build
 ```ts
 export async function writeConfigKey(dir: string, key: string, value: string | boolean): Promise<void>;
 ```
-Key names: the reader's where they exist; otherwise snake_case of the ADR-008 name. Values are stored in the form `FileConnectionConfig` accepts: strings as typed. Invalid is what `ResolveProviderSettings` rejects: a `provider` other than `kapso` or `dev`, a `receiving_mode` other than `catch-up` or `live`; those print one line and return 1. No reader reads `push_on` or `orders_spreadsheet` yet: `push on` and `push off` store the JSON boolean `true` or `false` under `push_on`, any other `push` value is invalid, and `orders-spreadsheet` stores the string as typed. `runConfig` (SPEC-08-1) gains the five keys, each calling `writeConfigKey` with `d.configDir`, printing `deputy: <key> saved; the running Deputy re-reads config.json.` and returning 0.
+Key names: the reader's where they exist, `orders-spreadsheet` as Orders TP-03 and ADR-015 give it, otherwise snake_case of the ADR-008 name (`push_on`). Values are stored in the form `FileConnectionConfig` accepts: strings as typed. Invalid is what `ResolveProviderSettings` rejects: a `provider` other than `kapso` or `dev`, a `receiving_mode` other than `catch-up` or `live`; those print one line and return 1. No reader reads `push_on` or `orders_spreadsheet` yet: `push on` and `push off` store the JSON boolean `true` or `false` under `push_on`, any other `push` value is invalid, and `orders-spreadsheet` stores the string as typed under `orders-spreadsheet`. `runConfig` (SPEC-08-1) gains the five keys, each calling `writeConfigKey` with `d.configDir`, printing `deputy: <key> saved; the running Deputy re-reads config.json.` and returning 0.
 
 ## Done when
 `bun test test/adapters/cli/config-file-keys.test.ts`
@@ -47,4 +47,4 @@ Key names: the reader's where they exist; otherwise snake_case of the ADR-008 na
 Owner numbers and the business number (SPEC-08-1, SPEC-08-2); `catalog-store` (SPEC-08-6). Reading the file back is `readConfigFile`, built.
 
 ## Open questions
-None.
+- Q-1 (Lead): Orders TP-03 says an id is 20 or more of `A-Z a-z 0-9 _ -` and "a URL is reduced to its id", without saying whether the command or the Orders reader does it. This spec stores the value as typed. Which one reduces it?
