@@ -5,7 +5,7 @@ Rests on: ../tp/TP-04-pilot-knowledge-files.md
 
 ## Summary
 
-The composition root builds the store, the use cases and the message checks, and adds the five tools to the server. The end-to-end test saves a profile, edits the file by hand and reads it again without a restart. Sixth of seven runs for FRD-04.
+The composition root builds the store, the use cases and the message checks, and adds the six tools to the server. The end-to-end test saves a profile, edits the file by hand and reads it again without a restart. Sixth of seven runs for FRD-04.
 
 Last change: 2026-11-24, rows and named tests for what the wiring holds: the objects, the tool list and the start order.
 
@@ -31,7 +31,7 @@ Quoted from: ../frd/FRD-04-pilot-knowledge-files.md
 - `src/main/drafts.ts` `draftsWiring`: it already hands `intake.isCustomerText` to an Intake adapter (`IntakeCustomerTextCheck`)
 
 ## Tests first
-FR-KNOWLEDGE-04-1, FR-KNOWLEDGE-04-8, FR-KNOWLEDGE-04-12, in `test/e2e`, written without the code in view. Builds the objects: the server saves a profile and the file `profile.md` exists in the `knowledge` folder of the configuration folder (FR-KNOWLEDGE-04-1). Adds the tools: `test/e2e/boot.test.ts` expects the tool list to hold `read_knowledge`, `save_profile`, `save_catalog`, `save_always_ask` and `remember`, in the order the tool list assembles them, so its expected array changes in this run. Start order: knowledge is built after the lease and the Intake wiring, so a second server on the same folders is read-only and its `save_profile` is refused with `not_owner` (FR-KNOWLEDGE-04-8). Hand edit: save a profile, edit the file by hand, call `read_knowledge` and see the edit (FR-KNOWLEDGE-04-12).
+FR-KNOWLEDGE-04-1, FR-KNOWLEDGE-04-8, FR-KNOWLEDGE-04-12, in `test/e2e`, written without the code in view. Builds the objects: the server saves a profile and the file `profile.md` exists in the `knowledge` folder of the configuration folder (FR-KNOWLEDGE-04-1). Adds the tools: `test/e2e/boot.test.ts` expects the tool list to hold `read_knowledge`, `save_profile`, `save_catalog`, `save_always_ask`, `save_memory` and `remember`, in the order the tool list assembles them, so its expected array changes in this run. Start order: knowledge is built after the lease and the Intake wiring, so a second server on the same folders is read-only and its `save_profile` is refused with `not_owner` (FR-KNOWLEDGE-04-8). Hand edit: save a profile, edit the file by hand, call `read_knowledge` and see the edit (FR-KNOWLEDGE-04-12).
 
 ## Build
 ```ts

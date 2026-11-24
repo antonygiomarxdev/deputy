@@ -7,7 +7,7 @@ Rests on: ../tp/TP-04-pilot-knowledge-files.md
 
 When the memory or the catalog is longer than one turn can carry, `read_knowledge` adds the notice `knowledge_long` with the sizes, and the tool text tells the session to tell the owner and propose a summary for the owner to approve. Deputy deletes and shortens nothing by itself. Eighth run for FRD-04.
 
-Last change: 2026-11-24, first draft for FR-KNOWLEDGE-04-23.
+Last change: 2026-11-24, rule and examples cited; the memory summary is saved by save_memory (lead answer).
 
 One spec is one agent run: at most 80 lines, 3 files and one done command. Too big: split it into another spec, never add context. A spec decides nothing new.
 
@@ -15,6 +15,8 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. Too b
 Quoted from: ../frd/FRD-04-pilot-knowledge-files.md
 
 | FR-KNOWLEDGE-04-23 | WHEN | WHEN the memory or the catalog has grown past what fits in each turn, the session shall tell the owner and propose a summary for the owner to approve, and Deputy shall not delete anything on its own. |
+| EX-25 | RULE-7 | positive | at the proposed limit of 12000 characters, memory.md holds 7000 characters and catalog.md holds 5001 | the agent calls `read_knowledge` | the result carries the notice `knowledge_long` with the sizes of both files, and memory.md and catalog.md are unchanged |
+| EX-26 | RULE-7 | boundary | at the proposed limit of 12000 characters, memory.md holds 7000 characters and catalog.md holds 5000 | the agent calls `read_knowledge` | the result carries no `knowledge_long` notice |
 
 ## Files
 | Path | Create or change | Holds |
@@ -29,7 +31,7 @@ Quoted from: ../frd/FRD-04-pilot-knowledge-files.md
 - Precedent: SPEC-04-5-knowledge-tools.md, which defines the tool texts
 
 ## Tests first
-FR-KNOWLEDGE-04-23, written without the code in view, in `test/knowledge/domain`, `test/knowledge/application` and `test/knowledge/adapters`. Cases: the sizes of the memory and the catalog together at the limit give no notice, one character over give `knowledge_long`; the result lists the size of each file; a read changes and deletes nothing (the store is unchanged after it); the tool text names the notice, tells the session to tell the owner and propose a summary, and says that only the owner's approval saves it; the profile and the always-ask list do not count.
+FR-KNOWLEDGE-04-23, EX-25, EX-26, written without the code in view, in `test/knowledge/domain`, `test/knowledge/application` and `test/knowledge/adapters`. Cases: the sizes of the memory and the catalog together at the limit give no notice, one character over give `knowledge_long`; the result lists the size of each file; a read changes and deletes nothing (the store is unchanged after it); the tool text names the notice, tells the session to tell the owner and propose a summary, and says that only the owner's approval saves it; the profile and the always-ask list do not count.
 
 ## Build
 ```ts
@@ -37,14 +39,13 @@ export const LIMITS: { /* as SPEC-04-1 */ turnChars: number }; // value: see Ope
 export function growthNotice(sizes: { memory: number | null; catalog: number | null }): "knowledge_long" | null; // null at or under turnChars
 // ReadKnowledge.read() result gains: notices: ("catalog_unreadable" | "knowledge_long")[]
 ```
-The notice carries no text of the files, only the sizes. The session proposes the summary and the owner approves it in the conversation; saving it is the owner's go through a save tool (Open questions Q-2).
+The notice carries no text of the files, only the sizes. The session proposes the summary and the owner approves it in the conversation; an approved memory summary is saved with `save_memory` (SPEC-04-3) and an approved catalog with `save_catalog`.
 
 ## Done when
 `bun test test/knowledge`
 
 ## Out of scope
-Writing or shortening the memory or the catalog (SPEC-04-3 saves a catalog; the memory write is Q-2), and any automatic deletion.
+Writing or shortening the memory or the catalog (`save_memory` and `save_catalog`, SPEC-04-3), and any automatic deletion.
 
 ## Open questions
 - Q-1 (Owner: only the owner can say how much of the plan one turn may spend on knowledge): what total size of the memory and the catalog counts as "past what fits in each turn"? A starting value of 12000 characters is proposed, from the approved limits (500 catalog items, 500 characters per memory entry); it is not decided.
-- Q-2 (Lead): FR-KNOWLEDGE-04-23 asks the owner to approve a summary of the memory, but the memory has no tool that replaces it (`remember` only appends, SPEC-04-4). Name one: add `memory` to the whole-file saves of SPEC-04-3 with the owner's words, or another way.

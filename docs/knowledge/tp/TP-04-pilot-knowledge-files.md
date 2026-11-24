@@ -22,7 +22,7 @@ Fixed elsewhere, so not decided again:
 
 ## Requirements served
 
-FR-KNOWLEDGE-04-1, FR-KNOWLEDGE-04-2, FR-KNOWLEDGE-04-3, FR-KNOWLEDGE-04-4, FR-KNOWLEDGE-04-5, FR-KNOWLEDGE-04-6, FR-KNOWLEDGE-04-7, FR-KNOWLEDGE-04-8, FR-KNOWLEDGE-04-9, FR-KNOWLEDGE-04-10, FR-KNOWLEDGE-04-11, FR-KNOWLEDGE-04-12, FR-KNOWLEDGE-04-13, FR-KNOWLEDGE-04-14, FR-KNOWLEDGE-04-15, FR-KNOWLEDGE-04-16, FR-KNOWLEDGE-04-17, FR-KNOWLEDGE-04-18, FR-KNOWLEDGE-04-19, FR-KNOWLEDGE-04-20, FR-KNOWLEDGE-04-21, FR-KNOWLEDGE-04-22.
+FR-KNOWLEDGE-04-1, FR-KNOWLEDGE-04-2, FR-KNOWLEDGE-04-3, FR-KNOWLEDGE-04-4, FR-KNOWLEDGE-04-5, FR-KNOWLEDGE-04-6, FR-KNOWLEDGE-04-7, FR-KNOWLEDGE-04-8, FR-KNOWLEDGE-04-9, FR-KNOWLEDGE-04-10, FR-KNOWLEDGE-04-11, FR-KNOWLEDGE-04-12, FR-KNOWLEDGE-04-13, FR-KNOWLEDGE-04-14, FR-KNOWLEDGE-04-15, FR-KNOWLEDGE-04-16, FR-KNOWLEDGE-04-17, FR-KNOWLEDGE-04-18, FR-KNOWLEDGE-04-19, FR-KNOWLEDGE-04-20, FR-KNOWLEDGE-04-21, FR-KNOWLEDGE-04-22, FR-KNOWLEDGE-04-23.
 
 ## Decisions
 
@@ -93,7 +93,7 @@ Domain (`src/knowledge/domain/`, no input or output, no package):
 - `LIMITS`: owner words 1000 (shared); approved by the owner on 2026-11-24: catalog 500 items, profile and always-ask 20000 characters, memory text 500 characters, history 20.
 - `memoryEntry(date, text)` returns `"<date>: <text>"`.
 
-Application (`src/knowledge/application/`): `ReadKnowledge`, `SaveKnowledgeFile` (one use case for the three files, the catalog adds its table check), `Remember`. Ports (`src/knowledge/ports/`): `KnowledgeStore` (read a file with its saved time, write a whole file with history, append a line), `ChangeLog`, `MessageChecks` (`isCustomerText(text)`, `ownerControlMessage(id)` returning the stored text or null). Adapters: `src/knowledge/adapters/files/` (store and log), `src/knowledge/adapters/intake/` (message checks over the Intake index: for each owner number of kind extra it reads that chat, newest 200 messages, and finds the message by its id), `src/knowledge/adapters/mcp/` (the tools). The composition root `src/main/knowledge.ts` builds them.
+Application (`src/knowledge/application/`): `ReadKnowledge`, `SaveKnowledgeFile` (one use case for the four files, the catalog adds its table check), `Remember`. Ports (`src/knowledge/ports/`): `KnowledgeStore` (read a file with its saved time, write a whole file with history, append a line), `ChangeLog`, `MessageChecks` (`isCustomerText(text)`, `ownerControlMessage(id)` returning the stored text or null). Adapters: `src/knowledge/adapters/files/` (store and log), `src/knowledge/adapters/intake/` (message checks over the Intake index: for each owner number of kind extra it reads that chat, newest 200 messages, and finds the message by its id), `src/knowledge/adapters/mcp/` (the tools). The composition root `src/main/knowledge.ts` builds them.
 
 ## Information
 
@@ -104,7 +104,7 @@ Four files, `knowledge/history/<name>.<time>` copies (20 per file) and `knowledg
 | Tool | Input | Result |
 |---|---|---|
 | `read_knowledge` | none | the four texts, always-ask first, each with its saved time, or "not written yet" |
-| `save_profile`, `save_always_ask` | `text`, `owner_words` | summary with the new size; or a refusal code |
+| `save_profile`, `save_always_ask`, `save_memory` | `text`, `owner_words` | summary with the new size; or a refusal code |
 | `save_catalog` | `text`, `owner_words` | summary with items added, removed, changed; or a refusal code |
 | `remember` | `text`, `source` (`{kind:"session", owner_words}` or `{kind:"control_chat", message_id}`); with a control chat source the text must be contained in that stored message on whole-token boundaries (FR-INTAKE-05-24) | the entry that was appended; or a refusal code |
 

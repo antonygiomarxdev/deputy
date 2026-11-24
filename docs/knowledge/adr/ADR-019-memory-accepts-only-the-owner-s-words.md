@@ -22,6 +22,7 @@ The memory is read by the agent on every turn, so a line a stranger plants there
 - The text is 1 to 500 characters (a proposed limit, FRD-04 Q-3); the entry is `<date>: <text>`.
 
 ## Consequences
+- Whole-file replacement of the memory, for an approved summary, is a different tool (`save_memory`, FRD-04 FR-KNOWLEDGE-04-6); `remember` stays append-only.
 - Easier: the owner's WhatsApp answers become knowledge with no extra step; a planted customer sentence is refused when copied whole.
 - Harder: a paraphrase of customer text passes the copy check, and the session source cannot prove who spoke; both are known limits, stated in the FRD and the README.
 - Watch: the lookup reads the newest 200 messages of each owner number's chat, so an older message is refused as `not_owner_message`.
