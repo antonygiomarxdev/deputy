@@ -1,6 +1,8 @@
-import { afterEach, expect, test } from "bun:test";
-import { call, removeHarnessDirs, startServer, waitForOwner, type Harness } from "../../support/harness";
+import { afterEach, expect, test, setDefaultTimeout } from "bun:test";
+import { E2E_TIMEOUT_MS, call, removeHarnessDirs, startServer, waitForOwner, type Harness } from "../../support/harness";
 import { postDelivery } from "../../support/live";
+
+setDefaultTimeout(E2E_TIMEOUT_MS);
 
 const CHAT_A = "+15557654321";
 const CHAT_B = "+15559998888";
