@@ -108,7 +108,7 @@ Known limit: Deputy controls only its own send path. An agent that has other too
 
 ## Status and roadmap
 
-**v0.1, experimental.** Built: the MCP stdio server and the tools above, the owner lease, the SQLite store and migrations, the owner numbers, start-up checks, the Kapso and `dev` providers, receiving by catch-up and live webhook, drafts, approval and the drafts log. Nothing here has run against real WhatsApp traffic yet.
+**v0.1, experimental.** Built: the MCP stdio server and the tools above, the owner lease, the SQLite store and migrations, the owner numbers, start-up checks, the Kapso and `dev` providers, receiving by catch-up and live webhook, drafts, approval and the drafts log. Tested on real WhatsApp traffic with a pilot business.
 
 Planned, with docs but no code yet (slice map in [docs/PRODUCT.md](docs/PRODUCT.md)):
 

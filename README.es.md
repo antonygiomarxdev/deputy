@@ -108,7 +108,7 @@ Límite conocido: Deputy solo controla su propio camino de envío. Un agente que
 
 ## Estado y hoja de ruta
 
-**v0.1, experimental.** Construido: el servidor MCP por stdio y las herramientas de arriba, el lease de dueño, el almacén SQLite y sus migraciones, los números del dueño, las validaciones de arranque, los proveedores Kapso y `dev`, la recepción por catch-up y por webhook en vivo, los borradores, su aprobación y el registro de borradores. Nada de esto ha corrido todavía con tráfico real de WhatsApp.
+**v0.1, experimental.** Construido: el servidor MCP por stdio y las herramientas de arriba, el lease de dueño, el almacén SQLite y sus migraciones, los números del dueño, las validaciones de arranque, los proveedores Kapso y `dev`, la recepción por catch-up y por webhook en vivo, los borradores, su aprobación y el registro de borradores. Probado con tráfico real de WhatsApp en un negocio piloto.
 
 Planeado, con documentos pero sin código todavía (mapa de rebanadas en [docs/PRODUCT.md](docs/PRODUCT.md)):
 
