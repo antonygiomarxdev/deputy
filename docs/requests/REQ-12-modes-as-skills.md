@@ -15,7 +15,7 @@ The owner, 2026-11-24, in a Claude Code session.
 ## What they said
 The owner asks for different modes, for example an assistant mode that helps answer customers and an analyst mode, with the skills inside each mode.
 
-The owner asks that each mode covers everything about the owner's business, kept in one place.
+The owner asks that everything to do with the owner's business can be kept and maintained there, inside the modes.
 
 ## The problem behind it
 One agent session mixes answering customers with analysing the business. The owner wants them as separate modes.
