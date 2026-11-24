@@ -5,9 +5,9 @@ Rests on: ../../adr/ADR-008-secrets-and-configuration.md
 
 ## Summary
 
-`config set` for the keys that live in `~/.deputy/config.json`: `provider`, `receiving_mode`, `push`, `kapso-phone-number-id`, `orders-spreadsheet` and `catalog-store`. The command writes the file and exits. It takes no lease; the `LeaseSupervisor` re-reads the file.
+`config set` for the keys that live in `~/.deputy/config.json`: `provider`, `receiving_mode`, `push`, `kapso-phone-number-id` and `orders-spreadsheet`. The command writes the file and exits. It takes no lease; the `LeaseSupervisor` re-reads the file. `catalog-store` is SPEC-08-6.
 
-Last change: 2026-11-24, first draft from ADR-008
+Last change: 2026-11-24, answers of the lead folded in; `catalog-store` moved to SPEC-08-6
 
 One spec is one agent run: at most 80 lines, 3 files and one done command. A spec decides nothing new.
 
@@ -16,34 +16,34 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 - Connection settings (`provider`, `receiving_mode`, `push_on`, `business-number`, `kapso-phone-number-id`, `orders-spreadsheet`, `catalog-store sheet:<id>`) and the owner numbers are changed only with `deputy config set <key> <value>`; an owner number is removed with `deputy config remove owner-number <number>`, a pending change applied and logged like `set`. `deputy secrets list` shows each secret's name and where it is kept, never a value. They live in `~/.deputy/config.json` and the owner-numbers repository. No MCP tool changes them; `set_setting` refuses them and names the command.
 - The command line is an inbound adapter (`src/adapters/cli/`) that never calls a lease-guarded use case. It writes a `pending_changes` row (key, value, typed command, time) or the config or secrets file, and exits; neither needs the lease. The owner process applies pending changes on its next tick without a restart (Intake's `ApplyPendingChanges` logs each owner-number change with the typed command, L4; the `LeaseSupervisor` re-reads `config.json`). With no owner process, they are applied at the next start. The agent conversation never sees the command line.
 
+R1 is the first row above, R2 the second. The ADR has no row ids, so these labels are local to the spec.
+
 ## Files
 | Path | Create or change | Holds |
 |---|---|---|
 | `src/adapters/config/config-file.ts` | Change | `writeConfigKey`: sets one key and keeps the others |
-| `src/adapters/cli/config.ts` | Create (made by SPEC-08-1; this spec changes it) | the six keys, next to the pending-change keys |
+| `src/adapters/cli/config.ts` | Create (made by SPEC-08-1; this spec changes it) | the five keys, next to the pending-change keys |
 | `test/adapters/cli/config-file-keys.test.ts` | Create | the tests below |
 
 ## Reuses
 - `src/adapters/config/config-file.ts` `readConfigFile`: reads the object the writer changes, and throws `ConfigError` on a bad file
-- Precedent: SPEC-08-1-config-set-business-number.md, the command shape and the typed command
+- `src/intake/adapters/config/file-connection-config.ts` `kapso_phone_number_id`: the key names the reader already uses (`provider`, `receiving_mode`, `kapso_phone_number_id`)
+- Precedent: SPEC-08-1-config-set-business-number.md, the command shape, the stored command, the messages and the exit codes
 
 ## Tests first
-The rows above carry no ids, so the tests cite none. Written before the code, without it in view, on a temporary config folder: (1) `config set provider kapso` writes `provider` and keeps every other key; (2) the same for each of the other five keys; (3) a missing file is created; (4) an unreadable file is left untouched and the command returns non-zero; (5) no pending-change row is written.
+Written before the code, without it in view, on a temporary config folder. R2: (1) `provider kapso` writes `provider` and keeps every other key; (2) the same for `receiving_mode`, `kapso-phone-number-id` (key `kapso_phone_number_id`), `push` (key `push_on`) and `orders-spreadsheet` (key `orders_spreadsheet`); (3) a missing file is created; (4) no pending-change row is written and no `OwnerLease` is imported. R1: (5) an unreadable file is left untouched, one line is printed and the code is 2; (6) a missing value prints one line and returns 1.
 
 ## Build
 ```ts
-export async function writeConfigKey(dir: string, key: string, value: unknown): Promise<void>;
+export async function writeConfigKey(dir: string, key: string, value: string): Promise<void>;
 ```
-`runConfig` (SPEC-08-1) gains the six keys; each calls `writeConfigKey` and returns 0.
+Key names: the reader's where they exist; otherwise snake_case of the ADR-008 name. The value is stored as typed. `runConfig` (SPEC-08-1) gains the five keys, each calling `writeConfigKey` with `d.configDir`, printing `deputy: <key> saved; the running Deputy re-reads config.json.` and returning 0.
 
 ## Done when
 `bun test test/adapters/cli/config-file-keys.test.ts`
 
 ## Out of scope
-Owner numbers and the business number (SPEC-08-1, SPEC-08-2). Reading the file back is `readConfigFile`, built.
+Owner numbers and the business number (SPEC-08-1, SPEC-08-2); `catalog-store` (SPEC-08-6). Reading the file back is `readConfigFile`, built.
 
 ## Open questions
-- Q-1 (Lead): the key names in `config.json`. Today it holds `provider`, `receiving_mode` and `kapso_phone_number_id`. The ADR names `push_on` for `push`, and gives no file key for `orders-spreadsheet` or `catalog-store`.
-- Q-2 (Lead): the stored form of a value: `push on` as a boolean or the word; `catalog-store sheet:<id>` whole or split.
-- Q-3 (Lead): whether the command refuses a value it cannot use (a provider other than `kapso` or `dev`), or stores what was typed.
-- Q-4 (Lead): the questions of SPEC-08-1 about the stored command text, the messages and the exit codes apply here too.
+- Q-1 (Lead): the stored form of `push on` (the word, or a boolean under `push_on`), and which values count as invalid input: a `provider` other than `kapso` or `dev`, a `receiving_mode` other than `catch-up` or `live`.
