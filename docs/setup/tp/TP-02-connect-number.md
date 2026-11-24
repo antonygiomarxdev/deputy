@@ -190,7 +190,7 @@ ATDD: each row is a test written first and titled with its FR id. UC means a use
 | FR-SETUP-02-12 | Given the owner chose live and no signed delivery arrived, When `CheckLiveDelivery` runs, Then it fails with a plain reason, Deputy keeps checking periodically, and Setup still completes; given a verified delivery after the start, Then it passes; given a `bad_signature` rejection since the start, Then `secrets_do_not_match` | UC |
 | FR-SETUP-02-13 | Given Setup is complete in periodic mode, When the owner asks for live delivery, Then the live step starts with its commands and its own `live` wait; given the owner goes back to periodic, Then Setup shows `deputy config set receiving_mode catch-up` and reads it back | UC |
 
-Time zone (FR-SETUP-02-11, asked with the receiving mode): given the system zone `America/Managua`, When Setup asks, Then it shows that zone with the country and records the owner's confirmation; given the owner names another zone, Then `TimeZoneSettings.set` is called with it and an unknown name is refused `unknown_zone` and asked again.
+Time zone (FR-SETUP-02-11, asked with the receiving mode): given the system zone `America/Chicago`, When Setup asks, Then it shows that zone with the country and records the owner's confirmation; given the owner names another zone, Then `TimeZoneSettings.set` is called with it and an unknown name is refused `unknown_zone` and asked again.
 
 Reconnect: given a confirmed warning and step 3 failed after passing then passed again, step 2 needs a new confirmation (`warning_voided`). Given a resume with the warning confirmed and no disconnect, the confirmation is kept and not asked again (FRD edge cases; also FR-SETUP-02-2).
 

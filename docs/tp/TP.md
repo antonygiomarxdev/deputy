@@ -217,6 +217,10 @@ flowchart LR
   OtO --> Files
 ```
 Moved verbatim to [TP-architecture.md](../tp-detail/TP-architecture.md).
+## Local pilot end to end
+
+Drawn in [TP-pilot-end-to-end.md](../tp-detail/TP-pilot-end-to-end.md): components, nine sequences, three state diagrams, the data and the list of arrows no spec builds (REQ-15).
+
 ## Information
 Moved verbatim to [TP-information.md](../tp-detail/TP-information.md).
 ## Interfaces
