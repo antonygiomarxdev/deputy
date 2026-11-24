@@ -4,7 +4,7 @@
 Proposed
 
 ## Summary
-The pilot wakes an idle Claude Code session in two ways: a slow `/loop` every 30 to 60 minutes, which is the guaranteed path, and a channel notice from Deputy, which is expected to wake the session at once but is unverified (events are documented as delivered on the next turn). No permission prompt may wait for the owner: the project settings allow only `mcp__deputy__*` and deny the shell tools. Two facts are not verified yet and the pilot checks them.
+The pilot wakes an idle Claude Code session in two ways: a slow `/loop` every 30 to 60 minutes, which is the reliable fallback, and a channel notice from Deputy, which is expected to wake the session at once but is unverified (events are documented as delivered on the next turn). No permission prompt may wait for the owner: the project settings allow only `mcp__deputy__*` and deny the shell tools. Two facts are not verified yet and the pilot checks them.
 
 ## Context
 REQ-15 and decisions D34 (wake) and D35 (no blocking prompts), approved 2026-11-24. An open session does nothing until a turn happens, and an unanswered permission prompt stops the session when the owner is away. Evidence is in the Claude Code docs and in throwaway tests with a dummy server (Claude Code 2.1.331 on Windows): STATED means a doc page says so, TESTED means a test showed it.
@@ -37,5 +37,5 @@ flowchart LR
 ## Consequences
 - Easier: a pilot owner gets notices without watching the terminal once the channel is verified, and no prompt waits for them.
 - Harder: the owner must start Claude Code from the shortcut, and the consent dialog appears the first time. An agent with other tools could bypass the guard (D11), so the shell deny rule matters.
-- Unverified, and the pilot checks all of them: that a channel event wakes an idle session, that the shortcut keeps the flag and its consent across restarts, that `/loop` keeps firing after the context is compacted, and that typing the skill command raises no prompt. If the channel fails, the loop alone carries the wake (the guaranteed path); if the loop fails after compaction, the owner restarts the session.
+- Unverified, and the pilot checks all of them: that a channel event wakes an idle session, that the shortcut keeps the flag and its consent across restarts, that `/loop` keeps firing after the context is compacted, and that typing the skill command raises no prompt. If the channel fails, the loop alone carries the wake (the reliable fallback); if the loop fails after compaction, the owner restarts the session.
 - Watch: a loop that answers while the owner is away may count as automated use under the provider's terms; a written read is tracked in issue 144.
