@@ -7,7 +7,7 @@ Rests on: ../frd/FRD-02-owners-go.md
 
 Binds one owner answer to one open question. Deputy does not parse which question a reply answers: the session maps the owner's free-text answers to the questions it sent, and calls a tool with `{ questionId, text }`. That call is the go for that one answer, and it approves no other draft (R-DRAFTS-23).
 
-Last change: 2026-11-24, rewritten in the format 4 layout after review of PR 202.
+Last change: 2026-11-24, split after review of PR 202 (SPEC-09 added for the log mark; SPEC-08 keeps the counts only).
 
 One spec is one agent run: at most 80 lines, 3 files and one done command. A spec decides nothing new.
 

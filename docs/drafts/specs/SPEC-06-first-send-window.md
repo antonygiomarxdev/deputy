@@ -7,7 +7,7 @@ Rests on: ../frd/FRD-03-safe-send.md
 
 Checks the customer's 24 hour window before an automatic first send, as ADR-012 does for a retry. A closed window sends nothing and sets `tellOwner`, so the caller tells the owner (R-DRAFTS-22).
 
-Last change: 2026-11-24, rewritten in the format 4 layout after review of PR 202.
+Last change: 2026-11-24, split after review of PR 202 (SPEC-09 added for the log mark; SPEC-08 keeps the counts only).
 
 One spec is one agent run: at most 80 lines, 3 files and one done command. A spec decides nothing new.
 
