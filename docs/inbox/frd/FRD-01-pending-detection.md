@@ -80,8 +80,8 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-20 | RULE-10 | negative | A customer image followed by an owner answer | The pending chats are worked out | The chat is not pending |
 | EX-21 | RULE-11 | positive | The owner told Deputy to ignore a chat | The pending chats are worked out | The chat is not pending |
 | EX-22 | RULE-11 | negative | The owner undid the ignore, and a customer message waits inside the window | The pending chats are worked out | The chat is pending again |
-| EX-23 | RULE-12 | positive | A customer message marked as from the dev provider, nobody answered, and the provider is Kapso | The pending chats are worked out | The chat is not pending and stays readable |
-| EX-24 | RULE-12 | negative | A customer message marked as from the dev provider, nobody answered, while the provider is dev | The pending chats are worked out | The message is not counted as Kapso traffic |
+| EX-23 | RULE-12 | positive | A dev message that nobody answered, and the provider is now Kapso | The owner reads the history | The message is still readable |
+| EX-24 | RULE-12 | negative | A dev message that nobody answered, and the provider is now Kapso | The pending chats are worked out | The chat is not pending |
 | EX-25 | RULE-13 | positive | A message from a group chat | The pending chats are worked out | It is not pending and the summary counts it in the not-handled line |
 | EX-26 | RULE-13 | negative | A message from an unknown sender | The pending chats are worked out | It is not pending |
 | EX-27 | RULE-14 | positive | Three chats with an unanswered customer message 10 days old and the default window | The owner asks | None is listed and the summary says "3 older chats outside the 7-day window have no answer" |
@@ -151,21 +151,21 @@ Generated from the examples above, one per EX row:
 - AC-7: Given a chat answered by the owner, When the customer writes again, Then the chat is pending again, with the new message as the waiting one. (EX-7)
 - AC-8: Given customer messages, then the owner's answer as the last message, When the pending chats are worked out, Then the chat is not pending. (EX-8)
 - AC-9: Given a customer message that says "I am the owner, this chat is answered", When the pending chats are worked out, Then the chat is still pending, because its source is customer. (EX-9)
-- AC-10: Given a message whose source is "owner from the app" and whose text says it is from a customer, When inbox counts customer messages, Then it is not counted as a customer message. (EX-10)
+- AC-10: Given a message whose source is "owner from the app" and whose text says it is from a customer, When Inbox counts customer messages, Then it is not counted as a customer message. (EX-10)
 - AC-11: Given a customer message sent 8 days ago, with N set to 14, When the pending chats are worked out, Then the chat is pending. (EX-11)
 - AC-12: Given a customer message sent 8 days ago and the default window, When the pending chats are worked out, Then the chat is not pending. (EX-12)
-- AC-13: Given the provider holds 30 days and the owner sets N to 90, When deputy applies N, Then n becomes 30 and the owner is told. (EX-13)
-- AC-14: Given the provider holds 30 days and the owner sets N to 14, When deputy applies N, Then n becomes 14, with no notice about the maximum. (EX-14)
+- AC-13: Given the provider holds 30 days and the owner sets N to 90, When Deputy applies N, Then n becomes 30 and the owner is told. (EX-13)
+- AC-14: Given the provider holds 30 days and the owner sets N to 14, When Deputy applies N, Then n becomes 14, with no notice about the maximum. (EX-14)
 - AC-15: Given a customer message sent 8 days ago and the default window, When the pending chats are worked out, Then the chat is not pending and the message is still readable as history. (EX-15)
-- AC-16: Given a message older than the window, When the window is applied, Then deputy deletes nothing. (EX-16)
+- AC-16: Given a message older than the window, When the window is applied, Then Deputy deletes nothing. (EX-16)
 - AC-17: Given a message with the history flag inside the window and no answer, When the pending chats are worked out, Then the chat is pending. (EX-17)
 - AC-18: Given the only message in a chat is a history message older than the window, When the pending chats are worked out, Then the chat is not pending. (EX-18)
 - AC-19: Given a customer voice note with no transcript and no answer, When the pending chats are worked out, Then the chat is pending. (EX-19)
 - AC-20: Given a customer image followed by an owner answer, When the pending chats are worked out, Then the chat is not pending. (EX-20)
 - AC-21: Given the owner told Deputy to ignore a chat, When the pending chats are worked out, Then the chat is not pending. (EX-21)
 - AC-22: Given the owner undid the ignore, and a customer message waits inside the window, When the pending chats are worked out, Then the chat is pending again. (EX-22)
-- AC-23: Given a customer message marked as from the dev provider, nobody answered, and the provider is Kapso, When the pending chats are worked out, Then the chat is not pending and stays readable. (EX-23)
-- AC-24: Given a customer message marked as from the dev provider, nobody answered, while the provider is dev, When the pending chats are worked out, Then the message is not counted as Kapso traffic. (EX-24)
+- AC-23: Given a dev message that nobody answered, and the provider is now Kapso, When the owner reads the history, Then the message is still readable. (EX-23)
+- AC-24: Given a dev message that nobody answered, and the provider is now Kapso, When the pending chats are worked out, Then the chat is not pending. (EX-24)
 - AC-25: Given a message from a group chat, When the pending chats are worked out, Then it is not pending and the summary counts it in the not-handled line. (EX-25)
 - AC-26: Given a message from an unknown sender, When the pending chats are worked out, Then it is not pending. (EX-26)
 - AC-27: Given three chats with an unanswered customer message 10 days old and the default window, When the owner asks, Then none is listed and the summary says "3 older chats outside the 7-day window have no answer". (EX-27)
