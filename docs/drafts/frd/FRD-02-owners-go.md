@@ -23,7 +23,7 @@ R-DRAFTS-6, R-DRAFTS-7, R-DRAFTS-8, R-DRAFTS-9, R-DRAFTS-10, R-DRAFTS-19, R-DRAF
 - **FR-DRAFTS-02-12.** Before calling the provider, Deputy marks the approval as used and the draft as "sending", and writes that in the log, as one step that cannot be done twice. A second or simultaneous send of the same approval is refused. If the session ends after the call started, the draft shows as "outcome unknown" at the next start and is never sent again without a new go. (R-DRAFTS-10)
 - **FR-DRAFTS-02-9.** An order is recorded only after a go under FR-DRAFTS-02-1 to FR-DRAFTS-02-4. An order draft shares the numbering of reply drafts (FRD-01), so "go on 3" is never ambiguous. Deputy gives Orders an approval for an order draft identifier, with the same checks (owner's words, the order as shown, one approval, used once), and the same rule as FR-DRAFTS-02-6. (R-DRAFTS-21)
 - **FR-DRAFTS-02-10.** An owner's own command about an order ("mark Juan's order delivered") is itself the go for that change, kept with the owner's words like any approval. It counts only when it comes from the owner's conversation (FR-DRAFTS-02-6), never from text found in a customer message. (R-DRAFTS-21)
-- **FR-DRAFTS-02-11.** The product documentation and the setup guide say plainly: Deputy controls only its own send path. An agent that has other tools (for example a shell) could reach the provider without Deputy. The guarantee depends on the owner choosing and limiting the agent's tools. (R-DRAFTS-20)
+- **FR-DRAFTS-02-11.** The product documentation and the setup guide say plainly: Deputy controls only its own send path. The known limit is stated in [R-DRAFTS-20](../PRD.md). The guarantee depends on the owner choosing and limiting the agent's tools. (R-DRAFTS-20)
 
 Example:
 
