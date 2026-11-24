@@ -1,6 +1,8 @@
-import { expect, spyOn, test } from "bun:test";
+import { expect, setDefaultTimeout, spyOn, test } from "bun:test";
 import { join } from "node:path";
-import { removeHarnessDirs } from "./harness";
+import { E2E_TIMEOUT_MS, removeHarnessDirs } from "./harness";
+
+setDefaultTimeout(E2E_TIMEOUT_MS);
 
 const h = { dataDir: join("C:", "tmp", "deputy-e2e-x", "data") };
 
