@@ -28,6 +28,7 @@ R-DRAFTS-6, R-DRAFTS-7, R-DRAFTS-8, R-DRAFTS-9, R-DRAFTS-10, R-DRAFTS-19, R-DRAF
 | FR-DRAFTS-02-11 | always | The product documentation and the setup guide say plainly: Deputy controls only its own send path. The known limit is stated in [R-DRAFTS-20](../PRD.md). The guarantee depends on the owner choosing and limiting the agent's tools. (R-DRAFTS-20) |
 | FR-DRAFTS-02-13 | WHERE | In the local pilot, Deputy shall send an answer that the business knowledge backs without the owner's go, unless its class is in the always-ask list. (R-DRAFTS-22) |
 | FR-DRAFTS-02-14 | WHEN | When an owner answer to a question about a customer chat arrives, the answer shall be the go for the next send to that chat within the customer window, and for that one send only. (R-DRAFTS-23) |
+| FR-DRAFTS-02-15 | WHEN | When Deputy restarts, a go shall stay until one send uses it or a newer go for the same chat replaces it. (R-DRAFTS-23) |
 
 Example:
 
