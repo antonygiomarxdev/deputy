@@ -6,7 +6,7 @@ Status: Draft
 
 For the local pilot the owner sets Deputy up by asking the agent, with no command-line commands: the agent installs it from a link, the owner pastes the provider key on a one-time local page, and a skill interviews the owner about the business. Deputy keeps the computer awake while the session is open. The key never passes through the conversation. FRD-01 to FRD-04 are deferred for the pilot, not removed.
 
-Last change: 2026-11-24, restart, error telling, shortcut run and prerequisites added (FR-SETUP-05-33 to FR-SETUP-05-37)
+Last change: 2026-11-24, a closed owner window records the question; L11 and L12 close the two research questions
 
 One feature of the [slice PRD](../PRD.md). Deferred for the pilot: [FRD-01](FRD-01-guided-flow.md) to [FRD-04](FRD-04-profile-test-finish.md).
 
@@ -48,7 +48,7 @@ R-SETUP-22, R-SETUP-23, R-SETUP-24, R-SETUP-25, R-SETUP-26, R-SETUP-27, R-SETUP-
 | FR-SETUP-05-24 | WHEN | WHEN a pending question is in an always-ask class or the knowledge does not back it, the skill shall collect it and ask the owner once per round, in one message that lists every open question. |
 | FR-SETUP-05-25 | WHEN | WHEN the owner has answered in the control chat, the skill shall match each answer to its question, close the question, and send the reply to the customer with the owner's answer as the go. |
 | FR-SETUP-05-26 | IF | IF a send is refused because the customer's window is closed, THEN the skill shall tell the owner in the session that the window is closed and shall not retry. |
-| FR-SETUP-05-27 | IF | IF asking the owner is refused because the owner's own window is closed, THEN the skill shall tell the owner in the session to write any message to the business number, and shall ask again once that message has arrived. |
+| FR-SETUP-05-27 | IF | IF the owner's own window is closed when the skill asks the owner, THEN the skill shall tell the owner in the session to write any message to the business number, and shall match the owner's later answer to the question, which stays recorded. |
 | FR-SETUP-05-28 | WHEN | WHEN the owner states a rule to keep, in the control chat or in the session, the skill shall save it with the owner's own words. |
 | FR-SETUP-05-29 | WHEN | WHEN the owner asks how the pilot is going, the skill shall report the pilot's counts. |
 | FR-SETUP-05-30 | WHILE | WHILE the session is open, the skill shall run one round of the daily loop now and again every 30 to 60 minutes (D34, ADR-018). |
@@ -86,7 +86,7 @@ R-SETUP-22, R-SETUP-23, R-SETUP-24, R-SETUP-25, R-SETUP-26, R-SETUP-27, R-SETUP-
 | EX-10 | RULE-5 | positive | The knowledge backs the opening hours and opening hours are not always-ask | A customer asks when the shop opens | The skill sends the answer itself |
 | EX-11 | RULE-5 | negative | The delivery price is an always-ask class | A customer asks for a delivery price | The skill sends nothing and collects the question for the owner |
 | EX-12 | RULE-6 | positive | The customer's window is closed | The skill tries to send | The skill tells the owner and does not retry |
-| EX-13 | RULE-6 | boundary | The owner's window is closed | The skill asks the owner a question | The skill tells the owner in the session to write to the business number, then asks again after the message arrives |
+| EX-13 | RULE-6 | boundary | The owner's window is closed | The skill asks the owner a question | The skill tells the owner in the session to write to the business number, and the owner's later answer closes the recorded question |
 | EX-14 | RULE-7 | positive | The owner sent the first message | The skill checks | The message is in the control chat and setup is reported as finished |
 | EX-15 | RULE-7 | negative | The owner has not written yet | The skill checks | The skill says it has not arrived and setup is not reported as finished |
 
@@ -136,9 +136,7 @@ n/a: the project has no CROSS-CUTTING.md yet; the cross-cutting rules live in th
 
 ## Open questions
 Closed on 2026-11-24 (the owner approved the proposals): the key page closes after one submit and a second page invalidates the earlier token; owner numbers are recorded after the owner confirms; keep-awake is a child process without administrator rights; the skill's daily reminder is in addition to the guide; prompts are acceptable during attended setup and the no-prompt rule applies to the daily loop; Spanish and English are the pilot's languages.
-Still open:
-- Q-1 (Research): the provider call that lists an account's numbers and its answer shape (SPEC-05-3).
-- Q-2 (Research): the Windows keep-awake method; the runtime's foreign-function route is documented as experimental (SPEC-05-6).
+None still open. The provider call that lists an account's numbers is recorded as L11 and the Windows keep-awake call as L12 (DECISIONS), both from the research of 2026-11-24.
 Answered by the lead on 2026-11-24 (technical): the chosen provider id is kept in the config file under the config folder, read by the existing config reader, and SPEC-05-8 adds the writer next to it; the tools are read_knowledge, save_profile, save_catalog, save_always_ask and remember (Knowledge pilot specs) and set_owner_numbers, ask_owner and answer_question (Intake pilot specs).
 Unverified, checked by the pilot (ADR-018): that a channel event wakes an idle session, that the shortcut keeps the wake option, and that the slow loop keeps firing after compaction.
 
@@ -155,6 +153,6 @@ Unverified, checked by the pilot (ADR-018): that a channel event wakes an idle s
 - AC-10 (EX-10): Given the knowledge backs the opening hours and opening hours are not always-ask, When a customer asks when the shop opens, Then the skill sends the answer itself.
 - AC-11 (EX-11): Given the delivery price is an always-ask class, When a customer asks for a delivery price, Then the skill sends nothing and collects the question for the owner.
 - AC-12 (EX-12): Given the customer's window is closed, When the skill tries to send, Then the skill tells the owner and does not retry.
-- AC-13 (EX-13): Given the owner's window is closed, When the skill asks the owner a question, Then the skill tells the owner in the session to write to the business number, then asks again after the message arrives.
+- AC-13 (EX-13): Given the owner's window is closed, When the skill asks the owner a question, Then the skill tells the owner in the session to write to the business number, and the owner's later answer closes the recorded question.
 - AC-14 (EX-14): Given the owner sent the first message, When the skill checks, Then the message is in the control chat and setup is reported as finished.
 - AC-15 (EX-15): Given the owner has not written yet, When the skill checks, Then the skill says it has not arrived and setup is not reported as finished.

@@ -24,17 +24,18 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Reuses
 - `src/intake/adapters/kapso/kapso-http.ts` `KapsoHttp`: the provider client, its pacing and its error mapping.
+- `src/intake/adapters/kapso/kapso-provider.ts` `businessNumber`: the same phone-numbers path and response shape, read for one number.
 - `src/intake/ports/provider.ts` `ProviderError`: the `credentials` kind that a refused key maps to.
 
 ## Tests first
-FR-SETUP-05-9: when the provider answers that the key is refused, `listNumbers` throws `ProviderError` of kind `credentials`, and the caller's message says in plain words that the provider refused the key; nothing is stored as working. FR-SETUP-05-10: `listNumbers` returns each number of the account as `{ id, display }`.
+FR-SETUP-05-9: when the provider answers that the key is refused, `listNumbers` throws `ProviderError` of kind `credentials`, and the caller's message says in plain words that the provider refused the key; nothing is stored as working. FR-SETUP-05-10: `listNumbers` reads every page up to `meta.total_pages` and returns each number as `{ id, display }`, where `id` is the Meta phone number id and `display` is `display_phone_number`, else `display_phone_number_normalized`, else `name`; one case has a null `display_phone_number`.
 
 ## Build
 ```ts
 export interface ProviderNumber { readonly id: string; readonly display: string }
 export function listNumbers(http: KapsoHttp, signal: AbortSignal): Promise<ProviderNumber[]>;
 ```
-The request path comes from one constant, `NUMBERS_PATH`, settled by Q-1.
+The call is `GET /platform/v1/whatsapp/phone_numbers` with the API key header, followed page by page (L11). The Meta phone number id is the value kept as `kapso_phone_number_id`.
 
 ## Done when
 `bun test test/setup/list-numbers.test.ts`
@@ -43,4 +44,4 @@ The request path comes from one constant, `NUMBERS_PATH`, settled by Q-1.
 - The tool the agent calls and the owner's pick: SPEC-05-4.
 
 ## Open questions
-Q-1 (Research): which provider call lists the WhatsApp numbers of an account, and its answer shape; read the provider's API docs and record it as a D-n before approval.
+None. The call is recorded as L11 (source: docs.kapso.ai, List phone numbers).
