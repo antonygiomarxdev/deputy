@@ -1,6 +1,6 @@
 # Drafts: slice PRD
 
-Status: Approved (2026-11-18) · Part of [Deputy product overview](../../../docs/PRODUCT.md) · Last updated: 2026-11-17
+Status: Approved (2026-11-18) · Part of [Deputy product overview](../PRODUCT.md) · Last updated: 2026-11-17
 
 ## Purpose
 
@@ -98,7 +98,7 @@ Safety requirements from the product overview:
 8. With the provider unreachable, the owner is told the send failed, the log shows "failed", and no duplicate arrives later. A retry is refused until the owner approves again (R-DRAFTS-13).
 9. For every message sent through Deputy in the log there is one approval entry before it (R-DRAFTS-17).
 10. A proposed text and an owner-edited final text are both in the log (R-DRAFTS-16).
-11. v1 success criterion from [PRODUCT.md section 8](../../../docs/PRODUCT.md): no reply leaves without an explicit owner go, verifiable from the log.
+11. v1 success criterion from [PRODUCT.md section 8](../PRODUCT.md): no reply leaves without an explicit owner go, verifiable from the log.
 12. A reply of "ok" with several drafts waiting is not a go, and the agent asks again (R-DRAFTS-19).
 13. One sentence naming drafts 1 and 3 approves only those two, with two approval entries holding the owner's words (R-DRAFTS-8, 17).
 14. If catch-up cannot complete, the send is held and the owner is told (R-DRAFTS-11).

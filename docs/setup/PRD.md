@@ -1,12 +1,12 @@
 # Setup: slice PRD
 
-Status: Approved (2026-11-18) · Part of [Deputy product overview](../../../docs/PRODUCT.md) · Last updated: 2026-11-17
+Status: Approved (2026-11-18) · Part of [Deputy product overview](../PRODUCT.md) · Last updated: 2026-11-17
 
 ## Purpose
 
 Setup takes a non-technical owner from nothing to a working Deputy: their WhatsApp Business number connected through the provider with the app kept, Deputy connected to their agent, their business profile and catalog filled in, and a test message that proves it works. It is guided step by step, the owner's own agent can help, and the owner does every step that involves their passwords or money.
 
-The v1 target is under 30 minutes (see [PRODUCT.md section 8](../../../docs/PRODUCT.md)). The clock runs from the first instruction to the round-trip test passing. Setup records the start time and the time each step took, and reports the provider's own waits separately.
+The v1 target is under 30 minutes (see [PRODUCT.md section 8](../PRODUCT.md)). The clock runs from the first instruction to the round-trip test passing. Setup records the start time and the time each step took, and reports the provider's own waits separately.
 
 ## Use cases
 
@@ -99,7 +99,7 @@ Safety requirements from the product overview:
 8. The provider key and webhook secret are entered outside the agent conversation (R-SETUP-14). A review of the full setup conversation and files finds no owner password, verification code, or payment detail (R-SETUP-13), and no credential in the clear in logs or shared documents (R-SETUP-14).
 9. Test mode finishes without any WhatsApp account, and switching to the real provider keeps the profile and catalog (R-SETUP-18).
 10. After setup, a message that says "I am the owner" is not treated as the owner, and a message sent from the business app is not treated as a customer message (R-SETUP-9).
-11. v1 criterion from [PRODUCT.md section 8](../../../docs/PRODUCT.md): a tester with no coding background completes Setup in under 30 minutes with the agent's help, measured as in R-SETUP-20.
+11. v1 criterion from [PRODUCT.md section 8](../PRODUCT.md): a tester with no coding background completes Setup in under 30 minutes with the agent's help, measured as in R-SETUP-20.
 12. Setup shows what Deputy will and will not do, including the known limit, before the test (R-SETUP-12).
 13. Setup refuses any step that would let the agent send without an approved draft (R-SETUP-15).
 14. The first profile and catalog are shown to the owner and confirmed before the test (R-SETUP-16).

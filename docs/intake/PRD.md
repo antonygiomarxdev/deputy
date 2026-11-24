@@ -1,6 +1,6 @@
 # Intake: slice PRD
 
-Status: Approved (2026-11-18) · Part of [Deputy product overview](../../../docs/PRODUCT.md) · Last updated: 2026-11-17
+Status: Approved (2026-11-18) · Part of [Deputy product overview](../PRODUCT.md) · Last updated: 2026-11-17
 
 ## Purpose
 
@@ -87,7 +87,7 @@ Safety requirements from the product overview:
 - **Drafts** relies on Intake to recognize the owner replies that Drafts itself sent, and to see owner replies made from the app before it sends.
 - **Notify** uses the "message stored" signal (R-INTAKE-17).
 - **Knowledge** may read stored history. How learning works is still open (see the product overview).
-- Product-level facts that apply: the 180-day history sync, the free plan's 2,000 messages per month, and the 250 messages per day limit (see [PRODUCT.md section 9](../../../docs/PRODUCT.md)).
+- Product-level facts that apply: the 180-day history sync, the free plan's 2,000 messages per month, and the 250 messages per day limit (see [PRODUCT.md section 9](../PRODUCT.md)).
 
 ## Acceptance criteria
 
@@ -104,11 +104,11 @@ Safety requirements from the product overview:
 11. A live delivery with a bad signature is rejected; a catch-up not made over the provider's authenticated access is not accepted (R-INTAKE-3, R-INTAKE-16).
 12. Storing a new message emits one "message stored" signal; a catch-up that stores three messages emits one signal for the group (R-INTAKE-17).
 13. After a failed catch-up, the other slices can read status "failed" and the newest stored message time (R-INTAKE-10).
-14. v1 success criterion: every inbound message the provider holds appears in the UC-1 summary (see [PRODUCT.md section 8](../../../docs/PRODUCT.md)).
+14. v1 success criterion: every inbound message the provider holds appears in the UC-1 summary (see [PRODUCT.md section 8](../PRODUCT.md)).
 
 ## Open questions
 
-These come from [PRODUCT.md section 10](../../../docs/PRODUCT.md) and are answered by the Kapso research task, not guessed here.
+These come from [PRODUCT.md section 10](../PRODUCT.md) and are answered by the Kapso research task, not guessed here.
 
 1. How does Kapso report an owner reply made in the WhatsApp Business app: as a live event, through its message listing, or both, and with which fields? The message listing marks them (origin "business_app", checked live 2026-11-17), so catch-up gets them; which live event carries them is still unchecked.
 2. Can Kapso list messages received while no session was open, and from how far back? This decides whether R-INTAKE-8 holds for the full retention window or a shorter one.

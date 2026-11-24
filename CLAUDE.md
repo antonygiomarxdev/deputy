@@ -21,7 +21,7 @@ Layout (ports and adapters; ADR-000 in `docs/adr/`):
 
 New provider = implement `Provider` in `src/intake/ports/provider.ts`, put the adapter in `src/intake/adapters/<name>/` and build it in `src/main/provider.ts`. New SQL migrations are numbered files under an `adapters/sqlite/migrations/` folder, appended to the list in `src/main/database.ts` (a file's position is its `user_version`).
 
-Product docs: [docs/PRODUCT.md](docs/PRODUCT.md) holds the problem, principles, v1 scope and slice map. Each slice keeps its chain (PRD → FRDs → TPs per FRD → ADRs → specs) in `src/<slice>/docs/`; the cross-cutting TP is `docs/tp/TP.md`. Implementation is ATDD: acceptance tests from the FRD first. Product decisions: [docs/DECISIONS.md](docs/DECISIONS.md); terms: [docs/GLOSSARY.md](docs/GLOSSARY.md); cross-slice ADRs: `docs/adr/`.
+Product docs: [docs/PRODUCT.md](docs/PRODUCT.md) holds the problem, principles, v1 scope and slice map. Each slice keeps its chain (PRD → FRDs → TPs per FRD → ADRs → specs) in `docs/<slice>/`; the cross-cutting TP is `docs/tp/TP.md`. Implementation is ATDD: acceptance tests from the FRD first. Product decisions: [docs/DECISIONS.md](docs/DECISIONS.md); terms: [docs/GLOSSARY.md](docs/GLOSSARY.md); cross-slice ADRs: `docs/adr/`.
 
 Keep `README.md` (English) and `README.es.md` (Spanish) in sync. Use Mermaid for diagrams (validate them before committing).
 
