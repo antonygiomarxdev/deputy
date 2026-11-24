@@ -86,7 +86,7 @@ The owner sent one message from the WhatsApp Business app on the Coexistence num
 
 ## Rate limits, 2026-11-17
 
-Kapso limits API requests per API key per fixed minute: Free 100, Pro 2,000, Platform and Enterprise 4,000. Over the limit it returns `429` with `Retry-After`; every response carries `X-RateLimit-Limit` and `X-RateLimit-Remaining`. A live call on the RUMAI key returned `x-ratelimit-limit: 100`, `x-ratelimit-remaining: 99`.
+Kapso limits API requests per API key per fixed minute: Free 100, Pro 2,000, Platform and Enterprise 4,000. Over the limit it returns `429` with `Retry-After`; every response carries `X-RateLimit-Limit` and `X-RateLimit-Remaining`. A live call on the owner's key returned `x-ratelimit-limit: 100`, `x-ratelimit-remaining: 99`.
 
 Effect on periodic catch-up: one check costs one conversation listing plus one message listing per conversation with new activity, so a check every 2 minutes uses a few requests per minute at most. A first catch-up after a long absence with many active conversations can need more: page through results and slow down when `X-RateLimit-Remaining` gets low. The monthly quota of the free plan counts messages, not API requests.
 

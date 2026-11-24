@@ -50,7 +50,7 @@ These hold for every feature. A requirement that breaks one needs an explicit ow
 | ID | Name | Description |
 |---|---|---|
 | UC-1 | Check the inbox | The owner asks "what's pending?". The agent summarizes unanswered chats grouped by what they need: needs the owner, orders, easy questions (draft ready), already answered by the owner. |
-| UC-2 | Answer with help | The owner says "tell María yes, build Juan's order, research delivery to Masaya and answer". The agent drafts each reply, shows them, and sends each one after the owner's go. |
+| UC-2 | Answer with help | The owner says "tell María yes, build Juan's order, research delivery to Riverside and answer". The agent drafts each reply, shows them, and sends each one after the owner's go. |
 | UC-3 | Be told while working | With an agent that supports push, the session gets a short, batched notice ("3 new, 1 order"), not one per message. |
 | UC-4 | Answer away from the computer | The owner continues the same conversation from the phone (e.g. Claude Remote Control). |
 | UC-5 | Learn from the owner | When the owner approves or corrects a reply, Deputy keeps it as knowledge and uses it to propose better next time. The owner can see and edit what was learned. |
