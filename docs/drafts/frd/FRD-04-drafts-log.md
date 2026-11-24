@@ -12,16 +12,18 @@ R-DRAFTS-15, R-DRAFTS-16, R-DRAFTS-17, R-DRAFTS-18.
 
 ## Behavior
 
-- **FR-DRAFTS-04-1.** Deputy writes one log entry, with its time and in order, for each event: draft proposed, draft replaced, text changed by the owner, approved, rejected, approval voided, held (with the reason), the owner's choice after a hold, sending, sent, failed, outcome unknown. Each entry names the draft and the chat. (R-DRAFTS-15)
-- **FR-DRAFTS-04-2.** The log keeps both the proposed text and the final text of a draft, so the difference between them can be read. (R-DRAFTS-16)
-- **FR-DRAFTS-04-3.** Each entry has an identifier. Knowledge can refer to it from a learned item. Knowledge reads the log. Drafts does not push to it. (R-DRAFTS-16)
-- **FR-DRAFTS-04-4.** Each approval entry keeps the owner's own words. Every sent entry points to exactly one approval entry that came before it, and the text sent equals the text approved. (R-DRAFTS-17)
-- **FR-DRAFTS-04-5.** A sent message with no approval entry is a defect. The owner can check by asking the agent, "does every sent message have an approval?" Deputy lists any sent entry that lacks one, or says there is none. (R-DRAFTS-17)
-- **FR-DRAFTS-04-6.** The owner can ask the agent to show the log in the conversation, newest first. The owner can limit it to one chat. (R-DRAFTS-18)
-- **FR-DRAFTS-04-7.** Entries are never changed or removed by the agent. A correction is a new entry. (R-DRAFTS-15)
-- **FR-DRAFTS-04-8.** Orders and order changes approved under FRD-02 appear in the log in the same way, with the owner's words. An order draft follows the same go rule as a reply. (R-DRAFTS-17, R-DRAFTS-21)
-- **FR-DRAFTS-04-9.** For an order entry, the log keeps a reference to the order and the owner's words while the order exists. The entry itself holds no customer name and no delivery address, but the owner's words may contain a name. (R-DRAFTS-15)
-- **FR-DRAFTS-04-10.** When the owner deletes an order, its log entries stay with a "deleted" mark. The owner's words in them are replaced by "deleted" too, and no personal data about the order remains. The order's reference and the fact that it was approved remain. (R-DRAFTS-15)
+| ID | Pattern | Requirement |
+|---|---|---|
+| FR-DRAFTS-04-1 | always | Deputy writes one log entry, with its time and in order, for each event: draft proposed, draft replaced, text changed by the owner, approved, rejected, approval voided, held (with the reason), the owner's choice after a hold, sending, sent, failed, outcome unknown. Each entry names the draft and the chat. (R-DRAFTS-15) |
+| FR-DRAFTS-04-2 | always | The log keeps both the proposed text and the final text of a draft, so the difference between them can be read. (R-DRAFTS-16) |
+| FR-DRAFTS-04-3 | always | Each entry has an identifier. Knowledge can refer to it from a learned item. Knowledge reads the log. Drafts does not push to it. (R-DRAFTS-16) |
+| FR-DRAFTS-04-4 | always | Each approval entry keeps the owner's own words. Every sent entry points to exactly one approval entry that came before it, and the text sent equals the text approved. (R-DRAFTS-17) |
+| FR-DRAFTS-04-5 | always | A sent message with no approval entry is a defect. The owner can check by asking the agent, "does every sent message have an approval?" Deputy lists any sent entry that lacks one, or says there is none. (R-DRAFTS-17) |
+| FR-DRAFTS-04-6 | always | The owner can ask the agent to show the log in the conversation, newest first. The owner can limit it to one chat. (R-DRAFTS-18) |
+| FR-DRAFTS-04-7 | always | Entries are never changed or removed by the agent. A correction is a new entry. (R-DRAFTS-15) |
+| FR-DRAFTS-04-8 | always | Orders and order changes approved under FRD-02 appear in the log in the same way, with the owner's words. An order draft follows the same go rule as a reply. (R-DRAFTS-17, R-DRAFTS-21) |
+| FR-DRAFTS-04-9 | always | For an order entry, the log keeps a reference to the order and the owner's words while the order exists. The entry itself holds no customer name and no delivery address, but the owner's words may contain a name. (R-DRAFTS-15) |
+| FR-DRAFTS-04-10 | WHEN | When the owner deletes an order, its log entries stay with a "deleted" mark. The owner's words in them are replaced by "deleted" too, and no personal data about the order remains. The order's reference and the fact that it was approved remain. (R-DRAFTS-15) |
 
 Example:
 

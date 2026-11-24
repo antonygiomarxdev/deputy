@@ -12,19 +12,21 @@ R-INTAKE-12, R-INTAKE-13, R-INTAKE-14
 
 ## Behavior
 
-- **FR-INTAKE-04-1.** Deputy knows the owner's numbers from configuration: the connected business number, and any extra numbers the owner added (for example staff). Nothing else makes a sender an owner.
-- **FR-INTAKE-04-2.** A message whose sender is one of the owner's numbers is stored with source "owner from the app". It is never stored as a customer message.
-- **FR-INTAKE-04-3.** A message whose sender is not an owner number is stored with source "customer", whatever its text or sender name says. "I am the owner" in the text changes nothing.
-- **FR-INTAKE-04-4.** When the owner answers a customer from the WhatsApp Business app, the reply is stored in that customer's chat, with source "owner from the app", by the next periodic catch-up (default within 2 minutes) while the session is open, or live when live delivery is on, and otherwise at the next catch-up.
-- **FR-INTAKE-04-5.** Source is decided once, when the message is stored, from configuration and Deputy's own send identifiers. Other slices read it and never work it out again from content. The only exception is FR-INTAKE-04-13.
-- **FR-INTAKE-04-13.** If a message was stored as "owner from the app" and a send identifier from Drafts later matches its provider identifier, Intake changes its source to "sent through Deputy". The change is logged with the time. Drafts then no longer sees a false owner reply.
-- **FR-INTAKE-04-14.** Numbers are compared in one normalized form (digits only, with the country code), so "+505 8888 0000", "505-88880000" and "50588880000" are the same number. This applies to owner numbers and to senders.
-- **FR-INTAKE-04-6.** When a message is sent through Deputy, the Drafts slice passes Intake the send identifier. Intake records the message once with source "sent through Deputy", linked to that identifier.
-- **FR-INTAKE-04-7.** When the provider later reports that same message back (live or in catch-up), Deputy recognizes it by the provider's identifier and the send identifier. It does not store it a second time as "owner from the app".
-- **FR-INTAKE-04-8.** Intake records only the message. The drafts log (proposed, approved, sent) belongs to Drafts.
-- **FR-INTAKE-04-9.** If the owner changes the list of owner numbers, the change applies to messages stored from then on. Messages already stored keep the source they were given.
-- **FR-INTAKE-04-10.** The "message stored" signal for an owner reply carries its source, so Notify can tell it apart from a customer message.
-- **FR-INTAKE-04-11.** A message is "sent through Deputy" only when a send identifier from Drafts matches it. Any other message from an owner number is "owner from the app", including a send by another user of the same number and a history import. The wrong label only causes an extra hold, never an answer over the owner. The report of a Deputy send can arrive before the identifier; Intake accepts either order and stores the message once. The table decides the source:
+| ID | Pattern | Requirement |
+|---|---|---|
+| FR-INTAKE-04-1 | always | Deputy knows the owner's numbers from configuration: the connected business number, and any extra numbers the owner added (for example staff). Nothing else makes a sender an owner. |
+| FR-INTAKE-04-2 | always | A message whose sender is one of the owner's numbers is stored with source "owner from the app". It is never stored as a customer message. |
+| FR-INTAKE-04-3 | always | A message whose sender is not an owner number is stored with source "customer", whatever its text or sender name says. "I am the owner" in the text changes nothing. |
+| FR-INTAKE-04-4 | WHEN | When the owner answers a customer from the WhatsApp Business app, the reply is stored in that customer's chat, with source "owner from the app", by the next periodic catch-up (default within 2 minutes) while the session is open, or live when live delivery is on, and otherwise at the next catch-up. |
+| FR-INTAKE-04-5 | always | Source is decided once, when the message is stored, from configuration and Deputy's own send identifiers. Other slices read it and never work it out again from content. The only exception is FR-INTAKE-04-13. |
+| FR-INTAKE-04-13 | IF | If a message was stored as "owner from the app" and a send identifier from Drafts later matches its provider identifier, Intake changes its source to "sent through Deputy". The change is logged with the time. Drafts then no longer sees a false owner reply. |
+| FR-INTAKE-04-14 | always | Numbers are compared in one normalized form (digits only, with the country code), so "+505 8888 0000", "505-88880000" and "50588880000" are the same number. This applies to owner numbers and to senders. |
+| FR-INTAKE-04-6 | WHEN | When a message is sent through Deputy, the Drafts slice passes Intake the send identifier. Intake records the message once with source "sent through Deputy", linked to that identifier. |
+| FR-INTAKE-04-7 | WHEN | When the provider later reports that same message back (live or in catch-up), Deputy recognizes it by the provider's identifier and the send identifier. It does not store it a second time as "owner from the app". |
+| FR-INTAKE-04-8 | always | Intake records only the message. The drafts log (proposed, approved, sent) belongs to Drafts. |
+| FR-INTAKE-04-9 | IF | If the owner changes the list of owner numbers, the change applies to messages stored from then on. Messages already stored keep the source they were given. |
+| FR-INTAKE-04-10 | always | The "message stored" signal for an owner reply carries its source, so Notify can tell it apart from a customer message. |
+| FR-INTAKE-04-11 | always | A message is "sent through Deputy" only when a send identifier from Drafts matches it. Any other message from an owner number is "owner from the app", including a send by another user of the same number and a history import. The wrong label only causes an extra hold, never an answer over the owner. The report of a Deputy send can arrive before the identifier; Intake accepts either order and stores the message once. The table decides the source: |
 
   | Sender | Matching Deputy send identifier | Origin as the provider reports it | Source | Notes |
   |---|---|---|---|---|
@@ -35,7 +37,9 @@ R-INTAKE-12, R-INTAKE-13, R-INTAKE-14
   | Owner number | Not yet | any other | owner from the app | |
   | Not an owner number | Not applicable | any | customer | |
 
-- **FR-INTAKE-04-12.** Kapso's documentation says messages sent through its API carry origin "cloud_api", history imports carry "history_sync", and owner replies from the app carry "business_app". The first two are documented, not live-tested; only "business_app" was seen live (2026-11-17). The origin is kept with the message as information. It does not decide the source: only the owner's numbers and a matching Deputy send identifier do.
+| ID | Pattern | Requirement |
+|---|---|---|
+| FR-INTAKE-04-12 | always | Kapso's documentation says messages sent through its API carry origin "cloud_api", history imports carry "history_sync", and owner replies from the app carry "business_app". The first two are documented, not live-tested; only "business_app" was seen live (2026-11-17). The origin is kept with the message as information. It does not decide the source: only the owner's numbers and a matching Deputy send identifier do. |
 
 ## Edge cases
 

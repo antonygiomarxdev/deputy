@@ -12,17 +12,19 @@ R-INTAKE-1, R-INTAKE-2
 
 ## Behavior
 
-- **FR-INTAKE-01-1.** Deputy has one setting that names the message source. v1 accepts two values: Kapso and dev. Any other value is refused at start with a plain message that lists the two valid values.
-- **FR-INTAKE-01-2.** With Kapso, Deputy receives and retrieves messages for the owner's connected WhatsApp Business number through Kapso's official route.
-- **FR-INTAKE-01-3.** With dev, a tester can create, on demand, an inbound customer message (chat, sender number, text, type, optional transcript, send time) and an owner reply from the app.
-- **FR-INTAKE-01-4.** A message created through dev is stored with the same fields and the same source marking as a message from Kapso (see FRD-02). The other slices cannot tell which source produced a message, except by the provider's own identifier.
-- **FR-INTAKE-01-5.** Dev supports the cases the other features need: unreadable types, a transcript, a repeated message, messages out of order, an owner reply, a history message, and a message that fails the authenticity check.
-- **FR-INTAKE-01-6.** Dev can also act as a source that has "missed" messages: a tester can add messages that Deputy has not yet stored, so catch-up (FRD-03) can be tested.
-- **FR-INTAKE-01-7.** Switching the setting from dev to Kapso (or back) does not delete stored messages and does not require a change in any other slice. Stored messages keep the identifier of the provider that produced them.
-- **FR-INTAKE-01-11.** With Kapso, Deputy receives by catch-up by default and needs no public address. The owner can switch on live delivery as an advanced setting (FR-INTAKE-03-16). Both settings (catch-up period, live delivery on or off) are read at start.
-- **FR-INTAKE-01-9.** The ways to create test messages and forged deliveries (FR-INTAKE-01-3, 01-5, 01-6) exist only while the setting is dev. With Kapso, they are absent and any attempt to use them is refused and noted. Nobody can inject a message into a Kapso setup this way.
-- **FR-INTAKE-01-10.** Once the setting is Kapso, stored messages from dev are never counted as pending, never counted in a notice, and never offered a draft. They stay readable and are marked "dev". The Inbox, Notify and Drafts slices rely on this.
-- **FR-INTAKE-01-8.** Until Setup has supplied Kapso connection details and the owner's numbers, only dev works. Choosing Kapso without them is refused at start with a message that says what is missing and points to Setup.
+| ID | Pattern | Requirement |
+|---|---|---|
+| FR-INTAKE-01-1 | always | Deputy has one setting that names the message source. v1 accepts two values: Kapso and dev. Any other value is refused at start with a plain message that lists the two valid values. |
+| FR-INTAKE-01-2 | always | With Kapso, Deputy receives and retrieves messages for the owner's connected WhatsApp Business number through Kapso's official route. |
+| FR-INTAKE-01-3 | always | With dev, a tester can create, on demand, an inbound customer message (chat, sender number, text, type, optional transcript, send time) and an owner reply from the app. |
+| FR-INTAKE-01-4 | always | A message created through dev is stored with the same fields and the same source marking as a message from Kapso (see FRD-02). The other slices cannot tell which source produced a message, except by the provider's own identifier. |
+| FR-INTAKE-01-5 | always | Dev supports the cases the other features need: unreadable types, a transcript, a repeated message, messages out of order, an owner reply, a history message, and a message that fails the authenticity check. |
+| FR-INTAKE-01-6 | always | Dev can also act as a source that has "missed" messages: a tester can add messages that Deputy has not yet stored, so catch-up (FRD-03) can be tested. |
+| FR-INTAKE-01-7 | always | Switching the setting from dev to Kapso (or back) does not delete stored messages and does not require a change in any other slice. Stored messages keep the identifier of the provider that produced them. |
+| FR-INTAKE-01-11 | always | With Kapso, Deputy receives by catch-up by default and needs no public address. The owner can switch on live delivery as an advanced setting (FR-INTAKE-03-16). Both settings (catch-up period, live delivery on or off) are read at start. |
+| FR-INTAKE-01-9 | always | The ways to create test messages and forged deliveries (FR-INTAKE-01-3, 01-5, 01-6) exist only while the setting is dev. With Kapso, they are absent and any attempt to use them is refused and noted. Nobody can inject a message into a Kapso setup this way. |
+| FR-INTAKE-01-10 | always | Once the setting is Kapso, stored messages from dev are never counted as pending, never counted in a notice, and never offered a draft. They stay readable and are marked "dev". The Inbox, Notify and Drafts slices rely on this. |
+| FR-INTAKE-01-8 | always | Until Setup has supplied Kapso connection details and the owner's numbers, only dev works. Choosing Kapso without them is refused at start with a message that says what is missing and points to Setup. |
 
 ## Edge cases
 

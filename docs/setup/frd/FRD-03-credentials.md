@@ -14,14 +14,16 @@ R-SETUP-13, R-SETUP-14, R-SETUP-15.
 
 Step 4 is the credentials step: the owner enters the two secrets, and the check says the provider accepts them and Deputy can reach the connected number.
 
-- **FR-SETUP-03-1.** Setup never asks the agent to enter, read or hold the owner's passwords, verification codes or payment details. Setup never asks the owner to type or paste them into the agent conversation. Each instruction that involves them says where the owner types them: the provider's or the phone's own screen.
-- **FR-SETUP-03-2.** Deputy needs the provider's access key. For live delivery (optional, FRD-02) it also needs the secret that proves incoming messages come from the provider. Setup tells the owner where to get each on the provider's pages and where to put it: a local place on the owner's machine. The agent does not read it because the locked-down agent profile denies that path. With any other agent, the owner must restrict that path themselves. This is the known limit: an agent with file tools of its own could read it, and Setup says so. Deputy offers a plain way to open that place and shows which lines the owner must fill, with no secret in the view.
-- **FR-SETUP-03-3.** If the owner pastes a secret, password or code into the agent conversation, the agent tells the owner not to do that, and Setup tells the owner to replace that secret on the provider's page. The pasted value is not used: nothing in Setup reads a secret from the conversation. Spotting the paste is the agent's behavior, taught by the setup guide text. Deputy cannot detect it.
-- **FR-SETUP-03-4.** The secrets are stored on the owner's machine only. Setup shows them back only in part (the last four characters for long secrets, nothing but present or absent for short ones) and says whether each is present.
-- **FR-SETUP-03-5.** Secrets are never written to chat logs, status output, or any document the owner might share, and never sent to a customer.
-- **FR-SETUP-03-6.** The check for secrets says whether each is present and accepted by the provider. It says nothing about their value.
-- **FR-SETUP-03-7.** Setup does not change any setting of the owner's agent that would let it send without an approved draft. If the owner asks for that (for example "always allow"), Setup refuses and says the approval is the owner's go in the conversation.
-- **FR-SETUP-03-8.** If a step would need such a setting, Setup does not run the step and tells the owner why.
+| ID | Pattern | Requirement |
+|---|---|---|
+| FR-SETUP-03-1 | always | Setup never asks the agent to enter, read or hold the owner's passwords, verification codes or payment details. Setup never asks the owner to type or paste them into the agent conversation. Each instruction that involves them says where the owner types them: the provider's or the phone's own screen. |
+| FR-SETUP-03-2 | always | Deputy needs the provider's access key. For live delivery (optional, FRD-02) it also needs the secret that proves incoming messages come from the provider. Setup tells the owner where to get each on the provider's pages and where to put it: a local place on the owner's machine. The agent does not read it because the locked-down agent profile denies that path. With any other agent, the owner must restrict that path themselves. This is the known limit: an agent with file tools of its own could read it, and Setup says so. Deputy offers a plain way to open that place and shows which lines the owner must fill, with no secret in the view. |
+| FR-SETUP-03-3 | IF | If the owner pastes a secret, password or code into the agent conversation, the agent tells the owner not to do that, and Setup tells the owner to replace that secret on the provider's page. The pasted value is not used: nothing in Setup reads a secret from the conversation. Spotting the paste is the agent's behavior, taught by the setup guide text. Deputy cannot detect it. |
+| FR-SETUP-03-4 | always | The secrets are stored on the owner's machine only. Setup shows them back only in part (the last four characters for long secrets, nothing but present or absent for short ones) and says whether each is present. |
+| FR-SETUP-03-5 | always | Secrets are never written to chat logs, status output, or any document the owner might share, and never sent to a customer. |
+| FR-SETUP-03-6 | always | The check for secrets says whether each is present and accepted by the provider. It says nothing about their value. |
+| FR-SETUP-03-7 | always | Setup does not change any setting of the owner's agent that would let it send without an approved draft. If the owner asks for that (for example "always allow"), Setup refuses and says the approval is the owner's go in the conversation. |
+| FR-SETUP-03-8 | IF | If a step would need such a setting, Setup does not run the step and tells the owner why. |
 
 ## Edge cases
 

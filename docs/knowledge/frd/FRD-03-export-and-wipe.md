@@ -12,16 +12,18 @@ R-KNOWLEDGE-12, R-KNOWLEDGE-13.
 
 ## Behavior
 
-- **FR-KNOWLEDGE-03-1.** Deputy keeps the profile, the catalog and the lessons on the owner's machine. Deputy sends them to no service. The owner's own agent receives them, because it needs them to draft.
-- **FR-KNOWLEDGE-03-2.** If the owner chooses their own spreadsheet as the catalog, the catalog is read from there. It is the only knowledge that leaves the machine. The agent tells the owner this when they choose it.
-- **FR-KNOWLEDGE-03-3.** The owner can ask to export all knowledge: profile, catalog and lessons. Deputy gives one export that holds everything, in a form the owner can read and keep.
-- **FR-KNOWLEDGE-03-4.** The owner can ask to wipe all knowledge. Deputy first states what will be deleted: profile, catalog, lessons. It deletes nothing until the owner confirms in the conversation. The confirmation names the action ("yes, wipe all knowledge").
-- **FR-KNOWLEDGE-03-5.** After a confirmed wipe, no profile, catalog or lesson remains. The agent has nothing to draft from, and says so when asked.
-- **FR-KNOWLEDGE-03-6.** With a spreadsheet catalog, a wipe does not delete the spreadsheet. Deputy disconnects from it and tells the owner.
-- **FR-KNOWLEDGE-03-8.** Export and wipe use the same rule as changes: Deputy offers one way to wipe, which takes the owner's own words that name the action, and refuses without them. Each wipe is logged.
-- **FR-KNOWLEDGE-03-9.** A wipe deletes the profile, the catalog, the lessons, the pending and declined proposals, and the confirmation and apply logs of knowledge. It keeps one entry: that a wipe happened, when, and the owner's words.
-- **FR-KNOWLEDGE-03-10.** A wipe does not change other slices. Orders hold their own copy of each item name and price (the Orders slice keeps a snapshot), so recorded orders stay readable. Lessons' links to chats and drafts disappear with the lessons. Drafts that quoted wiped knowledge stay.
-- **FR-KNOWLEDGE-03-7.** Deputy suggests the owner export before a wipe. It does not require it.
+| ID | Pattern | Requirement |
+|---|---|---|
+| FR-KNOWLEDGE-03-1 | always | Deputy keeps the profile, the catalog and the lessons on the owner's machine. Deputy sends them to no service. The owner's own agent receives them, because it needs them to draft. |
+| FR-KNOWLEDGE-03-2 | IF | If the owner chooses their own spreadsheet as the catalog, the catalog is read from there. It is the only knowledge that leaves the machine. The agent tells the owner this when they choose it. |
+| FR-KNOWLEDGE-03-3 | always | The owner can ask to export all knowledge: profile, catalog and lessons. Deputy gives one export that holds everything, in a form the owner can read and keep. |
+| FR-KNOWLEDGE-03-4 | always | The owner can ask to wipe all knowledge. Deputy first states what will be deleted: profile, catalog, lessons. It deletes nothing until the owner confirms in the conversation. The confirmation names the action ("yes, wipe all knowledge"). |
+| FR-KNOWLEDGE-03-5 | always | After a confirmed wipe, no profile, catalog or lesson remains. The agent has nothing to draft from, and says so when asked. |
+| FR-KNOWLEDGE-03-6 | always | With a spreadsheet catalog, a wipe does not delete the spreadsheet. Deputy disconnects from it and tells the owner. |
+| FR-KNOWLEDGE-03-8 | always | Export and wipe use the same rule as changes: Deputy offers one way to wipe, which takes the owner's own words that name the action, and refuses without them. Each wipe is logged. |
+| FR-KNOWLEDGE-03-9 | always | A wipe deletes the profile, the catalog, the lessons, the pending and declined proposals, and the confirmation and apply logs of knowledge. It keeps one entry: that a wipe happened, when, and the owner's words. |
+| FR-KNOWLEDGE-03-10 | always | A wipe does not change other slices. Orders hold their own copy of each item name and price (the Orders slice keeps a snapshot), so recorded orders stay readable. Lessons' links to chats and drafts disappear with the lessons. Drafts that quoted wiped knowledge stay. |
+| FR-KNOWLEDGE-03-7 | always | Deputy suggests the owner export before a wipe. It does not require it. |
 
 ## Edge cases
 

@@ -12,16 +12,18 @@ R-NOTIFY-6, R-NOTIFY-7, R-NOTIFY-15.
 
 ## Behavior
 
-- **FR-NOTIFY-02-1.** The owner can tell the agent how long Deputy waits to batch messages. Deputy keeps the choice and uses it from the next period. Without a choice, the default is 10 minutes. (R-NOTIFY-6)
-- **FR-NOTIFY-02-9.** The owner can set the reminder period (default 30 minutes), and can pause reminders and resume them. While reminders are paused, notices for new messages still go out. Quiet periods and the notices-off setting stop reminders too. (R-NOTIFY-6, R-NOTIFY-7)
-- **FR-NOTIFY-02-2.** The owner can set quiet periods, for example "no notices from 22:00 to 07:00". Quiet periods use the owner's local time zone and clock time, so a change of the clock (daylight saving, travel) moves them with the clock. During a quiet period no notice is sent. (R-NOTIFY-6)
-- **FR-NOTIFY-02-3.** Messages that arrive in a quiet period are summarized in the first notice after it ends, with one count for all of them. (R-NOTIFY-6)
-- **FR-NOTIFY-02-4.** The batching period accepts 1 minute to 24 hours. The reminder period accepts 5 minutes to 24 hours. Units are minutes. If the value the owner asks for is outside the range, Deputy says the range and keeps the old value. (R-NOTIFY-6)
-- **FR-NOTIFY-02-5.** The owner can turn notices off, and on again. With notices off, nothing else changes: messages are stored and the inbox lists them. (R-NOTIFY-7)
-- **FR-NOTIFY-02-6.** The ignore list belongs to the Inbox slice (FR-INBOX-03-10). The owner ignores and un-ignores chats there, by explicit command only, and Inbox logs each change with the owner's words. Notify only reads the list and keeps no copy and no log of its own. Deputy never ignores a chat on its own judgment. (R-NOTIFY-15)
-- **FR-NOTIFY-02-7.** An ignored chat is left out of notices, both new and waiting counts. The messages are still stored and the inbox still lists them. (R-NOTIFY-15)
-- **FR-NOTIFY-02-10.** Each time Deputy prepares a notice, it reads the current ignore list from Inbox, so a change takes effect in the next notice and survives a restart. Inbox shows the list and how many ignored chats have unanswered messages, so an ignore cannot hide a chat silently. (R-NOTIFY-15)
-- **FR-NOTIFY-02-8.** When the owner stops ignoring a chat in Inbox, the chat counts again in the next notice. (R-NOTIFY-15)
+| ID | Pattern | Requirement |
+|---|---|---|
+| FR-NOTIFY-02-1 | always | The owner can tell the agent how long Deputy waits to batch messages. Deputy keeps the choice and uses it from the next period. Without a choice, the default is 10 minutes. (R-NOTIFY-6) |
+| FR-NOTIFY-02-9 | always | The owner can set the reminder period (default 30 minutes), and can pause reminders and resume them. While reminders are paused, notices for new messages still go out. Quiet periods and the notices-off setting stop reminders too. (R-NOTIFY-6, R-NOTIFY-7) |
+| FR-NOTIFY-02-2 | always | The owner can set quiet periods, for example "no notices from 22:00 to 07:00". Quiet periods use the owner's local time zone and clock time, so a change of the clock (daylight saving, travel) moves them with the clock. During a quiet period no notice is sent. (R-NOTIFY-6) |
+| FR-NOTIFY-02-3 | always | Messages that arrive in a quiet period are summarized in the first notice after it ends, with one count for all of them. (R-NOTIFY-6) |
+| FR-NOTIFY-02-4 | always | The batching period accepts 1 minute to 24 hours. The reminder period accepts 5 minutes to 24 hours. Units are minutes. If the value the owner asks for is outside the range, Deputy says the range and keeps the old value. (R-NOTIFY-6) |
+| FR-NOTIFY-02-5 | always | The owner can turn notices off, and on again. With notices off, nothing else changes: messages are stored and the inbox lists them. (R-NOTIFY-7) |
+| FR-NOTIFY-02-6 | always | The ignore list belongs to the Inbox slice (FR-INBOX-03-10). The owner ignores and un-ignores chats there, by explicit command only, and Inbox logs each change with the owner's words. Notify only reads the list and keeps no copy and no log of its own. Deputy never ignores a chat on its own judgment. (R-NOTIFY-15) |
+| FR-NOTIFY-02-7 | always | An ignored chat is left out of notices, both new and waiting counts. The messages are still stored and the inbox still lists them. (R-NOTIFY-15) |
+| FR-NOTIFY-02-10 | always | Each time Deputy prepares a notice, it reads the current ignore list from Inbox, so a change takes effect in the next notice and survives a restart. Inbox shows the list and how many ignored chats have unanswered messages, so an ignore cannot hide a chat silently. (R-NOTIFY-15) |
+| FR-NOTIFY-02-8 | WHEN | When the owner stops ignoring a chat in Inbox, the chat counts again in the next notice. (R-NOTIFY-15) |
 
 Example:
 

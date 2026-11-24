@@ -12,20 +12,22 @@ R-INBOX-1, R-INBOX-2, R-INBOX-3, R-INBOX-9, R-INBOX-14
 
 ## Behavior
 
-- **FR-INBOX-01-1.** A chat is pending when all of these hold: its latest message has source "customer"; that message was sent inside the pending window; and no later message in the chat has source "owner from the app" or "sent through Deputy".
-- **FR-INBOX-01-2.** A reply from Deputy counts as an answer only when Intake has recorded it with source "sent through Deputy". Inbox uses this one source and does not ask Drafts which replies were sent. A draft that was proposed, approved but not yet sent, held, rejected, failed, or of unknown outcome does not clear a chat. If the provider reports a Deputy send before Intake has the send identifier, Intake still classifies it "sent through Deputy" or corrects it (FR-INTAKE-04-11, FR-INTAKE-04-13), so the chat counts as answered either way.
-- **FR-INBOX-01-3.** A chat whose latest message is an owner reply from the app is never pending, however old the customer message before it is.
-- **FR-INBOX-01-4.** When a customer writes again after any answer, the chat is pending again, with the new message as the waiting one.
-- **FR-INBOX-01-5.** Inbox reads the source that Intake stored for each message. It never works out who sent a message from its text, name or any other content. A message with source "owner from the app" is never counted as a customer message, whatever it says.
-- **FR-INBOX-01-6.** The pending window is the last N days, counted back from now. N is a setting the owner can change. The default is 7 days.
-- **FR-INBOX-01-7.** N cannot be larger than what the provider holds. If the owner asks for more, Deputy keeps the largest allowed value and says what it is.
-- **FR-INBOX-01-8.** Messages older than the window are not pending but stay stored and readable as history. Deputy deletes nothing because of the window.
-- **FR-INBOX-01-9.** A message with the history flag follows the same rules as any other: if it is inside the window and nothing answered it, the chat is pending.
-- **FR-INBOX-01-10.** A customer message that is not readable (voice note, image) counts as a waiting message like any other.
-- **FR-INBOX-01-11.** A chat that the owner told Deputy to ignore is not pending (see FRD-03).
-- **FR-INBOX-01-12.** Messages Intake marked as from the dev provider are never pending once the provider is Kapso (FR-INTAKE-01-10). They stay readable.
-- **FR-INBOX-01-13.** Messages Intake marked "group chat, not supported in v1" or "sender unknown" (FR-INTAKE-02-13) are not pending. The summary counts them in one line, for example "3 messages from group chats or unknown senders, not handled in v1", so they are not invisible.
-- **FR-INBOX-01-14.** Chats whose waiting customer message is older than the window are not listed. The summary counts them in one line, for example "4 older chats outside the 7-day window have no answer". They are counted, not listed, and stay readable as history.
+| ID | Pattern | Requirement |
+|---|---|---|
+| FR-INBOX-01-1 | always | A chat is pending when all of these hold: its latest message has source "customer"; that message was sent inside the pending window; and no later message in the chat has source "owner from the app" or "sent through Deputy". |
+| FR-INBOX-01-2 | always | A reply from Deputy counts as an answer only when Intake has recorded it with source "sent through Deputy". Inbox uses this one source and does not ask Drafts which replies were sent. A draft that was proposed, approved but not yet sent, held, rejected, failed, or of unknown outcome does not clear a chat. If the provider reports a Deputy send before Intake has the send identifier, Intake still classifies it "sent through Deputy" or corrects it (FR-INTAKE-04-11, FR-INTAKE-04-13), so the chat counts as answered either way. |
+| FR-INBOX-01-3 | always | A chat whose latest message is an owner reply from the app is never pending, however old the customer message before it is. |
+| FR-INBOX-01-4 | WHEN | When a customer writes again after any answer, the chat is pending again, with the new message as the waiting one. |
+| FR-INBOX-01-5 | always | Inbox reads the source that Intake stored for each message. It never works out who sent a message from its text, name or any other content. A message with source "owner from the app" is never counted as a customer message, whatever it says. |
+| FR-INBOX-01-6 | always | The pending window is the last N days, counted back from now. N is a setting the owner can change. The default is 7 days. |
+| FR-INBOX-01-7 | always | N cannot be larger than what the provider holds. If the owner asks for more, Deputy keeps the largest allowed value and says what it is. |
+| FR-INBOX-01-8 | always | Messages older than the window are not pending but stay stored and readable as history. Deputy deletes nothing because of the window. |
+| FR-INBOX-01-9 | always | A message with the history flag follows the same rules as any other: if it is inside the window and nothing answered it, the chat is pending. |
+| FR-INBOX-01-10 | always | A customer message that is not readable (voice note, image) counts as a waiting message like any other. |
+| FR-INBOX-01-11 | always | A chat that the owner told Deputy to ignore is not pending (see FRD-03). |
+| FR-INBOX-01-12 | always | Messages Intake marked as from the dev provider are never pending once the provider is Kapso (FR-INTAKE-01-10). They stay readable. |
+| FR-INBOX-01-13 | always | Messages Intake marked "group chat, not supported in v1" or "sender unknown" (FR-INTAKE-02-13) are not pending. The summary counts them in one line, for example "3 messages from group chats or unknown senders, not handled in v1", so they are not invisible. |
+| FR-INBOX-01-14 | always | Chats whose waiting customer message is older than the window are not listed. The summary counts them in one line, for example "4 older chats outside the 7-day window have no answer". They are counted, not listed, and stay readable as history. |
 
 ## Edge cases
 
