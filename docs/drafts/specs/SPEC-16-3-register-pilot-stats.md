@@ -35,7 +35,7 @@ FR-DRAFTS-04-12, FR-DRAFTS-04-13, in `test/main/pilot-stats-wiring.test.ts`, wri
 // in mcpServer, with pilot.stats from SPEC-16-1:
 pilotStatsTool({ drafts: () => pilot.stats.drafts(days), intake: () => pilot.stats.intake(days) }) // registered as "pilot_stats", input { days?: number }
 ```
-The tool's input is `{ days?: number }` (a whole number from 1 to 30, default 7); the handler calls `pilot.stats.drafts(days)` and `pilot.stats.intake(days)`, which compute the local-day range, and hands both to `pilotStatsTool`. The day is the local date of the computer, as Intake's counts use it (L14).
+The tool's input is `{ days?: number }` (a whole number from 1 to 30, default 7); the handler calls `pilot.stats.drafts(days)` and `pilot.stats.intake(days)`, which compute the range with `localDayRange` (SPEC-08) in the local time zone of the computer, and hands both to `pilotStatsTool`. The day is the local date of the computer, as Intake's counts use it (L14).
 
 ## Done when
 `bun test test/main/pilot-stats-wiring.test.ts`
