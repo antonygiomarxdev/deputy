@@ -10,7 +10,7 @@
 [Read in English](README.md) · [Visión del producto](docs/PRODUCT.md)
 
 <!-- GIF DE DEMO (lo graba el dueño, 20-30 s, solo con el proveedor dev y datos falsos, nunca un número ni un cliente reales):
-     le preguntas al agente "¿qué hay pendiente?", lee un chat, redacta una respuesta, dices "dale" y se confirma el envío.
+     le preguntas al agente "¿qué hay pendiente?", lee un chat, redacta una respuesta, dices "envía" y se confirma el envío.
      Pon el archivo en docs/assets/ e insértalo aquí. -->
 
 Deputy es un servidor [MCP](https://modelcontextprotocol.io) que corre en tu computadora y habla con tu agente por stdio (primero Claude Code; sirve cualquier agente MCP). Tu agente ve los mensajes que envían tus clientes, investiga lo que necesita y redacta respuestas. Tú decides qué sale. Es un asistente, no un bot autónomo.
@@ -34,7 +34,7 @@ sequenceDiagram
   K->>D: webhook o catch-up
   D->>A: check_messages, get_chat
   A->>O: borrador mostrado en la conversación
-  O->>A: dale, nombrando el borrador
+  O->>A: envía, nombrando el borrador
   A->>D: approve_draft
   D->>K: envío
 ```
