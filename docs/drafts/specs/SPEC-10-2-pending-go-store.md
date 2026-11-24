@@ -30,12 +30,13 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 - FR-DRAFTS-02-15 (5): a go already taken, a second take for that chat returns null, and the row keeps its `used_at` and `send_id`.
 - FR-DRAFTS-02-15 (7): given go rows used on two days, `usedBetween` returns the used rows in the range with their chat id and `used_at`, and no unused rows.
 - FR-DRAFTS-02-15 (6): a second put for the same chat before any take replaces the unused go: one take returns the second go only.
+- FR-DRAFTS-02-15 (8): a second put with the same questionId inserts no second row.
 
 ## Build
 ```ts
 export class SqlitePendingGoStore implements PendingGoStore {
   constructor(db: SqlExecutor);
-  async put(go: PendingGo): Promise<void>;                                  // deletes the unused go for the chat, then inserts
+  async put(go: PendingGo): Promise<void>;                                  // idempotent by questionId: if a row has it, do nothing; else delete the unused go for the chat, then insert
   async take(chatId: string, now: number, sendId: string): Promise<PendingGo | null>;  // returns the unused go, sets used_at = now and send_id
   async usedBetween(fromMs: number, toMs: number): Promise<{ chatId: string; usedAt: number }[]>;  // used rows in the range, for SPEC-08
 }

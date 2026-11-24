@@ -1,13 +1,13 @@
-# SPEC-13: the pilot's send tools and pilot_stats
+# SPEC-13: the pilot's send tools and the pilot_stats registration
 
 Status: Draft
 Rests on: ../frd/FRD-02-owners-go.md
 
 ## Summary
 
-Registers the two pilot send tools and `pilot_stats` in the MCP server. `send_answer` input: `{ chatId, text, answerClass, knowledge: string[] }`. Flow: the auto-send decision (SPEC-05), the first-send window check (SPEC-06), then create a draft from `text`, approve it with `Draft.approveWithoutWords("automatic", "")` (SPEC-09-4), and run the existing send use case (`driveSend`). `send_owner_go` input: `{ chatId, text }`, sent as SPEC-12 describes. Known limit (D11): the tools trust `text`, `answerClass` and `knowledge`; Drafts cannot check them.
+Registers the two pilot send tools and `pilot_stats` in the MCP server. `send_answer` input: `{ chatId, text, answerClass, knowledge: string[] }`. It reads the always-ask list from Knowledge through `AlwaysAskSource` (not from the session), decides (SPEC-05), checks the window (SPEC-06), then approves and sends through SPEC-09-4 and the existing driveSend. `send_owner_go` input: `{ chatId, text }`, sent as SPEC-12 describes. Known limit (D11): the tools trust `text`, `answerClass` and `knowledge`; Drafts cannot check them.
 
-Last change: 2026-11-24, after the lead's decision: approveWithoutWords replaces sendWithoutWords and the approval records its basis.
+Last change: 2026-11-24, after the review of 7a56758: the go is one unit of work with its approval; closed window tells the owner; the always-ask list comes from Knowledge; reconcile on start; the basis is in the log read; pilotStatsTool is in the application layer.
 
 One spec is one agent run: at most 80 lines, 3 files and one done command. A spec decides nothing new.
 
@@ -19,7 +19,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 | Path | Create or change | Holds |
 |---|---|---|
 | src/drafts/adapters/mcp/pilot-tools.ts | Create | The handlers of `send_answer` and `send_owner_go` |
-| src/main/tools.ts | Change | Registers the three tools in the MCP tool list |
+| src/main/tools.ts | Change | Registers the three tools: the two handlers and `pilotStatsTool` (SPEC-08) |
 | test/drafts/pilot-tools.test.ts | Create | The tests below |
 
 ## Reuses
@@ -29,6 +29,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 ## Tests first
 - FR-DRAFTS-02-13 (4): given an answer the knowledge backs, outside the always-ask set, in an open window, `send_answer` sends and the approval basis is `automatic`.
 - FR-DRAFTS-02-13 (5): given an always-ask class, `send_answer` does not send and answers with reason `always_ask`.
+- FR-DRAFTS-02-13 (21): given the Knowledge always-ask list containing "Delivery price" and a session answerClass "delivery price", `send_answer` does not send: the list comes from Knowledge, not the session.
 - FR-DRAFTS-02-14 (10): `send_owner_go` sends with a taken go, and refuses with no go for the chat.
 - The MCP tool list includes `send_answer`, `send_owner_go` and `pilot_stats`.
 
@@ -36,16 +37,16 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 ```ts
 export type SendAnswerInput = { chatId: string; text: string; answerClass: string; knowledge: string[] };
 export type SendOwnerGoInput = { chatId: string; text: string };
-export function sendAnswerTool(d: AutoSendDeps): (input: SendAnswerInput) => Promise<ToolResult>;
+export function sendAnswerTool(d: { alwaysAsk: AlwaysAskSource } & AutoSendDeps): (input: SendAnswerInput) => Promise<ToolResult>;
 export function sendOwnerGoTool(d: OwnerGoDeps): (input: SendOwnerGoInput) => Promise<ToolResult>;
-// pilot_stats: its handler pilotStatsTool is SPEC-08's (src/drafts/domain/pilot-stats.ts); this spec registers it in tools.ts
 ```
+`pilot_stats` is registered from `pilotStatsTool` (SPEC-08, application layer).
 
 ## Done when
 `bun test test/drafts/pilot-tools.test.ts`
 
 ## Out of scope
-The decision (SPEC-05), the window (SPEC-06), the approval method (SPEC-09-4), the go send (SPEC-12), the counts (SPEC-08), and the answer_question tool, which is Intake's.
+The decision (SPEC-05), the window (SPEC-06), the approval method (SPEC-09-4), the go send (SPEC-12), the counts (SPEC-08), the always-ask file (Knowledge), and the answer_question tool (Intake).
 
 ## Open questions
 None.

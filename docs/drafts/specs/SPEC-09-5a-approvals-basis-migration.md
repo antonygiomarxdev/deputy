@@ -18,7 +18,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 | Path | Create or change | Holds |
 |---|---|---|
 | src/drafts/adapters/sqlite/migrations/0006-approvals-basis.sql | Create | `ALTER TABLE approvals ADD COLUMN basis TEXT NOT NULL DEFAULT 'owner_words';` |
-| src/main/database.ts | Change | Registers 0006-approvals-basis.sql at the end of the migration list |
+| src/main/database.ts | Change | Registers 0006-approvals-basis.sql at the end of the migration list, after 0004 (SPEC-09-3c) and 0005 (SPEC-10-1); Intake's 0008 is registered before all of them |
 | test/drafts/contract/approvals-basis-migration.test.ts | Create | The tests below |
 
 ## Reuses
