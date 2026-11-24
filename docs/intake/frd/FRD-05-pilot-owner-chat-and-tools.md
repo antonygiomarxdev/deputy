@@ -47,7 +47,7 @@ R-INTAKE-12, R-INTAKE-13, R-INTAKE-14, R-INTAKE-18
 | FR-INTAKE-05-24 | IF | If the text the session records is not contained in a message the owner sent in the control chat after the question was asked, Intake refuses, changes nothing and publishes nothing, so the go comes only from the owner's own words, as docs/adr/ADR-006-draft-send-path.md and Drafts ADR-003 say. The text is contained when it appears in the message on whole-token boundaries; the message may hold more, because one message can answer several questions. |
 | FR-INTAKE-05-25 | always | Each question the session asks names the customer chat it is about, and Intake records that chat id with the question. |
 | FR-INTAKE-05-26 | IF | If a question names a chat that is not a stored customer chat, either unknown or an owner's control chat, Intake sends nothing, records nothing and refuses with "unknown chat". |
-| FR-INTAKE-05-27 | WHEN | When Drafts or the session asks for the day's counts, Intake returns for each day the number of customer messages received and the number of owner questions asked, each counted once, and nothing else: no text, name or chat id. |
+| FR-INTAKE-05-27 | WHEN | When Drafts or the session asks for the day's counts, Intake returns for each day the number of customer messages received and the number of owner questions asked, each counted once, and nothing else: no text, name or chat id. The day is the local date of the computer Deputy runs on (the runtime's resolved time zone), with no setting. (lead decision, 2026-11-24) |
 | FR-INTAKE-05-28 | WHEN | When Drafts asks for the answered questions at start, Intake returns each question that has an answer with the question id, the customer chat it names, the answer text and the time of the answer, so that an answer given while Drafts was not running is not lost. |
 | FR-INTAKE-05-29 | IF | If this process does not hold the lease, Intake records no business number at start. |
 
@@ -61,5 +61,4 @@ R-INTAKE-12, R-INTAKE-13, R-INTAKE-14, R-INTAKE-18
 
 ## Open questions
 
-- Q-2 (Lead): Proposed, not decided: the day of FR-INTAKE-05-27 is the UTC date, which matches Drafts' pilot counts only if Drafts uses the same day. The owner's local day would need a time zone setting the pilot does not have.
 - Q-1 (Lead): the business number when the provider offers none (FR-INTAKE-05-16). FR-INTAKE-05-21 stops set_owner_numbers from setting it, and the pilot has no command line. Kapso provides it, so the owner has not asked for a way; this stays open until a provider that offers none is used.

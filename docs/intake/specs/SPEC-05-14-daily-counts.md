@@ -13,7 +13,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-INTAKE-05-27 | WHEN | When Drafts or the session asks for the day's counts, Intake returns for each day the number of customer messages received and the number of owner questions asked, each counted once, and nothing else: no text, name or chat id. |
+| FR-INTAKE-05-27 | WHEN | When Drafts or the session asks for the day's counts, Intake returns for each day the number of customer messages received and the number of owner questions asked, each counted once, and nothing else: no text, name or chat id. The day is the local date of the computer Deputy runs on (the runtime's resolved time zone), with no setting. (lead decision, 2026-11-24) |
 
 ## Files
 | Path | Create or change | Holds |
@@ -28,20 +28,20 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 - Precedent: SPEC-05-4-owner-questions-table.md, the table the questions are counted from
 
 ## Tests first
-FR-INTAKE-05-27, written before the code, without it in view, on an in-memory SQLite database with the migrations. FR-INTAKE-05-27: two customer messages and one owner question on day one and one customer message on day two give two rows with their counts; a day with neither has no row; a message from the owner's app, a message sent through Deputy and a stored dev message are not counted; a question asked with the owner window closed (not sent) is counted once on the day it was asked; the range includes its first instant and excludes its last; the rows are oldest first; no row holds text, a name or a chat id.
+FR-INTAKE-05-27, written before the code, without it in view, on an in-memory SQLite database with the migrations. FR-INTAKE-05-27: two customer messages and one owner question on day one and one customer message on day two give two rows with their counts; a day with neither has no row; a message from the owner's app, a message sent through Deputy and a stored dev message are not counted; a question asked with the owner window closed (not sent) is counted once on the day it was asked; the range includes its first instant and excludes its last; the day of an instant is its local date in the resolved time zone, so with the zone set to UTC+10 a message stored at 23:30 UTC belongs to the next day, and a zone with daylight saving gives each local date once; the rows are oldest first; no row holds text, a name or a chat id.
 
 ## Build
 ```ts
-export type IntakeDayCounts = { day: string; customerMessages: number; ownerQuestions: number }; // day is the UTC date YYYY-MM-DD
+export type IntakeDayCounts = { day: string; customerMessages: number; ownerQuestions: number }; // day is the local date YYYY-MM-DD
 export interface IntakeDailyCounts { between(from: Instant, to: Instant): Promise<IntakeDayCounts[]> }
 ```
-Customer messages are the non-dev rows of `messages` with source `customer`, by `stored_at`. Owner questions are the rows of `owner_questions`, by `asked_at`. A read; it needs no lease.
+Customer messages are the non-dev rows of `messages` with source `customer`, by `stored_at`. Owner questions are the rows of `owner_questions`, by `asked_at`. The day comes from `Intl.DateTimeFormat().resolvedOptions().timeZone`, read in the adapter and passed in by the composition so a test can set it. A read; it needs no lease.
 
 ## Done when
 `bun test test/intake/contract/daily-counts.contract.test.ts`
 
 ## Out of scope
-Showing the counts to the owner and merging them with Drafts' counts (Drafts SPEC-08 and SPEC-13); the owner's local day (the second open question of FRD-05).
+Showing the counts to the owner and merging them with Drafts' counts (Drafts SPEC-08 and SPEC-13); a time zone setting (the day follows the computer's zone).
 
 ## Open questions
 None.
