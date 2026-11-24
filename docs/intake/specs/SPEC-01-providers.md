@@ -143,7 +143,7 @@ export function messageIdKey(id: MessageId): string; // `${provider}:${providerM
 
 // phone-number.ts
 export class PhoneNumber {
-  /** `raw` is an optional "+", then 9 to 15 digits; spaces, hyphens, dots and parentheses are dropped first (FR-INTAKE-04-14: "505-88880000" is one number). Any letter gives null. 9: Intake TP-04 "unparseable sender"; 15: the E.164 maximum. */
+  /** `raw` is an optional "+", then 9 to 15 digits; spaces, hyphens, dots and parentheses are dropped first (FR-INTAKE-04-14: "1-212-555-0100" is one number). Any letter gives null. 9: Intake TP-04 "unparseable sender"; 15: the E.164 maximum. */
   static fromInternational(raw: string): PhoneNumber | null;
   readonly e164: string;                     // "+" and digits
   get digits(): string;                      // e164 without "+"
@@ -457,7 +457,7 @@ Files, in the order `main.ts` lists them (a file's position is its global `user_
 | 2 | `src/intake/adapters/sqlite/migrations/0001-owner-numbers.sql` | `owner_numbers`, `owner_number_log` and its triggers, exactly as Intake TP-04 "Information" |
 | 3 | `src/intake/adapters/sqlite/migrations/0002-dev-holdings.sql` | `dev_holdings` exactly as Intake TP-01 "Information" |
 
-`owner_numbers.number` holds the E.164 string (`+50588880000`), the value `PhoneNumber.e164` returns.
+`owner_numbers.number` holds the E.164 string (`+12125550100`), the value `PhoneNumber.e164` returns.
 
 ```sql
 -- 0001-shared.sql
@@ -507,8 +507,8 @@ CREATE TABLE pending_changes (   -- written by the command line without the leas
 ### Task 3: Shared kernel value objects and ports
 - **Tests first:** `test/shared/value-objects.test.ts`, Intake ADR-012 "Tests", Intake TP-04 TD-2. Unit.
   - Given `+5491123456789` and `+541123456789`, When `sameLine` runs, Then true; Given `+5491123456789` and `+5491123456780`, Then false.
-  - Given `+5215512345678` and `+525512345678` (MX), and `+5511987654321` and `+551187654321` (BR), Then `sameLine` is true for each pair; Given NI `+50588880000`, Then `lineKey` is its own e164.
-  - Given "505-88880000", "50588880000", "+505 8888 0000", When `fromInternational` runs, Then each gives `digits` `50588880000`. Given 8 digits, 16 digits and `abc12345678`, Then null.
+  - Given `+5215512345678` and `+525512345678` (MX), and `+5511987654321` and `+551187654321` (BR), Then `sameLine` is true for each pair; Given US `+12125550100`, Then `lineKey` is its own e164.
+  - Given "1-212-555-0100", "12125550100", "+1 212 555 0100", When `fromInternational` runs, Then each gives `digits` `12125550100`. Given 8 digits, 16 digits and `abc12345678`, Then null.
   - Given `parseChatId("   ")`, Then null; given `parseSendId` of 100 and of 101 characters, Then a value and null; given `parseOwnerWords` of `"  ok  "`, of `""` and of 1,001 characters, Then `ok`, null, null.
   - Given a `FakeClock` at 1,000 with `sleep(500)` pending, When the test advances 500, Then the sleep resolves and `now()` is 1,500.
   - These tests also cover FR-INTAKE-04-14 for the value-object part (one normalized form); the owner-facing part is in SPEC-04.
@@ -544,7 +544,7 @@ CREATE TABLE pending_changes (   -- written by the command line without the leas
 - **Tests first:** Intake TP-04 TD-2 and "Information", TP-01 "Interfaces", ADR-012. Layers as named.
   - `test/intake/unit/owner-numbers.test.ts` (unit): Given a business number and one extra, When `has` runs for each and for a third number, Then true, true, false. Given a second business number, Then `add` returns `second_business`; given the same line twice (`+5491123456789` and `+541123456789`), Then `duplicate`; given `remove` of an absent number, Then `not_present`; given the set empty, Then it is valid and `has` is false.
   - `test/intake/contract/owner-numbers-repository.contract.test.ts` (adapter contract, in-memory and SQLite): Given a saved set and two log entries, When `load` and `log` run, Then they return the same set and the entries oldest first. Given `UPDATE` or `DELETE` on `owner_number_log`, Then the SQLite adapter's database rejects it (append-only triggers). Given `save` of a set with a log entry whose insert fails, Then the set is unchanged (one transaction).
-  - `test/intake/unit/phone-number.test.ts` (unit, `LibphonenumberParser`, ADR-012 "Tests"): Given `011 15 2345 6789` with default country AR, Then `+5491123456789`; Given `+54 11 2345-6789`, Then `parse` gives a number whose `sameLine` with `5491123456789` is true; the same for MX `+52 55 1234 5678` with `5215512345678` and BR `+55 11 8765-4321` with `5511987654321`. Given `8888 0000` with no default country, Then `needs_country_code`. Given `abc`, Then `unparseable`. Given `isCountry("NI")` and `isCountry("XX")`, Then true and false.
+  - `test/intake/unit/phone-number.test.ts` (unit, `LibphonenumberParser`, ADR-012 "Tests"): Given `011 15 2345 6789` with default country AR, Then `+5491123456789`; Given `+54 11 2345-6789`, Then `parse` gives a number whose `sameLine` with `5491123456789` is true; the same for MX `+52 55 1234 5678` with `5215512345678` and BR `+55 11 8765-4321` with `5511987654321`. Given `212 555 0100` with no default country, Then `needs_country_code`. Given `abc`, Then `unparseable`. Given `isCountry("US")` and `isCountry("XX")`, Then true and false.
   - `Secret` (unit): Given a `Secret`, When it goes through `String`, `JSON.stringify` and `console.log`-style inspection, Then each shows `[secret]` and `reveal()` returns the value.
   - `FileConnectionConfig` (unit, temporary folder, `FakeSecretStore`): Given `config.json` `{"provider":"kapso","receiving_mode":"live","kapso_phone_number_id":"123"}` and secrets `kapso-api-key`, `kapso-webhook-secret`, Then `read()` returns those values with the secrets as `Secret`. Given no file, Then every field is null.
 - **Build:** `secret.ts`, `owner-numbers.ts`, the port files, `in-memory-owner-numbers-repository.ts`, `in-memory-phone-number-parser.ts` (a table-driven fake), `libphonenumber-parser.ts` (`parse` uses `parsePhoneNumberFromString(text, defaultCountry)`, accepts only `isPossible()` numbers, and answers `needs_country_code` when the text has no `+` and no default country is given; the result goes through `PhoneNumber.fromInternational`), `sqlite-owner-numbers-repository.ts`, `0001-owner-numbers.sql`, `file-connection-config.ts` (keys `provider`, `receiving_mode`, `kapso_phone_number_id` in `config.json`; secrets `kapso-api-key`, `kapso-webhook-secret`).
@@ -574,7 +574,7 @@ CREATE TABLE pending_changes (   -- written by the command line without the leas
   - FR-INTAKE-01-4: Given the same text, chat and sender as a dev message, When both adapters return it, Then the `ProviderMessage`s have the same keys and value kinds (the contract test asserts the key set and each value's type).
   - Given the mapping, Then `origin` is `kapso.origin` as received, `transcript` is `kapso.transcript.text` when present, `direction` is `kapso.direction`, the counterpart is `to` for outbound and `from` for inbound, and an unknown `type` or none is `unknown`.
   - Error mapping: Given `429` with `Retry-After: 30`, Then `ProviderError("rate_limited", 30000, false)`; `401` and `403` give `credentials`; `402` gives `quota`; a body of the wrong shape gives `bad_response`; a connection refused gives `unreachable`; a response slower than `requestTimeoutMs` (the test sets 100 ms) gives `timeout`, and on `sendText` it has `mayHaveBeenAccepted = true`, while a `401` on `sendText` has it false. No `ProviderError.message` holds response text.
-  - FR-INTAKE-01-8: Given the fake server serves the phone-number record `display_phone_number: "+505 8888 1111"`, When `CheckProviderAccess` runs with the Kapso adapter, Then `ok` with `businessNumber` `+50588881111`. Given the record has no number, or the provider is dev, Then `businessNumber` is null. Given a `401`, Then `ok: false`, reason `credentials` and no number. Given `429`, Then `usage_limit`.
+  - FR-INTAKE-01-8: Given the fake server serves the phone-number record `display_phone_number: "+1 212 555 0104"`, When `CheckProviderAccess` runs with the Kapso adapter, Then `ok` with `businessNumber` `+12125550104`. Given the record has no number, or the provider is dev, Then `businessNumber` is null. Given a `401`, Then `ok: false`, reason `credentials` and no number. Given `429`, Then `usage_limit`.
 - **Build:** `kapso-provider.ts`, `kapso-schemas.ts`, `application/check-provider-access.ts`, `fake-kapso-server.ts`, the fixtures; extend `index.ts`.
 - **Done when:** `bun test test/intake/contract/provider.contract.test.ts test/intake/acceptance/check-provider-access.test.ts` and `bun run typecheck` pass.
 
@@ -585,7 +585,7 @@ CREATE TABLE pending_changes (   -- written by the command line without the leas
 
 ### Task 12: Dev entry points and the provider switch (needs SPEC-02 Tasks 1 to 6)
 - **Tests first:** TP-01 "Testing". Layers as named. These tests need `StoreMessages`, `ReceiveLiveDelivery`, `ReadChat`, `ListChats`, `ChatExists` and the listener from SPEC-02.
-  - FR-INTAKE-01-3: Given the dev provider, When the tester posts `{"chat":"50581112222","from":"50581112222","text":"How much is the cake?"}` to `/dev/deliver`, Then it is stored with every field of FRD-02 and `ReadChat` returns it (E2E, `test/e2e/dev-routes.test.ts`). Given a body without `chat`, Then the answer is 400 naming `chat` and nothing is stored (UC).
+  - FR-INTAKE-01-3: Given the dev provider, When the tester posts `{"chat":"12125550111","from":"12125550111","text":"How much is the cake?"}` to `/dev/deliver`, Then it is stored with every field of FRD-02 and `ReadChat` returns it (E2E, `test/e2e/dev-routes.test.ts`). Given a body without `chat`, Then the answer is 400 naming `chat` and nothing is stored (UC).
   - FR-INTAKE-01-4: Given a dev message and a Kapso message (through the fake provider) with the same text and chat, When `ReadChat` returns both, Then the views have the same fields and the same source meaning (UC).
   - FR-INTAKE-01-5: Given the dev provider, When the tester posts each of an unreadable type, a transcript, a repeated message, two messages in reverse order, an owner reply (`owner: true`), a history message (`history: true`) and a body with a bad signature to `/dev/forge`, Then each produces the stored or rejected result its FRD names (E2E).
   - FR-INTAKE-01-6: Given a body posted to `/dev/hold`, When catch-up runs (SPEC-03; until then the test calls the store with the held message through the provider), Then it is stored once (UC; the catch-up variant is repeated in SPEC-03 Task 2).
