@@ -5,14 +5,14 @@ Rests on: ../frd/FRD-02-owners-go.md
 
 ## Summary
 
-Binds the owner's WhatsApp answer to the one question Deputy asked. It approves no other draft (R-DRAFTS-23).
+Binds one owner answer to one open question. Deputy does not parse which question a reply answers: the session maps the owner's free-text answers to the questions it sent, and calls a tool with `{ questionId, text }`. That call is the go for that one answer, and it approves no other draft (R-DRAFTS-23).
 
 Last change: 2026-11-24, rewritten in the format 4 layout after review of PR 202.
 
 One spec is one agent run: at most 80 lines, 3 files and one done command. A spec decides nothing new.
 
 ## Rows
-| FR-DRAFTS-02-14 | WHEN | When the owner answers a question Deputy asked the owner, the answer shall be the go for that one answer only. (R-DRAFTS-23) |
+| FR-DRAFTS-02-14 | WHEN | When the session calls the answer tool with a questionId that is open, the call shall be the go for that one answer only, and Deputy shall not parse which question a free reply answers. (R-DRAFTS-23) |
 
 ## Files
 | Path | Create or change | Holds |
@@ -39,7 +39,7 @@ export function goFor(answer: OwnerAnswer, openQuestions: ReadonlySet<string>): 
 `bun test test/drafts/ask-owner-go.test.ts`
 
 ## Out of scope
-The Intake control chat that carries the answer. Its interface belongs to Intake's docs and is not edited here.
+The question batching, the numbered WhatsApp message and the tool's registration (Intake's docs, not edited here). Deputy never guesses a question from a free reply.
 
 ## Open questions
-Q-1 (Lead): how the owner names a question id in WhatsApp. Intake answers how the answer reaches Drafts (Intake FRD-05 row FR-INTAKE-05-22, spec SPEC-05-7-link-replies.md): it publishes `OwnerAnswered` with the `questionId` after the commit, and resolves the latest-open-question fallback first, so Drafts never gets an empty `questionId`. Drafts still checks the question is open in `goFor`. The naming rule is Intake's open item, shared with the lead.
+Q-1 (Lead): the tool name Intake registers for the `{ questionId, text }` call, which the builder confirms (Intake #237, PR #203). Resolved otherwise by the owner's ruling: Deputy does not parse which question a reply answers; the session maps answers to questions and makes the call.

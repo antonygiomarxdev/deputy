@@ -52,7 +52,7 @@ The drafts log
 - **R-DRAFTS-17.** The log keeps the owner's own words for each approval. Every message sent through Deputy traces to one approval event in the log. A sent message with no approval entry is a defect, and the owner can check for it by reading the log.
 - **R-DRAFTS-21.** An order is recorded only after a go under R-DRAFTS-19, with the same identification and one-approval rules. An owner's own command about an order ("mark Juan's order delivered") is itself the go for that change.
 - **R-DRAFTS-22.** Exception to R-DRAFTS-2 in the local pilot (REQ-15, D31): the session may send an answer by itself, without the owner's go, when the business knowledge backs the answer and its class is not in the always-ask list (D38). Every such send is logged as automatic. The pilot has no daily cap and no kill switch.
-- **R-DRAFTS-23.** Exception to R-DRAFTS-19 in the local pilot: the owner's WhatsApp answer to a question Deputy asked the owner (`ask_owner`) is the go for that one answer. It approves no other draft.
+- **R-DRAFTS-23.** Exception to R-DRAFTS-19 in the local pilot: the session maps the owner's free-text answer to a question Deputy asked (`ask_owner`) and calls the answer tool with that question's id. That call is the go for that one answer. Deputy does not parse which question a reply answers, and the call approves no other draft.
 - **R-DRAFTS-24.** In the local pilot, Deputy counts per day the automatic answers and the owner's approvals, so the owner can read the counts against Claude's usage status (`/status`). Counts of customer messages and owner questions come from Intake.
 - **R-DRAFTS-18.** The owner can read the log in the conversation at any time, newest first, and filter by chat.
 
