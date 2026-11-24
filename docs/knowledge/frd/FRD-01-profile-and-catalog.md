@@ -12,20 +12,22 @@ R-KNOWLEDGE-1, R-KNOWLEDGE-2, R-KNOWLEDGE-3, R-KNOWLEDGE-10, R-KNOWLEDGE-11, R-K
 
 ## Behavior
 
-- **FR-KNOWLEDGE-01-1.** Deputy offers the agent a way to read the whole business profile: description, tone and language, what Deputy may do, what it must not do, pickup and delivery, payment, and when to hand off to the owner.
-- **FR-KNOWLEDGE-01-2.** The profile states that "what Deputy may do" guides drafts only. Nothing goes out without the owner's go. No profile text changes this.
-- **FR-KNOWLEDGE-01-3.** Deputy offers the agent a way to look up catalog items by name. For each match it returns the name, unit, price and availability, exactly as the owner stored them.
-- **FR-KNOWLEDGE-01-4.** When a price or availability is empty or unknown, Deputy returns "to be confirmed" for that field. It never fills in a value.
-- **FR-KNOWLEDGE-01-5.** When a name matches nothing, Deputy says no item matches. When a name matches several items, Deputy returns all of them. The agent does not pick one silently.
-- **FR-KNOWLEDGE-01-6.** Deputy controls what it returns. It does not claim to check the free text the agent writes in a draft.
-- **FR-KNOWLEDGE-01-7.** The owner can create the profile and the catalog from templates, then edit them at any time. Templates have the same fields Deputy reads. Guiding the owner through the first fill-in belongs to Setup.
-- **FR-KNOWLEDGE-01-8.** A change the owner saves to the profile or the catalog applies from the next draft written after the save. The owner does not reinstall or restart anything by hand.
-- **FR-KNOWLEDGE-01-9.** When the owner mentions a change ("we ran out of tamales", "we now deliver on Sundays"), the agent can propose a catalog or profile change. Deputy records the proposal with an identifier, the old value and the new value, and the agent shows them in the conversation. A profile change (including the "must not do" list) follows exactly the same rule as a catalog change.
-- **FR-KNOWLEDGE-01-10.** Deputy offers the agent one way to apply a change. It takes the proposal identifier and the owner's own words. Deputy refuses without both, and refuses words that do not identify the proposal (the Drafts rule for a go). A refused apply changes nothing. Deputy logs each apply with the owner's words. The agent has no other way to write the catalog or the profile.
-- **FR-KNOWLEDGE-01-11.** The go binds to the old and new values shown in the proposal. If the proposal changes after the owner saw it, it needs a new go.
-- **FR-KNOWLEDGE-01-12.** Known limit: Deputy cannot check who spoke. It checks the proposal identifier and that words were supplied. An agent with other tools (for example a shell) could edit the files directly. Deputy does not claim to prevent that (decision D11).
-- **FR-KNOWLEDGE-01-13.** With a spreadsheet catalog, reads are live: each lookup reads the spreadsheet. Applying a change writes to the spreadsheet after the go. If the spreadsheet cannot be reached, the lookup or the apply fails with a clear message and nothing is changed. Deputy never answers from an older copy without telling the agent.
-- **FR-KNOWLEDGE-01-14.** Deputy keeps the time each of the profile and the catalog was last saved. When the agent lists a waiting draft, Deputy marks it "catalog changed since this draft" if the catalog was saved after the draft was written. The owner then sees the old price may be stale. Known limit: Deputy marks it, it does not rewrite the draft.
+| ID | Pattern | Requirement |
+|---|---|---|
+| FR-KNOWLEDGE-01-1 | always | Deputy offers the agent a way to read the whole business profile: description, tone and language, what Deputy may do, what it must not do, pickup and delivery, payment, and when to hand off to the owner. |
+| FR-KNOWLEDGE-01-2 | always | The profile states that "what Deputy may do" guides drafts only. Nothing goes out without the owner's go. No profile text changes this. |
+| FR-KNOWLEDGE-01-3 | always | Deputy offers the agent a way to look up catalog items by name. For each match it returns the name, unit, price and availability, exactly as the owner stored them. |
+| FR-KNOWLEDGE-01-4 | WHEN | When a price or availability is empty or unknown, Deputy returns "to be confirmed" for that field. It never fills in a value. |
+| FR-KNOWLEDGE-01-5 | WHEN | When a name matches nothing, Deputy says no item matches. When a name matches several items, Deputy returns all of them. The agent does not pick one silently. |
+| FR-KNOWLEDGE-01-6 | always | Deputy controls what it returns. It does not claim to check the free text the agent writes in a draft. |
+| FR-KNOWLEDGE-01-7 | always | The owner can create the profile and the catalog from templates, then edit them at any time. Templates have the same fields Deputy reads. Guiding the owner through the first fill-in belongs to Setup. |
+| FR-KNOWLEDGE-01-8 | always | A change the owner saves to the profile or the catalog applies from the next draft written after the save. The owner does not reinstall or restart anything by hand. |
+| FR-KNOWLEDGE-01-9 | WHEN | When the owner mentions a change ("we ran out of tamales", "we now deliver on Sundays"), the agent can propose a catalog or profile change. Deputy records the proposal with an identifier, the old value and the new value, and the agent shows them in the conversation. A profile change (including the "must not do" list) follows exactly the same rule as a catalog change. |
+| FR-KNOWLEDGE-01-10 | always | Deputy offers the agent one way to apply a change. It takes the proposal identifier and the owner's own words. Deputy refuses without both, and refuses words that do not identify the proposal (the Drafts rule for a go). A refused apply changes nothing. Deputy logs each apply with the owner's words. The agent has no other way to write the catalog or the profile. |
+| FR-KNOWLEDGE-01-11 | always | The go binds to the old and new values shown in the proposal. If the proposal changes after the owner saw it, it needs a new go. |
+| FR-KNOWLEDGE-01-12 | always | Known limit: Deputy cannot check who spoke. It checks the proposal identifier and that words were supplied. An agent with other tools (for example a shell) could edit the files directly. Deputy does not claim to prevent that (decision D11). |
+| FR-KNOWLEDGE-01-13 | always | With a spreadsheet catalog, reads are live: each lookup reads the spreadsheet. Applying a change writes to the spreadsheet after the go. If the spreadsheet cannot be reached, the lookup or the apply fails with a clear message and nothing is changed. Deputy never answers from an older copy without telling the agent. |
+| FR-KNOWLEDGE-01-14 | always | Deputy keeps the time each of the profile and the catalog was last saved. When the agent lists a waiting draft, Deputy marks it "catalog changed since this draft" if the catalog was saved after the draft was written. The owner then sees the old price may be stale. Known limit: Deputy marks it, it does not rewrite the draft. |
 
 Example:
 

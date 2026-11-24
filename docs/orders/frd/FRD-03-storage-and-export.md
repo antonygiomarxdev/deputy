@@ -12,15 +12,17 @@ R-ORDERS-10, R-ORDERS-11, R-ORDERS-12, R-ORDERS-15.
 
 ## Behavior
 
-- **FR-ORDERS-03-1.** By default Deputy keeps orders on the owner's machine.
-- **FR-ORDERS-03-2.** The owner can choose their own spreadsheet instead. When they choose it, the agent tells them the orders will be stored in that spreadsheet and nowhere else outside the machine. Helping the owner pick during first setup belongs to Setup.
-- **FR-ORDERS-03-3.** Every behavior in FRD-01 and FRD-02 is the same with either choice: record, list, filter, change, history, cancel, delete.
-- **FR-ORDERS-03-4.** Order data goes to no service other than the owner's own agent and, if chosen, the owner's own spreadsheet.
-- **FR-ORDERS-03-5.** When the spreadsheet cannot be reached, a record, a change or a delete fails. The agent tells the owner. It never reports success. A list says the orders could not be read, and never shows an old copy as current.
-- **FR-ORDERS-03-5a.** If one order cannot be read (bad status value, missing field), the list shows it as unreadable with whatever is known, and still shows the others. It never drops or hides an order.
-- **FR-ORDERS-03-5b.** After the owner changes the storage choice, Deputy does not move or copy orders. The list shows orders from the current place only, and a notice says how many orders remain in the old place.
-- **FR-ORDERS-03-6.** The owner can export all their orders, including the change history. By default the export leaves cancelled orders out and says how many it left out; every other order is there with all fields, in a form the owner can read and keep. The cancelled orders stay stored. Owner decision D26: later, an owner setting will let the export include them.
-- **FR-ORDERS-03-7.** An export that is partial or failed is reported as such, never as complete.
+| ID | Pattern | Requirement |
+|---|---|---|
+| FR-ORDERS-03-1 | always | By default Deputy keeps orders on the owner's machine. |
+| FR-ORDERS-03-2 | always | The owner can choose their own spreadsheet instead. When they choose it, the agent tells them the orders will be stored in that spreadsheet and nowhere else outside the machine. Helping the owner pick during first setup belongs to Setup. |
+| FR-ORDERS-03-3 | always | Every behavior in FRD-01 and FRD-02 is the same with either choice: record, list, filter, change, history, cancel, delete. |
+| FR-ORDERS-03-4 | always | Order data goes to no service other than the owner's own agent and, if chosen, the owner's own spreadsheet. |
+| FR-ORDERS-03-5 | WHEN | When the spreadsheet cannot be reached, a record, a change or a delete fails. The agent tells the owner. It never reports success. A list says the orders could not be read, and never shows an old copy as current. |
+| FR-ORDERS-03-5a | IF | If one order cannot be read (bad status value, missing field), the list shows it as unreadable with whatever is known, and still shows the others. It never drops or hides an order. |
+| FR-ORDERS-03-5b | always | After the owner changes the storage choice, Deputy does not move or copy orders. The list shows orders from the current place only, and a notice says how many orders remain in the old place. |
+| FR-ORDERS-03-6 | always | The owner can export all their orders, including the change history. By default the export leaves cancelled orders out and says how many it left out; every other order is there with all fields, in a form the owner can read and keep. The cancelled orders stay stored. Owner decision D26: later, an owner setting will let the export include them. |
+| FR-ORDERS-03-7 | always | An export that is partial or failed is reported as such, never as complete. |
 
 ## Edge cases
 
