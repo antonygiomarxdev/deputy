@@ -5,13 +5,13 @@ Part of [TP.md](../tp/TP.md). Added 2026-11-24 for the local pilot (REQ-15, D31 
 
 ## Summary
 
-How the pilot's pieces work together, drawn from the specs already written: the components, nine sequences, the states of a draft, an owner question and a pending go, and the data. It decides no behavior; every arrow cites the spec that builds it, and six arrows no spec builds are marked GAP and listed under Risks.
+How the pilot's pieces work together, drawn from the specs already written: the components, nine sequences, the states of a draft, an owner question and a pending go, and the data. It decides no behavior; every arrow cites the spec that builds it, and the arrows no spec builds are marked GAP and listed under Risks.
 
 ## Context
 
 Sources: Intake FRD-05, TP-05 and SPEC-05-x; Setup FRD-05 and SPEC-05-x; Knowledge FRD-04 and SPEC-04-x; ADR-018; Drafts pilot specs SPEC-05 to SPEC-13 and Drafts ADR-013 (PR #202, branch docs/drafts-pilot, not merged when this was written). The send design drawn is the final one: `approveWithoutWords(basis, words)` emits the normal Approved event (the `approvals.basis` column), then `startSending`, `driveSend` and `finishSent` with recovery; `send_answer` uses basis automatic and `send_owner_go` uses basis owner_go.
 
-Spec ids in the drawings use one letter for the slice: I = Intake, D = Drafts, K = Knowledge, S = Setup. `I05-6` is Intake SPEC-05-6; `I03` is Intake SPEC-03 (catch-up); `D07` is Drafts SPEC-07.
+Spec ids in the drawings use one letter for the slice: I = Intake, D = Drafts, K = Knowledge, S = Setup, N = Notify. `I05-6` is Intake SPEC-05-6; `I03` is Intake SPEC-03 (catch-up); `D07` is Drafts SPEC-07; `N01-3` is Notify SPEC-01-3.
 
 ## Decisions
 
@@ -46,7 +46,7 @@ flowchart LR
   Kapso -->|"catch-up poll: I03"| MCP
   MCP -->|"SendText: I04, D03"| Kapso
   Sess -->|"tools, mcp__deputy__* allowed: ADR-018"| MCP
-  MCP -.->|"channel notice: GAP"| Sess
+  MCP -.->|"channel notice: N01-5, in PR 211, not merged"| Sess
   Owner -->|"types /deputy"| Sess
   MCP --> Db
   MCP --> Know
@@ -66,10 +66,10 @@ flowchart TD
   Know["Knowledge: files in the config folder, change log"]
   Setup["Setup: key page, number pick, config writer, keep-awake, skill"]
   Shared["Shared kernel: Clock, OwnerLease, signals, text, containsWords"]
-  Root --> Intake
-  Root --> Drafts
-  Root --> Know
-  Root --> Setup
+  Root -->|"I05-15"| Intake
+  Root -->|"GAP: no spec wires Drafts"| Drafts
+  Root -->|"K04-6"| Know
+  Root -->|"GAP: no spec wires Setup"| Setup
   Drafts -->|"SendText, ReadChat, CatchUpChat: D03"| Intake
   Intake -->|"OwnerAnswered signal: I05-12"| Drafts
   Know -->|"message checks: K04-7"| Intake
@@ -100,11 +100,13 @@ sequenceDiagram
   K-->>M: numbers
   S->>M: select_number (S05-4)
   M->>M: writeConfigKey in config.json (S05-8)
-  M->>M: adopt the business number, owner_numbers kind business (I05-9)
+  M->>M: restart so the server reads the new provider (GAP: no spec sets provider kapso and restarts)
+  M->>M: serve start, adopt the business number under the lease, owner_numbers kind business (I05-9)
   S->>O: interview, confirm before saving (S05-5)
   S->>M: save_profile, save_catalog, save_always_ask with owner words (K04-3, K04-5)
   S->>M: set_owner_numbers describe, then confirm (I05-10, I05-11, table owner_numbers and owner_number_log)
   S->>O: tells the owner to write the business number once, opens the window (GAP: no spec for the first message)
+  S->>O: first launch shows the channel consent dialog (ADR-018, GAP: no spec tells the owner)
 ```
 
 #### (b) Customer message to a knowledge-backed automatic answer
@@ -122,7 +124,7 @@ sequenceDiagram
   S->>M: get_chat with windowClosesAt, list_pending (I05-3)
   S->>M: read_knowledge (K04-5, K04-2)
   S->>S: classes the question, not in always-ask, knowledge backs it
-  S->>M: send_answer chatId, text, answerClass, knowledge (D13)
+  S->>M: send_answer chatId, text, answerClass, knowledge (D13, GAP: the always-ask list never reaches Drafts)
   M->>M: decideAutoSend, send true (D05)
   M->>M: checkFirstSend, window open (D06)
   M->>M: create draft, approveWithoutWords automatic, row in approvals with basis (D09-4, D09-5a, D09-5b)
@@ -131,7 +133,7 @@ sequenceDiagram
   K-->>M: accepted
   M->>M: finishSent with recovery, log entry automatic (D03, D09-1, D09-2, D09-3a, D09-3b)
   M-->>S: sent
-  O-->>S: reads the count with pilot_stats (D13, D08)
+  O-->>S: reads the count with pilot_stats (D13, D08, GAP: Intake daily counts are not read)
 ```
 
 #### (c) Always-ask or unknown: ask the owner, take the answer as the go
@@ -177,7 +179,7 @@ sequenceDiagram
   M-->>S: refused window_closed, nothing sent, nothing recorded (I05-6)
   S->>O: asks in the Claude app, tells the owner to answer on WhatsApp (I05-8 error text, S05-7 rule)
   O->>M: writes any message to the business number, window reopens (I03, table messages)
-  S->>M: ask_owner again (I05-8)
+  S->>M: ask_owner again (GAP: the first question was not kept, so the owner's answer closes nothing)
 ```
 
 #### (e) The customer window is closed: no send, tell the owner
@@ -261,8 +263,9 @@ sequenceDiagram
     M->>K: poll the provider (I03, ADR-005, table catchup_status)
     K-->>M: new messages stored (I02, table messages)
   end
-  M-->>S: batched channel notice, counts only (ADR-018, ADR-007, GAP: no spec builds the notice)
+  M-->>S: batched channel notice, counts only (ADR-018, N01-3, N01-5, PR 211 not merged)
   Note over S: the session reads it on its next turn, instant wake is unverified (ADR-018)
+  Note over S: the owner must have accepted the consent dialog at first launch (GAP: no spec)
   loop /loop every 30 to 60 minutes
     S->>M: check_messages (I03)
     M-->>S: sync status and stored count
@@ -380,13 +383,19 @@ Each arrow's spec carries its own tests first. This file is checked by `check.ts
 
 An arrow in a drawing that no spec builds. Each is stated as found; none is decided here.
 
-1. Channel notice. ADR-018 expects a batched notice through the channel, and Intake SPEC-01 only declares the capability. No spec emits the notice (Notify has no spec in the pilot). The `/loop` fallback does not depend on it.
+1. Channel notice. ADR-018 expects a batched notice through the channel, and Intake SPEC-01 only declares the capability. The Notify specs for the notice (SPEC-01-1 to 01-8) are in PR 211 and not merged; until they are, no merged spec emits it. The `/loop` fallback does not depend on it.
 2. Skill daily loop. Setup SPEC-05-7 builds the headings of SKILL.md and leaves the daily steps (check, classify, `send_answer`, `ask_owner`, `answer_question`, `send_owner_go`) and the `/loop` recipe to "the Drafts pilot specs", and those specs hold no skill text.
 3. First owner message. The owner window opens only when the owner writes to the business number (FR-INTAKE-05-7). No spec has the setup interview ask for that first message, so the first `ask_owner` after setup can return `window_closed`.
 4. A consumed go. Drafts SPEC-07 `takeGo` marks the go used before the send runs; if the send then fails or the process crashes (diagram f), no spec returns the go or tells the session.
 5. A lost signal. `OwnerAnswered` is published in process after the commit (Intake SPEC-05-7); a crash between that commit and Drafts SPEC-11 `recordGo` leaves a closed question with no pending go, and nothing replays it at start (diagram g).
 6. Closed window on the go path. Drafts SPEC-06 sets `tellOwner` for `send_answer`; `send_owner_go` with a closed window returns nothing sent, and no spec says it tells the owner (diagram e).
+7. Provider choice and restart. Setup SPEC-05-8 writes one key of `config.json`; no spec sets the provider to kapso or restarts the server so that serve reads it before the business number is adopted (diagram a).
+8. Always-ask source. Drafts SPEC-05 takes the always-ask set as a parameter sourced from Knowledge's always-ask file; no spec passes that file's content to Drafts (diagram b).
+9. Intake daily counts. Drafts SPEC-08 leaves the customer-message and owner-question counts to Intake, and no merged spec builds or reads them (diagram b).
+10. Composition wiring. Intake and Knowledge have wiring specs; no spec wires the Drafts and Setup pilot use cases and tools into the composition root (the components drawing).
+11. Channel consent. ADR-018 says the first launch with the channel flag shows a consent dialog; no spec has the skill or the install guide tell the owner (diagrams a and i).
+12. Closed owner window. Intake SPEC-05-6 refuses and records nothing when the owner window is closed, so the owner's later answer has no question to close and the re-ask is not an arrow any merged spec builds (diagram d).
 
 ## Open questions
 
-None: each GAP above is a question for the owner or a spec to write, and none is decided here.
+None. The GAPs are tracked under Risks; each is a question for the owner or a spec to write, and none is decided here.
