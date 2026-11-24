@@ -25,7 +25,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 - `src/adapters/config/config-file.ts` `readConfigFile`: the reader whose file and error type the writer shares.
 
 ## Tests first
-FR-SETUP-05-10: after `writeConfigKey(dir, "kapso-phone-number-id", id)` the reader returns that id and every other key is unchanged; a file that is not a JSON object is refused with `ConfigError` and left as it was; a missing file is created.
+FR-SETUP-05-10: after `writeConfigKey(dir, "kapso_phone_number_id", id)` the reader returns that id and every other key is unchanged; a file that is not a JSON object is refused with `ConfigError` and left as it was; a missing file is created.
 
 ## Build
 ```ts
