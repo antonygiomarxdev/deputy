@@ -14,7 +14,7 @@ describe("PendingChangesReader (sqlite)", () => {
   test("FR-INTAKE-04-9: only the three keys' unapplied rows come, oldest first, and an applied row does not come again", async () => {
     await add("business_number", "+50588880000", 300);
     await add("owner_numbers", "+50599990000", 100);
-    await add("time_zone", "America/Managua", 50);
+    await add("time_zone", "America/Chicago", 50);
     await add("owner_number_remove", "+50577770000", 200);
 
     const taken = await s.repos.pending.takeOwnerNumberChanges();
