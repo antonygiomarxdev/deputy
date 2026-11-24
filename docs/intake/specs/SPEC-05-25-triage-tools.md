@@ -1,4 +1,4 @@
-# SPEC-05-23: The tools that carry the token
+# SPEC-05-25: The tools that carry the token
 
 Status: Draft
 Rests on: ../frd/FRD-05-pilot-owner-chat-and-tools.md
@@ -27,7 +27,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 ## Reuses
 - `src/intake/adapters/mcp/intake-tools.ts` `intakeTools`: where the intake tools are registered
 - Precedent: SPEC-05-3-pending-and-window-tools.md, the `list_pending` tool this spec extends
-- Precedent: SPEC-05-21-chat-context.md and SPEC-05-22-save-chat-summary.md, the use cases the new tools call
+- Precedent: SPEC-05-23-chat-context.md and SPEC-05-24-save-chat-summary.md, the use cases the new tools call
 
 ## Tests first
 FR-INTAKE-05-30, FR-INTAKE-05-31, FR-INTAKE-05-32, written before the code, without it in view, through the tool definitions with fake use cases and fake tokens. FR-INTAKE-05-30: `list_pending` returns `{ chat, lastCustomerAt, windowClosesAt, triageToken }` for each chat and the token is the one `TriageTokens.issue` gave for that chat. FR-INTAKE-05-31: `chat_context` with a chat and a token returns the messages and the labeled summary; `bad_token` is an error result that says the token does not belong to this chat. FR-INTAKE-05-32: `save_chat_summary` with a chat, a token and a text returns `saved`; each refusal is an error result with its reason.
@@ -43,7 +43,7 @@ FR-INTAKE-05-30, FR-INTAKE-05-31, FR-INTAKE-05-32, written before the code, with
 `bun test test/intake/unit/triage-tools.test.ts`
 
 ## Out of scope
-The wiring of the secret (SPEC-05-24); Drafts' check of the token on `send_answer` (a Drafts spec).
+The wiring of the secret (SPEC-05-26); Drafts' check of the token on `send_answer` (a Drafts spec).
 
 ## Open questions
 None.

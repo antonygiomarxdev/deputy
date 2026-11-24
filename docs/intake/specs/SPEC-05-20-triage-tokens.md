@@ -1,4 +1,4 @@
-# SPEC-05-18: The triage token of a chat
+# SPEC-05-20: The triage token of a chat
 
 Status: Draft
 Rests on: ../frd/FRD-05-pilot-owner-chat-and-tools.md
@@ -41,7 +41,7 @@ SHA-256 through `node:crypto`; compare with `timingSafeEqual` after a length che
 `bun test test/intake/unit/triage-tokens.test.ts`
 
 ## Out of scope
-Where the secret comes from (SPEC-05-24); the tools that carry the token (SPEC-05-23).
+Where the secret comes from (SPEC-05-26); the tools that carry the token (SPEC-05-25).
 
 ## Open questions
 None.

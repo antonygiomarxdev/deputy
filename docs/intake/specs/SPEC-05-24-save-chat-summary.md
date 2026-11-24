@@ -1,4 +1,4 @@
-# SPEC-05-22: A helper saves the summary of a chat
+# SPEC-05-24: A helper saves the summary of a chat
 
 Status: Draft
 Rests on: ../frd/FRD-05-pilot-owner-chat-and-tools.md
@@ -25,15 +25,15 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Reuses
 - `src/intake/ports/intake-unit-of-work.ts` `IntakeUnitOfWork`: one transaction that checks the lease first
-- Precedent: SPEC-05-18-triage-tokens.md, the token check
-- Precedent: SPEC-05-20-chat-summary-repository.md, the write
+- Precedent: SPEC-05-20-triage-tokens.md, the token check
+- Precedent: SPEC-05-22-chat-summary-repository.md, the write
 
 ## Tests first
 FR-INTAKE-05-32, FR-INTAKE-05-33, written before the code, without it in view, with in-memory fakes and a fake clock. FR-INTAKE-05-32: a valid token and a text replace the summary and the time; a token of another chat gives `bad_token` and stores nothing; a text of 2001 characters gives `too_long` and stores nothing, and 2000 characters is stored; a process without the lease gives `not_owner` and stores nothing; an empty text is refused as `empty`. FR-INTAKE-05-33: the stored text is exactly the text given; Intake adds no label to the stored text (the label is added when it is read).
 
 ## Build
 ```ts
-export const SUMMARY_MAX = 2000;
+export const SUMMARY_MAX = 2000; // Proposed, lead decision: keeps the context small
 export type SaveChatSummaryResult = { kind: "saved" } | { kind: "refused"; reason: "bad_token" | "too_long" | "empty" | "not_owner" };
 export interface SaveChatSummary { execute(q: { chat: ChatId; token: string; text: string }): Promise<SaveChatSummaryResult> }
 ```
@@ -42,7 +42,7 @@ export interface SaveChatSummary { execute(q: { chat: ChatId; token: string; tex
 `bun test test/intake/unit/save-chat-summary.test.ts`
 
 ## Out of scope
-The tool (SPEC-05-23).
+The tool (SPEC-05-25).
 
 ## Open questions
-- Q-1 (Lead): the 2000 character limit is Proposed (the fourth open question of FRD-05).
+None.

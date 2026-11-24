@@ -1,4 +1,4 @@
-# SPEC-05-21: The chat context a helper reads
+# SPEC-05-23: The chat context a helper reads
 
 Status: Draft
 Rests on: ../frd/FRD-05-pilot-owner-chat-and-tools.md
@@ -26,8 +26,8 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 ## Reuses
 - `src/intake/ports/message-repository.ts` `MessageRepository`: `listChat` reads the newest messages of a chat
 - `src/intake/ports/views.ts` `MessageView`: the message shape the session already reads
-- Precedent: SPEC-05-18-triage-tokens.md, the check this use case calls
-- Precedent: SPEC-05-20-chat-summary-repository.md, the summary it reads
+- Precedent: SPEC-05-20-triage-tokens.md, the check this use case calls
+- Precedent: SPEC-05-22-chat-summary-repository.md, the summary it reads
 
 ## Tests first
 FR-INTAKE-05-31, FR-INTAKE-05-33, written before the code, without it in view, with in-memory fakes. FR-INTAKE-05-31: with 30 messages in the chat the result holds the newest 20, oldest first; with 5 it holds 5; with no summary the summary is null; a token of another chat gives `refused` with `bad_token` and the fakes were not read; an unknown chat gives `unknown_chat`; messages of another chat never appear. FR-INTAKE-05-33: the summary is returned inside `summary: { text, label }` where the label says it is the model's earlier notes and not the owner's words and not a go, and the summary text is never put in the messages list.
@@ -45,7 +45,7 @@ export interface ChatContext { execute(q: { chat: ChatId; token: string }): Prom
 `bun test test/intake/unit/chat-context.test.ts`
 
 ## Out of scope
-The tool (SPEC-05-23); saving a summary (SPEC-05-22).
+The tool (SPEC-05-25); saving a summary (SPEC-05-24).
 
 ## Open questions
 None.

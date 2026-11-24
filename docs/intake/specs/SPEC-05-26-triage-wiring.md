@@ -1,4 +1,4 @@
-# SPEC-05-24: The composition builds the token, the summary and the context
+# SPEC-05-26: The composition builds the token, the summary and the context
 
 Status: Draft
 Rests on: ../frd/FRD-05-pilot-owner-chat-and-tools.md
@@ -38,7 +38,7 @@ FR-INTAKE-05-34, FR-INTAKE-05-30, written before the code, without it in view, w
 `bun test test/intake/unit/triage-wiring.test.ts`
 
 ## Out of scope
-The tools themselves (SPEC-05-23); the secret store adapter (ADR-008).
+The tools themselves (SPEC-05-25); the secret store adapter (ADR-008).
 
 ## Open questions
 None.

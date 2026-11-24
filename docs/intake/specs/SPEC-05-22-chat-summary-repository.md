@@ -1,11 +1,11 @@
-# SPEC-05-20: The repository of the chat summaries
+# SPEC-05-22: The repository of the chat summaries
 
 Status: Draft
 Rests on: ../frd/FRD-05-pilot-owner-chat-and-tools.md
 
 ## Summary
 
-The outbound port `ChatSummaryRepository` and its SQLite adapter over the table of SPEC-05-19: read the summary of a chat and replace it.
+The outbound port `ChatSummaryRepository` and its SQLite adapter over the table of SPEC-05-21: read the summary of a chat and replace it.
 
 Last change: 2026-11-24, first draft for the dispatcher session
 
@@ -42,7 +42,7 @@ export interface ChatSummaryRepository {
 `bun test test/intake/contract/chat-summary-repository.contract.test.ts`
 
 ## Out of scope
-The use cases (SPEC-05-21, SPEC-05-22).
+The use cases (SPEC-05-23, SPEC-05-24).
 
 ## Open questions
 None.

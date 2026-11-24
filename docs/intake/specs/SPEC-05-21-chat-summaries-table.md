@@ -1,4 +1,4 @@
-# SPEC-05-19: The table that holds a summary per chat
+# SPEC-05-21: The table that holds a summary per chat
 
 Status: Draft
 Rests on: ../frd/FRD-05-pilot-owner-chat-and-tools.md
@@ -43,7 +43,7 @@ CREATE TABLE chat_summaries (
 `bun test test/intake/unit/chat-summaries-migration.test.ts`
 
 ## Out of scope
-The repository (SPEC-05-20).
+The repository (SPEC-05-22).
 
 ## Open questions
 None.
