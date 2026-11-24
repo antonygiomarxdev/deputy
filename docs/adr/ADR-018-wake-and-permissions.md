@@ -1,7 +1,7 @@
 # ADR-018: Wake the session with channels and a slow loop, and pre-allow only Deputy's tools
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 The pilot wakes an idle Claude Code session in two ways: a slow `/loop` every 30 to 60 minutes, which is the reliable fallback, and a channel notice from Deputy, which is expected to wake the session at once but is unverified (events are documented as delivered on the next turn). No permission prompt may wait for the owner: the project settings allow only `mcp__deputy__*` and deny the shell tools. Two facts are not verified yet and the pilot checks them.

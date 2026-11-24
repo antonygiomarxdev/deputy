@@ -1,7 +1,7 @@
 # ADR-018: Pilot knowledge is four plain files, written whole
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 For the pilot, Knowledge keeps profile.md, catalog.md, memory.md and always-ask.md in the folder `knowledge` of the configuration folder. A save replaces a whole file through a temporary file and keeps the last 20 previous versions. From [TP-04](../tp/TP-04-pilot-knowledge-files.md) TD-1 and TD-2.
