@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "41 5 * * 1"
 
 permissions:
   contents: read
@@ -30,21 +33,70 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run typecheck
 
+
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
-      - uses: oven-sh/setup-bun@v2
+        with:
+          fetch-depth: 2
+      - name: Select tests
+        id: select
+        env:
+          EVENT: ${{ github.event_name }}
+        run: |
+          set -eu
+          full_re='^(bun\.lock|package\.json|tsconfig\.json|bunfig\.toml|src/main\.ts|\.changeset/config\.json)$|^(test/support|test/fixtures|src/shared|src/main|src/composition|src/adapters)/|/migrations/|^\.github/workflows/'
+          docs_re='\.md$|^(docs|business|examples)/|^src/[^/]+/docs/|^LICENSE$|^\.github/ISSUE_TEMPLATE/'
+          mode=full; reason="event $EVENT runs everything"; e2e=true
+          if [ "$EVENT" = pull_request ]; then
+            files=$(git diff --name-only HEAD^1 HEAD)
+            hit=$(printf '%s\n' "$files" | grep -E "$full_re" | head -1 || true)
+            if [ -z "$files" ]; then
+              mode=full; reason="empty diff, running everything to be safe"
+            elif [ -n "$hit" ]; then
+              mode=full; reason="$hit is shared code or configuration"
+            elif [ -z "$(printf '%s\n' "$files" | grep -Ev "$docs_re" || true)" ]; then
+              mode=docs; reason="only documentation changed"; e2e=false
+            else
+              mode=selected
+              src=$(printf '%s\n' "$files" | grep -E '^(src/|test/e2e/)' | grep -Ev "$docs_re" | head -1 || true)
+              if [ -n "$src" ]; then e2e=true; reason="$src changed, so e2e runs too"; else e2e=false; reason="no source change, architecture and affected tests only"; fi
+            fi
+          fi
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          echo "e2e=$e2e" >> "$GITHUB_OUTPUT"
+          echo "Test mode: **$mode** ($reason)" >> "$GITHUB_STEP_SUMMARY"
+          echo "mode=$mode: $reason"
+          {
+            echo 'rc=0'
+            case "$mode" in
+              full) echo 'bun test || rc=1' ;;
+              selected)
+                echo 'bun test test/architecture || rc=1'
+                [ "$e2e" = true ] && echo 'bun test test/e2e || rc=1'
+                echo 'bun test --changed=HEAD^1 || rc=1'
+                ;;
+            esac
+            echo 'exit $rc'
+          } > "$RUNNER_TEMP/tests.sh"
+      - if: steps.select.outputs.mode != 'docs'
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.4
-      - uses: actions/cache@v4
+      - if: steps.select.outputs.mode != 'docs'
+        uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
           restore-keys: bun-${{ runner.os }}-
       # test/e2e/live-delivery.test.ts uses Bun.secrets, which needs a Secret Service on Linux
-      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libsecret-1-0 gnome-keyring dbus-x11
-      - run: bun install --frozen-lockfile
-      - run: |
-          dbus-run-session -- bash -c 'echo -n ci | gnome-keyring-daemon --unlock --components=secrets > /dev/null; bun test'
+      - if: steps.select.outputs.e2e == 'true'
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libsecret-1-0 gnome-keyring dbus-x11
+      - if: steps.select.outputs.mode != 'docs'
+        run: bun install --frozen-lockfile
+      - if: steps.select.outputs.mode != 'docs' && steps.select.outputs.e2e == 'true'
+        run: dbus-run-session -- bash -c 'echo -n ci | gnome-keyring-daemon --unlock --components=secrets > /dev/null; bash "$RUNNER_TEMP/tests.sh"'
+      - if: steps.select.outputs.mode != 'docs' && steps.select.outputs.e2e != 'true'
+        run: bash "$RUNNER_TEMP/tests.sh"
