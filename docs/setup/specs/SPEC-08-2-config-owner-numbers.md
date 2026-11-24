@@ -29,10 +29,10 @@ R1 is the first row above, R2 the second. The ADR has no row ids, so these label
 - `src/intake/adapters/sqlite/sqlite-pending-changes-reader.ts` `KEYS`: `owner_numbers` and `owner_number_remove` are two of the keys it reads
 
 ## Tests first
-Written before the code, without it in view. R2: (1) `owner-numbers "+505 8888 0000"` adds one row with key `owner_numbers`, the value as typed and the command; (2) `remove owner-number "+505 8888 0000"` adds one row with key `owner_number_remove`; (3) neither imports `OwnerLease`. R1: (4) a number the parser refuses, or a missing value, writes nothing, prints one line and returns 1; (5) a storage error returns 2; (6) the two forms leave the `business_number` row alone.
+Written before the code, without it in view. R2: (1) `owner-numbers "+505 8888 0000"` adds one row with key `owner_numbers`, the value as typed and the command; (2) `remove owner-number "+505 8888 0000"` adds one row with key `owner_number_remove`; (3) neither imports `OwnerLease`. R1: (4) a number without a leading `+`, a number the parser refuses, or a missing value, writes nothing, prints one line and returns 1; (5) a storage error returns 2; (6) the two forms leave the `business_number` row alone.
 
 ## Build
-`runConfig` (SPEC-08-1) gains `["set","owner-numbers",v]` and `["remove","owner-number",v]`. Each calls `parser.parse(v, null)`; a refusal prints `deputy: "<v>" is not a phone number; type it with + and the country code.` and returns 1. Otherwise the row is written like SPEC-08-1 with that key, and the one-line message names the key.
+`runConfig` (SPEC-08-1) gains `["set","owner-numbers",v]` and `["remove","owner-number",v]`. `v` must start with `+` and `parser.parse(v, null)` must be `ok`, with no country setting; else it prints `deputy: "<v>" is not a phone number; write it with + and the country code.` and returns 1. Otherwise the row is written like SPEC-08-1 with that key, and the one-line message names the key.
 
 ## Done when
 `bun test test/adapters/cli/config-owner-numbers.test.ts`
@@ -41,4 +41,4 @@ Written before the code, without it in view. R2: (1) `owner-numbers "+505 8888 0
 The business number (SPEC-08-1). Today `ApplyPendingChanges` reads the value of `owner_numbers` as the whole list of extra numbers. TD-8 in `docs/tp/TP.md` says "an add through `set`, a removal through `remove`", so the apply step must add; SPEC-08-7 makes that change. That the business number cannot be removed this way is checked when the row is applied.
 
 ## Open questions
-- Q-1 (Lead): `ApplyPendingChanges` parses an owner number with the Intake `country` setting, and this command parses with no default country, so a number typed without `+` is refused here. Should the command read the `country` setting too?
+None.

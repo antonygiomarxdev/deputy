@@ -28,7 +28,7 @@ R1 is the first row above, R2 the second. The ADR has no row ids, so these label
 - Precedent: SPEC-08-1-config-set-business-number.md, the row, the stored command, the messages and the exit codes
 
 ## Tests first
-Written before the code, without it in view. R2: (1) `catalog-store sheet:abc123` adds one row with key `catalog_store`, the value as typed, the command and the time, prints one line and returns 0; (2) no `OwnerLease` is imported and `config.json` is not written. R1: (3) a missing value writes nothing, prints one line and returns 1; (4) a storage error returns 2.
+Written before the code, without it in view. R2: (1) `catalog-store sheet:abc123` adds one row with key `catalog_store`, the value as typed, the command and the time, prints one line and returns 0; (2) no `OwnerLease` is imported and `config.json` is not written. R1: (3) a missing value, or a value that is not `sheet:` followed by an id, writes nothing, prints one line and returns 1; (4) a storage error returns 2.
 
 ## Build
 `runConfig` (SPEC-08-1) gains `["set","catalog-store",v]`. It writes the row like SPEC-08-1 with key `catalog_store` and prints `deputy: catalog-store saved; the running Deputy applies it on its next tick, or at the next start.`
@@ -37,7 +37,7 @@ Written before the code, without it in view. R2: (1) `catalog-store sheet:abc123
 `bun test test/adapters/cli/config-catalog-store.test.ts`
 
 ## Out of scope
-Applying the row (Knowledge's `ApplyCatalogStoreChange`, in the Knowledge slice). The other file keys (SPEC-08-3).
+Applying the row (Knowledge's `ApplyCatalogStoreChange`, in the Knowledge slice). The other file keys (SPEC-08-3). Any value other than `sheet:<id>`: the Knowledge documents name no other, so none is accepted. The key `catalog_store` is the snake_case of the ADR-008 name; the ADR lists `catalog-store` under `config.json` and TD-8 says a pending row, and this spec follows TD-8.
 
 ## Open questions
-- Q-1 (Lead): the key `catalog_store` is the snake_case of the ADR-008 name, as the lead's rule says; no document names the row's key. The ADR lists `catalog-store` among the settings in `config.json`, and TD-8 says a pending row applied by Knowledge. This spec follows TD-8. Which values besides `sheet:<id>` does the command accept, and is a value that is not `sheet:<id>` invalid input?
+None.

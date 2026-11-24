@@ -39,7 +39,7 @@ Written before the code, without it in view, in `test/adapters/cli/config-busine
 ```ts
 export async function runConfig(args: string[], d: { db: SqlExecutor; clock: Clock; parser: PhoneNumberParser; out: (s: string) => void }): Promise<number>;
 ```
-`args` start after `config`. `parser.parse(value, null)` must be `ok`, else print `deputy: "<value>" is not a phone number; type it with + and the country code.` and return 1. Then run `INSERT INTO pending_changes (key, value, command, at) VALUES ("business_number", value, ["config", ...args].join(" "), clock.now())`, print `deputy: business-number saved; the running Deputy applies it on its next tick, or at the next start.` and return 0. A throw from the database prints one line and returns 2. When `openDatabase` reports `newer`, `main.ts` prints serve's message and returns 2.
+`args` start after `config`. `parser.parse(value, null)` must be `ok`, else print `deputy: "<value>" is not a phone number; write it with + and the country code.` and return 1. Then run `INSERT INTO pending_changes (key, value, command, at) VALUES ("business_number", value, ["config", ...args].join(" "), clock.now())`, print `deputy: business-number saved; the running Deputy applies it on its next tick, or at the next start.` and return 0. A throw from the database prints one line and returns 2. When `openDatabase` reports `newer`, `main.ts` prints serve's message and returns 2.
 
 ## Done when
 `bun test test/adapters/cli/config-business-number.test.ts`

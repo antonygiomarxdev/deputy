@@ -44,7 +44,7 @@ export async function runSecrets(args: string[], d: { os: { set(service: string,
 `bun test test/adapters/cli/secrets-set.test.ts`
 
 ## Out of scope
-`secrets list` (SPEC-08-5). Reading secrets back is the reader that exists. `check_secrets` and the mode warning at start belong to Setup.
+`secrets list` (SPEC-08-5). The Google service account secret: ADR-008 lists it and no document names it, so it is added when a document does. Reading secrets back is the reader that exists. `check_secrets` and the mode warning at start belong to Setup.
 
 ## Open questions
-- Q-1 (Lead): the name of the Google service account path secret. ADR-008 lists it, and no document gives its name, so `SECRET_NAMES` holds only the two Kapso names.
+None.
