@@ -18,7 +18,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 ## Files
 | Path | Create or change | Holds |
 |---|---|---|
-| src/drafts/adapters/mcp/pilot-tools.ts | Create | The handlers of `send_answer`, `send_owner_go` and `pilot_stats` |
+| src/drafts/adapters/mcp/pilot-tools.ts | Create | The handlers of `send_answer` and `send_owner_go` |
 | src/main/tools.ts | Change | Registers the three tools in the MCP tool list |
 | test/drafts/pilot-tools.test.ts | Create | The tests below |
 
@@ -38,7 +38,7 @@ export type SendAnswerInput = { chatId: string; text: string; answerClass: strin
 export type SendOwnerGoInput = { chatId: string; text: string };
 export function sendAnswerTool(d: AutoSendDeps): (input: SendAnswerInput) => Promise<ToolResult>;
 export function sendOwnerGoTool(d: OwnerGoDeps): (input: SendOwnerGoInput) => Promise<ToolResult>;
-export function pilotStatsTool(d: StatsDeps): () => Promise<ToolResult>;  // countsByDay (SPEC-08)
+// pilot_stats: its handler pilotStatsTool is SPEC-08's (src/drafts/domain/pilot-stats.ts); this spec registers it in tools.ts
 ```
 
 ## Done when

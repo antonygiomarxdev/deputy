@@ -17,7 +17,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 ## Files
 | Path | Create or change | Holds |
 |---|---|---|
-| src/drafts/domain/pilot-stats.ts | Create | `countsByDay`: the per-day counts over automatic answers, go answers and hand approvals |
+| src/drafts/domain/pilot-stats.ts | Create | `countsByDay`: the per-day counts over automatic answers, go answers and hand approvals; and the `pilot_stats` handler `pilotStatsTool` that returns them |
 | test/drafts/pilot-stats.test.ts | Create | The tests for FR-DRAFTS-04-12 |
 
 ## Reuses
@@ -28,11 +28,13 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 - FR-DRAFTS-04-12 (1): given automatic entries and used go rows on two days, `countsByDay` returns one row per day with that day's `autoAnswers`, `goAnswers` and `ownerApprovals`.
 - FR-DRAFTS-04-12 (2): given a day with no entries and no used go rows, it returns no row for that day.
 - FR-DRAFTS-04-12 (3): the returned type has no customer-message or owner-question field.
+- FR-DRAFTS-04-12 (4): `pilotStatsTool` returns the `countsByDay` result for the same entries and used goes.
 
 ## Build
 ```ts
 export type DailyCounts = { day: string; autoAnswers: number; goAnswers: number; ownerApprovals: number };
 export function countsByDay(entries: { at: number; automatic: boolean; kind: "sent" | "approved" }[], usedGoes: { usedAt: number }[]): DailyCounts[];
+export function pilotStatsTool(d: { entries: () => Promise<{ at: number; automatic: boolean; kind: "sent" | "approved" }[]>; goes: () => Promise<{ usedAt: number }[]> }): () => Promise<DailyCounts[]>;
 // reads SPEC-10-2's usedBetween(fromMs, toMs): Promise<{ chatId: string; usedAt: number }[]>
 ```
 
