@@ -5,7 +5,7 @@ Rests on: ../frd/FRD-02-owners-go.md
 
 ## Summary
 
-One builder in the composition root makes what the pilot tools need: the pending-go store over the shared database, the always-ask source over Knowledge's readAlwaysAsk, the dependencies of the automatic send and of the send with an owner's go, and the sources of the pilot counts. It does not subscribe to OwnerAnswered (SPEC-11) and registers no tool (SPEC-16-2, SPEC-16-3). First of four runs.
+One builder in the composition root makes what the pilot tools need: the pending-go store over the shared database, the always-ask source over Knowledge's readAlwaysAsk, the dependencies of the automatic send and of the send with an owner's go, and the sources of the pilot counts. It takes Intake's event bus and hands it to SPEC-11's subscription; it registers no tool (SPEC-16-2, SPEC-16-3). First of four runs.
 
 Last change: 2026-11-24, first draft for the Drafts pilot wiring.
 
@@ -31,7 +31,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. Too b
 - Precedent: SPEC-10-2-pending-go-store.md, SPEC-14-knowledge-always-ask.md and SPEC-12-owner-go-send.md, which define the three things this builder assembles
 
 ## Tests first
-FR-DRAFTS-02-13, FR-DRAFTS-02-14, FR-DRAFTS-02-15, in `test/main/drafts-pilot-wiring.test.ts`, written without the code in view; it builds `draftsWiring` on a temporary database with fake Intake ports and a fake `readAlwaysAsk`. Cases: the always-ask source returns the normalized entries of the injected function and reads it again on every call, so a hand edit shows on the next call (FR-DRAFTS-02-13); a go put in `pilot.pendingGoes` is the same one a transaction of the unit of work takes, so both use one database (FR-DRAFTS-02-14); closing the database and building the wiring again on the same file still holds an unused go (FR-DRAFTS-02-15); `autoSendDeps.latestCustomerSentAt(chat)` is the time of the chat's latest customer message from the chat reader, and null for an unknown chat; `autoSendDeps` and `ownerGoDeps` are plain objects, so a later spec adds a field to the first without touching the tool registration.
+FR-DRAFTS-02-13, FR-DRAFTS-02-14, FR-DRAFTS-02-15, in `test/main/drafts-pilot-wiring.test.ts`, written without the code in view; it builds `draftsWiring` on a temporary database with fake Intake ports and a fake `readAlwaysAsk`. Cases: the always-ask source returns the normalized entries of the injected function and reads it again on every call, so a hand edit shows on the next call (FR-DRAFTS-02-13); a go put in `pilot.pendingGoes` is the same one a transaction of the unit of work takes, so both use one database (FR-DRAFTS-02-14); closing the database and building the wiring again on the same file still holds an unused go (FR-DRAFTS-02-15); `autoSendDeps.latestCustomerSentAt(chat)` is the time of the chat's latest customer message from the chat reader, and null for an unknown chat; `autoSendDeps` and `ownerGoDeps` are plain objects, so a later spec adds a field to the first without touching the tool registration. Subscription: given a fake `events` with a `subscribe`, `draftsWiring` registers exactly one handler (SPEC-11's `onOwnerAnswered` over `pilot.pendingGoes`), and an `OwnerAnswered` delivered through it puts a go in `pilot.pendingGoes` (FR-DRAFTS-02-14); the reconcile reads the answered questions from the injected `listAnsweredQuestions` before the wiring returns.
 
 ## Build
 ```ts
@@ -41,15 +41,15 @@ export type PilotWiring = {
   ownerGoDeps: OwnerGoDeps;         // for sendOwnerGoTool
   stats: { drafts: (days: number) => Promise<DailyCounts[]>; intake: (days: number) => Promise<IntakeDayCounts[]> }; // the local days ending today (L16)
 };
-export function pilotWiring(d: { db: SqlDatabase; unitOfWork: UnitOfWork; clock: Clock; chats: ChatReader; readAlwaysAsk: ReadAlwaysAsk; dailyCounts: IntakeDailyCounts; createDraft: CreateDraft; ids: Ids }): PilotWiring;
+export function pilotWiring(d: { db: SqlDatabase; unitOfWork: UnitOfWork; clock: Clock; chats: ChatReader; readAlwaysAsk: ReadAlwaysAsk; dailyCounts: IntakeDailyCounts; createDraft: CreateDraft; ids: Ids; events: IntakeEvents; listAnsweredQuestions: ListAnsweredQuestions }): PilotWiring;
 ```
-`draftsWiring` gains the inputs `readAlwaysAsk` (from `knowledgeWiring`, Knowledge SPEC-04-6) and `dailyCounts` (Intake SPEC-05-15) and returns `{ drafts, approvals, pilot }`. `AutoSendDeps` and `OwnerGoDeps` hold the fields SPEC-12 and SPEC-13 name: the unit of work, `latestCustomerSentAt`, `now`, `newSendId`, `createDraft`, `driveSend` and the window check.
+`draftsWiring` gains the inputs `readAlwaysAsk` (from `knowledgeWiring`, Knowledge SPEC-04-6), and `dailyCounts`, `listAnsweredQuestions` and `events` (members of Intake's runtime and wiring, Intake SPEC-05-18) and returns `{ drafts, approvals, pilot }`. `AutoSendDeps` and `OwnerGoDeps` hold the fields SPEC-12 and SPEC-13 name: the unit of work, `latestCustomerSentAt`, `now`, `newSendId`, `createDraft`, `driveSend` and the window check.
 
 ## Done when
 `bun test test/main/drafts-pilot-wiring.test.ts`
 
 ## Out of scope
-The OwnerAnswered subscription and the reconcile (SPEC-11), registering the tools (SPEC-16-2 and SPEC-16-3) and the start order (SPEC-16-4).
+The logic of the subscription handler and the reconcile (SPEC-11), registering the tools (SPEC-16-2 and SPEC-16-3) and the start order (SPEC-16-4).
 
 ## Open questions
 None.

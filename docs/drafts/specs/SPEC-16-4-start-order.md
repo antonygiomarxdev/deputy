@@ -35,10 +35,10 @@ FR-DRAFTS-02-13, FR-DRAFTS-02-15, in `test/e2e/drafts-pilot.test.ts`, written wi
 // serve.ts order
 const wired = intakeWiring(...);
 const knowledge = knowledgeWiring({ ..., intake: wired.intake });          // Knowledge SPEC-04-9
-const { drafts, approvals, pilot } = await draftsWiring({ ..., readAlwaysAsk: knowledge.readAlwaysAsk, dailyCounts: wired.intake.dailyCounts }); // subscribes and reconciles inside (SPEC-11), so it is async
+const { drafts, approvals, pilot } = await draftsWiring({ ..., readAlwaysAsk: knowledge.readAlwaysAsk, dailyCounts: wired.intake.dailyCounts, listAnsweredQuestions: wired.intake.listAnsweredQuestions, events: wired.events }); // subscribes and reconciles inside (SPEC-11), so it is async
 const supervisor = superviseLease(...);   // the scheduler starts here: the first poll comes after the reconcile
 ```
-The member names of the Intake runtime are those of Intake SPEC-05-15 and SPEC-05-17.
+The members `dailyCounts` and `listAnsweredQuestions` and the returned `events` are those of Intake SPEC-05-18.
 
 ## Done when
 `bun test test/e2e/drafts-pilot.test.ts`

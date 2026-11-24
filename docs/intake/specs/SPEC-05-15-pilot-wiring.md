@@ -7,7 +7,7 @@ Rests on: ../frd/FRD-05-pilot-owner-chat-and-tools.md
 
 The composition root builds the pilot's Intake use cases (`AskOwner`, `AnswerQuestion`, `ListPending`, `SetOwnerNumbers`, `AdoptBusinessNumber`, the owner-question repository, `IntakeDailyCounts`), exports their ports from the Intake index, and passes them to `intakeTools`. After it a session sees `ask_owner`, `answer_question`, `list_pending`, `set_owner_numbers` and the business number is adopted at start.
 
-Last change: 2026-11-24, first draft
+Last change: 2026-11-24, the runtime members and the returned event bus are SPEC-05-18 so that each run holds three files.
 
 One spec is one agent run: at most 80 lines, 3 files and one done command. A spec decides nothing new.
 
@@ -41,7 +41,7 @@ FR-INTAKE-05-5, FR-INTAKE-05-9, FR-INTAKE-05-13, FR-INTAKE-05-15, FR-INTAKE-05-1
 `bun test test/intake/unit/pilot-wiring.test.ts`
 
 ## Out of scope
-The tools themselves (SPEC-05-3, SPEC-05-8, SPEC-05-11), the adoption call in `serve.ts` (SPEC-05-9), Drafts' use of the counts. The export of the answered questions: SPEC-05-17.
+The tools themselves (SPEC-05-3, SPEC-05-8, SPEC-05-11), the adoption call in `serve.ts` (SPEC-05-9), Drafts' use of the counts. The export of the answered questions: SPEC-05-17. The runtime members `dailyCounts` and `listAnsweredQuestions` and the `events` that `intakeWiring` returns: SPEC-05-18.
 
 ## Open questions
 None.
