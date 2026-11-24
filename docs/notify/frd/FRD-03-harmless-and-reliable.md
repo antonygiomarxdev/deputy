@@ -17,11 +17,11 @@ R-NOTIFY-8, R-NOTIFY-9, R-NOTIFY-10, R-NOTIFY-11.
 | FR-NOTIFY-03-1 | always | A message the owner sends from the WhatsApp Business app does not raise a notice by itself. Deputy uses the message source that Intake recorded, never the message content. (R-NOTIFY-8) |
 | FR-NOTIFY-03-2 | always | A chat the owner has already answered is neither counted as new nor as waiting. (R-NOTIFY-8) |
 | FR-NOTIFY-03-3 | always | Notify sends nothing to a customer and approves nothing. Receiving a notice cannot cause a send or an approval. (R-NOTIFY-9) |
-| FR-NOTIFY-03-4 | always | With an agent that does not support push, or with no session open, no notice is sent. The rule is stated in [R-NOTIFY-10](../PRD.md). (R-NOTIFY-10) |
+| FR-NOTIFY-03-4 | IF | With an agent that does not support push, or with no session open, no notice is sent. The rule is stated in [R-NOTIFY-10](../PRD.md). (R-NOTIFY-10) |
 | FR-NOTIFY-03-5 | always | Messages that arrived while no session was open are found by catch-up at the next start and covered by one notice (see FRD-01). (R-NOTIFY-10) |
 | FR-NOTIFY-03-6 | always | A notice counts as failed when there is no open session at the moment of sending, or when writing it to the session returns an error. A push has no acknowledgement, so a notice that was written without error counts as delivered. If a notice cannot be delivered, Deputy keeps storing messages and the inbox keeps listing them. The failure is not shown to the customer. The failure is recorded where the owner can see it, for example in the status. (R-NOTIFY-11) |
 | FR-NOTIFY-03-8 | WHEN | When Intake's status shows the provider unreachable for longer than one catch-up period, Deputy sends one notice with fixed wording: "Cannot reach the provider since <time>." It carries no customer data. It is sent once per outage. When the provider is reachable again, one notice says so. These notices follow the owner's quiet periods and the notices-off setting. (R-NOTIFY-11) |
-| FR-NOTIFY-03-7 | always | After a failed notice, the next notice counts the messages that failed to notify as new, so no count is lost. (R-NOTIFY-11) |
+| FR-NOTIFY-03-7 | WHEN | After a failed notice, the next notice counts the messages that failed to notify as new, so no count is lost. (R-NOTIFY-11) |
 | FR-NOTIFY-03-9 | WHEN | When a queued send is held or fails (decision D29), or an owner reply cannot be tied to a chat (decision D30), Deputy raises one notice for each event. The notice names one of four reasons (`held_after_retry`, `window_closed`, `retry_failed`, `owner_reply_unlinked`), says why and what the owner must do, and holds no chat, name, number or customer text. It follows the same gates as every notice. (R-NOTIFY-8) |
 
 ## Edge cases

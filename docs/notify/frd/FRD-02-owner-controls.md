@@ -22,7 +22,7 @@ R-NOTIFY-6, R-NOTIFY-7, R-NOTIFY-15.
 | FR-NOTIFY-02-5 | always | The owner can turn notices off, and on again. With notices off, nothing else changes: messages are stored and the inbox lists them. (R-NOTIFY-7) |
 | FR-NOTIFY-02-6 | always | The ignore list belongs to the Inbox slice (FR-INBOX-03-10). The owner ignores and un-ignores chats there, by explicit command only, and Inbox logs each change with the owner's words. Notify only reads the list and keeps no copy and no log of its own. Deputy never ignores a chat on its own judgment. (R-NOTIFY-15) |
 | FR-NOTIFY-02-7 | always | An ignored chat is left out of notices, both new and waiting counts. The messages are still stored and the inbox still lists them. (R-NOTIFY-15) |
-| FR-NOTIFY-02-10 | always | Each time Deputy prepares a notice, it reads the current ignore list from Inbox, so a change takes effect in the next notice and survives a restart. Inbox shows the list and how many ignored chats have unanswered messages, so an ignore cannot hide a chat silently. (R-NOTIFY-15) |
+| FR-NOTIFY-02-10 | WHEN | Each time Deputy prepares a notice, it reads the current ignore list from Inbox, so a change takes effect in the next notice and survives a restart. Inbox shows the list and how many ignored chats have unanswered messages, so an ignore cannot hide a chat silently. (R-NOTIFY-15) |
 | FR-NOTIFY-02-8 | WHEN | When the owner stops ignoring a chat in Inbox, the chat counts again in the next notice. (R-NOTIFY-15) |
 
 Example:

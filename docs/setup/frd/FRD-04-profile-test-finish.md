@@ -22,7 +22,7 @@ R-SETUP-16, R-SETUP-17, R-SETUP-18, R-SETUP-19.
 | FR-SETUP-04-6 | IF | If a part of the round trip fails, Setup says which part (message did not arrive, no draft, not approved, provider refused it, owner says it did not arrive) and what to do. Setup stays at step 6. |
 | FR-SETUP-04-7 | always | Test mode needs no WhatsApp account and skips steps 2, 3 and 4. The round trip uses the development provider: the owner or the agent simulates a customer message, and the draft and approval work as in the real run. Test mode is marked "test" in the status and in the final summary. |
 | FR-SETUP-04-8 | always | The owner can switch from test mode to the real provider later. The profile and catalog are kept. Test messages and test chats from the development provider stay as history. Once the provider is not the development one, they never count as pending, never appear in notices and are never offered a draft (Intake FR-INTAKE-01-10). Setup runs steps 2, 3 and 4 and a new round trip. |
-| FR-SETUP-04-9 | always | On completion, Setup shows: what is connected, which numbers are treated as the owner's, where the owner's data lives, how to ask the agent what is pending, and the total time and provider wait (FRD-01). |
+| FR-SETUP-04-9 | WHEN | On completion, Setup shows: what is connected, which numbers are treated as the owner's, where the owner's data lives, how to ask the agent what is pending, and the total time and provider wait (FRD-01). |
 | FR-SETUP-04-10 | always | Setup may offer push notices (Notify) as an optional extra for agents that support it, labeled optional. Setup completes without it. |
 
 Example:
