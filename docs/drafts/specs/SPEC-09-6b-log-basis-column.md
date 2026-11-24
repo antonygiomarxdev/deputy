@@ -17,11 +17,12 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 ## Files
 | Path | Create or change | Holds |
 |---|---|---|
-| src/drafts/adapters/sqlite/migrations/0007-log-basis.sql | Create | Adds `basis TEXT NOT NULL DEFAULT 'owner_words'` to drafts_log and rebuilds the ADR-010 `BEFORE UPDATE` trigger with `basis` in its equality list |
+| src/drafts/adapters/sqlite/migrations/0007-log-basis.sql | Create | Adds `basis TEXT NOT NULL DEFAULT 'owner_words'` to drafts_log and rebuilds the ADR-010 `BEFORE UPDATE` trigger with `basis` and `automatic` (0004) in its equality list |
 | src/drafts/adapters/sqlite/sqlite-draft-log-repository.ts | Change | `COLUMNS` includes `basis`; the row mapper reads it |
 | src/main/database.ts | Change | Registers 0007-log-basis.sql at the end of the migration list |
 
 ## Reuses
+- Test support: `test/drafts/contract/log-database.ts` lists migrations up to 0007 (a test file; not a Files row).
 - Precedent: SPEC-09-3a-automatic-migration.md, the same trigger rebuild for the `automatic` column; SPEC-09-3c-automatic-registration.md, the registration and the version check by position.
 
 ## Tests first
@@ -32,7 +33,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 ## Build
 ```sql
 ALTER TABLE drafts_log ADD COLUMN basis TEXT NOT NULL DEFAULT 'owner_words';
--- drop and recreate the BEFORE UPDATE trigger of ADR-010 with basis in its equality list
+-- drop and recreate the BEFORE UPDATE trigger of ADR-010 with basis and automatic in its equality list
 ```
 
 ## Done when

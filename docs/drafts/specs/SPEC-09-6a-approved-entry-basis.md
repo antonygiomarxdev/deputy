@@ -31,7 +31,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 ## Build
 ```ts
 // events.ts: Approved gains basis?: ApprovalBasis
-// log-entry.ts: LogEntry.basis: ApprovalBasis
+// log-entry.ts: LogEntry.basis?: ApprovalBasis; blankLogEntry defaults it to owner_words
 ```
 
 ## Done when
