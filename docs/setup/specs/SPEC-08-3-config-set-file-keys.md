@@ -38,13 +38,14 @@ Written before the code, without it in view, on a temporary config folder. R2: (
 ```ts
 export async function writeConfigKey(dir: string, key: string, value: string | boolean): Promise<void>;
 ```
-Key names: the reader's where they exist, `orders-spreadsheet` as Orders TP-03 and ADR-015 give it, otherwise snake_case of the ADR-008 name (`push_on`). Values are stored in the form `FileConnectionConfig` accepts: strings as typed. Invalid is what `ResolveProviderSettings` rejects: a `provider` other than `kapso` or `dev`, a `receiving_mode` other than `catch-up` or `live`; those print one line and return 1. No reader reads `push_on` or `orders_spreadsheet` yet: `push on` and `push off` store the JSON boolean `true` or `false` under `push_on`, any other `push` value is invalid, and `orders-spreadsheet` stores the string as typed under `orders-spreadsheet`. `runConfig` (SPEC-08-1) gains the five keys, each calling `writeConfigKey` with `d.configDir`, printing `deputy: <key> saved; the running Deputy re-reads config.json.` and returning 0.
+Key names: the reader's where they exist, `orders-spreadsheet` as Orders TP-03 and ADR-015 give it, otherwise snake_case of the ADR-008 name (`push_on`). Values are stored in the form `FileConnectionConfig` accepts: strings as typed. Invalid is what `ResolveProviderSettings` rejects: a `provider` other than `kapso` or `dev`, a `receiving_mode` other than `catch-up` or `live`; those print one line and return 1. No reader reads `push_on` or `orders-spreadsheet` yet: `push on` and `push off` store the JSON boolean `true` or `false` under `push_on`, any other `push` value is invalid, and `orders-spreadsheet` stores the string as typed under `orders-spreadsheet`. `runConfig` (SPEC-08-1) gains the five keys, each calling `writeConfigKey` with `d.configDir`, printing `deputy: <key> saved; the running Deputy re-reads config.json.` and returning 0.
 
 ## Done when
 `bun test test/adapters/cli/config-file-keys.test.ts`
 
 ## Out of scope
+Reducing a spreadsheet URL to its id: Orders TP-03 puts it in the Orders reader, so the command stores the value as typed.
 Owner numbers and the business number (SPEC-08-1, SPEC-08-2); `catalog-store` (SPEC-08-6). Reading the file back is `readConfigFile`, built.
 
 ## Open questions
-- Q-1 (Lead): Orders TP-03 says an id is 20 or more of `A-Z a-z 0-9 _ -` and "a URL is reduced to its id", without saying whether the command or the Orders reader does it. This spec stores the value as typed. Which one reduces it?
+None.
