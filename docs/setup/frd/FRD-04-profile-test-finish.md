@@ -12,16 +12,18 @@ R-SETUP-16, R-SETUP-17, R-SETUP-18, R-SETUP-19.
 
 ## Behavior
 
-- **FR-SETUP-04-1.** In step 5 the agent asks the owner short questions about the business (what it sells, hours, area, payment and delivery rules, tone) and the items for sale (name, price, notes). One question at a time.
-- **FR-SETUP-04-2.** Setup shows the resulting profile and catalog to the owner and asks for confirmation. Setup hands them to Knowledge only after the owner confirms. A small catalog is accepted. Setup says it can be improved later.
-- **FR-SETUP-04-3.** Step 6 asks the owner to send a message to the business number from another phone. An owner without a second phone is offered test mode, or to ask someone else to send it.
-- **FR-SETUP-04-4.** The test message must appear in the inbox. Then the agent drafts a reply, the owner approves it in the conversation, the provider accepts the send, and the owner states that the reply arrived on the other phone. Setup is marked complete only when all of that has happened. Deputy knows only that the provider accepted the send, so arrival is the owner's word.
-- **FR-SETUP-04-5.** The test reply is an ordinary draft: it needs the owner's approval like every reply. Setup does not send it itself.
-- **FR-SETUP-04-6.** If a part of the round trip fails, Setup says which part (message did not arrive, no draft, not approved, provider refused it, owner says it did not arrive) and what to do. Setup stays at step 6.
-- **FR-SETUP-04-7.** Test mode needs no WhatsApp account and skips steps 2, 3 and 4. The round trip uses the development provider: the owner or the agent simulates a customer message, and the draft and approval work as in the real run. Test mode is marked "test" in the status and in the final summary.
-- **FR-SETUP-04-8.** The owner can switch from test mode to the real provider later. The profile and catalog are kept. Test messages and test chats from the development provider stay as history. Once the provider is not the development one, they never count as pending, never appear in notices and are never offered a draft (Intake FR-INTAKE-01-10). Setup runs steps 2, 3 and 4 and a new round trip.
-- **FR-SETUP-04-9.** On completion, Setup shows: what is connected, which numbers are treated as the owner's, where the owner's data lives, how to ask the agent what is pending, and the total time and provider wait (FRD-01).
-- **FR-SETUP-04-10.** Setup may offer push notices (Notify) as an optional extra for agents that support it, labeled optional. Setup completes without it.
+| ID | Pattern | Requirement |
+|---|---|---|
+| FR-SETUP-04-1 | always | In step 5 the agent asks the owner short questions about the business (what it sells, hours, area, payment and delivery rules, tone) and the items for sale (name, price, notes). One question at a time. |
+| FR-SETUP-04-2 | always | Setup shows the resulting profile and catalog to the owner and asks for confirmation. Setup hands them to Knowledge only after the owner confirms. A small catalog is accepted. Setup says it can be improved later. |
+| FR-SETUP-04-3 | always | Step 6 asks the owner to send a message to the business number from another phone. An owner without a second phone is offered test mode, or to ask someone else to send it. |
+| FR-SETUP-04-4 | always | The test message must appear in the inbox. Then the agent drafts a reply, the owner approves it in the conversation, the provider accepts the send, and the owner states that the reply arrived on the other phone. Setup is marked complete only when all of that has happened. Deputy knows only that the provider accepted the send, so arrival is the owner's word. |
+| FR-SETUP-04-5 | always | The test reply is an ordinary draft: it needs the owner's approval like every reply. Setup does not send it itself. |
+| FR-SETUP-04-6 | IF | If a part of the round trip fails, Setup says which part (message did not arrive, no draft, not approved, provider refused it, owner says it did not arrive) and what to do. Setup stays at step 6. |
+| FR-SETUP-04-7 | always | Test mode needs no WhatsApp account and skips steps 2, 3 and 4. The round trip uses the development provider: the owner or the agent simulates a customer message, and the draft and approval work as in the real run. Test mode is marked "test" in the status and in the final summary. |
+| FR-SETUP-04-8 | always | The owner can switch from test mode to the real provider later. The profile and catalog are kept. Test messages and test chats from the development provider stay as history. Once the provider is not the development one, they never count as pending, never appear in notices and are never offered a draft (Intake FR-INTAKE-01-10). Setup runs steps 2, 3 and 4 and a new round trip. |
+| FR-SETUP-04-9 | always | On completion, Setup shows: what is connected, which numbers are treated as the owner's, where the owner's data lives, how to ask the agent what is pending, and the total time and provider wait (FRD-01). |
+| FR-SETUP-04-10 | always | Setup may offer push notices (Notify) as an optional extra for agents that support it, labeled optional. Setup completes without it. |
 
 Example:
 
