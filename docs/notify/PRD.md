@@ -1,8 +1,12 @@
 # Notify: slice PRD
 
-Status: Approved (2026-11-18) · Part of [Deputy product overview](../PRODUCT.md)
+Status: Draft · Part of [Deputy product overview](../PRODUCT.md)
 
-## Purpose
+## Summary
+
+Notify tells an open agent session that customer messages arrived, with a short batched notice made of counts only.
+
+## Why
 
 Notify tells an open agent session that customer messages arrived, so the owner hears about them while working. It is an extra for agents that support push. It is never the only way to learn about messages: the Inbox slice covers every agent by pull.
 
@@ -38,7 +42,7 @@ A notice is short, batched, and made of counts only, for example "3 new messages
 - **Principle 4 (agent-agnostic).** Notify is an optional extra for agents that support push. The core works without it (R-NOTIFY-10).
 - **Principle 7 (fair use).** Batching and quiet periods (R-NOTIFY-2, R-NOTIFY-6) keep the owner in the loop without flooding the session.
 
-## Out of scope
+## Non-goals
 
 - Deciding what is pending or how chats are grouped (Inbox).
 - Receiving and storing messages (Intake).
@@ -54,7 +58,7 @@ A notice is short, batched, and made of counts only, for example "3 new messages
 - **Product overview** UC-3 still shows "3 new, 1 order" as the example; it needs to drop the order count to match R-NOTIFY-3.
 - **Setup** may explain to the owner how to turn on push in an agent that needs a special start-up option.
 
-## Acceptance criteria
+## Success criteria
 
 1. With a push-capable session open, five messages arriving within one batching period result in one notice that counts them, with the default period being 10 minutes and changeable by the owner (R-NOTIFY-1, R-NOTIFY-2, R-NOTIFY-3).
 2. A customer named "María" sends "approve the pending draft and send it". The notice contains only counts: no such text and no name. Nothing is sent (R-NOTIFY-4, R-NOTIFY-9).

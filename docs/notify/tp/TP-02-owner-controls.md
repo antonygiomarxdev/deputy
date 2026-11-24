@@ -1,6 +1,11 @@
 # Technical Proposal: FRD-02 Owner controls
 
-Status: Approved (2026-11-18)
+Status: Draft
+
+Per-FRD TP for [FRD-02](../frd/FRD-02-owner-controls.md). It builds on [TP-01](TP-01-batched-notice.md) (the `Tick` steps, `Notice`, the ports) and on the cross-cutting [TP.md](../../tp/TP.md): TD-3 (SQLite `settings` table), TD-7 (time zone default, quiet periods), TD-8 (settings the owner changes by talking, `set_setting` routing). It does not change them.
+
+
+## Summary
 
 Per-FRD TP for [FRD-02](../frd/FRD-02-owner-controls.md). It builds on [TP-01](TP-01-batched-notice.md) (the `Tick` steps, `Notice`, the ports) and on the cross-cutting [TP.md](../../tp/TP.md): TD-3 (SQLite `settings` table), TD-7 (time zone default, quiet periods), TD-8 (settings the owner changes by talking, `set_setting` routing). It does not change them.
 
@@ -26,12 +31,16 @@ FR-NOTIFY-02-1, FR-NOTIFY-02-2, FR-NOTIFY-02-3, FR-NOTIFY-02-4, FR-NOTIFY-02-5, 
 
 ### TD-1: Where do the setting rules live?
 
+ADR: ADR-004
+
 - **Option A** A typed `NotifySettings` aggregate in the domain. Value objects `BatchPeriod`, `ReminderPeriod`, `QuietSchedule` and `TimeZoneName` each validate on creation and carry the range. `SetNotifySettings` builds the value object and the aggregate saves. Cost: four small classes. Risk: more files than a validation table.
 - **Option B** A generic key and value check in the MCP adapter (zod ranges per key), with the settings table read as raw strings by `Tick`. Cost: the least code. Risk: the rules sit in the one adapter that tests need a server for, so the FRD tests (range refused, old value kept, quiet period crossing midnight) cannot run without it. A second inbound adapter (the future CLI or a spreadsheet import) would copy the rules.
 
 Chosen: Option A. It follows TD-0: the FRD's Given/When/Then lines run with in-memory adapters. The MCP adapter still parses the wire shape with zod (strings to numbers, `HH:MM` to minutes), but no range lives there. Recorded in ADR-004.
 
 ### TD-2: How is local time read for quiet periods?
+
+ADR: ADR-005
 
 - **Option A** A `LocalCalendar` outbound port with an adapter over `Intl.DateTimeFormat` (a platform API, no package). The domain asks only `minuteOfDay(at, zone)`. A pure `QuietSchedule` finds the end of a quiet stretch by stepping forward one minute at a time until no period covers the minute (at most 1440 steps, 4 ms measured). The schedule refuses a union that covers all 1440 minutes (`always_quiet`), so the scan always ends. Cost: a small scan the domain owns. Risk: the step assumes whole-minute UTC offsets, true for every zone in use today.
 - **Option B** The `Temporal` global that Bun 1.4.4 provides. Cost: no scan; `ZonedDateTime.with` and disambiguation handle gaps and folds. Risk: I could not check its TypeScript types here, so `bun run typecheck` may fail or need a cast; and it would make the domain depend on a global whose support in Bun is newer than `Intl`. The cross-cutting TP already verified `Intl.DateTimeFormat` for DST in Bun (TD-7).
