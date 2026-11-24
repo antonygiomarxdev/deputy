@@ -378,7 +378,7 @@ Nothing new: the drawings show the existing guards. The go comes from the owner'
 
 ## Testing
 
-Each arrow's spec carries its own tests first. This file is checked by `check.ts tp` and the Mermaid validator; the GAP list is the list of arrows with no test to point to.
+The rows the drawings serve are the pilot rows of the four slices, for example FR-INTAKE-05-5, FR-DRAFTS-02-13, FR-SETUP-05-22 and FR-NOTIFY-01-1. Each arrow's spec carries its own tests first. This file is checked by `check.ts tp` and the Mermaid validator; the GAP list is the list of arrows with no test to point to.
 
 ## Risks
 
