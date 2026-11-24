@@ -6,7 +6,7 @@ Status: Draft
 
 In the pilot the business knowledge is four plain text files on the owner's computer: the profile, the catalog, the memory and the always-ask list. The agent reads them with one call and saves them as whole files after the owner agreed; the memory grows only from the owner's own answers. Customer text never writes a knowledge file. Deputy holds no credentials of any other service: the session brings in a spreadsheet, a photo or a document and saves the result.
 
-Last change: 2026-11-24, first draft for REQ-15 and D38; the control chat is the one Intake FRD-05 defines (FR-INTAKE-05-1 to FR-INTAKE-05-3), so the old question about it is closed.
+Last change: 2026-11-24, the owner approved the limits and the growth rule, and the lead confirmed the tools; the control chat is the one Intake FRD-05 defines (FR-INTAKE-05-1 to FR-INTAKE-05-3), so the old question about it is closed.
 
 One feature of the [slice PRD](../PRD.md). It replaces, for the pilot only, the proposal flow of [FRD-01](FRD-01-profile-and-catalog.md) rows 9 to 11 and the spreadsheet row 13; the other FRD-01 rows are kept where this FRD does not restate them. Learned knowledge (FRD-02) and export and wipe (FRD-03) are not built for the pilot.
 
@@ -42,6 +42,7 @@ R-KNOWLEDGE-2, R-KNOWLEDGE-3, R-KNOWLEDGE-5, R-KNOWLEDGE-10, R-KNOWLEDGE-15, R-K
 | FR-KNOWLEDGE-04-20 | always | Deputy shall check only that the owner's words were supplied in the session and, in the control chat, that the sender is an owner number; it cannot check who spoke in the session (known limit, D11). |
 | FR-KNOWLEDGE-04-21 | IF | IF the source is a control chat message and the text to remember is not contained, after normalization and on whole-token boundaries as FR-INTAKE-05-24 says, in that stored message, THEN Deputy shall refuse with `text_not_in_message` and change nothing. |
 | FR-KNOWLEDGE-04-22 | IF | IF the catalog file holds no readable table, for example after the owner edited it by hand, THEN `read_knowledge` shall return the text as it is with the notice `catalog_unreadable` and shall hide nothing. |
+| FR-KNOWLEDGE-04-23 | WHEN | WHEN the memory or the catalog has grown past what fits in each turn, the session shall tell the owner and propose a summary for the owner to approve, and Deputy shall not delete anything on its own. |
 
 ## Rules and examples
 
@@ -151,9 +152,10 @@ n/a: this project keeps its cross-cutting rules in the cross-cutting TP (`docs/t
 
 ## Open questions
 
-- Q-1 (Lead): the task named `read_knowledge`, `remember` and `save_catalog`; setup also has to write the profile and the always-ask list, so this FRD adds `save_profile` and `save_always_ask` with the same rule. Confirm, or name another way to write them.
-- Q-2 (Owner: only the owner knows how much knowledge the agent should read on every turn): when the memory or the catalog grows so large that reading it each turn costs too much of the plan, should Deputy warn the owner and ask to tidy it?
-- Q-3 (Lead): the numbers in FR-KNOWLEDGE-04-9, -10, -11 and -17 (500 catalog items, 20000 characters, 20 previous versions, 500 characters per memory entry) are proposed by this draft, not decided by the owner; they exist to bound plan usage and disk. Confirm or replace them.
+None open. Answered on 2026-11-24:
+- The owner approved the limits of FR-KNOWLEDGE-04-9, -10, -11 and -17 (500 catalog items, 20000 characters, 20 previous versions, 500 characters per memory entry).
+- The owner decided what happens when knowledge grows too large: the session tells the owner and proposes a summary that the owner approves; nothing is deleted on its own (FR-KNOWLEDGE-04-23).
+- The lead answered that `save_profile` and `save_always_ask` stay next to `read_knowledge`, `remember` and `save_catalog`.
 
 ## Acceptance criteria
 Generated from the examples, decision table and states; never edited by hand.

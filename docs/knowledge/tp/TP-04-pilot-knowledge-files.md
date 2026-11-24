@@ -6,7 +6,7 @@ Status: Draft
 
 Knowledge becomes four plain files in `<configuration folder>/knowledge`, read whole by one tool and written whole by one tool per file after the owner's words. The memory grows through `remember`, which accepts only the owner's words and refuses copies of customer text. Nothing reaches a spreadsheet or another service: the session brings the content and Deputy stores it.
 
-Last change: 2026-11-24, first draft for REQ-15 and D38.
+Last change: 2026-11-24, the owner approved the limits and the growth rule
 
 Follows the cross-cutting TP (`docs/tp/TP.md`). "TD-n" without a prefix means a decision in this TP. It replaces for the pilot the proposal mechanism and the mapping detector of [TP-01](TP-01-profile-and-catalog.md) (its TD-3 to TD-7); TD-1, TD-2 and TD-8 of TP-01 are not used either.
 
@@ -90,7 +90,7 @@ Domain (`src/knowledge/domain/`, no input or output, no package):
 
 - `KnowledgeFileName`: `"profile" | "catalog" | "memory" | "always-ask"` and its file name.
 - `parseCatalogTable(text) -> { ok: true, items } | { ok: false, code: "catalog_unreadable" }`; `renderCatalog(items)` returns "to be confirmed" for an empty price or availability; `diffCatalog(old, new) -> { added, removed, changed }`.
-- `LIMITS`: owner words 1000 (shared); proposed by this draft, not decided by the owner: catalog 500 items, profile and always-ask 20000 characters, memory text 500 characters, history 20 (Q-3).
+- `LIMITS`: owner words 1000 (shared); approved by the owner on 2026-11-24: catalog 500 items, profile and always-ask 20000 characters, memory text 500 characters, history 20.
 - `memoryEntry(date, text)` returns `"<date>: <text>"`.
 
 Application (`src/knowledge/application/`): `ReadKnowledge`, `SaveKnowledgeFile` (one use case for the three files, the catalog adds its table check), `Remember`. Ports (`src/knowledge/ports/`): `KnowledgeStore` (read a file with its saved time, write a whole file with history, append a line), `ChangeLog`, `MessageChecks` (`isCustomerText(text)`, `ownerControlMessage(id)` returning the stored text or null). Adapters: `src/knowledge/adapters/files/` (store and log), `src/knowledge/adapters/intake/` (message checks over the Intake index: for each owner number of kind extra it reads that chat, newest 200 messages, and finds the message by its id), `src/knowledge/adapters/mcp/` (the tools). The composition root `src/main/knowledge.ts` builds them.
@@ -118,7 +118,7 @@ Refusal codes: `not_owner`, `owner_words_missing`, `owner_words_size`, `catalog_
 | The agent supplies made-up owner words | A save without the owner | Known limit (D11); each change is recorded with the words in `changes.log` and the previous version is kept |
 | A path in a tool input | A file outside the folder is read or written | There is no path input; names come from a closed list |
 | A paraphrase of customer text is remembered | Same as the first row | Stated limit; the control chat source needs a stored owner message |
-| A very large text | Plan usage and disk | Size limits in the domain (proposed, Q-3) |
+| A very large text | Plan usage and disk | Size limits in the domain (approved by the owner) |
 
 ## Testing
 
@@ -128,13 +128,11 @@ ATDD from the FRD: tests carry `covers: knowledge/FRD-04/<ID>`. The store is tes
 
 | Risk | Effect | Mitigation |
 |---|---|---|
-| Reading all four files on every turn grows the plan usage | The $20 plan runs out sooner | Size limits (proposed); `read_knowledge` returns the size of each file (FR-KNOWLEDGE-04-2); Q-3 asks the owner what to do when it grows |
+| Reading all four files on every turn grows the plan usage | The $20 plan runs out sooner | Size limits (approved by the owner); `read_knowledge` returns the size of each file (FR-KNOWLEDGE-04-2); when it grows past a turn, the session tells the owner and proposes a summary the owner approves (FR-KNOWLEDGE-04-23) |
 | The owner edits the catalog into a shape Deputy cannot read | Lookup fails | `read_knowledge` returns the text as it is and adds the notice `catalog_unreadable`; it hides nothing (FR-KNOWLEDGE-04-22) |
 | The lookup reads only the newest 200 messages of the owner's chat | An older message cannot be used as a source | It is refused as `not_owner_message`; the owner repeats the instruction and the session uses a newer message |
 | A file open in another program on Windows | The save fails | The old text stays; the refusal says to close the file |
 
 ## Open questions
 
-- Q-1 (Lead): the FRD adds `save_profile` and `save_always_ask` to the three tools named in the task; confirm.
-- Q-2 (Owner: only the owner knows how much knowledge the agent should read on every turn): what should happen when the memory or the catalog is so long that reading it each turn costs too much of the plan?
-- Q-3 (Lead): the limits of 500 catalog items, 20000 characters, 20 previous versions and 500 characters per memory entry are proposed by this draft, not decided by the owner; confirm or replace them.
+None open. Answered on 2026-11-24: the lead keeps `save_profile` and `save_always_ask`; the owner approved the limits and decided that a growing memory or catalog is reported and summarized with the owner's approval, nothing deleted on its own (FR-KNOWLEDGE-04-23).
