@@ -15,7 +15,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 | FR-INTAKE-05-9 | WHEN | When the session records an answer with the id of an open question and the owner's text, Intake closes that question and keeps the text with it. |
 | FR-INTAKE-05-10 | IF | If the id is not an open question, Intake refuses and changes nothing. |
-| FR-INTAKE-05-24 | IF | If the text the session records is not contained in a message the owner sent in the control chat after the question was asked, Intake refuses, changes nothing and publishes nothing, so the go comes only from the owner's own words (Drafts ADR-006). |
+| FR-INTAKE-05-24 | IF | If the text the session records is not contained in a message the owner sent in the control chat after the question was asked, Intake refuses, changes nothing and publishes nothing, so the go comes only from the owner's own words, as docs/adr/ADR-006-draft-send-path.md and Drafts ADR-003 say. The text is contained when it appears in the message on whole-token boundaries; the message may hold more, because one message can answer several questions. |
 | FR-INTAKE-05-11 | always | When the session reads the control chat, it gets the owner's messages together with the open questions and their ids. Intake does not match a message to a question; the session does. |
 
 ## Files
