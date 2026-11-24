@@ -43,7 +43,7 @@ SKILL.md sections: Daily loop, Rules (no terminal prompt, ask by message), Setup
 `bun test test/skill/skill.test.ts`
 
 ## Out of scope
-- The wake loop and channel recipe: the wake and permissions decision (ADR-018). Draft and send rules in the skill: the Drafts pilot specs.
+- The loop steps: SPEC-05-9; remember, counts and the repeat: SPEC-05-10; the first message: SPEC-05-11. The wake decision: ADR-018. Draft and send rules in the skill: the Drafts pilot specs.
 
 ## Open questions
 None.

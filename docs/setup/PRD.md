@@ -1,10 +1,10 @@
 # Setup: slice PRD
 
-Status: Approved (2026-11-18) with amendments from REQ-15 (pending owner approval) · Part of [Deputy product overview](../PRODUCT.md) · Last updated: 2026-11-24 (pilot setup added)
+Status: Approved (2026-11-18) with amendments from REQ-15 (pending owner approval) · Part of [Deputy product overview](../PRODUCT.md) · Last updated: 2026-11-24 (pilot setup and daily loop added)
 
 ## Summary
 
-Setup takes a non-technical owner from nothing to a working Deputy. The v1 design is a guided, resumable flow (FRD-01 to FRD-04). For the local pilot the owner instead asks the agent to install Deputy from a link, pastes the provider key on a one-time local page, and sets up the business in a conversation run by a skill (R-SETUP-22 to R-SETUP-29, FRD-05).
+Setup takes a non-technical owner from nothing to a working Deputy. The v1 design is a guided, resumable flow (FRD-01 to FRD-04). For the local pilot the owner instead asks the agent to install Deputy from a link, pastes the provider key on a one-time local page, and sets up the business in a conversation run by a skill (R-SETUP-22 to R-SETUP-31, FRD-05).
 
 Last change: 2026-11-24, pilot setup requirements added
 
@@ -76,6 +76,8 @@ For the local pilot the guided flow above is deferred: [FRD-01 to FRD-04](frd/FR
 - **R-SETUP-27.** While a session is open, Deputy keeps the computer from sleeping through idleness, without administrator rights, and releases it when the session ends (D36).
 - **R-SETUP-28.** Setup gives the owner the keep-awake checklist (lid open, plugged in, no shutdown, network on) and says that a closed lid still sleeps the computer (D36). The guide tells the owner to message the business number at least once a day (D36). The skill also reminds the owner when a day passes without such a message.
 - **R-SETUP-29.** The skill never asks the owner for a permission in the terminal during the daily loop (D35). When it needs the owner's decision it asks by message first. It answers in the owner's language (D20); Spanish and English are the two languages of the pilot. Setup is attended, the owner is at the computer, so a permission prompt there for the owner's own sheet or documents is acceptable; the no-prompt rule applies to the daily loop.
+- **R-SETUP-30.** While the session is open, the skill runs the daily loop once now and again every 30 to 60 minutes (D34, ADR-018). Each round checks for new messages, lists the pending chats and reads the knowledge. It answers by itself only what the knowledge backs and the always-ask list does not cover (D31, D38). It collects every other question and asks the owner once, in one message, then matches the owner's answers to the questions and sends the replies. It tells the owner in the session when a customer's window or the owner's own window is closed. It saves a rule the owner states with the owner's own words, and reports the counts of the pilot when asked.
+- **R-SETUP-31.** At the end of setup the skill asks the owner to send one message from their personal number to the business number, which opens the owner's window and starts the control chat (D37), and checks that the message arrived. Setup is not reported as finished until it has.
 
 ## Principles honored
 
