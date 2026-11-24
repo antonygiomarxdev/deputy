@@ -25,7 +25,7 @@ R-DRAFTS-15, R-DRAFTS-16, R-DRAFTS-17, R-DRAFTS-18, R-DRAFTS-22, R-DRAFTS-24.
 | FR-DRAFTS-04-9 | always | For an order entry, the log keeps a reference to the order and the owner's words while the order exists. The entry itself holds no customer name and no delivery address, but the owner's words may contain a name. (R-DRAFTS-15) |
 | FR-DRAFTS-04-10 | WHEN | When the owner deletes an order, its log entries stay with a "deleted" mark. The owner's words in them are replaced by "deleted" too, and no personal data about the order remains. The order's reference and the fact that it was approved remain. (R-DRAFTS-15) |
 | FR-DRAFTS-04-11 | always | Each automatic send shall be logged as automatic, with its draft and time. (R-DRAFTS-22) |
-| FR-DRAFTS-04-12 | always | Deputy shall count per day the automatic answers and the answers sent with an owner's go, and shall show the counts to the owner. (R-DRAFTS-24) |
+| FR-DRAFTS-04-12 | always | Deputy shall count per day the automatic answers, the answers sent with an owner's go and the owner's hand approvals, and shall show the counts to the owner. (R-DRAFTS-24) |
 
 Example:
 

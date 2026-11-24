@@ -12,17 +12,16 @@ Last change: 2026-11-24, go answers added to the count after the lead's decision
 One spec is one agent run: at most 80 lines, 3 files and one done command. A spec decides nothing new.
 
 ## Rows
-| FR-DRAFTS-04-12 | always | Deputy shall count per day the automatic answers and the answers sent with an owner's go, and shall show the counts to the owner. (R-DRAFTS-24) |
+| FR-DRAFTS-04-12 | always | Deputy shall count per day the automatic answers, the answers sent with an owner's go and the owner's hand approvals, and shall show the counts to the owner. (R-DRAFTS-24) |
 
 ## Files
 | Path | Create or change | Holds |
 |---|---|---|
 | src/drafts/domain/pilot-stats.ts | Create | `countsByDay`: the per-day counts over automatic answers, go answers and hand approvals |
-| src/drafts/adapters/sqlite/sqlite-pending-go-store.ts | Change | Adds `usedBetween`, the read of the used go rows (`usedAt`, `chatId`) that the counts need |
 | test/drafts/pilot-stats.test.ts | Create | The tests for FR-DRAFTS-04-12 |
 
 ## Reuses
-- Precedent: SPEC-10-2-pending-go-store.md, which holds the used go rows that this spec reads through `usedBetween`.
+- Precedent: SPEC-10-2-pending-go-store.md, whose `usedBetween` read this spec uses; this spec does not change the store.
 - Precedent: SPEC-04-drafts-log.md, which keeps the drafts log whose automatic entries this spec reads.
 
 ## Tests first
@@ -34,7 +33,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 ```ts
 export type DailyCounts = { day: string; autoAnswers: number; goAnswers: number; ownerApprovals: number };
 export function countsByDay(entries: { at: number; automatic: boolean; kind: "sent" | "approved" }[], usedGoes: { usedAt: number }[]): DailyCounts[];
-// store: async usedBetween(fromMs: number, toMs: number): Promise<{ chatId: string; usedAt: number }[]>
+// reads SPEC-10-2's usedBetween(fromMs, toMs): Promise<{ chatId: string; usedAt: number }[]>
 ```
 
 ## Done when
