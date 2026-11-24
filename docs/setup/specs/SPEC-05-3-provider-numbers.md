@@ -42,4 +42,4 @@ The request path comes from one constant, `NUMBERS_PATH`, settled by Q-1.
 - The tool the agent calls and the owner's pick: SPEC-05-4.
 
 ## Open questions
-Q-1 (Research): which provider endpoint lists the WhatsApp numbers of an account, and its answer shape; read the provider's API docs and record it as a D-n before approval.
+Q-1 (Research): which provider call lists the WhatsApp numbers of an account, and its answer shape; read the provider's API docs and record it as a D-n before approval.

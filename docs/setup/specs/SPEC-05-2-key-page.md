@@ -13,7 +13,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-SETUP-05-6 | WHILE | WHILE the key page is open, it shall accept only a request from this computer that carries its one-time token, and it shall close after one successful submit or when the session ends. |
+| FR-SETUP-05-6 | WHILE | WHILE the key page is open, it shall accept only a request from this computer that carries its one-time token, and it shall close after one successful submit or when the session ends (Proposed, extends D33; Q-1). |
 | FR-SETUP-05-7 | WHEN | WHEN the owner submits the key, Deputy shall store it in the secret store and tell the agent only that it is stored, never the value. |
 | FR-SETUP-05-8 | IF | IF the secret store is unavailable, THEN Deputy shall say so, use the owner-only file the secrets decision names (ADR-008), and tell the owner where the key is kept and why. |
 
@@ -50,4 +50,4 @@ The page binds to 127.0.0.1 on a free port. The URL carries a random token. A se
 - Checking that the provider accepts the key: SPEC-05-3.
 
 ## Open questions
-None.
+Q-1 (Owner: it extends D33): the page closes after one successful submit and a second page invalidates the earlier token. Proposed in FRD-05 (Q-1 there).
