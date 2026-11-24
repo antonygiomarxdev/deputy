@@ -42,4 +42,4 @@ export function goFor(answer: OwnerAnswer, openQuestions: ReadonlySet<string>): 
 The Intake control chat that carries the answer. Its interface belongs to Intake's docs and is not edited here.
 
 ## Open questions
-Q-1 (Lead): how an owner answer reaches Drafts through the Intake control chat, including the latest-open-question fallback. The interface is owned by the Intake docs task (#237). This spec waits for it.
+Q-1 (Lead): how the owner names a question id in WhatsApp. Intake answers how the answer reaches Drafts (Intake FRD-05 row FR-INTAKE-05-22, spec SPEC-05-7-link-replies.md): it publishes `OwnerAnswered` with the `questionId` after the commit, and resolves the latest-open-question fallback first, so Drafts never gets an empty `questionId`. Drafts still checks the question is open in `goFor`. The naming rule is Intake's open item, shared with the lead.
