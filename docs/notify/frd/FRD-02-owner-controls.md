@@ -2,8 +2,6 @@
 
 Status: Approved (2026-11-18)
 
-Deferred (REQ-15, 2026-11-24): the local pilot has no notices to control (D34). The document stays as written.
-
 ## Summary
 
 The owner decides how long Deputy batches, when it stays quiet, whether notices are on, and which chats to ignore. See [the slice PRD](../PRD.md).

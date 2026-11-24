@@ -2,8 +2,6 @@
 
 Status: Approved (2026-11-18)
 
-Deferred (REQ-15, 2026-11-24): the local pilot lists pending chats with Intake FRD-05 instead of this summary (REQ-15). The document stays as written.
-
 ## Summary
 
 The owner asks "what's pending?" and the agent shows every pending chat in exactly one group, oldest first, with who, how long, and a short excerpt. Deputy first catches up, and warns when the record may be incomplete. It works at any time, without push. See the [Inbox PRD](../PRD.md).

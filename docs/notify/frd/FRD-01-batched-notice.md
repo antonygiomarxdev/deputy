@@ -2,8 +2,6 @@
 
 Status: Approved (2026-11-18)
 
-Deferred (REQ-15, 2026-11-24): the local pilot wakes the session by channels and a slow loop, not by batched notices (D34). The document stays as written.
-
 ## Summary
 
 When customer messages arrive while an open session can receive push, Deputy sends one short notice made of counts only. It points the owner to the inbox. See [the slice PRD](../PRD.md).

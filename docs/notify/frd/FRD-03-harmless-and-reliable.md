@@ -2,8 +2,6 @@
 
 Status: Approved (2026-11-18)
 
-Deferred (REQ-15, 2026-11-24): the local pilot has no notices (D34). The document stays as written.
-
 ## Summary
 
 A notice never sends, approves or loses anything. Without push, or when a notice fails, the inbox still shows every message. See [the slice PRD](../PRD.md).
