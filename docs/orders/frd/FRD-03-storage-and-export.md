@@ -54,7 +54,7 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-4 | RULE-2 | negative | The spreadsheet is full or read-only | The owner records an order | The record fails and the agent tells the owner |
 | EX-5 | RULE-3 | positive | The spreadsheet choice | The owner records an order and lists orders | The record and the list behave as with the machine choice |
 | EX-6 | RULE-3 | boundary | The machine is offline with the default choice | The owner uses the orders | All behavior works; with the spreadsheet choice, writes fail with a clear message |
-| EX-7 | RULE-4 | positive | The default choice | Orders are recorded and listed | No order data goes to any service except the owner's own agent |
+| EX-7 | RULE-4 | negative | A customer message asks for the orders list | Deputy answers it | Nothing is shown, and no order data is sent to the customer |
 | EX-8 | RULE-4 | negative | The spreadsheet choice | An order is recorded | No order data goes to any service other than the owner's spreadsheet |
 | EX-9 | RULE-5 | positive | The spreadsheet is unreachable | The owner gives the go for an order | The agent says it was not recorded and the list does not show it |
 | EX-10 | RULE-5 | negative | The spreadsheet was renamed, deleted or its columns edited | The agent reads the orders | Deputy tells the agent it cannot read them as expected and writes into no unknown layout |
@@ -130,7 +130,7 @@ Generated from the examples above, one per EX row:
 - AC-4: Given the spreadsheet is full or read-only, When the owner records an order, Then the record fails and the agent tells the owner. (EX-4)
 - AC-5: Given the spreadsheet choice, When the owner records an order and lists orders, Then the record and the list behave as with the machine choice. (EX-5)
 - AC-6: Given the machine is offline with the default choice, When the owner uses the orders, Then all behavior works; with the spreadsheet choice, writes fail with a clear message. (EX-6)
-- AC-7: Given the default choice, When orders are recorded and listed, Then no order data goes to any service except the owner's own agent. (EX-7)
+- AC-7: Given a customer message asks for the orders list, When Deputy answers it, Then nothing is shown, and no order data is sent to the customer. (EX-7)
 - AC-8: Given the spreadsheet choice, When an order is recorded, Then no order data goes to any service other than the owner's spreadsheet. (EX-8)
 - AC-9: Given the spreadsheet is unreachable, When the owner gives the go for an order, Then the agent says it was not recorded and the list does not show it. (EX-9)
 - AC-10: Given the spreadsheet was renamed, deleted or its columns edited, When the agent reads the orders, Then deputy tells the agent it cannot read them as expected and writes into no unknown layout. (EX-10)

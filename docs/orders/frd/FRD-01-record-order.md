@@ -90,7 +90,7 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-7 | RULE-5 | positive | A complete order: customer, items with quantities, fulfillment, and an address for a delivery | The owner gives the go | The order is recorded |
 | EX-8 | RULE-5 | negative | A delivery order with no address | The agent prepares it | Nothing is recorded and the agent asks for the address |
 | EX-9 | RULE-6 | positive | A complete order | The owner gives the go | The order gets an identifier and a creation time, and the owner is told it is recorded, with the identifier |
-| EX-10 | RULE-6 | negative | A complete order with no go | The agent prepares it | Nothing is recorded and no identifier is set |
+| EX-10 | RULE-6 | negative | A complete order with no go | The agent prepares it | Nothing is recorded, because RULE-6 records only on the owner's go |
 | EX-11 | RULE-7 | positive | The owner approved the same order draft twice | The owner lists orders | One order appears |
 | EX-12 | RULE-7 | boundary | A chat has two open orders, each a separate order draft | The owner gives a go that names one of them | Only that order is recorded |
 | EX-13 | RULE-8 | positive | The owner's spreadsheet is unreachable | The owner gives the go | The agent says the order was not recorded and the list does not show it |
@@ -112,7 +112,7 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-29 | RULE-19 | negative | The order was deleted | Inbox asks about m1 | The answer is no |
 | EX-30 | RULE-1 | negative | A pickup order | The draft is prepared | The draft holds no delivery address |
 | EX-31 | RULE-1 | boundary | An item whose price is not known | The draft is prepared | The total is not held as a number; the other fields are held |
-| EX-32 | RULE-2 | negative | An item with neither a catalog reference nor a "not in catalog" mark | The order is shown to the owner | The item is not complete, and the agent looks the item up in the catalog |
+| EX-32 | RULE-2 | negative | An item with neither a catalog reference nor a "not in catalog" mark | The order is shown to the owner | The item has neither mark, which RULE-2 requires each item to have; the agent looks items up in the catalog, as RULE-2 says |
 | EX-33 | RULE-3 | negative | The customer asked for an item not in the catalog, and the owner has not decided | The order is recorded | The item is not recorded |
 | EX-34 | RULE-10 | negative | An order was recorded after the owner's go | The customer's chat is checked | No message from Deputy to the customer exists for the recording |
 | EX-35 | RULE-12 | positive | The owner saw the order and gave the go | Nothing in the order changed | The go is valid and the order is recorded |
@@ -165,7 +165,7 @@ n/a: docs/CROSS-CUTTING.md has no filled row; the cross-cutting rules live in do
 
 - Q-1 (Owner: only the owner decides the v1 scope): later, not in v1: an owner setting to require the date wanted. Owner decision D26: by default it is optional.
 - Q-2 (Owner: only the owner knows the wanted behaviour): should the owner be able to open a recorded order from the chat it came from?
-- Q-3 (Lead): the order draft approval interface is agreed with the Drafts FRDs (FR-DRAFTS-02-9). Confirm the wording with frd-b.
+- Q-3 (Lead): the order draft approval interface is agreed with the Drafts FRDs (FR-DRAFTS-02-9). Confirm the wording with the owner's review of the Drafts FRD-02 (docs/drafts/frd/FRD-02-owners-go.md).
 
 ## Acceptance criteria
 
@@ -180,7 +180,7 @@ Generated from the examples above, one per EX row:
 - AC-7: Given a complete order: customer, items with quantities, fulfillment, and an address for a delivery, When the owner gives the go, Then the order is recorded. (EX-7)
 - AC-8: Given a delivery order with no address, When the agent prepares it, Then nothing is recorded and the agent asks for the address. (EX-8)
 - AC-9: Given a complete order, When the owner gives the go, Then the order gets an identifier and a creation time, and the owner is told it is recorded, with the identifier. (EX-9)
-- AC-10: Given a complete order with no go, When the agent prepares it, Then nothing is recorded and no identifier is set. (EX-10)
+- AC-10: Given a complete order with no go, When the agent prepares it, Then nothing is recorded, because RULE-6 records only on the owner's go. (EX-10)
 - AC-11: Given the owner approved the same order draft twice, When the owner lists orders, Then one order appears. (EX-11)
 - AC-12: Given a chat has two open orders, each a separate order draft, When the owner gives a go that names one of them, Then only that order is recorded. (EX-12)
 - AC-13: Given the owner's spreadsheet is unreachable, When the owner gives the go, Then the agent says the order was not recorded and the list does not show it. (EX-13)
@@ -202,7 +202,7 @@ Generated from the examples above, one per EX row:
 - AC-29: Given the order was deleted, When inbox asks about m1, Then the answer is no. (EX-29)
 - AC-30: Given a pickup order, When the draft is prepared, Then the draft holds no delivery address. (EX-30)
 - AC-31: Given an item whose price is not known, When the draft is prepared, Then the total is not held as a number; the other fields are held. (EX-31)
-- AC-32: Given an item with neither a catalog reference nor a "not in catalog" mark, When the order is shown to the owner, Then the item is not complete, and the agent looks the item up in the catalog. (EX-32)
+- AC-32: Given an item with neither a catalog reference nor a "not in catalog" mark, When the order is shown to the owner, Then the item has neither mark, which RULE-2 requires each item to have; the agent looks items up in the catalog, as RULE-2 says. (EX-32)
 - AC-33: Given the customer asked for an item not in the catalog, and the owner has not decided, When the order is recorded, Then the item is not recorded. (EX-33)
 - AC-34: Given an order was recorded after the owner's go, When the customer's chat is checked, Then no message from Deputy to the customer exists for the recording. (EX-34)
 - AC-35: Given the owner saw the order and gave the go, When nothing in the order changed, Then the go is valid and the order is recorded. (EX-35)

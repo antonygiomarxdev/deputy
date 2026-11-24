@@ -90,7 +90,7 @@ n/a: no rule combines more than two conditions, so no decision table is needed.
 
 ## States
 
-n/a: the statuses (new, confirmed, ready, delivered, cancelled) are listed in FR-ORDERS-02-3; the existing text gives no transition table.
+n/a: the statuses (new, confirmed, ready, delivered, cancelled) are listed in FR-ORDERS-02-3; every transition is allowed by default (owner decision D26), so no transition table is needed.
 
 ## Invariants
 
