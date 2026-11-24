@@ -38,7 +38,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 `bun test test/drafts/check-approvals-automatic.test.ts`
 
 ## Out of scope
-The approval method (SPEC-09-4), the basis column (SPEC-09-6b), and the approval reads (SPEC-09-5b-1, 09-5b-2).
+The approval method (SPEC-09-4), the basis column (SPEC-09-6b), and the approval reads (SPEC-09-5b, 09-5b-2).
 
 ## Open questions
 None.

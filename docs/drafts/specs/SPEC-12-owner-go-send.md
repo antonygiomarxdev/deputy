@@ -24,6 +24,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 - Precedent: SPEC-09-4-draft-without-words.md, the `approveWithoutWords` method this spec calls for the owner_go basis.
 - Precedent: SPEC-06-first-send-window.md, the window check this spec calls first.
 - Precedent: SPEC-03-safe-send.md, whose `driveSend` runs the send and its recovery unchanged.
+- Dependency: SPEC-10-3-pending-goes-in-transaction.md, which puts `pendingGoes` in the transaction this spec runs in.
 
 ## Tests first
 - FR-DRAFTS-02-14 (7): given a taken go for chat "c1" and an open window, the draft is approved with basis `owner_go`, sent through driveSend, and `pending_goes.send_id` equals the approval's send id.

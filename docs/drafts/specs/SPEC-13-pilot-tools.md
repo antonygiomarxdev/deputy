@@ -31,6 +31,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 - FR-DRAFTS-02-13 (5): given an always-ask class, `send_answer` does not send and answers with reason `always_ask`.
 - FR-DRAFTS-02-13 (21): given the Knowledge always-ask list containing "Delivery price" and a session answerClass "delivery price", `send_answer` does not send: the list comes from Knowledge, not the session.
 - FR-DRAFTS-02-14 (10): `send_owner_go` sends with a taken go, and refuses with no go for the chat.
+- FR-DRAFTS-02-14 (22): given a closed customer window, `send_owner_go` sends nothing, and the result tells the owner (`window_closed`); the go stays stored.
 - The MCP tool list includes `send_answer`, `send_owner_go` and `pilot_stats`.
 
 ## Build

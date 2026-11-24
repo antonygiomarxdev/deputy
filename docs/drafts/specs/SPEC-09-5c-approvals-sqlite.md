@@ -1,11 +1,11 @@
-# SPEC-09-5b-2: the SQLite approval repository reads and writes the basis
+# SPEC-09-5c: the SQLite approval repository reads and writes the basis
 
 Status: Draft
 Rests on: ../frd/FRD-02-owners-go.md
 
 ## Summary
 
-The SQLite approval repository reads, writes and lists `basis` and `approvalsBetween` through the port of SPEC-09-5b-1, and runs the same contract (depends on SPEC-09-5b-1).
+The SQLite approval repository reads, writes and lists `basis` and `approvalsBetween` through the port of SPEC-09-5b, and runs the same contract (depends on SPEC-09-5b).
 
 Last change: 2026-11-24, after the review of 7a56758: the approved entry carries the basis; CheckApprovals runs on the real use case; the approval port gains approvalsBetween. Split so each run has at most 3 files.
 
@@ -20,7 +20,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 | src/drafts/adapters/sqlite/sqlite-approval-repository.ts | Change | Reads and writes `basis`; implements `approvalsBetween` |
 
 ## Reuses
-- Precedent: SPEC-09-5b-1-approvals-port.md, the port and contract this adapter implements.
+- Precedent: SPEC-09-5b-approvals-port.md, the port and contract this adapter implements.
 
 ## Tests first
 - FR-DRAFTS-02-14 (15): the SQLite repository passes case (15) of the contract.
@@ -36,7 +36,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 `bun test test/drafts/contract/approval-repository.sqlite.test.ts`
 
 ## Out of scope
-The port and the in-memory store (SPEC-09-5b-1).
+The port and the in-memory store (SPEC-09-5b).
 
 ## Open questions
 None.

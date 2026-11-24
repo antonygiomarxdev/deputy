@@ -1,11 +1,11 @@
-# SPEC-09-5b-1: the approval port reads the basis and lists approvals by time
+# SPEC-09-5b: the approval port reads the basis and lists approvals by time
 
 Status: Draft
 Rests on: ../frd/FRD-02-owners-go.md
 
 ## Summary
 
-The `ApprovalRepository` port and the in-memory approvals read and write `basis`, and add `approvalsBetween` for SPEC-08's hand-approval count (depends on SPEC-09-5a). The SQLite store is SPEC-09-5b-2.
+The `ApprovalRepository` port and the in-memory approvals read and write `basis`, and add `approvalsBetween` for SPEC-08's hand-approval count (depends on SPEC-09-5a). The SQLite store is SPEC-09-5c.
 
 Last change: 2026-11-24, after the review of 7a56758: the approved entry carries the basis; CheckApprovals runs on the real use case; the approval port gains approvalsBetween. Split so each run has at most 3 files.
 
@@ -40,7 +40,7 @@ approvalsBetween(fromMs: number, toMs: number): Promise<{ approvedAt: number; ba
 `bun test test/drafts/contract`
 
 ## Out of scope
-The SQLite repository (SPEC-09-5b-2), the column (SPEC-09-5a), and the count that reads it (SPEC-08).
+The SQLite repository (SPEC-09-5c), the column (SPEC-09-5a), and the count that reads it (SPEC-08).
 
 ## Open questions
 None.

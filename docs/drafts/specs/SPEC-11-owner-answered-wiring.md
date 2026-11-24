@@ -5,7 +5,7 @@ Rests on: ../frd/FRD-02-owners-go.md
 
 ## Summary
 
-Drafts subscribes to Intake's OwnerAnswered signal and calls `recordGo` for each answer (live). On start it also reconciles: it reads Intake's answered questions and records the ones missing from `pending_goes`, idempotent by question id, because the signal is in-process and an answer given while Drafts was stopped would otherwise be lost (R-DRAFTS-23).
+Drafts subscribes to Intake's OwnerAnswered signal and calls `recordGo` for each answer (live). On start it also reconciles: it reads Intake's answered questions and records the ones missing from `pending_goes`, idempotent by question id, because the signal is in-process and an answer given while Drafts was stopped would otherwise be lost (R-DRAFTS-23). The composition root (src/main/drafts.ts) also builds the Knowledge always-ask adapter (SPEC-14) and passes it to the send_answer tool (SPEC-13).
 
 Last change: 2026-11-24, after the review of 7a56758: the go is one unit of work with its approval; closed window tells the owner; the always-ask list comes from Knowledge; reconcile on start; the basis is in the log read; pilotStatsTool is in the application layer.
 
