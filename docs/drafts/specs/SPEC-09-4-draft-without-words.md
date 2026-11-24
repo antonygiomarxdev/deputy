@@ -44,7 +44,7 @@ approveWithoutWords(input: { basis: PilotBasis; words: string; shownText: string
 `bun test test/drafts/draft-without-words.test.ts`
 
 ## Out of scope
-The migration and repository (SPEC-09-5a, 09-5b-1 and 09-5b-2), the send itself (driveSend, unchanged), the CheckApprovals report (SPEC-09-6c), the decision (SPEC-05), the go store (SPEC-10-2), and the tools (SPEC-13).
+The migration and repository (SPEC-09-5a, 09-5b-1 and 09-5b-2), the send itself (driveSend, unchanged), the CheckApprovals report (SPEC-09-6c-1), the decision (SPEC-05), the go store (SPEC-10-2), and the tools (SPEC-13).
 
 ## Open questions
 None.

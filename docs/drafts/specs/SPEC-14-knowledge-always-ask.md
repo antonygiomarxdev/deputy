@@ -17,6 +17,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 ## Files
 | Path | Create or change | Holds |
 |---|---|---|
+| test/drafts/adapters/knowledge-always-ask.test.ts | Create | The tests below |
 | src/drafts/adapters/knowledge/knowledge-always-ask.ts | Create | `KnowledgeAlwaysAsk`: implements `AlwaysAskSource` over Knowledge's `readAlwaysAsk`, normalizing each name |
 
 ## Reuses

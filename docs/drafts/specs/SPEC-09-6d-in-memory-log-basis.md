@@ -5,7 +5,7 @@ Rests on: ../frd/FRD-04-drafts-log.md
 
 ## Summary
 
-The in-memory drafts log keeps `basis` on approved entries, the same as the SQLite log of SPEC-09-6b, so the contract holds for both (FR-DRAFTS-04-5). Depends on SPEC-09-6a (the field) and runs with the contract the SQLite log uses.
+The in-memory drafts log keeps `basis` on approved entries, the same as the SQLite log of SPEC-09-6b-1, so the contract holds for both (FR-DRAFTS-04-5). Depends on SPEC-09-6a-2 (the field) and runs with the contract the SQLite log uses.
 
 Last change: 2026-11-24, split from SPEC-09-6 so each run has at most 3 non-test files.
 
@@ -18,9 +18,10 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 | Path | Create or change | Holds |
 |---|---|---|
 | src/drafts/adapters/memory/in-memory-draft-log.ts | Change | Appends and reads `basis` on approved entries, default `owner_words` |
+| test/drafts/contract/draft-log-repository.contract.ts | Change | Adds the basis cases below to the contract |
 
 ## Reuses
-- Precedent: SPEC-09-6b-log-basis-column.md, the same field in the SQLite log.
+- Precedent: SPEC-09-6b-1-basis-migration.md, the same field in the SQLite log.
 
 ## Tests first
 - FR-DRAFTS-04-5 (15): an approved entry appended to the in-memory log with `basis: "owner_go"` reads back with that basis.
@@ -35,7 +36,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 `bun test test/drafts/contract`
 
 ## Out of scope
-The event and entry field (SPEC-09-6a), the SQLite column and trigger (SPEC-09-6b), and the CheckApprovals reads (SPEC-09-6c).
+The event and entry field (SPEC-09-6a-2), the SQLite column and trigger (SPEC-09-6b-1), and the CheckApprovals reads (SPEC-09-6c-1).
 
 ## Open questions
 None.

@@ -23,7 +23,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Reuses
 - Precedent: SPEC-03-safe-send.md, which subscribes to `SendNeedsOwner` in composition the same way.
-- Dependency: Intake PR 212 exports `listAnsweredQuestions()` over `owner_questions` (answered rows, FR-INTAKE-05-9).
+- Dependency: Intake PR 212 exports `listAnsweredQuestions()` over `owner_questions` (answered rows, FR-INTAKE-05-9), returning `{ questionId, chatId, text, at }` with `chatId` a ChatId and `at` an Instant, Intake's types. Merge order: PR 209 and PR 212 before PR 202.
 
 ## Tests first
 - FR-DRAFTS-02-14 (5): given an OwnerAnswered signal, `recordGo` is called once with its questionId, chatId, text and at.
