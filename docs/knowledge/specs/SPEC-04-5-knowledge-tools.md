@@ -52,7 +52,7 @@ A refusal is `isError: true` with the code as the text. `src/knowledge/index.ts`
 `bun test test/knowledge`
 
 ## Out of scope
-Building the objects and adding the tools to the server (SPEC-04-6).
+Building the objects, registering the tools and the start order (SPEC-04-6 and SPEC-04-9).
 
 ## Open questions
 None.

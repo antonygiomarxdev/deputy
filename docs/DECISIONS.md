@@ -14,6 +14,7 @@ Product decisions made by the owner, and design decisions the lead made while re
 | D36 | 2026-11-24 | **Daily use (REQ-15).** The owner opens the session by hand; nothing starts Claude automatically (no `claude -p`, cron job or server). The guide tells the owner to message the business number at least once a day. Keep-awake asks for the lid open and the computer plugged in, and Deputy keeps the computer awake while the session is open. | docs/setup/PRD.md (pending) |
 | D37 | 2026-11-24 | **Control chat (REQ-15).** The chat from the owner's personal number to the business number is a control chat: messages there are answers or instructions for the session, never customer messages, and they never hold sends. Owner replies to customers from the Business app keep holding as in D30. | docs/intake/frd/FRD-04-owner-echoes.md (pending) |
 | D38 | 2026-11-24 | **Always-ask classes (REQ-15).** Set per business during setup: the setup skill interviews the owner to understand the business and agrees what must always be asked, for example a delivery price that depends on the address. | docs/setup/PRD.md (pending) |
+| D39 | 2026-11-24 | **Long knowledge (FRD-04).** The notice that the knowledge has grown too long appears when the memory and the catalog together are longer than 12000 characters. The session then tells the owner and proposes a summary that the owner approves, and nothing is deleted on its own. | docs/knowledge/frd/FRD-04-pilot-knowledge-files.md (pending) |
 
 ## Lead decisions (design, from the reviews)
 
