@@ -13,9 +13,9 @@ Last change: 2026-11-24, first draft from the owner's words
 The owner, 2026-11-24, in a Claude Code session.
 
 ## What they said
-> necesito direccion a nivel de marca como tal, siento que nos falta y luego de eso, agregarlo a product hunt
+The owner asks for brand direction, which is missing, and then to list Deputy on Product Hunt.
 
-> siento que deberiamos ser mas marketeros, es decir, que se sienta como un producto top
+The owner asks for more marketing sense, so that Deputy feels like a top product.
 
 ## The problem behind it
 The name clashes with deputy.com (workforce software) and with the npm package deputy-mcp, an MCP product in the same space. No logo, palette or voice exists.

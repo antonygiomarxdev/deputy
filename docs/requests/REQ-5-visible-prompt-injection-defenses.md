@@ -13,7 +13,7 @@ Last change: 2026-11-24, first draft from the owner's words
 The owner, 2026-11-24, in a Claude Code session.
 
 ## What they said
-> Y de hecho tenemos que tener ahí bien claro el tema de prompt injection
+The owner asks that prompt injection is stated clearly.
 
 ## The problem behind it
 A customer can write instructions inside a message. If tool output does not mark that text as data, the agent may follow it.

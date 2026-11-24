@@ -13,7 +13,7 @@ Last change: 2026-11-24, first draft from the owner's words
 The owner, 2026-11-24, in a Claude Code session.
 
 ## What they said
-> tenemos que agregar la parte de automatizaciones a futuro, agregar la parte de campaña y de que puedas hacer análisis con inteligencia artificial de lo que piden tus clientes, tu negocio, hacer proyecciones
+The owner asks to add, later, automations, campaigns, and AI analysis of what customers ask and of the business, including projections.
 
 ## The problem behind it
 Campaigns conflict with "Not in v1" (templates) and principle 7. Autopilot is also "Not in v1".
