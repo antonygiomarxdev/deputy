@@ -34,10 +34,10 @@ Chosen: Option A. ADR: none: a table for one list of rows, as TD-3 of the cross-
 
 ### TD-3: How does a reply link to a question?
 
-- **Option A** If the message names an open question's number, that question; otherwise the latest open question of that owner number; otherwise none (an instruction).
+- **Option A** If the message names an open question's id, that question; otherwise the latest open question of that owner number; otherwise none (an instruction).
 - **Option B** Only the latest open question, never by number. Risk: two questions open at once get mixed.
 
-Chosen: Option A (FR-INTAKE-05-9 and FR-INTAKE-05-10). How a reply names a number is the first open question of FRD-05. ADR: none: a rule of the use case.
+Chosen: Option A (FR-INTAKE-05-9 and FR-INTAKE-05-10). How a reply names an id is the first open question of FRD-05. Once linked, Intake hands Drafts `{ questionId, text }` (FR-INTAKE-05-22); Intake resolves the latest-open fallback first. ADR: none: a rule of the use case.
 
 ### TD-4: How is a window known?
 
@@ -89,11 +89,12 @@ sequenceDiagram
     I-->>S: window closed
   else window open
     I->>P: send text from the business number
-    I->>I: record question with its number
-    I-->>S: question number
+    I->>I: record question with its id
+    I-->>S: question id
     O->>P: reply on WhatsApp
     I->>P: next poll reads the reply
     I->>I: link to the named or latest open question
+    I->>I: hand Drafts the question id and the text
   end
   S->>I: read the control chat and the open questions
   I-->>S: messages with the question each answers
@@ -103,12 +104,14 @@ sequenceDiagram
 
 Inbound tools (the intake tools file registers them; each calls one use case):
 
-- `ask_owner { number, text }` returns `{ question }` or `{ refused: "window_closed" | "not_an_owner_number" | "not_owner" }` or the send failure of `SendTextResult`. Lease required.
+- `ask_owner { number, text }` returns `{ questionId }` or `{ refused: "window_closed" | "not_an_owner_number" | "not_owner" }` or the send failure of `SendTextResult`. Lease required.
 - `list_pending {}` returns `[{ chat, lastCustomerAt, windowClosesAt }]`, newest first. A read, no lease.
-- `get_chat` gains `windowClosesAt` for a customer chat and `question` on each message of the control chat. A read.
+- `get_chat` gains `windowClosesAt` for a customer chat and `answers` (a question id or none) on each message of the control chat and `openQuestions`. A read.
 - `set_owner_numbers { number, ownerWords, confirm? }` returns the described number, or `{ added }` with `confirm`. Lease required.
 
-Outbound port added: `OwnerQuestionRepository` (`add`, `listOpen`, `link`), SQLite and in-memory adapters, a migration `0008-owner-questions.sql` appended to the list in `src/main/database.ts`.
+A shared signal `OwnerAnswered { questionId: string; text: string; at }` (in `src/shared/signals.ts`, published after the commit like `OwnerReplyUnlinked`) is the hand-off to Drafts, whose `OwnerAnswer` has the same fields.
+
+Outbound port added: `OwnerQuestionRepository` (`add`, `listOpen`, `latestOpen`, `link`), SQLite and in-memory adapters, a migration `0008-owner-questions.sql` appended to the list in `src/main/database.ts`.
 
 ## Information
 
@@ -116,7 +119,7 @@ One new table, created by a numbered migration (`0008-owner-questions.sql`):
 
 | Column | Meaning |
 |---|---|
-| `number` | The question number the session and the owner see; whole number, one sequence. |
+| `number` | A whole number in one sequence; its decimal text is the question id the session, the owner and Drafts see. |
 | `owner_chat` | The chat id of the owner number the question went to. |
 | `text` | The question text as sent (the session's words). |
 | `asked_at` | The time the question was sent. |

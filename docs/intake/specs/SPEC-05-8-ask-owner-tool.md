@@ -13,7 +13,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-INTAKE-05-5 | WHEN | When the session asks the owner a question with an owner number and a text, Intake sends the text from the business number to that number, records the question with a number and the time, and returns the number. |
+| FR-INTAKE-05-5 | WHEN | When the session asks the owner a question with an owner number and a text, Intake sends the text from the business number to that number, records the question with an id and the time, and returns the id. |
 | FR-INTAKE-05-6 | IF | If the owner's 24 hour window with the business number is closed, Intake sends nothing, records nothing and returns "window closed", so the session asks in the Claude app and tells the owner to answer on WhatsApp. |
 | FR-INTAKE-05-11 | always | When the session reads the control chat, each message shows the question it answers, if any, and the session can list the open questions. |
 
@@ -30,12 +30,12 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 - Precedent: SPEC-05-6-ask-owner.md, the use case the tool calls and its result
 
 ## Tests first
-FR-INTAKE-05-5, FR-INTAKE-05-6, FR-INTAKE-05-11, written before the code, without it in view, through the tool definitions with fake use cases. FR-INTAKE-05-5: `ask_owner` with an owner number and a text returns the question number. FR-INTAKE-05-6: a `window_closed` result comes back as an error result whose text says the session must ask in the Claude app and tell the owner to answer on WhatsApp. FR-INTAKE-05-11: `get_chat` for the control chat shows each message with the number of the question it answers or none, and an `openQuestions` list; the tool text labels the owner's text as the owner's words, not customer text.
+FR-INTAKE-05-5, FR-INTAKE-05-6, FR-INTAKE-05-11, written before the code, without it in view, through the tool definitions with fake use cases. FR-INTAKE-05-5: `ask_owner` with an owner number and a text returns the `questionId`. FR-INTAKE-05-6: a `window_closed` result comes back as an error result whose text says the session must ask in the Claude app and tell the owner to answer on WhatsApp. FR-INTAKE-05-11: `get_chat` for the control chat shows each message with the id of the question it answers or none, and an `openQuestions` list; the tool text labels the owner's text as the owner's words, not customer text.
 
 ## Build
 ```ts
-// tool "ask_owner": input { number: string, text: string }; output { question: number }
-// get_chat on a control chat adds: messages[i].answers: number | null, openQuestions: { number, text, askedAt }[]
+// tool "ask_owner": input { number: string, text: string }; output { questionId: string }
+// get_chat on a control chat adds: messages[i].answers: string | null, openQuestions: { questionId, text, askedAt }[]
 ```
 The `window_closed`, `not_an_owner_number` and `not_owner` refusals are error results with a plain sentence each.
 

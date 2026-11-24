@@ -25,11 +25,11 @@ R-INTAKE-12, R-INTAKE-13, R-INTAKE-14, R-INTAKE-18
 | FR-INTAKE-05-2 | always | A message in the control chat is an answer or an instruction for the session. It is never a customer message and never makes any chat pending. |
 | FR-INTAKE-05-3 | always | A message in the control chat never holds a send. Only an owner reply to a customer that Deputy cannot tie to a chat holds sends (D30). |
 | FR-INTAKE-05-4 | WHEN | When the owner answers a customer from the WhatsApp Business app, the reply keeps its source "owner from the app", stays in the customer's chat and keeps holding sends as FR-INTAKE-04-11 and D30 say. |
-| FR-INTAKE-05-5 | WHEN | When the session asks the owner a question with an owner number and a text, Intake sends the text from the business number to that number, records the question with a number and the time, and returns the number. |
+| FR-INTAKE-05-5 | WHEN | When the session asks the owner a question with an owner number and a text, Intake sends the text from the business number to that number, records the question with an id and the time, and returns the id. |
 | FR-INTAKE-05-6 | IF | If the owner's 24 hour window with the business number is closed, Intake sends nothing, records nothing and returns "window closed", so the session asks in the Claude app and tells the owner to answer on WhatsApp. |
 | FR-INTAKE-05-7 | always | The owner's window with the business number is open for 24 hours after the latest message that owner number sent to the business number. |
 | FR-INTAKE-05-8 | IF | If the number is not an owner number, Intake sends nothing, records nothing and refuses. |
-| FR-INTAKE-05-9 | WHEN | When a message arrives in the control chat and names the number of an open question, Intake links the message to that question and closes it. |
+| FR-INTAKE-05-9 | WHEN | When a message arrives in the control chat and names the id of an open question, Intake links the message to that question and closes it. |
 | FR-INTAKE-05-10 | IF | If a message in the control chat names no question, Intake links it to the latest open question for that owner number; with none open, it is an instruction and links to nothing. |
 | FR-INTAKE-05-11 | always | When the session reads the control chat, each message shows the question it answers, if any, and the session can list the open questions. |
 | FR-INTAKE-05-12 | always | Each customer chat shows when its customer 24 hour window closes: 24 hours after the customer's latest message. |
@@ -42,6 +42,7 @@ R-INTAKE-12, R-INTAKE-13, R-INTAKE-14, R-INTAKE-18
 | FR-INTAKE-05-19 | IF | If the number cannot be parsed or needs a country code, Intake refuses with the reason and writes nothing. |
 | FR-INTAKE-05-20 | IF | If this process does not hold the lease, Intake refuses and writes nothing. |
 | FR-INTAKE-05-21 | always | set_owner_numbers adds numbers only. It never removes a number and never changes the business number. |
+| FR-INTAKE-05-22 | WHEN | When a control message is linked to a question, Intake hands Drafts the question id and the message text. Intake resolves the latest open question itself first, so Drafts never receives a reply that has no question id. |
 
 ## Edge cases
 
@@ -52,6 +53,6 @@ R-INTAKE-12, R-INTAKE-13, R-INTAKE-14, R-INTAKE-18
 
 ## Open questions
 
-- Q-1 (Lead): how a reply names a question. The rows say "names the number of an open question" and no document says how the owner does it: typing the number at the start of the reply, or quoting the question in WhatsApp. Recommendation: the question text starts with its number, and the owner either types it or just answers (latest open).
+- Q-1 (Lead): how a reply names a question. The rows say "names the id of an open question" and no document says how the owner does it: typing the id at the start of the reply, or quoting the question in WhatsApp. Recommendation: the id is the question's number as text and the question text starts with it, and the owner either types it or just answers (latest open).
 - Q-2 (Lead): the business number when the provider offers none (FR-INTAKE-05-16). FR-INTAKE-05-21 stops set_owner_numbers from setting it, and the pilot has no command line. Which tool or step lets the owner give it?
 - Q-3 (Lead): removing an owner number in the pilot. FR-INTAKE-05-21 gives only adding, and the removal command of TD-8 needs a terminal.

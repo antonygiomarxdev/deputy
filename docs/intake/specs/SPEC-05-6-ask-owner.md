@@ -13,7 +13,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-INTAKE-05-5 | WHEN | When the session asks the owner a question with an owner number and a text, Intake sends the text from the business number to that number, records the question with a number and the time, and returns the number. |
+| FR-INTAKE-05-5 | WHEN | When the session asks the owner a question with an owner number and a text, Intake sends the text from the business number to that number, records the question with an id and the time, and returns the id. |
 | FR-INTAKE-05-6 | IF | If the owner's 24 hour window with the business number is closed, Intake sends nothing, records nothing and returns "window closed", so the session asks in the Claude app and tells the owner to answer on WhatsApp. |
 | FR-INTAKE-05-7 | always | The owner's window with the business number is open for 24 hours after the latest message that owner number sent to the business number. |
 | FR-INTAKE-05-8 | IF | If the number is not an owner number, Intake sends nothing, records nothing and refuses. |
@@ -33,12 +33,12 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 - Precedent: SPEC-05-5-owner-question-repository.md, the repository `AskOwner` records the question with
 
 ## Tests first
-FR-INTAKE-05-5, FR-INTAKE-05-6, FR-INTAKE-05-7, FR-INTAKE-05-8, written before the code, without it in view, with a fake provider, a fake clock and in-memory repositories. FR-INTAKE-05-5: with the window open, the text goes out from the business number to that number once, a question is recorded with the send id and the time, and its number is returned. FR-INTAKE-05-6: with the window closed, nothing is sent, nothing is recorded and the result is `window_closed`. FR-INTAKE-05-7: the window is open at 23 hours 59 minutes after the owner's latest message to the business number, closed at 24 hours, and a new message from the owner reopens it. FR-INTAKE-05-8: a number that is not an owner number gets `not_an_owner_number` with nothing sent; a process without the lease gets `not_owner`; a failed send records no question.
+FR-INTAKE-05-5, FR-INTAKE-05-6, FR-INTAKE-05-7, FR-INTAKE-05-8, written before the code, without it in view, with a fake provider, a fake clock and in-memory repositories. FR-INTAKE-05-5: with the window open, the text goes out from the business number to that number once, a question is recorded with the send id and the time, and its id is returned. FR-INTAKE-05-6: with the window closed, nothing is sent, nothing is recorded and the result is `window_closed`. FR-INTAKE-05-7: the window is open at 23 hours 59 minutes after the owner's latest message to the business number, closed at 24 hours, and a new message from the owner reopens it. FR-INTAKE-05-8: a number that is not an owner number gets `not_an_owner_number` with nothing sent; a process without the lease gets `not_owner`; a failed send records no question.
 
 ## Build
 ```ts
 export type AskOwnerResult =
-  | { kind: "asked"; question: number }
+  | { kind: "asked"; questionId: string }
   | { kind: "refused"; reason: "window_closed" | "not_an_owner_number" | "not_owner" }
   | { kind: "failed"; reason: Extract<SendTextResult, { kind: "failed" }>["reason"] };
 export interface AskOwner { execute(q: { number: PhoneNumber; text: string }): Promise<AskOwnerResult> }

@@ -13,7 +13,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-INTAKE-05-5 | WHEN | When the session asks the owner a question with an owner number and a text, Intake sends the text from the business number to that number, records the question with a number and the time, and returns the number. |
+| FR-INTAKE-05-5 | WHEN | When the session asks the owner a question with an owner number and a text, Intake sends the text from the business number to that number, records the question with an id and the time, and returns the id. |
 | FR-INTAKE-05-11 | always | When the session reads the control chat, each message shows the question it answers, if any, and the session can list the open questions. |
 
 ## Files
@@ -29,7 +29,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 - `src/intake/adapters/sqlite/migrations/0007-catchup-finished-at.sql` `ALTER`: the last migration of the slice, the pattern to follow
 
 ## Tests first
-FR-INTAKE-05-5, FR-INTAKE-05-11, written before the code, without it in view, on a fresh database from `openDatabase`. FR-INTAKE-05-5: the table `owner_questions` exists with `number` (an integer primary key that counts up), `owner_chat`, `text`, `asked_at`, `send_id`, `linked_message`, `closed_at`; a row keeps the number and the time it was written with. FR-INTAKE-05-11: a query for open questions (`closed_at` empty) returns the rows not yet linked. A database made before the migration upgrades with its data kept.
+FR-INTAKE-05-5, FR-INTAKE-05-11, written before the code, without it in view, on a fresh database from `openDatabase`. FR-INTAKE-05-5: the table `owner_questions` exists with `number` (an integer primary key that counts up), `owner_chat`, `text`, `asked_at`, `send_id`, `linked_message`, `closed_at`; a row keeps the number (whose decimal text is the question id) and the time it was written with. FR-INTAKE-05-11: a query for open questions (`closed_at` empty) returns the rows not yet linked. A database made before the migration upgrades with its data kept.
 
 ## Build
 ```sql
