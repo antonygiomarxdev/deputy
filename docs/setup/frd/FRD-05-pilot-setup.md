@@ -6,7 +6,7 @@ Status: Draft
 
 For the local pilot the owner sets Deputy up by asking the agent, with no command-line commands: the agent installs it from a link, the owner pastes the provider key on a one-time local page, and a skill interviews the owner about the business. Deputy keeps the computer awake while the session is open. The key never passes through the conversation. FRD-01 to FRD-04 are deferred for the pilot, not removed.
 
-Last change: 2026-11-24, a closed owner window records the question; L11 and L12 close the two research questions
+Last change: 2026-11-24, rows 22 to 36 marked as proposed lead decisions; the owner reopens the session from the shortcut; the first message gates Ready
 
 One feature of the [slice PRD](../PRD.md). Deferred for the pilot: [FRD-01](FRD-01-guided-flow.md) to [FRD-04](FRD-04-profile-test-finish.md).
 
@@ -43,22 +43,21 @@ R-SETUP-22, R-SETUP-23, R-SETUP-24, R-SETUP-25, R-SETUP-26, R-SETUP-27, R-SETUP-
 | FR-SETUP-05-19 | WHEN | WHEN the owner types the skill's command, the skill shall load the setup and daily-use instructions without any permission prompt. |
 | FR-SETUP-05-20 | always | The skill shall never ask the owner for a permission in the terminal during the daily loop (D35); when it needs the owner's decision it shall ask by message first and wait. |
 | FR-SETUP-05-21 | always | The skill shall answer in the owner's language (D20); Spanish and English are the pilot's two languages. |
-| FR-SETUP-05-22 | WHEN | WHEN a round of the daily loop starts, the skill shall check for new messages, list the pending chats and read the knowledge before it answers any chat. |
-| FR-SETUP-05-23 | WHEN | WHEN a pending question is backed by the knowledge and its class is not in the always-ask list, the skill shall answer it by sending the answer itself. |
-| FR-SETUP-05-24 | WHEN | WHEN a pending question is in an always-ask class or the knowledge does not back it, the skill shall collect it and ask the owner once per round, in one message that lists every open question. |
-| FR-SETUP-05-25 | WHEN | WHEN the owner has answered in the control chat, the skill shall match each answer to its question, close the question, and send the reply to the customer with the owner's answer as the go. |
-| FR-SETUP-05-26 | IF | IF a send is refused because the customer's window is closed, THEN the skill shall tell the owner in the session that the window is closed and shall not retry. |
-| FR-SETUP-05-27 | IF | IF the owner's own window is closed when the skill asks the owner, THEN the skill shall tell the owner in the session to write any message to the business number, and shall match the owner's later answer to the question, which stays recorded. |
-| FR-SETUP-05-28 | WHEN | WHEN the owner states a rule to keep, in the control chat or in the session, the skill shall save it with the owner's own words. |
-| FR-SETUP-05-29 | WHEN | WHEN the owner asks how the pilot is going, the skill shall report the pilot's counts. |
-| FR-SETUP-05-30 | WHILE | WHILE the session is open, the skill shall run one round of the daily loop now and again every 30 to 60 minutes (D34, ADR-018). |
-| FR-SETUP-05-31 | WHEN | WHEN the interview and the owner numbers are done, the skill shall ask the owner to send one message from their personal number to the business number, and shall check that it arrived in the control chat. |
-| FR-SETUP-05-32 | IF | IF the first message has not arrived when the skill checks, THEN the skill shall tell the owner that it has not arrived and what to check, and shall not report setup as finished. |
-| FR-SETUP-05-33 | WHEN | WHEN the owner has picked the business number, Deputy shall write the provider setting and the receiving mode (periodic checking) into the configuration next to the number's provider id. |
-| FR-SETUP-05-34 | WHEN | WHEN the connection settings are written, the skill shall tell the owner to close the session and reopen it from the shortcut, and after the reopening the skill shall continue setup where it stopped. |
-| FR-SETUP-05-35 | IF | IF a Deputy tool reports an error, such as a refused key, a failing check for messages or a failed send, THEN the skill shall tell the owner in plain words, by message first and in the session when the owner's window is closed. |
-| FR-SETUP-05-36 | WHEN | WHEN the install guide has created the shortcut, the agent shall run it once while the owner is present, so that the consent dialog of the wake option is answered during setup and never meets the daily loop. |
-| FR-SETUP-05-37 | WHEN | WHEN the owner asks the agent to install Deputy from a link, the install guide shall first check that the runtime Deputy needs, git and the agent are present, and say what to install when one is missing. |
+| FR-SETUP-05-22 | WHEN | WHEN a round of the daily loop starts, the skill shall check for new messages, list the pending chats and read the knowledge before it answers any chat. (Proposed, lead decision.) |
+| FR-SETUP-05-23 | WHEN | WHEN a pending question is backed by the knowledge and its class is not in the always-ask list, the skill shall answer it by sending the answer itself. (Proposed, lead decision.) |
+| FR-SETUP-05-24 | WHEN | WHEN a pending question is in an always-ask class or the knowledge does not back it, the skill shall collect it and ask the owner once per round, in one message that lists every open question. (Proposed, lead decision.) |
+| FR-SETUP-05-25 | WHEN | WHEN the owner has answered in the control chat, the skill shall match each answer to its question, close the question, and send the reply to the customer with the owner's answer as the go. (Proposed, lead decision.) |
+| FR-SETUP-05-26 | IF | IF a send is refused because the customer's window is closed, THEN the skill shall tell the owner in the session that the window is closed and shall not retry. (Proposed, lead decision.) |
+| FR-SETUP-05-27 | IF | IF the owner's own window is closed when the skill asks the owner, THEN the skill shall tell the owner in the session to write any message to the business number, and once that message has arrived the skill shall ask again, so that the questions that were not sent go out in one numbered message and the owner's answers close the recorded questions. (Proposed, lead decision.) |
+| FR-SETUP-05-28 | WHEN | WHEN the owner states a rule to keep, in the control chat or in the session, the skill shall save it with the owner's own words. (Proposed, lead decision.) |
+| FR-SETUP-05-29 | WHEN | WHEN the owner asks how the pilot is going, the skill shall report the pilot's counts. (Proposed, lead decision.) |
+| FR-SETUP-05-30 | WHILE | WHILE the session is open, the skill shall run one round of the daily loop now and again every 30 to 60 minutes (D34, ADR-018). (Proposed, lead decision.) |
+| FR-SETUP-05-31 | WHEN | WHEN the interview and the owner numbers are done, the skill shall ask the owner to send one message from their personal number to the business number, and shall check that it arrived in the control chat. (Proposed, lead decision.) |
+| FR-SETUP-05-32 | IF | IF the first message has not arrived when the skill checks, THEN the skill shall tell the owner that it has not arrived and what to check, and shall not report setup as finished. (Proposed, lead decision.) |
+| FR-SETUP-05-33 | WHEN | WHEN the owner has picked the business number, Deputy shall write the provider setting and the receiving mode (periodic checking) into the configuration next to the number's provider id. (Proposed, lead decision.) |
+| FR-SETUP-05-34 | WHEN | WHEN the connection settings are written, the skill shall tell the owner to close the session and reopen it from the shortcut, so that the consent dialog of the wake option is answered on that first launch while the owner is present, and after the reopening the skill shall continue setup where it stopped. (Proposed, lead decision.) |
+| FR-SETUP-05-35 | IF | IF a Deputy tool reports an error, such as a refused key, a failing check for messages or a failed send, THEN the skill shall tell the owner in plain words, by message first and in the session when the owner's window is closed. (Proposed, lead decision.) |
+| FR-SETUP-05-36 | WHEN | WHEN the owner asks the agent to install Deputy from a link, the install guide shall first check that the runtime Deputy needs, git and the agent are present, and say what to install when one is missing. (Proposed, lead decision.) |
 
 ## Rules and examples
 
@@ -86,7 +85,7 @@ R-SETUP-22, R-SETUP-23, R-SETUP-24, R-SETUP-25, R-SETUP-26, R-SETUP-27, R-SETUP-
 | EX-10 | RULE-5 | positive | The knowledge backs the opening hours and opening hours are not always-ask | A customer asks when the shop opens | The skill sends the answer itself |
 | EX-11 | RULE-5 | negative | The delivery price is an always-ask class | A customer asks for a delivery price | The skill sends nothing and collects the question for the owner |
 | EX-12 | RULE-6 | positive | The customer's window is closed | The skill tries to send | The skill tells the owner and does not retry |
-| EX-13 | RULE-6 | boundary | The owner's window is closed | The skill asks the owner a question | The skill tells the owner in the session to write to the business number, and the owner's later answer closes the recorded question |
+| EX-13 | RULE-6 | boundary | The owner's window is closed | The skill asks the owner a question | The skill tells the owner in the session to write to the business number; after the owner writes, the skill asks again and the not-sent questions go out in one numbered message, and the owner's answers close them |
 | EX-14 | RULE-7 | positive | The owner sent the first message | The skill checks | The message is in the control chat and setup is reported as finished |
 | EX-15 | RULE-7 | negative | The owner has not written yet | The skill checks | The skill says it has not arrived and setup is not reported as finished |
 
@@ -94,7 +93,7 @@ R-SETUP-22, R-SETUP-23, R-SETUP-24, R-SETUP-25, R-SETUP-26, R-SETUP-27, R-SETUP-
 n/a: no behavior here depends on more than three conditions.
 
 ## States
-ST-1: Installed, the install guide is done. ST-2: KeyPage, the one-time page is open. ST-3: KeyStored, the key is stored and accepted. ST-4: NumberPicked, the business number, its provider id, the provider and the receiving mode are kept. ST-7: Restarted, the session was reopened from the shortcut. ST-5: Interviewed, the owner confirmed the knowledge. ST-6: Ready, the owner numbers are confirmed. The transition that must not happen: from KeyPage to KeyStored without the owner's submit.
+ST-1: Installed, the install guide is done. ST-2: KeyPage, the one-time page is open. ST-3: KeyStored, the key is stored and accepted. ST-4: NumberPicked, the business number, its provider id, the provider and the receiving mode are kept. ST-5: Restarted, the session was reopened from the shortcut. ST-6: Interviewed, the owner confirmed the knowledge. ST-7: FirstMessage, the owner numbers are confirmed and the owner was asked to write once. ST-8: Ready, the first owner message arrived. The transitions that must not happen: from KeyPage to KeyStored without the owner's submit, and from FirstMessage to Ready before the first owner message has arrived.
 
 ```mermaid
 stateDiagram-v2
@@ -105,7 +104,8 @@ stateDiagram-v2
   KeyStored --> NumberPicked: owner picks number
   NumberPicked --> Restarted: settings written, session reopened
   Restarted --> Interviewed: owner confirms knowledge
-  Interviewed --> Ready: owner numbers confirmed
+  Interviewed --> FirstMessage: owner numbers confirmed
+  FirstMessage --> Ready: first owner message arrives
   Ready --> [*]
 ```
 
@@ -136,7 +136,8 @@ n/a: the project has no CROSS-CUTTING.md yet; the cross-cutting rules live in th
 
 ## Open questions
 Closed on 2026-11-24 (the owner approved the proposals): the key page closes after one submit and a second page invalidates the earlier token; owner numbers are recorded after the owner confirms; keep-awake is a child process without administrator rights; the skill's daily reminder is in addition to the guide; prompts are acceptable during attended setup and the no-prompt rule applies to the daily loop; Spanish and English are the pilot's languages.
-None still open. The provider call that lists an account's numbers is recorded as L11 and the Windows keep-awake call as L12 (DECISIONS), both from the research of 2026-11-24.
+Q-1 (Owner: the rows FR-SETUP-05-22 to FR-SETUP-05-36 are lead decisions built on the approved pilot decisions, not decided by the owner): approve them or change them.
+None of the research questions is open. The provider call that lists an account's numbers is recorded as L11 and the Windows keep-awake call as L12 (DECISIONS), both from the research of 2026-11-24.
 Answered by the lead on 2026-11-24 (technical): the chosen provider id is kept in the config file under the config folder, read by the existing config reader, and SPEC-05-8 adds the writer next to it; the tools are read_knowledge, save_profile, save_catalog, save_always_ask and remember (Knowledge pilot specs) and set_owner_numbers, ask_owner and answer_question (Intake pilot specs).
 Unverified, checked by the pilot (ADR-018): that a channel event wakes an idle session, that the shortcut keeps the wake option, and that the slow loop keeps firing after compaction.
 
@@ -153,6 +154,6 @@ Unverified, checked by the pilot (ADR-018): that a channel event wakes an idle s
 - AC-10 (EX-10): Given the knowledge backs the opening hours and opening hours are not always-ask, When a customer asks when the shop opens, Then the skill sends the answer itself.
 - AC-11 (EX-11): Given the delivery price is an always-ask class, When a customer asks for a delivery price, Then the skill sends nothing and collects the question for the owner.
 - AC-12 (EX-12): Given the customer's window is closed, When the skill tries to send, Then the skill tells the owner and does not retry.
-- AC-13 (EX-13): Given the owner's window is closed, When the skill asks the owner a question, Then the skill tells the owner in the session to write to the business number, and the owner's later answer closes the recorded question.
+- AC-13 (EX-13): Given the owner's window is closed, When the skill asks the owner a question, Then the skill tells the owner in the session to write to the business number; after the owner writes, the skill asks again and the not-sent questions go out in one numbered message, and the owner's answers close them.
 - AC-14 (EX-14): Given the owner sent the first message, When the skill checks, Then the message is in the control chat and setup is reported as finished.
 - AC-15 (EX-15): Given the owner has not written yet, When the skill checks, Then the skill says it has not arrived and setup is not reported as finished.

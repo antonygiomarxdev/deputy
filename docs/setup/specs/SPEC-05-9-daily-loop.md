@@ -13,16 +13,16 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-SETUP-05-22 | WHEN | WHEN a round of the daily loop starts, the skill shall check for new messages, list the pending chats and read the knowledge before it answers any chat. |
-| FR-SETUP-05-23 | WHEN | WHEN a pending question is backed by the knowledge and its class is not in the always-ask list, the skill shall answer it by sending the answer itself. |
-| FR-SETUP-05-24 | WHEN | WHEN a pending question is in an always-ask class or the knowledge does not back it, the skill shall collect it and ask the owner once per round, in one message that lists every open question. |
-| FR-SETUP-05-25 | WHEN | WHEN the owner has answered in the control chat, the skill shall match each answer to its question, close the question, and send the reply to the customer with the owner's answer as the go. |
-| FR-SETUP-05-26 | IF | IF a send is refused because the customer's window is closed, THEN the skill shall tell the owner in the session that the window is closed and shall not retry. |
-| FR-SETUP-05-27 | IF | IF the owner's own window is closed when the skill asks the owner, THEN the skill shall tell the owner in the session to write any message to the business number, and shall match the owner's later answer to the question, which stays recorded. |
+| FR-SETUP-05-22 | WHEN | WHEN a round of the daily loop starts, the skill shall check for new messages, list the pending chats and read the knowledge before it answers any chat. (Proposed, lead decision.) |
+| FR-SETUP-05-23 | WHEN | WHEN a pending question is backed by the knowledge and its class is not in the always-ask list, the skill shall answer it by sending the answer itself. (Proposed, lead decision.) |
+| FR-SETUP-05-24 | WHEN | WHEN a pending question is in an always-ask class or the knowledge does not back it, the skill shall collect it and ask the owner once per round, in one message that lists every open question. (Proposed, lead decision.) |
+| FR-SETUP-05-25 | WHEN | WHEN the owner has answered in the control chat, the skill shall match each answer to its question, close the question, and send the reply to the customer with the owner's answer as the go. (Proposed, lead decision.) |
+| FR-SETUP-05-26 | IF | IF a send is refused because the customer's window is closed, THEN the skill shall tell the owner in the session that the window is closed and shall not retry. (Proposed, lead decision.) |
+| FR-SETUP-05-27 | IF | IF the owner's own window is closed when the skill asks the owner, THEN the skill shall tell the owner in the session to write any message to the business number, and once that message has arrived the skill shall ask again, so that the questions that were not sent go out in one numbered message and the owner's answers close the recorded questions. (Proposed, lead decision.) |
 | EX-10 | RULE-5 | positive | The knowledge backs the opening hours and opening hours are not always-ask | A customer asks when the shop opens | The skill sends the answer itself |
 | EX-11 | RULE-5 | negative | The delivery price is an always-ask class | A customer asks for a delivery price | The skill sends nothing and collects the question for the owner |
 | EX-12 | RULE-6 | positive | The customer's window is closed | The skill tries to send | The skill tells the owner and does not retry |
-| EX-13 | RULE-6 | boundary | The owner's window is closed | The skill asks the owner a question | The skill tells the owner in the session to write to the business number, and the owner's later answer closes the recorded question |
+| EX-13 | RULE-6 | boundary | The owner's window is closed | The skill asks the owner a question | The skill tells the owner in the session to write to the business number; after the owner writes, the skill asks again and the not-sent questions go out in one numbered message, and the owner's answers close them |
 
 ## Files
 | Path | Create or change | Holds |
@@ -36,7 +36,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 - Precedent: SPEC-05-5-setup-interview.md, a skill text checked by a test that reads it.
 
 ## Tests first
-FR-SETUP-05-22: loop.md names check_messages, then list_pending, then read_knowledge, before any send step. FR-SETUP-05-23: it allows send_answer only when the knowledge backs the question and its class is not in the always-ask list. FR-SETUP-05-24: it collects the other questions and calls ask_owner once per round with all of them. FR-SETUP-05-25: it calls answer_question for each owner answer, then send_owner_go. FR-SETUP-05-26: on a refused send with a closed customer window it tells the owner in the session and does not retry. FR-SETUP-05-27: when the owner's own window is closed it tells the owner in the session to write to the business number and matches the owner's later answer to the question, which stays recorded. EX-10: loop.md lets the skill send an answer the knowledge backs when its class is not always-ask. EX-11: loop.md forbids sending and collects the question when its class is always-ask. EX-12: on a closed customer window loop.md says to tell the owner and not retry. EX-13: on a closed owner window loop.md says to tell the owner in the session to write to the business number, and that the owner's later answer closes the recorded question.
+FR-SETUP-05-22: loop.md names check_messages, then list_pending, then read_knowledge, before any send step. FR-SETUP-05-23: it allows send_answer only when the knowledge backs the question and its class is not in the always-ask list. FR-SETUP-05-24: it collects the other questions and calls ask_owner once per round with all of them. FR-SETUP-05-25: it calls answer_question for each owner answer, then send_owner_go. FR-SETUP-05-26: on a refused send with a closed customer window it tells the owner in the session and does not retry. FR-SETUP-05-27: when the owner's own window is closed it tells the owner in the session to write to the business number, and after the owner writes it asks again so the not-sent questions go out in one numbered message. EX-10: loop.md lets the skill send an answer the knowledge backs when its class is not always-ask. EX-11: loop.md forbids sending and collects the question when its class is always-ask. EX-12: on a closed customer window loop.md says to tell the owner and not retry. EX-13: on a closed owner window loop.md says to tell the owner in the session to write to the business number, then to ask again after the owner writes, and that the owner's answers close the questions.
 
 ## Build
 ```ts
@@ -54,4 +54,4 @@ The test asserts that each name of ROUND appears before the first name of AFTER,
 - The tools themselves: the Intake, Drafts and Knowledge pilot specs.
 
 ## Open questions
-Q-1 (Lead): send_answer, send_owner_go and pilot_stats are named in the Drafts pilot specs (PR 202, not yet merged); confirm the names once it lands.
+None. send_answer, send_owner_go and pilot_stats are the names in the Drafts pilot specs (PR 202).

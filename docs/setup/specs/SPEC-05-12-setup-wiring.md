@@ -13,7 +13,9 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-SETUP-05-33 | WHEN | WHEN the owner has picked the business number, Deputy shall write the provider setting and the receiving mode (periodic checking) into the configuration next to the number's provider id. |
+| FR-SETUP-05-5 | WHEN | WHEN the provider key is needed, the agent shall open the one-time key page and tell the owner to paste the key there and not in the conversation. |
+| FR-SETUP-05-10 | WHEN | WHEN the key is stored and accepted, Deputy shall list the numbers of the owner's provider account, let the owner pick the business number, and keep that number's provider id. |
+| FR-SETUP-05-33 | WHEN | WHEN the owner has picked the business number, Deputy shall write the provider setting and the receiving mode (periodic checking) into the configuration next to the number's provider id. (Proposed, lead decision.) |
 
 ## Files
 | Path | Create or change | Holds |
@@ -28,7 +30,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 - Precedent: SPEC-05-4-setup-tools.md, the tools this spec registers.
 
 ## Tests first
-FR-SETUP-05-33: after `select_number` with a listed id, config.json holds `provider` "kapso", `receiving_mode` "catch-up" and `kapso_phone_number_id` with that id, and every other key is unchanged.
+FR-SETUP-05-5 and FR-SETUP-05-10, the boot case: the server built by `mcpServer` with the wiring lists `open_key_page`, `list_numbers` and `select_number`, and a call to `open_key_page` returns the loopback url without any key. FR-SETUP-05-33: after `select_number` with a listed id, config.json holds `provider` "kapso", `receiving_mode` "catch-up" and `kapso_phone_number_id` with that id, and every other key is unchanged.
 
 ## Build
 ```ts
