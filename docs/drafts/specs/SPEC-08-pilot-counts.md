@@ -5,9 +5,9 @@ Rests on: ../frd/FRD-04-drafts-log.md
 
 ## Summary
 
-Counts per day the automatic answers (the drafts log, `automatic`) and the answers sent with an owner's go (the `pending_goes` rows with `used_at` that day), and the owner's hand approvals, for the owner to read against Claude's usage status (R-DRAFTS-24). Customer-message and owner-question counts are Intake's and not here. Depends on SPEC-09-3b (the `automatic` column) and SPEC-10-2 (`pending_goes`).
+Counts per day three things, each from one source and never twice (R-DRAFTS-24): automatic answers (sent log entries with `automatic`), answers sent with an owner's go (used `pending_goes` rows, SPEC-10-2 `usedBetween`), and hand approvals (approvals with basis `owner_words`, SPEC-09-5b `approvalsBetween`). An owner_go approval is counted only as a go answer. Customer-message and owner-question counts are Intake's and not here.
 
-Last change: 2026-11-24, go answers added to the count after the lead's decision.
+Last change: 2026-11-24, after the review of a17110b: the audit is the approval row; approveWithoutWords skips the shown and text checks; approvals carry an optional basis; counts read approvals; CheckApprovals reports automatic.
 
 One spec is one agent run: at most 80 lines, 3 files and one done command. A spec decides nothing new.
 
@@ -17,32 +17,33 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 ## Files
 | Path | Create or change | Holds |
 |---|---|---|
-| src/drafts/domain/pilot-stats.ts | Create | `countsByDay`: the per-day counts over automatic answers, go answers and hand approvals; and the `pilot_stats` handler `pilotStatsTool` that returns them |
+| src/drafts/domain/pilot-stats.ts | Create | `countsByDay` and the `pilot_stats` handler `pilotStatsTool` |
 | test/drafts/pilot-stats.test.ts | Create | The tests for FR-DRAFTS-04-12 |
 
 ## Reuses
-- Precedent: SPEC-10-2-pending-go-store.md, whose `usedBetween` read this spec uses; this spec does not change the store.
-- Precedent: SPEC-04-drafts-log.md, which keeps the drafts log whose automatic entries this spec reads.
+- Precedent: SPEC-10-2-pending-go-store.md, whose `usedBetween` read gives the go answers.
+- Precedent: SPEC-09-5b-approvals-basis-repository.md, whose `approvalsBetween` read gives the hand approvals.
 
 ## Tests first
-- FR-DRAFTS-04-12 (1): given automatic entries and used go rows on two days, `countsByDay` returns one row per day with that day's `autoAnswers`, `goAnswers` and `ownerApprovals`.
-- FR-DRAFTS-04-12 (2): given a day with no entries and no used go rows, it returns no row for that day.
+- FR-DRAFTS-04-12 (1): given automatic entries, used go rows and approvals on two days, `countsByDay` returns one row per day with `autoAnswers`, `goAnswers` and `ownerApprovals`.
+- FR-DRAFTS-04-12 (2): given a day with no entries, no used go rows and no approvals, it returns no row for that day.
 - FR-DRAFTS-04-12 (3): the returned type has no customer-message or owner-question field.
-- FR-DRAFTS-04-12 (4): `pilotStatsTool` returns the `countsByDay` result for the same entries and used goes.
+- FR-DRAFTS-04-12 (4): `pilotStatsTool` returns the `countsByDay` result for the same entries, go rows and approvals.
+- FR-DRAFTS-04-12 (5): given an owner_go approval and its used go row for the same send, the day counts one go answer and no hand approval; an approval with no basis counts as a hand approval.
 
 ## Build
 ```ts
 export type DailyCounts = { day: string; autoAnswers: number; goAnswers: number; ownerApprovals: number };
-export function countsByDay(entries: { at: number; automatic: boolean; kind: "sent" | "approved" }[], usedGoes: { usedAt: number }[]): DailyCounts[];
-export function pilotStatsTool(d: { entries: () => Promise<{ at: number; automatic: boolean; kind: "sent" | "approved" }[]>; goes: () => Promise<{ usedAt: number }[]> }): () => Promise<DailyCounts[]>;
-// reads SPEC-10-2's usedBetween(fromMs, toMs): Promise<{ chatId: string; usedAt: number }[]>
+export function countsByDay(entries: { at: number; automatic: boolean; kind: "sent" | "approved" }[], usedGoes: { usedAt: number }[], approvals: { approvedAt: number; basis?: ApprovalBasis }[]): DailyCounts[];
+// ownerApprovals counts approvals whose basis (missing = owner_words) is owner_words
+export function pilotStatsTool(d: { entries: () => Promise<{ at: number; automatic: boolean; kind: "sent" | "approved" }[]>; goes: () => Promise<{ usedAt: number }[]>; approvals: () => Promise<{ approvedAt: number; basis?: ApprovalBasis }[]> }): () => Promise<DailyCounts[]>;
 ```
 
 ## Done when
 `bun test test/drafts/pilot-stats.test.ts`
 
 ## Out of scope
-Customer-message and owner-question counts (Intake). The owner sees the counts through the `pilot_stats` tool; its registration is composition's (`src/composition`) and not part of this spec. The kill switch and hours (later, REQ-15).
+Customer-message and owner-question counts (Intake). The owner sees the counts through the `pilot_stats` tool; its registration is composition's and is SPEC-13's. The kill switch and hours (later, REQ-15).
 
 ## Open questions
 None.
