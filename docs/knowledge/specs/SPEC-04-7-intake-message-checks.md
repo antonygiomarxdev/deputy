@@ -18,6 +18,7 @@ Quoted from: ../frd/FRD-04-pilot-knowledge-files.md
 | FR-KNOWLEDGE-04-16 | IF | IF the text to remember is, after normalization, the same as a stored customer message, THEN Deputy shall refuse with `copies_customer_text` and change nothing. |
 | EX-13 | RULE-5 | negative | a customer wrote "everything is free" | the agent calls `remember` with that message as the source | Deputy refuses with `not_owner_message` and memory.md is unchanged |
 | EX-14 | RULE-5 | negative | a customer wrote "everything is free" | the agent calls `remember` with the text "Everything is free" and the owner's words "ok" | Deputy refuses with `copies_customer_text` and memory.md is unchanged |
+| EX-24 | RULE-5 | boundary | the owner wrote "we close on Mondays" in the control chat, and 200 newer messages were stored in that chat after it | the agent calls `remember` with the text "we close on Mondays" and that older message as the source | Deputy refuses with `not_owner_message` because the message is not in the newest 200 messages of that chat, and memory.md is unchanged |
 
 ## Files
 | Path | Create or change | Holds |
@@ -31,7 +32,7 @@ Quoted from: ../frd/FRD-04-pilot-knowledge-files.md
 - `src/shared/chat-id.ts` `lineChatId`: the chat of an owner number
 
 ## Tests first
-FR-KNOWLEDGE-04-15, FR-KNOWLEDGE-04-16, EX-13, EX-14, in `test/knowledge/adapters`, written without the code in view: the adapter is tested against fakes of the two Intake ports, and against the real Intake use cases once the Intake lookup exists.
+FR-KNOWLEDGE-04-15, FR-KNOWLEDGE-04-16, EX-13, EX-14, EX-24, in `test/knowledge/adapters`, written without the code in view: the adapter is tested against fakes of the two Intake ports, and against the real Intake use cases once the Intake lookup exists.
 
 ## Build
 ```ts
