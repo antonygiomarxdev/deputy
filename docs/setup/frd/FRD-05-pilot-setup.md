@@ -162,7 +162,7 @@ n/a: the project has no CROSS-CUTTING.md yet; the cross-cutting rules live in th
 
 ## Open questions
 Closed on 2026-11-24 (the owner approved the proposals): the key page closes after one submit and a second page invalidates the earlier token; owner numbers are recorded after the owner confirms; keep-awake is a child process without administrator rights; the skill's daily reminder is in addition to the guide; prompts are acceptable during attended setup and the no-prompt rule applies to the daily loop; Spanish and English are the pilot's languages.
-Q-1 (Owner: the rows FR-SETUP-05-22 to FR-SETUP-05-47 are lead decisions built on the approved pilot decisions, not decided by the owner): approve them or change them.
+Q-1 (Owner: the rows FR-SETUP-05-22 to FR-SETUP-05-50 are lead decisions built on the approved pilot decisions, not decided by the owner): approve them or change them.
 Q-2 (Lead): Proposed, not decided: how a subagent transcript is assigned to a part (triage or web). The spec uses the agent name the transcript carries; if the format has none, the part is reported as "helper".
 None of the research questions is open. The provider call that lists an account's numbers is recorded as L11 and the Windows keep-awake call as L12 (DECISIONS), both from the research of 2026-11-24.
 Answered by the lead on 2026-11-24 (technical): the chosen provider id is kept in the config file under the config folder, read by the existing config reader, and SPEC-05-8 adds the writer next to it; the tools are read_knowledge, save_profile, save_catalog, save_always_ask and remember (Knowledge pilot specs) and set_owner_numbers, ask_owner and answer_question (Intake pilot specs).
