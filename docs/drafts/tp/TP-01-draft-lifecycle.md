@@ -200,67 +200,11 @@ interface OwnerLease { isOwner(): boolean }       // shared kernel
 
 ## Information
 
-Tables owned by the slice for FRD-01 (the full `drafts` table; TP-02 adds `approvals`, TP-04 adds `drafts_log`). Times are ISO-8601 UTC text.
-
-```sql
-CREATE TABLE draft_counter (
-  id   INTEGER PRIMARY KEY CHECK (id = 1),
-  last INTEGER NOT NULL
-);
-INSERT INTO draft_counter (id, last) VALUES (1, 0);
-
-CREATE TABLE drafts (
-  number                  INTEGER PRIMARY KEY,
-  kind                    TEXT NOT NULL CHECK (kind IN ('reply','order')),
-  chat                    TEXT NOT NULL,
-  state                   TEXT NOT NULL CHECK (state IN
-    ('waiting','held','sending','recording','sent','recorded','failed','unknown','rejected','replaced')),
-  proposed_text           TEXT NOT NULL,
-  current_text            TEXT NOT NULL,
-  proposed_norm           TEXT NOT NULL,   -- normalized copy, for the copied-words check (TP-02)
-  current_norm            TEXT NOT NULL,
-  text_version            INTEGER NOT NULL DEFAULT 1,
-  shown_version           INTEGER,         -- last text_version returned by list_drafts
-  revision                INTEGER NOT NULL DEFAULT 1,
-  made_at                 TEXT NOT NULL,
-  answers_message_id      TEXT,
-  dev                     INTEGER NOT NULL DEFAULT 0,   -- the world the draft was made in (Intake's dev flag)
-  basis_message_id        TEXT NOT NULL,
-  basis_sent_at           TEXT NOT NULL,
-  checked_sent_at         TEXT NOT NULL,   -- TP-03: moves at a hold
-  checked_stored_at       TEXT NOT NULL,
-  pending_choice          INTEGER NOT NULL DEFAULT 0,
-  hold_reason             TEXT,
-  fail_reason             TEXT,
-  order_payload           TEXT,
-  order_id                TEXT,
-  replaced_by             INTEGER REFERENCES drafts(number),
-  closed_at               TEXT,
-  CHECK (kind = 'order' OR (order_payload IS NULL AND order_id IS NULL))
-);
-CREATE UNIQUE INDEX drafts_one_open
-  ON drafts (chat, kind)
-  WHERE state IN ('waiting','held','failed','unknown','sending','recording');
-CREATE INDEX drafts_by_state ON drafts (state);
-```
-
-Notes.
-- The `state` list has no "approved" because it is never stored.
-- `WaitingChats` returns `made_at` as the time written and reads only rows in an open state.
-- Order drafts keep their summary in `current_text` and the payload in `order_payload`. Both are personal data and are replaced when the order is deleted (TP-04).
+Moved verbatim to [TP-01-draft-lifecycle-information.md](../tp-detail/TP-01-draft-lifecycle-information.md).
 
 ## Interfaces
 
-Inbound ports above. MCP tools this FRD adds (zod schemas; every tool also returns a plain-text rendering):
-
-| Tool | Input | Output | Use case |
-|---|---|---|---|
-| `create_draft` | `{ kind?: 'reply' \| 'order' (default 'reply'), chat: string, text?: string, order?: object }`; `text` is required for a reply, `order` for an order | draft number, state, text, the message it answers, and "replaced draft N" when it replaced one | `CreateDraft` |
-| `list_drafts` | `{ chat?: string }` | drafts with number, kind, chat, state, text, the message answered (labeled `<customer_text>`), the "catalog changed" mark, hold or fail reason; "no drafts waiting" when empty | `ListDrafts` |
-| `change_draft` | `{ number: int, text?: string, order?: object, owner_words: string }` | number, state "waiting", and whether an approval was voided | `ChangeDraft` |
-| `reject_draft` | `{ number: int, owner_words: string }` | number, state "rejected" | `RejectDraft` |
-
-`WaitingChats` is called by Inbox's adapter, not by a tool. Cross-slice calls: Intake (`ChatExists`, `ReadChat`) and Orders (`PrepareOrder`) through the ports above. Refusals are plain text: "draft 4 does not exist", "draft 4 is closed (sent)", "that chat has only test messages".
+Moved verbatim to [TP-01-draft-lifecycle-interfaces.md](../tp-detail/TP-01-draft-lifecycle-interfaces.md).
 
 ## Threat model
 
@@ -272,32 +216,7 @@ Inbound ports above. MCP tools this FRD adds (zod schemas; every tool also retur
 
 ## Testing
 
-ATDD (cross-cutting TD-11): each test below is written first from the FRD line, titled with its FR id. Layer UC means a use case run through its inbound port with in-memory adapters and a fake clock; D means a domain unit test; C means an adapter contract test run on the in-memory and SQLite adapters; E means end to end over stdio.
-
-| Test | FR ids | Layer |
-|---|---|---|
-| FR-DRAFTS-01-1 create_draft stores chat, text, time and the latest message time, and gives a number | FR-DRAFTS-01-1 | UC |
-| FR-DRAFTS-01-1 a reply and an order draft get different numbers from one counter | FR-DRAFTS-01-1 | UC |
-| FR-DRAFTS-01-1 a new draft after a closed one never gets an earlier number | FR-DRAFTS-01-1 | UC, C |
-| FR-DRAFTS-01-2 a new draft is waiting and the fake provider received nothing | FR-DRAFTS-01-2 | UC |
-| FR-DRAFTS-01-3 list_drafts shows number, chat, exact text and the customer message answered | FR-DRAFTS-01-3 | UC, E |
-| FR-DRAFTS-01-3 list_drafts with no drafts says so | FR-DRAFTS-01-3 | UC |
-| FR-DRAFTS-01-3 a draft whose text and answered message contain `</customer_text>` and `&` is listed with `&lt;/customer_text&gt;` and `&amp;`, inside one label, through the shared escape helper | FR-DRAFTS-01-3 | UC |
-| FR-KNOWLEDGE-01-14 through the `list_drafts` MCP adapter, with a fake Knowledge: a reply draft made at T and a catalog saved after T: `CatalogChangedSince` answers changed and the list shows the mark; saved before T gives no mark; `'unknown'` shows `catalog_check_unavailable`; an order draft with a changed snapshotted price shows the mark even when the time check says unchanged; `ListDrafts` itself imports and calls nothing of Knowledge (architecture test) | FR-KNOWLEDGE-01-14 | E, ARCH |
-| FR-DRAFTS-01-4 WaitingChats returns waiting, held, failed and unknown drafts with chat, time and state, and no text | FR-DRAFTS-01-4 | UC |
-| FR-DRAFTS-01-4 a draft made before the session started (fake clock) is listed with `fromEarlierSession` true and `WaitingChats` returns `earlierSession` true; a draft made after is false; the send path checks the chat the same way (D25) | FR-DRAFTS-01-4 | UC |
-| FR-DRAFTS-01-4 two chats with waiting drafts return exactly those two with their written times | FR-DRAFTS-01-4 | UC |
-| FR-DRAFTS-01-5 changing the text of an approved draft returns it to waiting and voids the approval | FR-DRAFTS-01-5 | D (approved is transient), UC (held draft) |
-| FR-DRAFTS-01-6 a rejected draft is closed and a later approval is refused | FR-DRAFTS-01-6 | UC |
-| FR-DRAFTS-01-7 a new reply draft replaces the waiting one, logs it, and the answer says so | FR-DRAFTS-01-7 | UC |
-| FR-DRAFTS-01-7 replacing an approved draft closes it as replaced and voids its approval | FR-DRAFTS-01-7 | D |
-| FR-DRAFTS-01-7 a reply draft never replaces an order draft and the other way round | FR-DRAFTS-01-7 | UC |
-| FR-DRAFTS-01-7 a draft in "sending" cannot be replaced; the second unique open draft is rejected by the database | FR-DRAFTS-01-7 | UC, C |
-| FR-DRAFTS-01-8 a chat with only dev messages is refused once the provider is not dev | FR-DRAFTS-01-8 | UC |
-| FR-DRAFTS-01-1 an unknown chat, a chat with no customer message and an empty text are refused | FR-DRAFTS-01-1 | UC |
-| FR-DRAFTS-01-3 the whole draft flow over MCP: create, list, change, reject | FR-DRAFTS-01-1, FR-DRAFTS-01-3, FR-DRAFTS-01-5, FR-DRAFTS-01-6 | E |
-
-Every FR id of FRD-01 (01-1 to 01-8) appears above.
+Moved verbatim to [TP-01-draft-lifecycle-testing.md](../tp-detail/TP-01-draft-lifecycle-testing.md).
 
 ## Risks
 
