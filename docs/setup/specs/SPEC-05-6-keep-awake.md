@@ -15,6 +15,8 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 | FR-SETUP-05-15 | WHILE | WHILE a session is open, Deputy shall keep the computer from sleeping through idleness, without administrator rights, and shall release that hold when the session ends (D36). |
 | FR-SETUP-05-16 | IF | IF the keep-awake hold cannot be started, THEN Deputy shall say so once and keep working. |
+| EX-8 | RULE-4 | positive | A session is open | Deputy starts | The keep-awake hold is on |
+| EX-9 | RULE-4 | boundary | A session is open with the hold on | The session ends | The hold is released |
 
 ## Files
 | Path | Create or change | Holds |
@@ -28,7 +30,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 - `src/adapters/supervisor/lease-supervisor.ts` `onAcquired`: the hook that fires when this process becomes the owner process.
 
 ## Tests first
-FR-SETUP-05-15: on macOS the spawned command is the idle-sleep hold tied to the process id; on Linux the inhibitor tied to the process id; on Windows the Windows hold; `stop()` kills the child; a second `start()` does nothing. FR-SETUP-05-16: when the spawner throws, `log` receives one message and `start()` returns normally.
+FR-SETUP-05-15: on macOS the spawned command is the idle-sleep hold tied to the process id; on Linux the inhibitor tied to the process id; on Windows the Windows hold; `stop()` kills the child; a second `start()` does nothing. FR-SETUP-05-16: when the spawner throws, `log` receives one message and `start()` returns normally. EX-8: `start()` spawns the hold once. EX-9: `stop()` kills the hold and a later `stop()` does nothing.
 
 ## Build
 ```ts

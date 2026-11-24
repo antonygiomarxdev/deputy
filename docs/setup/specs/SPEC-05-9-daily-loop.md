@@ -19,6 +19,10 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 | FR-SETUP-05-25 | WHEN | WHEN the owner has answered in the control chat, the skill shall match each answer to its question, close the question, and send the reply to the customer with the owner's answer as the go. |
 | FR-SETUP-05-26 | IF | IF a send is refused because the customer's window is closed, THEN the skill shall tell the owner in the session that the window is closed and shall not retry. |
 | FR-SETUP-05-27 | IF | IF asking the owner is refused because the owner's own window is closed, THEN the skill shall tell the owner in the session to write any message to the business number, and shall ask again once that message has arrived. |
+| EX-10 | RULE-5 | positive | The knowledge backs the opening hours and opening hours are not always-ask | A customer asks when the shop opens | The skill sends the answer itself |
+| EX-11 | RULE-5 | negative | The delivery price is an always-ask class | A customer asks for a delivery price | The skill sends nothing and collects the question for the owner |
+| EX-12 | RULE-6 | positive | The customer's window is closed | The skill tries to send | The skill tells the owner and does not retry |
+| EX-13 | RULE-6 | boundary | The owner's window is closed | The skill asks the owner a question | The skill tells the owner in the session to write to the business number, then asks again after the message arrives |
 
 ## Files
 | Path | Create or change | Holds |
@@ -32,7 +36,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 - Precedent: SPEC-05-5-setup-interview.md, a skill text checked by a test that reads it.
 
 ## Tests first
-FR-SETUP-05-22: loop.md names check_messages, then list_pending, then read_knowledge, before any send step. FR-SETUP-05-23: it allows send_answer only when the knowledge backs the question and its class is not in the always-ask list. FR-SETUP-05-24: it collects the other questions and calls ask_owner once per round with all of them. FR-SETUP-05-25: it calls answer_question for each owner answer, then send_owner_go. FR-SETUP-05-26: on a refused send with a closed customer window it tells the owner in the session and does not retry. FR-SETUP-05-27: on ask_owner refused for the owner's window it tells the owner to write to the business number and asks again after it arrives.
+FR-SETUP-05-22: loop.md names check_messages, then list_pending, then read_knowledge, before any send step. FR-SETUP-05-23: it allows send_answer only when the knowledge backs the question and its class is not in the always-ask list. FR-SETUP-05-24: it collects the other questions and calls ask_owner once per round with all of them. FR-SETUP-05-25: it calls answer_question for each owner answer, then send_owner_go. FR-SETUP-05-26: on a refused send with a closed customer window it tells the owner in the session and does not retry. FR-SETUP-05-27: on ask_owner refused for the owner's window it tells the owner to write to the business number and asks again after it arrives. EX-10: loop.md lets the skill send an answer the knowledge backs when its class is not always-ask. EX-11: loop.md forbids sending and collects the question when its class is always-ask. EX-12: on a closed customer window loop.md says to tell the owner and not retry. EX-13: on a closed owner window loop.md says to tell the owner in the session to write to the business number, then ask again.
 
 ## Build
 ```ts

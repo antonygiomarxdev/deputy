@@ -6,7 +6,7 @@ Status: Draft
 
 For the local pilot the owner sets Deputy up by asking the agent, with no command-line commands: the agent installs it from a link, the owner pastes the provider key on a one-time local page, and a skill interviews the owner about the business. Deputy keeps the computer awake while the session is open. The key never passes through the conversation. FRD-01 to FRD-04 are deferred for the pilot, not removed.
 
-Last change: 2026-11-24, the daily loop and the first owner message added (R-SETUP-30, R-SETUP-31)
+Last change: 2026-11-24, restart, error telling, shortcut run and prerequisites added (FR-SETUP-05-33 to FR-SETUP-05-37)
 
 One feature of the [slice PRD](../PRD.md). Deferred for the pilot: [FRD-01](FRD-01-guided-flow.md) to [FRD-04](FRD-04-profile-test-finish.md).
 
@@ -54,6 +54,11 @@ R-SETUP-22, R-SETUP-23, R-SETUP-24, R-SETUP-25, R-SETUP-26, R-SETUP-27, R-SETUP-
 | FR-SETUP-05-30 | WHILE | WHILE the session is open, the skill shall run one round of the daily loop now and again every 30 to 60 minutes (D34, ADR-018). |
 | FR-SETUP-05-31 | WHEN | WHEN the interview and the owner numbers are done, the skill shall ask the owner to send one message from their personal number to the business number, and shall check that it arrived in the control chat. |
 | FR-SETUP-05-32 | IF | IF the first message has not arrived when the skill checks, THEN the skill shall tell the owner that it has not arrived and what to check, and shall not report setup as finished. |
+| FR-SETUP-05-33 | WHEN | WHEN the owner has picked the business number, Deputy shall write the provider setting and the receiving mode (periodic checking) into the configuration next to the number's provider id. |
+| FR-SETUP-05-34 | WHEN | WHEN the connection settings are written, the skill shall tell the owner to close the session and reopen it from the shortcut, and after the reopening the skill shall continue setup where it stopped. |
+| FR-SETUP-05-35 | IF | IF a Deputy tool reports an error, such as a refused key, a failing check for messages or a failed send, THEN the skill shall tell the owner in plain words, by message first and in the session when the owner's window is closed. |
+| FR-SETUP-05-36 | WHEN | WHEN the install guide has created the shortcut, the agent shall run it once while the owner is present, so that the consent dialog of the wake option is answered during setup and never meets the daily loop. |
+| FR-SETUP-05-37 | WHEN | WHEN the owner asks the agent to install Deputy from a link, the install guide shall first check that the runtime Deputy needs, git and the agent are present, and say what to install when one is missing. |
 
 ## Rules and examples
 
@@ -89,7 +94,7 @@ R-SETUP-22, R-SETUP-23, R-SETUP-24, R-SETUP-25, R-SETUP-26, R-SETUP-27, R-SETUP-
 n/a: no behavior here depends on more than three conditions.
 
 ## States
-ST-1: Installed, the install guide is done. ST-2: KeyPage, the one-time page is open. ST-3: KeyStored, the key is stored and accepted. ST-4: NumberPicked, the business number and its provider id are kept. ST-5: Interviewed, the owner confirmed the knowledge. ST-6: Ready, the owner numbers are confirmed. The transition that must not happen: from KeyPage to KeyStored without the owner's submit.
+ST-1: Installed, the install guide is done. ST-2: KeyPage, the one-time page is open. ST-3: KeyStored, the key is stored and accepted. ST-4: NumberPicked, the business number, its provider id, the provider and the receiving mode are kept. ST-7: Restarted, the session was reopened from the shortcut. ST-5: Interviewed, the owner confirmed the knowledge. ST-6: Ready, the owner numbers are confirmed. The transition that must not happen: from KeyPage to KeyStored without the owner's submit.
 
 ```mermaid
 stateDiagram-v2
@@ -98,7 +103,8 @@ stateDiagram-v2
   KeyPage --> KeyPage: provider refuses key
   KeyPage --> KeyStored: owner submits key
   KeyStored --> NumberPicked: owner picks number
-  NumberPicked --> Interviewed: owner confirms knowledge
+  NumberPicked --> Restarted: settings written, session reopened
+  Restarted --> Interviewed: owner confirms knowledge
   Interviewed --> Ready: owner numbers confirmed
   Ready --> [*]
 ```

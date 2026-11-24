@@ -14,6 +14,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 ## Rows
 
 | FR-SETUP-05-9 | IF | IF the provider does not accept the key, THEN Deputy shall say in plain words that the provider refused it, keep nothing as working, and offer the key page again. |
+| FR-SETUP-05-10 | WHEN | WHEN the key is stored and accepted, Deputy shall list the numbers of the owner's provider account, let the owner pick the business number, and keep that number's provider id. |
 
 ## Files
 | Path | Create or change | Holds |
@@ -26,7 +27,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 - `src/intake/ports/provider.ts` `ProviderError`: the `credentials` kind that a refused key maps to.
 
 ## Tests first
-FR-SETUP-05-9: when the provider answers that the key is refused, `listNumbers` throws `ProviderError` of kind `credentials`, and the caller's message says in plain words that the provider refused the key; nothing is stored as working.
+FR-SETUP-05-9: when the provider answers that the key is refused, `listNumbers` throws `ProviderError` of kind `credentials`, and the caller's message says in plain words that the provider refused the key; nothing is stored as working. FR-SETUP-05-10: `listNumbers` returns each number of the account as `{ id, display }`.
 
 ## Build
 ```ts
