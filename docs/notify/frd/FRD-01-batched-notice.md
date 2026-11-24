@@ -8,7 +8,7 @@ When customer messages arrive while an open session can receive push, Deputy sen
 
 ## Requirements covered
 
-R-NOTIFY-1, R-NOTIFY-2, R-NOTIFY-3, R-NOTIFY-4, R-NOTIFY-5, R-NOTIFY-12, R-NOTIFY-13, R-NOTIFY-14.
+R-NOTIFY-1, R-NOTIFY-2, R-NOTIFY-3, R-NOTIFY-4, R-NOTIFY-5, R-NOTIFY-12, R-NOTIFY-13, R-NOTIFY-14, with amendments from REQ-15 (pending owner approval): rows FR-NOTIFY-01-13 to FR-NOTIFY-01-16.
 
 ## Behavior
 
@@ -26,6 +26,10 @@ R-NOTIFY-1, R-NOTIFY-2, R-NOTIFY-3, R-NOTIFY-4, R-NOTIFY-5, R-NOTIFY-12, R-NOTIF
 | FR-NOTIFY-01-8 | always | The messages that catch-up finds at session start produce one notice, not one per message. The same holds for each periodic catch-up: all messages one catch-up stores, together with others in the same batching period, make one notice. A batching period shorter than the catch-up period gives at most one notice per catch-up that found something. (R-NOTIFY-13) |
 | FR-NOTIFY-01-9 | always | Chats still unanswered keep appearing, as a count, in later notices. Deputy counts them itself, so the notice does not depend on the agent remembering them. (R-NOTIFY-14) |
 | FR-NOTIFY-01-10 | WHILE | While at least one unanswered chat that is not ignored exists, Deputy sends a reminder notice even when no new message arrived. A reminder holds counts only: no new messages, and the number of chats still waiting, with the pointer to the inbox. The reminder period is separate from the batching period, and its default is 30 minutes. The period runs from the last notice of any kind. A reminder never breaks the rule of at most one notice per batching period. When no unanswered chats remain, no reminder is sent. (R-NOTIFY-14) |
+| FR-NOTIFY-01-13 | always | In the local pilot (REQ-15), Deputy takes the waiting chats from Intake's pending list (FR-INTAKE-05-13) in place of Inbox, and leaves out the ignored-chat filter because the pilot has no ignore list. (REQ-15, D34) |
+| FR-NOTIFY-01-14 | always | In the local pilot, notices are always on with the default batching period of 10 minutes. Reminders (FR-NOTIFY-01-10), quiet periods, the owner's controls (FRD-02) and the outage notices of FRD-03 are deferred until after the pilot. (REQ-15, D34) |
+| FR-NOTIFY-01-15 | WHEN | When a notice cannot be delivered, because no session is open, the client does not support push or writing returns an error, Deputy keeps the batch and tries again after 60 seconds, and the next notice counts those messages as new. With no open session or without push support nothing is sent and the inbox keeps listing the messages. (FR-NOTIFY-03-4, FR-NOTIFY-03-6, FR-NOTIFY-03-7, ADR-006) |
+| FR-NOTIFY-01-16 | always | A notice sends nothing to a customer and approves nothing: receiving it cannot cause a send or an approval. (FR-NOTIFY-03-3) |
 
 Example reminder:
 
