@@ -15,7 +15,7 @@ Verified 2026-11-18. Bun 1.4.4, Windows 11 Home 10.0.26300 (x64). Compiled with 
 | 5b. papaparse | pass | pass | `5.papaparse: [{"a":"1","b":"2"}]` |
 | 5c. country-to-currency | pass | pass | `5.country-to-currency: {"NI":"NIO","IN":"INR"}` |
 | 6a. `Intl.supportedValuesOf('currency')` | pass | pass | `6.currency: {"n":307,"hasNIO":true,"hasINR":true}` |
-| 6b. Time zones Managua / Kolkata | pass | pass | `6.tz: {"managua":"01/06/2026, 06:00:00 GMT-6","kolkata":"01/06/2026, 17:30:00 GMT+5:30"}` (input 2026-06-01T12:00Z) |
+| 6b. Time zones Chicago / Kolkata | pass | pass | `6.tz: {"chicago":"01/06/2026, 07:00:00 GMT-5","kolkata":"01/06/2026, 17:30:00 GMT+5:30"}` (input 2026-06-01T12:00Z) |
 | 6c. `Intl.Segmenter` graphemes | pass | pass | `6.segmenter: {"graphemes":4,"codepoints":9}` for `a`, family emoji, `é`, flag |
 
 Notes:
