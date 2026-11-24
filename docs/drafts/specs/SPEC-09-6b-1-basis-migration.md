@@ -19,7 +19,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 |---|---|---|
 | src/drafts/adapters/sqlite/migrations/0007-log-basis.sql | Create | Adds `basis TEXT NOT NULL DEFAULT 'owner_words'` and rebuilds the ADR-010 `BEFORE UPDATE` trigger with `basis` and `automatic` in its equality list |
 | src/main/database.ts | Change | Registers 0007-log-basis.sql at the end of the migration list, after 0006 |
-| test/drafts/contract/log-basis.sqlite.test.ts | Create | The tests below |
+| test/drafts/contract/log-basis.sqlite.test.ts | Create | The tests below; they open the database with `openDatabase` from `src/main/database.ts`, so they need no test helper |
 
 ## Reuses
 - Precedent: SPEC-09-3a-automatic-migration.md, the same trigger rebuild for `automatic`; SPEC-09-3c-automatic-registration.md, the registration and the version check by position.

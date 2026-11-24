@@ -5,7 +5,7 @@ Rests on: ../frd/FRD-04-drafts-log.md
 
 ## Summary
 
-`pilot_stats` returns one row per day that joins Drafts' `countsByDay` (SPEC-08) with Intake's `IntakeDailyCounts.between(from, to)` (Intake PR 212, which returns `{ day, customerMessages, ownerQuestions }`) by `day`: `{ day, customerMessages, ownerQuestions, automatic, withGo, handApprovals }`. A day present on one side only gets zero on the other side. Merge order: PR 209 and PR 212 before PR 202.
+`pilot_stats` returns one row per day that joins Drafts' `countsByDay` (SPEC-08) with Intake's `IntakeDailyCounts.between(from, to)` (Intake PR 212, which returns `{ day, customerMessages, ownerQuestions }`) by `day`: `{ day, customerMessages, ownerQuestions, autoAnswers, goAnswers, ownerApprovals }`. A day present on one side only gets zero on the other side. Merge order: PR 209 and PR 212 before PR 202.
 
 Last change: 2026-11-24, the joined view split from SPEC-08 so each side has one owner.
 
@@ -27,12 +27,12 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Tests first
 - FR-DRAFTS-04-12 (4): `pilotStatsTool` returns the joined row for a day present on both sides, with the values of both.
-- FR-DRAFTS-04-12 (7): a day present only in Intake's counts has `automatic`, `withGo` and `handApprovals` of 0.
+- FR-DRAFTS-04-12 (7): a day present only in Intake's counts has `autoAnswers`, `goAnswers` and `ownerApprovals` of 0.
 - FR-DRAFTS-04-12 (8): a day present only in Drafts' counts has `customerMessages` and `ownerQuestions` of 0.
 
 ## Build
 ```ts
-export type JoinedDay = { day: string; customerMessages: number; ownerQuestions: number; automatic: number; withGo: number; handApprovals: number };
+export type JoinedDay = { day: string; customerMessages: number; ownerQuestions: number; autoAnswers: number; goAnswers: number; ownerApprovals: number };
 export function pilotStatsTool(d: { drafts: () => Promise<DailyCounts[]>; intake: () => Promise<{ day: string; customerMessages: number; ownerQuestions: number }[]> }): () => Promise<JoinedDay[]>;
 ```
 

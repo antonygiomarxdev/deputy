@@ -34,6 +34,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Build
 ```ts
+// OwnerAnswer = { questionId: string; chatId: ChatId; text: string; at: Instant }: Intake's OwnerAnswered fields, ChatId from src/shared/chat-id.ts, Instant from src/shared/instant.ts
 export function onOwnerAnswered(store: PendingGoStore): (signal: OwnerAnswered) => Promise<void>;
 export async function reconcileOwnerAnswers(port: { listAnsweredQuestions(): Promise<OwnerAnswer[]> }, store: PendingGoStore): Promise<number>;  // store.put is idempotent by questionId (SPEC-10-2)
 ```
