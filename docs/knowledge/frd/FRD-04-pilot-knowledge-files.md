@@ -83,8 +83,8 @@ R-KNOWLEDGE-2, R-KNOWLEDGE-3, R-KNOWLEDGE-5, R-KNOWLEDGE-10, R-KNOWLEDGE-15, R-K
 | EX-22 | RULE-1 | negative | the owner edited catalog.md by hand and it holds no table | the agent calls `read_knowledge` | the result shows the text as it is with the notice `catalog_unreadable` |
 | EX-23 | RULE-5 | boundary | the owner wrote "we close on Mondays" in the control chat and Deputy stored it | the agent calls `remember` with the text "close on Mon" and that message as the source | Deputy refuses with `text_not_in_message` because a fragment of a word is not on a whole-token boundary, and memory.md is unchanged |
 | EX-24 | RULE-5 | boundary | the owner wrote "we close on Mondays" in the control chat, and 200 newer messages were stored in that chat after it | the agent calls `remember` with the text "we close on Mondays" and that older message as the source | Deputy refuses with `not_owner_message` because the message is not in the newest 200 messages of that chat, and memory.md is unchanged |
-| EX-25 | RULE-7 | positive | at the proposed limit of 12000 characters, memory.md holds 7000 characters and catalog.md holds 5001 | the agent calls `read_knowledge` | the result carries the notice `knowledge_long` with the sizes of both files, and memory.md and catalog.md are unchanged |
-| EX-26 | RULE-7 | boundary | at the proposed limit of 12000 characters, memory.md holds 7000 characters and catalog.md holds 5000 | the agent calls `read_knowledge` | the result carries no `knowledge_long` notice |
+| EX-25 | RULE-7 | positive | at the limit of 12000 characters decided by the owner, memory.md holds 7000 characters and catalog.md holds 5001 | the agent calls `read_knowledge` | the result carries the notice `knowledge_long` with the sizes of both files, and memory.md and catalog.md are unchanged |
+| EX-26 | RULE-7 | boundary | at the limit of 12000 characters decided by the owner, memory.md holds 7000 characters and catalog.md holds 5000 | the agent calls `read_knowledge` | the result carries no `knowledge_long` notice |
 | EX-27 | RULE-2 | positive | this is the owner process and memory.md holds 40 entries | the agent calls `save_memory` with a shorter summary text and the owner's words "Yes, use that summary" | memory.md holds the summary, the 40 entries are kept as a previous version, and the change is recorded with those words |
 | EX-28 | RULE-6 | positive | always-ask.md holds the lines "- Delivery price that depends on the address" and "Anything about refunds" and a blank line | another slice asks for the always-ask classes | the list holds "Delivery price that depends on the address" and "Anything about refunds" |
 | EX-29 | RULE-6 | negative | always-ask.md does not exist | another slice asks for the always-ask classes | the list is empty and no file is created |
@@ -160,13 +160,12 @@ n/a: this project keeps its cross-cutting rules in the cross-cutting TP (`docs/t
 ## Open questions
 
 None open. Answered on 2026-11-24:
+- The owner decided that the notice of FR-KNOWLEDGE-04-23 appears when the memory and the catalog together are longer than 12000 characters.
+- The lead confirmed that the 20000-character limit of FR-KNOWLEDGE-04-10, approved by the owner for the profile and the always-ask list, also applies to a memory summary saved with `save_memory`.
 - The owner approved the limits of FR-KNOWLEDGE-04-9, -10, -11 and -17 (500 catalog items, 20000 characters, 20 previous versions, 500 characters per memory entry).
 - The owner decided what happens when knowledge grows too large: the session tells the owner and proposes a summary that the owner approves; nothing is deleted on its own (FR-KNOWLEDGE-04-23).
 - The lead answered that `save_profile` and `save_always_ask` stay next to `read_knowledge`, `remember` and `save_catalog`, and that `save_memory` replaces the memory as a whole file with the owner's words so that an approved summary can be saved; `remember` stays append-only.
 
-Still open:
-- Q-1 (Owner: only the owner can say how much of the plan one turn may spend on knowledge): the total size of the memory and the catalog at which the notice of FR-KNOWLEDGE-04-23 appears. SPEC-04-8 and EX-25 and EX-26 use 12000 characters as a proposed value.
-- Q-2 (Lead): `save_memory` takes the same limit as the profile, 20000 characters (FR-KNOWLEDGE-04-10); confirm or give another.
 
 ## Acceptance criteria
 Generated from the examples, decision table and states; never edited by hand.
@@ -194,8 +193,8 @@ Generated from the examples, decision table and states; never edited by hand.
 - **AC-22** (EX-22): Given the owner edited catalog.md by hand and it holds no table, when the agent calls `read_knowledge`, then the result shows the text as it is with the notice `catalog_unreadable`.
 - **AC-23** (EX-23): Given the owner wrote "we close on Mondays" in the control chat and Deputy stored it, when the agent calls `remember` with the text "close on Mon" and that message as the source, then Deputy refuses with `text_not_in_message` because a fragment of a word is not on a whole-token boundary, and memory.md is unchanged.
 - **AC-24** (EX-24): Given the owner wrote "we close on Mondays" in the control chat, and 200 newer messages were stored in that chat after it, when the agent calls `remember` with the text "we close on Mondays" and that older message as the source, then Deputy refuses with `not_owner_message` because the message is not in the newest 200 messages of that chat, and memory.md is unchanged.
-- **AC-25** (EX-25): Given at the proposed limit of 12000 characters, memory.md holds 7000 characters and catalog.md holds 5001, when the agent calls `read_knowledge`, then the result carries the notice `knowledge_long` with the sizes of both files, and memory.md and catalog.md are unchanged.
-- **AC-26** (EX-26): Given at the proposed limit of 12000 characters, memory.md holds 7000 characters and catalog.md holds 5000, when the agent calls `read_knowledge`, then the result carries no `knowledge_long` notice.
+- **AC-25** (EX-25): Given at the limit of 12000 characters decided by the owner, memory.md holds 7000 characters and catalog.md holds 5001, when the agent calls `read_knowledge`, then the result carries the notice `knowledge_long` with the sizes of both files, and memory.md and catalog.md are unchanged.
+- **AC-26** (EX-26): Given at the limit of 12000 characters decided by the owner, memory.md holds 7000 characters and catalog.md holds 5000, when the agent calls `read_knowledge`, then the result carries no `knowledge_long` notice.
 - **AC-27** (EX-27): Given this is the owner process and memory.md holds 40 entries, when the agent calls `save_memory` with a shorter summary text and the owner's words "Yes, use that summary", then memory.md holds the summary, the 40 entries are kept as a previous version, and the change is recorded with those words.
 - **AC-28** (EX-28): Given always-ask.md holds the lines "- Delivery price that depends on the address" and "Anything about refunds" and a blank line, when another slice asks for the always-ask classes, then the list holds "Delivery price that depends on the address" and "Anything about refunds".
 - **AC-29** (EX-29): Given always-ask.md does not exist, when another slice asks for the always-ask classes, then the list is empty and no file is created.

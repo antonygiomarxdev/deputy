@@ -7,7 +7,7 @@ Rests on: ../tp/TP-04-pilot-knowledge-files.md
 
 When the memory or the catalog is longer than one turn can carry, `read_knowledge` adds the notice `knowledge_long` with the sizes, and the tool text tells the session to tell the owner and propose a summary for the owner to approve. Deputy deletes and shortens nothing by itself. Eighth run for FRD-04.
 
-Last change: 2026-11-24, rule and examples cited; the memory summary is saved by save_memory (lead answer).
+Last change: 2026-11-24, the owner decided the threshold: 12000 characters, memory and catalog together.
 
 One spec is one agent run: at most 80 lines, 3 files and one done command. Too big: split it into another spec, never add context. A spec decides nothing new.
 
@@ -15,8 +15,8 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. Too b
 Quoted from: ../frd/FRD-04-pilot-knowledge-files.md
 
 | FR-KNOWLEDGE-04-23 | WHEN | WHEN the memory or the catalog has grown past what fits in each turn, the session shall tell the owner and propose a summary for the owner to approve, and Deputy shall not delete anything on its own. |
-| EX-25 | RULE-7 | positive | at the proposed limit of 12000 characters, memory.md holds 7000 characters and catalog.md holds 5001 | the agent calls `read_knowledge` | the result carries the notice `knowledge_long` with the sizes of both files, and memory.md and catalog.md are unchanged |
-| EX-26 | RULE-7 | boundary | at the proposed limit of 12000 characters, memory.md holds 7000 characters and catalog.md holds 5000 | the agent calls `read_knowledge` | the result carries no `knowledge_long` notice |
+| EX-25 | RULE-7 | positive | at the limit of 12000 characters decided by the owner, memory.md holds 7000 characters and catalog.md holds 5001 | the agent calls `read_knowledge` | the result carries the notice `knowledge_long` with the sizes of both files, and memory.md and catalog.md are unchanged |
+| EX-26 | RULE-7 | boundary | at the limit of 12000 characters decided by the owner, memory.md holds 7000 characters and catalog.md holds 5000 | the agent calls `read_knowledge` | the result carries no `knowledge_long` notice |
 
 ## Files
 | Path | Create or change | Holds |
@@ -35,7 +35,7 @@ FR-KNOWLEDGE-04-23, EX-25, EX-26, written without the code in view, in `test/kno
 
 ## Build
 ```ts
-export const LIMITS: { /* as SPEC-04-1 */ turnChars: number }; // value: see Open questions Q-1
+export const LIMITS: { /* as SPEC-04-1 */ turnChars: 12000 }; // decided by the owner, memory and catalog together
 export function growthNotice(sizes: { memory: number | null; catalog: number | null }): "knowledge_long" | null; // null at or under turnChars
 // ReadKnowledge.read() result gains: notices: ("catalog_unreadable" | "knowledge_long")[]
 ```
@@ -48,4 +48,4 @@ The notice carries no text of the files, only the sizes. The session proposes th
 Writing or shortening the memory or the catalog (`save_memory` and `save_catalog`, SPEC-04-3), and any automatic deletion.
 
 ## Open questions
-- Q-1 (Owner: only the owner can say how much of the plan one turn may spend on knowledge): what total size of the memory and the catalog counts as "past what fits in each turn"? A starting value of 12000 characters is proposed, from the approved limits (500 catalog items, 500 characters per memory entry); it is not decided.
+None.
