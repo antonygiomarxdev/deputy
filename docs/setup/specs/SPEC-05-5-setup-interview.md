@@ -28,7 +28,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 - `src/intake/adapters/mcp/intake-tools.ts` `getOwnerNumbers`: the read tool the skill uses to repeat the recorded numbers back.
 
 ## Tests first
-FR-SETUP-05-11: setup.md lists the interview topics (how the business works, products and prices, hours, always-ask questions). FR-SETUP-05-12: it tells the agent to show what it understood before saving. FR-SETUP-05-13: it tells the agent to write through the Knowledge tools only after the owner confirms. FR-SETUP-05-14: it tells the agent to repeat the owner numbers back and record them only after the owner confirms in the conversation.
+FR-SETUP-05-11: setup.md lists the interview topics (how the business works, products and prices, hours, always-ask questions). FR-SETUP-05-12: it tells the agent to show what it understood before saving. FR-SETUP-05-13: it tells the agent to write through save_profile, save_catalog and save_always_ask only after the owner confirms. FR-SETUP-05-14: it tells the agent to repeat the owner numbers back and record them with set_owner_numbers only after the owner confirms in the conversation.
 
 ## Build
 ```ts
@@ -41,8 +41,8 @@ setup.md has one heading per topic, then "Confirm before saving" and "Owner numb
 `bun test test/skill/setup-interview.test.ts`
 
 ## Out of scope
-- The Knowledge write tools and the owner-numbers setter: their own specs in the Knowledge and Intake slices. Until they exist, setup.md names the tools by role.
+- The tools themselves (read_knowledge, save_profile, save_catalog, save_always_ask, remember, set_owner_numbers): their own specs in the Knowledge and Intake slices.
 - The daily loop: SPEC-05-7.
 
 ## Open questions
-Q-1 (Lead): the names of the Knowledge write tool and the Intake owner-numbers tool, from the Knowledge and Intake pilot specs; fill them in setup.md before approval.
+None. The tool names were answered by the lead on 2026-11-24.

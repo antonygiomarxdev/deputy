@@ -104,7 +104,7 @@ n/a: the project has no CROSS-CUTTING.md yet; the cross-cutting rules live in th
 
 ## Information
 - Whether the key is stored and where (secret store or owner-only file), never its value.
-- The chosen number's provider id.
+- The chosen number's provider id, kept in the config file.
 - The owner numbers recorded and the time they were confirmed.
 - Whether the keep-awake hold is on.
 
@@ -117,9 +117,8 @@ Proposed content that extends an owner decision, for the owner to accept or chan
 - Q-5 (Owner: it extends D35): setup is attended, so a permission prompt for reading the owner's own sheet or documents (FR-SETUP-05-12) is acceptable; the no-prompt rule applies to the daily loop.
 - Q-6 (Owner: D20 sets the owner's language, not the pilot's two languages): Spanish and English are the languages of the pilot copy (FR-SETUP-05-21).
 - Q-7 (Research): the provider call that lists an account's numbers and its answer shape (SPEC-05-3).
-- Q-8 (Lead): where the chosen provider id is kept; it needs the config writer of the `deputy config` specs (SPEC-05-4).
-- Q-9 (Lead): the names of the Knowledge write tool and the Intake owner-numbers tool (SPEC-05-5).
-- Q-10 (Research): the Windows keep-awake method; the runtime's foreign-function route is documented as experimental (SPEC-05-6).
+- Q-8 (Research): the Windows keep-awake method; the runtime's foreign-function route is documented as experimental (SPEC-05-6).
+Answered by the lead on 2026-11-24 (technical): the chosen provider id is kept in the config file under the config folder, read by the existing config reader, and SPEC-05-8 adds the writer next to it; the tools are read_knowledge, save_profile, save_catalog, save_always_ask and remember (Knowledge pilot specs) and set_owner_numbers, ask_owner and answer_question (Intake pilot specs).
 Unverified, checked by the pilot (ADR-018): that a channel event wakes an idle session, that the shortcut keeps the wake option, and that the slow loop keeps firing after compaction.
 
 ## Acceptance criteria

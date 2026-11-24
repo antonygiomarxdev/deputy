@@ -40,13 +40,13 @@ export interface SetupToolDeps {
 }
 export function setupTools(d: SetupToolDeps): ToolDefinition[];
 ```
-`saveNumberId` is injected; where the id is kept is settled by Q-1.
+`saveNumberId` is injected; the composition wires it to the config writer of SPEC-05-8.
 
 ## Done when
 `bun test test/setup/setup-tools.test.ts`
 
 ## Out of scope
-- The page itself: SPEC-05-2. The provider call: SPEC-05-3. The skill text that calls these tools: SPEC-05-7.
+- The config writer: SPEC-05-8. The page itself: SPEC-05-2. The provider call: SPEC-05-3. The skill text that calls these tools: SPEC-05-7.
 
 ## Open questions
-Q-1 (Lead): where the chosen provider id is kept. The setting is named in the secrets and configuration decision (ADR-008) and needs the config writer of the `deputy config` specs; settle it with that spec before approval.
+None. The id is kept in the config file by the writer of SPEC-05-8 (answered by the lead on 2026-11-24).
