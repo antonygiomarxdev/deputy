@@ -13,7 +13,7 @@ Last change: 2026-11-24, first draft from the owner's words
 The owner, 2026-11-24, in a Claude Code session.
 
 ## What they said
-> La idea es que cualquier cosa que vos puedas hacer desde WhatsApp también lo puedas hacer desde aquí.
+The owner asks that anything a person can do from WhatsApp can also be done through Deputy.
 
 ## The problem behind it
 Deputy stores images, audio, video, documents, stickers, locations and contacts as "[type, not readable]" and drops caption, filename and quote data. It sends text only.

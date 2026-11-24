@@ -13,7 +13,7 @@ Last change: 2026-11-24, first draft from the owner's words
 The owner, 2026-11-24, in a Claude Code session.
 
 ## What they said
-> cosas que si deben venir, agregarte a vos por whatsapp para dar instrucciones, que compile y no tenga que estar levantando nada nadie, investiguemos de este tipo de productos que mas cosas podemos agregar
+The owner asks to add the agent to the owner's own WhatsApp to give instructions there, to ship a compiled binary so nobody has to start anything by hand, and to research comparable products for more features to add.
 
 ## The problem behind it
 Today the owner can only talk to the agent in the agent's own session. Whether the owner's go for a draft may also travel over WhatsApp is open and touches principle 1.

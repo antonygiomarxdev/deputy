@@ -49,9 +49,9 @@ describe("ownerWordsShape", () => {
 
 describe("normalizeText", () => {
   test("FR-DRAFTS-02-3: Spanish, Arabic and Chinese punctuation and digits", () => {
-    expect(normalizeText("¡Dale al 3!")).toBe(normalizeText("dale al 3"));
+    expect(normalizeText("¡Envía el 3!")).toBe(normalizeText("envía el 3"));
     expect(normalizeText("¿Cuánto cuesta?")).toBe("cuánto cuesta");
-    expect(wholeNumberTokens("¡Dale al 3!")).toEqual([3]);
+    expect(wholeNumberTokens("¡Envía el 3!")).toEqual([3]);
     expect(normalizeText("أريد ٣ كيلو")).toBe("أريد 3 كيلو");
     expect(normalizeText("！！好的，我要３个。。")).toBe("好的,我要3个");
   });
