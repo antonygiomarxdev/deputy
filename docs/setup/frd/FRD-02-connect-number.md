@@ -2,6 +2,8 @@
 
 Status: Approved (2026-11-18) · Slice: Setup · Part of [Setup PRD](../PRD.md)
 
+Deferred (REQ-15, 2026-11-24): the local pilot connects Kapso and records the numbers through the skill and Intake FRD-05 (D33). The document stays as written.
+
 ## Summary
 
 Before the owner connects anything, Setup shows what it costs, what the sync copies, and what Deputy will and will not do. It checks the number can work, then the owner connects it on the provider's pages and the phone. Setup records who counts as the owner. See [../PRD.md](../PRD.md).

@@ -2,6 +2,8 @@
 
 Status: Approved (2026-11-18) · Slice: Setup · Part of [Setup PRD](../PRD.md)
 
+Deferred (REQ-15, 2026-11-24): the local pilot replaces the guided flow with a Deputy skill (D33). The document stays as written.
+
 ## Summary
 
 Setup walks the owner through a fixed list of steps. At every moment the owner sees the current step, how many remain, and who acts. A step passes only when its check passes. Setup can be stopped and resumed, and it times the whole run. See [../PRD.md](../PRD.md).
