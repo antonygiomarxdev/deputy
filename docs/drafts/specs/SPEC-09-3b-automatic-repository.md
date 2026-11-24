@@ -5,9 +5,9 @@ Rests on: ../frd/FRD-04-drafts-log.md
 
 ## Summary
 
-The repository reads and writes `automatic`, and the migration of SPEC-09-3a is registered in the list (depends on SPEC-09-3a).
+The repository reads and writes `automatic`, and migration 0004 of SPEC-09-3a is registered in the list (depends on SPEC-09-3a).
 
-Last change: 2026-11-24, split and extended after the review of PR 202 (pending go async; optional automatic; wiring and send-path specs added).
+Last change: 2026-11-24, after the lead's decision: the owner's go is recorded in pending_goes, not in approvals or the drafts log.
 
 One spec is one agent run: at most 80 lines, 3 files and one done command. A spec decides nothing new.
 
@@ -22,16 +22,17 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 | test/drafts/contract/draft-log-repository.contract.ts | Change | Adds the read and write cases below |
 
 ## Reuses
-- Precedent: SPEC-04-drafts-log.md Task 2, which built the SQLite log and its registration; this spec adds the 0004 entry to the same list. The migration's position is its `user_version`.
+- Precedent: SPEC-04-drafts-log.md Task 2, which built the SQLite log and its registration; this spec adds the 0004 entry to the same list.
 
 ## Tests first
 - FR-DRAFTS-04-11 (4): a sent entry appended with `automatic: true` reads back as `automatic: true`.
-- FR-DRAFTS-04-11 (5): the database registers 0004, so `user_version` is 4 after open.
+- FR-DRAFTS-04-11 (5): after open, `user_version` equals the position of 0004 in the migration list (the list length before 0004, plus one).
 - FR-DRAFTS-04-11 (6): an entry appended without `automatic` reads back as `automatic: false`.
 
 ## Build
 ```ts
-// in sqlite-draft-log-repository.ts: COLUMNS adds "automatic"; the row mapper sets automatic = row.automatic === 1
+// sqlite-draft-log-repository.ts: COLUMNS adds "automatic"; the row mapper sets automatic = row.automatic === 1
+// src/main/database.ts: the list gains 0004-automatic.sql at the end
 ```
 
 ## Done when

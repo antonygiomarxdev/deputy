@@ -7,7 +7,7 @@ Rests on: ../frd/FRD-04-drafts-log.md
 
 Adds the `automatic` column to drafts_log and rebuilds the ADR-010 update trigger so the column is compared like the others (depends on SPEC-09-2). The repository and the registration follow in SPEC-09-3b.
 
-Last change: 2026-11-24, split and extended after the review of PR 202 (pending go async; optional automatic; wiring and send-path specs added).
+Last change: 2026-11-24, after the lead's decision: the owner's go is recorded in pending_goes, not in approvals or the drafts log.
 
 One spec is one agent run: at most 80 lines, 3 files and one done command. A spec decides nothing new.
 
@@ -18,6 +18,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 | Path | Create or change | Holds |
 |---|---|---|
 | src/drafts/adapters/sqlite/migrations/0004-automatic.sql | Create | Adds `automatic INTEGER NOT NULL DEFAULT 0` and rebuilds the ADR-010 `BEFORE UPDATE` trigger with `automatic` in its equality list |
+| test/drafts/contract/log-database.ts | Change | Lists migration 0004 after the earlier migrations, so the test database has the column |
 | test/drafts/contract/draft-log-repository.contract.ts | Change | Adds the trigger cases below to the contract the sqlite runner executes |
 
 ## Reuses

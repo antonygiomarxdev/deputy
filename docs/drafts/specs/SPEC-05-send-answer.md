@@ -38,7 +38,7 @@ export function decideAutoSend(answerClass: string, alwaysAsk: ReadonlySet<strin
 `bun test test/drafts/auto-send.test.ts`
 
 ## Out of scope
-The window check (SPEC-06), the automatic mark on the log (SPEC-09-1 to 09-3), the pilot counts (SPEC-08), the go from the owner's answer (SPEC-07) and the always-ask list itself (Knowledge).
+The window check (SPEC-06), the automatic mark on the log (SPEC-09-1 to 09-3b), the pilot counts (SPEC-08), the go from the owner's answer (SPEC-07) and the always-ask list itself (Knowledge).
 
 ## Open questions
 None.

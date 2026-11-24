@@ -38,7 +38,7 @@ export function countsByDay(entries: { at: number; automatic: boolean; kind: "se
 `bun test test/drafts/pilot-stats.test.ts`
 
 ## Out of scope
-Customer-message and owner-question counts (Intake). The owner sees the counts through the `pilot_stats` tool; its registration is composition's (`src/composition`) and not part of this spec. The kill switch and hours (later, REQ-15).
+Customer-message and owner-question counts (Intake). Owner answers recorded as go in `pending_goes` are not counted here; counting them needs a read of that table, which no spec builds yet. The owner sees the counts through the `pilot_stats` tool; its registration is composition's (`src/composition`) and not part of this spec. The kill switch and hours (later, REQ-15).
 
 ## Open questions
 None.
