@@ -6,7 +6,7 @@ Status: Open
 
 The owner asks for the smallest version that can run on their own computer: Claude Code with the owner's own subscription, no cloud and no separate service. Deputy answers by itself what the business knowledge backs and asks the owner for the rest. A pilot with the owner and one friend measures how much of the plan this uses. The daily loop is drawn in `docs/PRODUCT.md`.
 
-Last change: 2026-11-24, owner rulings recorded; cap and kill switch dropped; control chat and always-ask classes decided
+Last change: 2026-11-24, owner approved D32 to D36
 
 ## Who asked and when
 The owner, 2026-11-24, in a Claude Code session, over several messages.
@@ -23,7 +23,7 @@ The approved product needs the owner's go on every send (D1) and a terminal for 
 - Unknown: plan usage of an idle loop; whether Claude Code shows a form answer to the model; Windows, macOS and Linux behavior of keep-awake.
 
 ## Decision
-Open until the owner accepts the request; one question stays open (Q-1). Decided by the owner on 2026-11-24, recorded in `docs/DECISIONS.md` (D31 is archived in `docs/decisions/2026-11.md` and approved in `docs/PRODUCT.md`; D32 and D34 to D36 are still Draft):
+Open until the owner accepts the request; one question stays open (Q-1). Decided by the owner on 2026-11-24, recorded in `docs/DECISIONS.md` (D31 is archived in `docs/decisions/2026-11.md` and approved in `docs/PRODUCT.md`; the owner approved D32 to D36 on the same day, and their target documents will state them):
 - Local only: Claude Code with the owner's own subscription, on Windows, macOS and Linux. The pilot is the owner and one friend. Cloud, a separate server, a hosted database and OAuth are deferred. There is no tunnel: the owner chose polling over a tunnel.
 - Install: the owner asks Claude Code to install Deputy from a link. Receiving: the MCP polls Kapso every 1 to 2 minutes and catches up on start. The current code is reused and trimmed.
 - The owner opens the session by hand. Nothing starts Claude automatically (no `claude -p`, no cron job, no server). The guide tells the owner to message the business number at least once a day. Keep-awake asks for the lid open and the computer plugged in, and Deputy keeps the computer awake while the session is open.
