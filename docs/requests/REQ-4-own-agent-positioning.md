@@ -13,9 +13,9 @@ Last change: 2026-11-24, first draft from the owner's words
 The owner, 2026-11-24, in a Claude Code session.
 
 ## What they said
-> lo que se quiere con esto es que vos tengas tu propio agente de IA para tu negocio, no algo como que funcione de manera general. Y de hecho tenemos que tener ahí bien claro el tema de prompt injection
+The owner asks that each business has its own AI agent, not a general-purpose one, and that prompt injection is stated clearly.
 
-> vos tenés tu suscripción de Claude o de ChatGPT o la que sea, tenés tu negocio, no tenés tiempo de estarle contestando a todos y te apoyas en deputy para hacer para contestar y él aprende de lo que vos le decís y vos le puedes pasar lo que necesites, es decir, si necesitas un Google Sheet, le pasas el Google Sheet
+The owner describes the pitch: the owner has their own Claude, ChatGPT or other subscription and a business, has no time to answer every customer, and relies on Deputy to answer. Deputy learns from what the owner tells it, and the owner can hand it whatever is needed, for example a Google Sheet.
 
 ## The problem behind it
 The owner has no time to answer every customer. The product must say plainly what it is, for the owner and for Meta's rules on AI providers.

@@ -13,7 +13,7 @@ Last change: 2026-11-24, first draft from the owner's words
 The owner, 2026-11-24, in a Claude Code session.
 
 ## What they said
-> el poder ordenar tu WhatsApp y agregarle etiquetas, agregarle, mira, esta persona tiene pendiente algo, mira, esta persona viene de tal anuncio
+The owner asks to organize WhatsApp and add labels, for example "this person has something pending" or "this person comes from that ad".
 
 ## The problem behind it
 Chats are one flat list. Meta does not support WhatsApp Business app labels on the Cloud API, so they cannot be synced.
