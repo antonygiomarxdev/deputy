@@ -29,7 +29,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 - Precedent: SPEC-01-3-tick.md, the `Notifier` port this adapter implements
 
 ## Tests first
-FR-NOTIFY-01-5, FR-NOTIFY-01-15, FR-NOTIFY-01-16, written before the code, without it in view, with a fake server. FR-NOTIFY-01-15: `availability()` is `ready` when the channel is enabled and `unsupported` when it is not; `deliver` returns `failed no_session` when the transport is closed and `failed write_error` when the notification rejects, and `delivered` otherwise. FR-NOTIFY-01-5: `deliver` sends one `notifications/claude/channel` whose `content` is the envelope text and whose `meta` is the envelope meta, and nothing else. FR-NOTIFY-01-16: the adapter holds no send port and no approval; its only output is that notification. The created server declares the capability.
+FR-NOTIFY-01-5, FR-NOTIFY-01-15, FR-NOTIFY-01-16, written before the code, without it in view, with a fake server. FR-NOTIFY-01-15: `availability()` is `ready` when the channel is enabled and `off` when it is not; `deliver` returns `failed no_session` when the transport is closed and `failed write_error` when the notification rejects, and `delivered` otherwise. FR-NOTIFY-01-5: `deliver` sends one `notifications/claude/channel` whose `content` is the envelope text and whose `meta` is the envelope meta, and nothing else. FR-NOTIFY-01-16: the adapter holds no send port and no approval; its only output is that notification. The created server declares the capability.
 
 ## Build
 ```ts
@@ -37,7 +37,7 @@ export class ClaudeChannelNotifier implements Notifier {
   constructor(d: { enabled: boolean; server: { notification(n: { method: string; params: { content: string; meta: Record<string, number | string> } }): Promise<void> }; isClosed(): boolean })
 }
 ```
-`tools.ts` passes `claudeChannel: true`. The notice reaches the session only when the owner launched Claude Code with the channel flag of ADR-018; otherwise the client ignores it.
+`tools.ts` passes `claudeChannel: true`, and `src/main/notify.ts` (SPEC-01-7) passes `enabled: true`, a constant for the pilot (FR-NOTIFY-01-14); the `off` case is tested with `enabled: false`. The notice reaches the session only when the owner launched Claude Code with the channel flag of ADR-018; otherwise the client ignores it.
 
 ## Done when
 `bun test test/notify/unit/claude-channel-notifier.test.ts`

@@ -42,7 +42,7 @@ FR-NOTIFY-01-2, FR-NOTIFY-01-4, FR-NOTIFY-01-7, FR-NOTIFY-01-9, FR-NOTIFY-01-11,
 ```ts
 export interface WaitingCounts { snapshot(): Promise<{ chats: ReadonlyArray<ChatId> }> } // throws when the read fails
 export interface SyncStatusReader { read(): Promise<{ status: "complete" | "failed" }> }
-export interface Notifier { availability(): "off" | "unsupported" | "ready"; deliver(e: NoticeEnvelope): Promise<{ kind: "delivered" } | { kind: "failed"; reason: "no_session" | "write_error" }> }
+export interface Notifier { availability(): "off" | "ready"; deliver(e: NoticeEnvelope): Promise<{ kind: "delivered" } | { kind: "failed"; reason: "no_session" | "write_error" }> }
 export type TickResult = { kind: "skipped" } | { kind: "idle" } | { kind: "nothing_due" } | { kind: "retrying" } | { kind: "sent" } | { kind: "failed"; reason: "no_session" | "write_error" };
 export class Tick { execute(): Promise<TickResult> }
 ```

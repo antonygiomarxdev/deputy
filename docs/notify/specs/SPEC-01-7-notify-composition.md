@@ -35,7 +35,7 @@ FR-NOTIFY-01-1, FR-NOTIFY-01-13, written before the code, without it in view, wi
 ```ts
 export function createNotify(d: { events: InProcessEventBus<IntakeEvent>; intake: Pick<IntakeRuntime, "listPending" | "getSyncStatus">; server: ChannelServer; lease: OwnerLease; clock: Clock }): { startSession(): void; start(): void; stop(): void };
 ```
-`main/intake.ts` returns `{ ...runtime, events }`.
+`main/intake.ts` returns `{ ...runtime, events }`. `createNotify` builds the notifier with `enabled: true`, a constant for the pilot (FR-NOTIFY-01-14).
 
 ## Done when
 `bun test test/notify/unit/notify-composition.test.ts`
