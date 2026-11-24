@@ -1,8 +1,7 @@
 # Drafts: slice PRD
 
-Status: Approved (2026-11-18) · Part of [Deputy product overview](../PRODUCT.md) · Last updated: 2026-11-17
+Status: Draft, with amendments from REQ-15 (pending owner approval) · Part of [Deputy product overview](../PRODUCT.md) · Last updated: 2026-11-17
 
-Amendments: from REQ-15 (pending owner approval).
 
 ## Purpose
 
