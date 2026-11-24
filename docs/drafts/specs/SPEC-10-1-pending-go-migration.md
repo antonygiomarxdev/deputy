@@ -22,7 +22,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 | test/drafts/contract/pending-goes-migration.test.ts | Create | The tests below for the migration |
 
 ## Reuses
-- Precedent: SPEC-09-3b-automatic-repository.md, which registers migration 0004 in the same list; this spec does the same for 0005.
+- Precedent: SPEC-09-3c-automatic-registration.md, which registers migration 0004 in the same list; this spec does the same for 0005.
 
 ## Tests first
 - FR-DRAFTS-02-15 (1): after the migration, `pending_goes` exists with the listed columns, including `used_at` and `send_id`.

@@ -38,7 +38,7 @@ export type DraftSent = { /* existing fields */ automatic?: boolean };  // missi
 `bun test test/drafts/auto-event.test.ts`
 
 ## Out of scope
-The log entry and mapper (SPEC-09-2), the column (SPEC-09-3a), the repository and registration (SPEC-09-3b), and the send decision (SPEC-05).
+The log entry and mapper (SPEC-09-2), the column (SPEC-09-3a), the repository (SPEC-09-3b) and registration (SPEC-09-3c), and the send decision (SPEC-05).
 
 ## Open questions
 None.
