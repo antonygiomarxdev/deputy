@@ -1,7 +1,11 @@
 # ADR-015: The spreadsheet id comes from the terminal; a switch leaves a notice
 
 ## Status
-Accepted (2026-11-18)
+Proposed
+
+## Summary
+
+`deputy config set orders-spreadsheet <id or URL>` stores the id in `~/.deputy/config.json`. Talking can only switch `orders_store` between `machine` and `spreadsheet`.
 
 ## Context
 Orders may go to the owner's own spreadsheet (D7). The id is a destination for personal data. FR-ORDERS-03-2 and FR-ORDERS-03-5b. From Orders TP-03 TD-5.
@@ -11,7 +15,7 @@ Orders may go to the owner's own spreadsheet (D7). The id is a destination for p
 - A switch to `spreadsheet` runs a probe (token, access, layout, tab creation if empty) and is refused with a code if it fails, with the service-account email to share the sheet with.
 - On every switch Deputy counts the orders in the place it leaves and stores it. `list_orders` returns `oldPlace {place, remaining}` until the owner switches back. Orders are never copied.
 
-## Alternatives
+## Options considered
 - Everything by talking: injected text could redirect all new orders to an attacker's sheet.
 - Everything in the terminal: the owner cannot say "use the machine for now" in conversation.
 
