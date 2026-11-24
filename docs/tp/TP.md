@@ -162,37 +162,12 @@ flowchart LR
   Cli["Command line adapter: deputy config, deputy secrets"]
   Cfg["config.json, OS credential store, secrets.env fallback"]
   MCP["MCP server adapter: tools to use cases"]
-  Chan["Claude channel notifier adapter, optional"]
-  subgraph IntakeCtx["Intake context"]
-    InI(["inbound ports"])
-    IntakeCore["domain and application"]
-    InO(["outbound ports: MessageRepository, Provider, OwnerLease, Clock"])
-    InI --> IntakeCore --> InO
-  end
-  subgraph InboxCtx["Inbox context"]
-    BxI(["inbound ports"])
-    InboxCore["domain and application"]
-    BxO(["outbound ports: IgnoreRepository, MessageReader, CatchUpRunner, DraftsQuery, OrdersQuery"])
-    BxI --> InboxCore --> BxO
-  end
-  subgraph DraftsCtx["Drafts context"]
-    DrI(["inbound ports"])
-    DraftsCore["domain and application"]
-    DrO(["outbound ports: DraftRepository, DraftLog, Sender, ChatFreshness, OrderPreparer, OrderChanger, UnitOfWork"])
-    DrI --> DraftsCore --> DrO
-  end
-  subgraph NotifyCtx["Notify context"]
-    NoI(["inbound ports"])
-    NotifyCore["domain and application"]
-    NoO(["outbound ports: NoticeRepository, Notifier, WaitingCounts"])
-    NoI --> NotifyCore --> NoO
-  end
-  subgraph OthersCtx["Knowledge, Orders, Setup contexts: same four folders"]
-    OtI(["inbound ports"])
-    OtherCore["domain and application"]
-    OtO(["outbound ports: repositories, catalog and profile readers, secrets check"])
-    OtI --> OtherCore --> OtO
-  end
+  SqliteA["SQLite repositories"]
+  InI(["Intake context: inbound ports"])
+  BxI(["Inbox context: inbound ports"])
+  DrI(["Drafts context: inbound ports"])
+  NoI(["Notify context: inbound ports"])
+  OtI(["Knowledge, Orders, Setup contexts, same four folders: inbound ports"])
   Agent --> MCP
   MCP --> InI
   MCP --> BxI
@@ -203,10 +178,31 @@ flowchart LR
   Hook --> InI
   Cli -.->|pending-change row, no lease| SqliteA
   Cli --> Cfg
-  InO --> SqliteA["SQLite repositories"]
-  InO --> ProvA["Provider adapters: Kapso, dev"]
-  ProvA --> Kapso
   Kapso -.->|signed webhook| Hook
+  Main["src/main.ts: composition root"] -.->|wires| MCP
+```
+
+Inside every context the inbound ports reach its domain and application, and these reach its outbound ports. The first drawing shows what calls in; the second shows the outbound ports, the adapters outside and the calls between contexts.
+
+```mermaid
+flowchart LR
+  Agent["Agent: Claude Code, Codex, Cursor, Gemini CLI"]
+  Kapso["Kapso API"]
+  Chan["Claude channel notifier adapter, optional"]
+  SqliteA["SQLite repositories"]
+  ProvA["Provider adapters: Kapso, dev"]
+  Files["Owner files and spreadsheet adapters"]
+  InI(["Intake context: inbound ports"])
+  InO(["Intake context: outbound ports: MessageRepository, Provider, OwnerLease, Clock"])
+  BxO(["Inbox context: outbound ports: IgnoreRepository, MessageReader, CatchUpRunner, DraftsQuery, OrdersQuery"])
+  DrI(["Drafts context: inbound ports"])
+  DrO(["Drafts context: outbound ports: DraftRepository, DraftLog, Sender, ChatFreshness, OrderPreparer, OrderChanger, UnitOfWork"])
+  NoO(["Notify context: outbound ports: NoticeRepository, Notifier, WaitingCounts"])
+  OtI(["Knowledge, Orders, Setup contexts, same four folders: inbound ports"])
+  OtO(["Knowledge, Orders, Setup contexts: outbound ports: repositories, catalog and profile readers, secrets check"])
+  InO --> SqliteA
+  InO --> ProvA
+  ProvA --> Kapso
   DrO --> SqliteA
   DrO -.->|SendText, CatchUpChat via published port| InI
   DrO -.->|PrepareOrder, RecordOrder, ChangeOrder, DeleteOrder| OtI
@@ -218,8 +214,7 @@ flowchart LR
   NoO --> Chan
   Chan -->|counts only| Agent
   OtO --> SqliteA
-  OtO --> Files["Owner files and spreadsheet adapters"]
-  Main["src/main.ts: composition root"] -.->|wires| MCP
+  OtO --> Files
 ```
 Moved verbatim to [TP-architecture.md](../tp-detail/TP-architecture.md).
 ## Information
