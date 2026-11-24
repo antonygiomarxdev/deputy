@@ -1,0 +1,54 @@
+# SPEC-05-14: The triage and web helper agent files
+
+Status: Draft
+Rests on: ../frd/FRD-05-pilot-setup.md
+
+## Summary
+
+The two helper definitions: `deputy-triage` (a cheap model, a refusal instead of a prompt, no project instructions, and only `chat_context` and `send_answer`) and `deputy-web` (the read tools plus WebSearch and WebFetch, a refusal instead of a prompt). Neither has an inline server entry or an empty tool set.
+
+Last change: 2026-11-24, first draft for the dispatcher session
+
+One spec is one agent run: at most 80 lines, 3 files and one done command. A spec decides nothing new.
+
+## Rows
+
+| FR-SETUP-05-39 | WHEN | WHEN a round lists pending chats, the dispatcher shall hand each chat, with its token and the knowledge text, to a triage helper that runs in the background. (Proposed, lead decision.) |
+| FR-SETUP-05-41 | WHEN | WHEN the owner asks for a web lookup or research, the dispatcher shall run the web helper for that request only and show its result to the owner, with no terminal prompt. (Proposed, lead decision.) |
+| FR-SETUP-05-42 | always | No helper shall raise a permission prompt in the daily loop; a call that is not allowed is refused, not asked (FR-SETUP-05-20). (Proposed, lead decision.) |
+| FR-SETUP-05-47 | always | Helpers shall not ask the owner anything; only the dispatcher asks. (Proposed, lead decision.) |
+| EX-18 | RULE-8 | boundary | The owner asks in a message to look something up online | The dispatcher runs | The web helper runs for that request only and its result is shown to the owner |
+| EX-19 | RULE-9 | positive | Three chats are pending | A round runs | Three triage helpers each hold one chat's token and the one with an answer sends it |
+| EX-20 | RULE-9 | negative | A triage helper needs the owner's decision | It cannot ask the owner | It returns one line to the dispatcher |
+| EX-21 | RULE-9 | boundary | A triage helper holds the token of chat A | It tries to read chat B | The tool refuses it |
+
+## Files
+| Path | Create or change | Holds |
+|---|---|---|
+| skill/deputy/agents/deputy-triage.md | Create | the triage helper |
+| skill/deputy/agents/deputy-web.md | Create | the web helper |
+| test/skill/helper-agents.test.ts | Create | reads both files and asserts the rows |
+
+## Reuses
+- Precedent: SPEC-05-13-dispatcher-agent.md, the dispatcher file these helpers answer to
+- Precedent: docs/adr/ADR-019-dispatcher-session-and-background-helpers.md, the decision this file carries out
+
+## Tests first
+FR-SETUP-05-39, FR-SETUP-05-41, FR-SETUP-05-42, FR-SETUP-05-47, EX-18, EX-19, EX-20, EX-21, written before the code, without it in view, by reading both files. FR-SETUP-05-39: the triage file has `model: haiku`, `omitClaudeMd: true`, and a `tools` list of exactly `mcp__deputy__chat_context` and `mcp__deputy__send_answer`; its text says the dispatcher passes the chat id, the token and the knowledge, and that it sends only when the knowledge backs the answer and the class is not always-ask, otherwise it returns one line with the question. FR-SETUP-05-42: both files have `permissionMode: dontAsk`; neither has a `mcpServers` key; neither has an empty `tools` list. EX-19: the triage text says it works on the one chat it was given. EX-20 and FR-SETUP-05-47: neither text lets the helper ask the owner; the triage text says to return one line. EX-21: the triage text says a refused token means stop and report. FR-SETUP-05-41 and EX-18: the web file lists `WebSearch` and `WebFetch` and no `send_answer` or `ask_owner`, and its text says it runs for one request and returns the result.
+
+## Build
+```ts
+export const TRIAGE_TOOLS = ["mcp__deputy__chat_context", "mcp__deputy__send_answer"];
+export const WEB_TOOLS = ["mcp__deputy__read_knowledge", "mcp__deputy__get_chat", "WebSearch", "WebFetch"];
+```
+Both files start with a frontmatter block (`name`, `description`, `model`, `permissionMode`, `tools`); `omitClaudeMd` only in the triage file.
+
+## Done when
+`bun test test/skill/helper-agents.test.ts`
+
+## Out of scope
+The tools `chat_context` and `send_answer` themselves and their token check (Intake and Drafts specs); the install step (SPEC-05-15).
+
+## Open questions
+- Q-1 (Lead): Proposed, not decided: the web helper's "read tools" are `read_knowledge` and `get_chat`; the lead named no list. The model of the web helper is left to the default.
+- Q-2 (Lead): see Q-2 of FRD-05: the triage helper has no tool to read the knowledge, so the dispatcher passes it in the prompt.
