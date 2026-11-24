@@ -1,7 +1,11 @@
 # ADR-010: The ignore log is append-only by trigger
 
 ## Status
-Accepted (2026-11-18)
+Proposed
+
+## Summary
+
+Table `ignore_log` has triggers that abort UPDATE and DELETE. Its id is `AUTOINCREMENT`, so order does not depend on the clock.
 
 ## Context
 L4 and FR-INBOX-03-11: each ignore and un-ignore is logged with its time and the owner's words, and the owner can list them. The cross-cutting TP uses triggers to keep `drafts_log` append-only (TD-3). From TP-03 TD-3.
@@ -12,7 +16,7 @@ L4 and FR-INBOX-03-11: each ignore and un-ignore is logged with its time and the
 - Every command is logged, with `changed = 0` when it changed nothing.
 - A migration that rebuilds `ignore_log` recreates the triggers in the same file; the cross-cutting migration test covers it.
 
-## Alternatives
+## Options considered
 - Append-only by convention (no update or delete method on the repository): a later change or a hand-run statement could rewrite the owner's words without the database objecting.
 
 ## Consequences

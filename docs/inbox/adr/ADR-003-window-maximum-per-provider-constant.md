@@ -1,7 +1,11 @@
 # ADR-003: The maximum window is a per-provider constant behind a port
 
 ## Status
-Accepted (2026-11-18)
+Proposed
+
+## Summary
+
+Port `ProviderHistoryLimit.maxWindowDays()`. Its adapter returns 180 for Kapso and for dev, and 180 for any unknown provider name.
 
 ## Context
 FR-INBOX-01-7 caps N at what the provider holds. Research found no API field for Kapso's retention: Kapso keeps messages "indefinitely by default" and paid projects can shorten it (`docs/research/kapso.md`). The longest history the WhatsApp Business app hands to the Cloud API at onboarding is 180 days (Meta, Onboard WhatsApp Business app users). From TP-01 TD-3.
@@ -11,7 +15,7 @@ FR-INBOX-01-7 caps N at what the provider holds. Research found no API field for
 - `InboxSettings.setWindow(requested, max)` keeps `min(requested, max)` and reports `clamped`.
 - The rule changes nowhere else when a real retention field is found: only the adapter changes.
 
-## Alternatives
+## Options considered
 - Cap by stored reach (`now - oldestStoredAt`): a business connected three days ago could not set 14 days in advance, and a failed catch-up could lower the cap.
 - Ask the provider: no such field was found, so nothing can be called.
 

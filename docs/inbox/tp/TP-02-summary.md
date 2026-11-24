@@ -1,6 +1,11 @@
 # Technical Proposal: The inbox summary (Inbox FRD-02)
 
-Status: Approved (2026-11-18)
+Status: Draft
+
+Follows the cross-cutting TP (`docs/tp/TP.md`) and builds on TP-01 (`PendingPolicy`, `ChatScanner`, `PendingWindow`). "Cross-cutting TD-n" means a decision there.
+
+
+## Summary
 
 Follows the cross-cutting TP (`docs/tp/TP.md`) and builds on TP-01 (`PendingPolicy`, `ChatScanner`, `PendingWindow`). "Cross-cutting TD-n" means a decision there.
 
@@ -32,6 +37,8 @@ FR-INBOX-02-1, FR-INBOX-02-2, FR-INBOX-02-3, FR-INBOX-02-4, FR-INBOX-02-5, FR-IN
 
 ### TD-1: Who puts each chat in its group?
 
+ADR: ADR-004
+
 - **Option A** Deputy assigns the group from facts it holds, and takes one hint from the agent. The facts are Drafts' state per chat and whether the waiting message is recorded as an order. The hint is `order_chats`, the chats the agent judges to be orders. Deputy applies the precedence needs-the-owner, then orders, then easy questions, and returns each pending chat once. Cost: a group assigner in the domain and one optional input; the agent may call `inbox` a second time with the hint. Risk: the agent's hint is influenced by customer text, so a chat can be promoted to "orders". The chat is still listed once, and anything Deputy knows is a problem (a held, failed or unknown draft) outranks the hint.
 - **Option B** Deputy returns a flat list of pending chats with facts, and the agent groups them in its answer. Cost: least code. Risk: "exactly one group, never omitted" (R-INBOX-4) is then only an instruction. With 40 pending chats the agent can drop or double a chat and no test can catch it. A held or failed draft could be shown as an easy question.
 - **Option C** Deputy decides "order" by keywords in the text. Cost: one function. Risk: Deputy serves owners in many languages (D20) and keywords fail in all but the ones listed; it also makes Deputy read customer text to decide, which Inbox avoids.
@@ -48,6 +55,8 @@ Recorded in ADR-004.
 
 ### TD-2: When does the summary start a catch-up?
 
+ADR: ADR-005
+
 - **Option A** `ReadInbox` reads Intake's sync status and starts a catch-up only when the last success is older than the catch-up period (default 2 minutes, `catchUpMinutes` from the status), or the owner asks to check again (`refresh = "force"`). Cost: one status read, one comparison. Risk: a message that arrived 1 minute 59 seconds after the last run is not in the list; the header "up to date as of" shows the age.
 - **Option B** Always start a catch-up. Cost: simplest. Risk: each ask costs at least one conversations request plus one per active conversation and one outbound page; ten asks in a minute against 100 requests per minute leaves little for sends, and FR-INBOX-02-2 says to reuse a fresh one.
 - **Option C** Never start one; read what is stored. Cost: no provider call. Risk: after two days closed the list is stale and the owner is not told; R-INBOX-10 requires a catch-up first.
@@ -56,6 +65,8 @@ Chosen: Option A. Intake's timer keeps the data within one period while the sess
 
 ### TD-3: How does customer text stay inside its label?
 
+ADR: ADR-006
+
 - **Option A** The MCP adapter writes customer fields inside `<customer_text>`, after escaping `&`, `<` and `>` to `&amp;`, `&lt;` and `&gt;`. A customer cannot write a closing tag, because no `<` survives. The structured result carries the raw strings in JSON fields named `customerText`, where a string cannot close anything. Cost: one small function, `src/adapters/mcp/customer-text.ts`, shared by every tool that returns customer text. Risk: a price like `<5kg` reads `&lt;5kg`; the agent reads escapes without trouble.
 - **Option B** A random nonce in the tag for each response (`<customer_text id="7f3a">`). Cost: a random source through a port and unstable output in tests. Risk: longer output; the agent must match ids.
 - **Option C** Remove `<` and `>` from customer text. Cost: one regex. Risk: it changes the data the owner needs to read.
@@ -63,6 +74,8 @@ Chosen: Option A. Intake's timer keeps the data within one period while the sess
 Chosen: Option A, because the attack in FR-INBOX-02-10 (text that tries to end the label and speak as Deputy) is closed by a rule that keeps the text readable and the output stable for tests. Fields labeled: every excerpt, transcript, the chat's number (a `group:<id>` is provider text) and any longer view. Recorded in ADR-006.
 
 ### TD-4: How does Inbox know why a draft is held?
+
+ADR: ADR-007
 
 - **Option A** Derive it from Intake's times. A held draft with `lastAnswerAt` (source `owner_app`) later than the draft's `writtenAt` gets `draft_held_owner_answered`; one with `lastCustomerAt` later than `writtenAt` gets `draft_held_customer_wrote_again`; both can apply; with neither, `draft_held`. Cost: no change to Drafts. Risk: a hold caused by a failed pre-send catch-up shows as `draft_held`, the generic code, which is still correct and still sends the owner to choose.
 - **Option B** Drafts adds a `holdReason` to `WaitingChat`. Cost: a change to a settled Drafts port. Risk: two slices must agree on the code list, and Drafts' TP is closed for this round.
