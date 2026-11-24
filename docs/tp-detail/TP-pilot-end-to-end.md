@@ -393,7 +393,7 @@ An arrow in a drawing that no spec builds. Each is stated as found; none is deci
 7. Provider choice and restart. Setup SPEC-05-8 writes one key of `config.json`; no spec sets the provider to kapso or restarts the server so that serve reads it before the business number is adopted (diagram a).
 8. Always-ask source. Drafts SPEC-05 takes the always-ask set as a parameter sourced from Knowledge's always-ask file; no spec passes that file's content to Drafts (diagram b).
 9. Intake daily counts. Drafts SPEC-08 leaves the customer-message and owner-question counts to Intake. Intake SPEC-05-14 builds them (PR 212, not merged); no Drafts spec reads them (diagram b).
-10. Composition wiring. Intake and Knowledge have wiring specs; no spec wires the Drafts and Setup pilot use cases and tools into the composition root (the components drawing).
+10. Composition wiring. Knowledge has a wiring spec on main (K04-6) and Intake's arrives with PR 212 (SPEC-05-15, not merged); Notify's is in PR 211. No spec wires the Drafts and Setup pilot use cases and tools into the composition root (the components drawing).
 11. Channel consent. ADR-018 says the first launch with the channel flag shows a consent dialog; no spec has the skill or the install guide tell the owner (diagrams a and i).
 12. Closed owner window. Merged Intake SPEC-05-6 refuses and records nothing when the owner window is closed. PR 212 (not merged) records the question as not sent, so the owner's later answer closes it (diagram d); until it merges the diagram shows the amended behavior.
 
