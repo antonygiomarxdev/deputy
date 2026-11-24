@@ -87,7 +87,8 @@ sequenceDiagram
   S->>I: ask owner (number, questions, each with its customer chat)
   I->>I: owner window open? (24 h after the owner's latest message)
   alt window closed
-    I-->>S: window closed
+    I->>I: record each question as not sent
+    I-->>S: window closed with the question ids
   else window open
     I->>P: one message listing the open questions, numbered
     I->>I: record each new question with its id and customer chat
@@ -106,7 +107,7 @@ sequenceDiagram
 
 Inbound tools (the intake tools file registers them; each calls one use case):
 
-- `ask_owner { number, questions }` (`questions` is a list of `{ chatId, text }`) returns `{ questionIds }` or `{ refused: "window_closed" | "unknown_chat" | "not_an_owner_number" | "not_owner" }` or the send failure of `SendTextResult`. Lease required.
+- `ask_owner { number, questions }` (`questions` is a list of `{ chatId, text }`) returns `{ questionIds }`, or `{ questionIds, sent: false, reason: "window_closed" }`, or `{ refused: "unknown_chat" | "not_an_owner_number" | "not_owner" }` or the send failure of `SendTextResult`. Lease required.
 - `answer_question { questionId, text }` returns `{ recorded }` or `{ refused: "unknown_question" | "not_owner_words" | "not_owner" }`. Lease required.
 - `list_pending {}` returns `[{ chat, lastCustomerAt, windowClosesAt }]`, newest first. A read, no lease.
 - `get_chat` gains `windowClosesAt` for a customer chat and, for the control chat, `openQuestions` next to the messages. A read.
@@ -127,7 +128,7 @@ One new table, created by a numbered migration (`0008-owner-questions.sql`):
 | `chat_id` | The customer chat the question is about. |
 | `text` | The question text as sent (the session's words). |
 | `asked_at` | The time the question was sent. |
-| `send_id` | The send id of the outgoing message, so a failed send can be found. |
+| `send_id` | The send id of the outgoing message, so a failed send can be found; empty while the question was not sent (owner window closed). |
 | `answer` | The text the session recorded as the owner's answer, or empty while the question is open. |
 | `closed_at` | The time the answer was recorded, or empty. |
 
@@ -142,7 +143,7 @@ Nothing else changes in storage (TD-1 and TD-4).
 
 ## Testing
 
-- Each use case has an in-memory test first; a control message never sets `lastUnattributedAt`, a Business-app echo still does; `ask_owner` never sends with the window closed and sends one message for all open questions; an answer closes only an open question and publishes once.
+- Each use case has an in-memory test first; a control message never sets `lastUnattributedAt`, a Business-app echo still does; `ask_owner` never sends with the window closed and keeps the question as not sent and sends one message for all open questions; an answer closes only an open question and publishes once.
 - One end-to-end test through the harness: a fake provider, an owner number, a question out, an answer recorded.
 
 ## Risks

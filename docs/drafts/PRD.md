@@ -1,6 +1,8 @@
 # Drafts: slice PRD
 
-Status: Approved (2026-11-18) · Part of [Deputy product overview](../PRODUCT.md) · Last updated: 2026-11-17
+Status: Approved (2026-11-24) · Part of [Deputy product overview](../PRODUCT.md) · Last updated: 2026-11-17
+Approval: content hiGOde2AZpUm; rests on ../PRODUCT.md EVnyDrK2H9_N
+
 
 ## Purpose
 
@@ -47,8 +49,11 @@ The drafts log
 
 - **R-DRAFTS-15.** The log records every event, in order, with its time: draft proposed, draft replaced, text changed by the owner, approved, rejected, held (with reason), sent, failed. Each entry names the draft and chat.
 - **R-DRAFTS-16.** The log keeps both the proposed text and the final text, so the difference is available to the Knowledge slice (UC-5), which reads the log. Each entry has an identifier a learned item can refer to.
-- **R-DRAFTS-17.** The log keeps the owner's own words for each approval. Every message sent through Deputy traces to one approval event in the log. A sent message with no approval entry is a defect, and the owner can check for it by reading the log.
+- **R-DRAFTS-17.** The log keeps the owner's own words for each approval. Every message sent through Deputy traces to one approval event in the log. A sent message with no approval entry is a defect, and the owner can check for it by reading the log. An automatic approval keeps empty owner words and basis automatic; CheckApprovals reports it as automatic, not as an owner approval.
 - **R-DRAFTS-21.** An order is recorded only after a go under R-DRAFTS-19, with the same identification and one-approval rules. An owner's own command about an order ("mark Juan's order delivered") is itself the go for that change.
+- **R-DRAFTS-22.** Exception to R-DRAFTS-2 in the local pilot (REQ-15, D31): the session may send an answer by itself, without the owner's go, when the business knowledge backs the answer and its class is not in the always-ask list (D38). Every such send is logged as automatic. The pilot has no daily cap and no kill switch.
+- **R-DRAFTS-23.** Exception to R-DRAFTS-19 in the local pilot: the owner's answer to a question Deputy asked (`ask_owner`) is the go for the next send to the customer chat that question is about, within the customer window, and for that one send only. The session maps the owner's free-text answers to questions; Deputy does not parse which question a reply answers. The go approves no other draft.
+- **R-DRAFTS-24.** In the local pilot, Deputy counts per day the automatic answers, the answers sent with an owner's go and the owner's hand approvals, so the owner can read the counts against Claude's usage status (`/status`). Counts of customer messages and owner questions come from Intake.
 - **R-DRAFTS-18.** The owner can read the log in the conversation at any time, newest first, and filter by chat.
 
 ## Principles honored

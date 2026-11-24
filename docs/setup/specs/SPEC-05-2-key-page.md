@@ -16,6 +16,9 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 | FR-SETUP-05-6 | WHILE | WHILE the key page is open, it shall accept only a request from this computer that carries its one-time token, and it shall close after one successful submit or when the session ends. |
 | FR-SETUP-05-7 | WHEN | WHEN the owner submits the key, Deputy shall store it in the secret store and tell the agent only that it is stored, never the value. |
 | FR-SETUP-05-8 | IF | IF the secret store is unavailable, THEN Deputy shall say so, use the owner-only file the secrets decision names (ADR-008), and tell the owner where the key is kept and why. |
+| EX-1 | RULE-1 | positive | The key page is open with its token | The owner submits a key from this computer | The key is stored and the agent is told only "stored" |
+| EX-2 | RULE-1 | negative | The key page is open | A request arrives without the token | It is refused and nothing is stored |
+| EX-3 | RULE-1 | boundary | The key page was opened twice | The first token is used | It is refused; only the newest token works |
 
 ## Files
 | Path | Create or change | Holds |
@@ -29,7 +32,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 - `src/intake/adapters/http/listener.ts` `LiveListener`: a loopback server that refuses a request from outside, the pattern the page follows.
 
 ## Tests first
-FR-SETUP-05-6: a request without the token, with a wrong token, or with a non-local host is refused and stores nothing; the page closes after one submit and when `close()` runs. FR-SETUP-05-7: after a submit `set` was called once with the value, and the callback receives only where it was stored. FR-SETUP-05-8: when the OS store throws, the key lands in the owner-only file and the callback says "file".
+FR-SETUP-05-6: a request without the token, with a wrong token, or with a non-local host is refused and stores nothing; the page closes after one submit and when `close()` runs. FR-SETUP-05-7: after a submit `set` was called once with the value, and the callback receives only where it was stored. FR-SETUP-05-8: when the OS store throws, the key lands in the owner-only file and the callback says "file". EX-1: submitting a key with the token from this computer stores it and the callback gets only where. EX-2: a request without the token is refused and `set` is never called. EX-3: after a second `openKeyPage`, the first token is refused and only the newest works.
 
 ## Build
 ```ts
