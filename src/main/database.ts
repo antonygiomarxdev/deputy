@@ -9,6 +9,7 @@ import messagesSql from "../intake/adapters/sqlite/migrations/0003-messages.sql"
 import outgoingSql from "../intake/adapters/sqlite/migrations/0004-outgoing.sql" with { type: "text" };
 import catchupStatusSql from "../intake/adapters/sqlite/migrations/0005-catchup-status.sql" with { type: "text" };
 import outgoingRetrySql from "../intake/adapters/sqlite/migrations/0006-outgoing-retry.sql" with { type: "text" };
+import catchupFinishedSql from "../intake/adapters/sqlite/migrations/0007-catchup-finished-at.sql" with { type: "text" };
 import draftsSql from "../drafts/adapters/sqlite/migrations/0001-drafts.sql" with { type: "text" };
 import draftsLogSql from "../drafts/adapters/sqlite/migrations/0002-log.sql" with { type: "text" };
 import draftsApprovalsSql from "../drafts/adapters/sqlite/migrations/0003-approvals.sql" with { type: "text" };
@@ -30,6 +31,7 @@ export async function openDatabase(settings: Settings): Promise<{ db: ReturnType
     { name: "0002-log", sql: draftsLogSql },
     { name: "0003-approvals", sql: draftsApprovalsSql },
     { name: "0006-outgoing-retry", sql: outgoingRetrySql },
+    { name: "0007-catchup-finished-at", sql: catchupFinishedSql },
   ], {
     basePath: dbPath,
     copyTo: (p) => copyFile(dbPath, p),

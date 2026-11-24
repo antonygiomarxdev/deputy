@@ -17,6 +17,7 @@ const TABLES_BY_MIGRATION = [
   ["drafts_log"],
   ["approvals"],
   [], // 0006-outgoing-retry adds a column to outgoing
+  [], // 0007-catchup-finished-at adds a column to catchup_status
 ];
 
 test("booting migrates every slice, in order, and creates each table", async () => {

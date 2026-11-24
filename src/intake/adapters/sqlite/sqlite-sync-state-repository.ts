@@ -43,6 +43,7 @@ function toProps(r: SqlRow): SyncStateProps {
     gap: gapStored === null || gapReturned === null ? null : { storedAt: gapStored, returnedAt: gapReturned },
     firstImportCount: num(r, "first_import_count"),
     liveVerifiedAt: numOrNull(r, "live_verified_at"),
+    finishedAt: numOrNull(r, "finished_at"),
   };
 }
 
@@ -80,8 +81,8 @@ export class SqliteSyncStateRepository implements SyncStateRepository {
     await this.ex.run(
       `INSERT INTO catchup_status
          (provider, status, reason, last_attempt_at, last_success_at, run_started_at, connected_at, mark_conversations,
-          mark_outbound, outbound_resume, failed_since, rate_limited_since, retry_at, gap_stored_at, gap_returned_at, first_import_count)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          mark_outbound, outbound_resume, failed_since, rate_limited_since, retry_at, gap_stored_at, gap_returned_at, first_import_count, finished_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT (provider) DO UPDATE SET
          status = excluded.status, reason = excluded.reason,
          last_attempt_at = excluded.last_attempt_at, last_success_at = excluded.last_success_at,
@@ -92,11 +93,11 @@ export class SqliteSyncStateRepository implements SyncStateRepository {
          outbound_resume = excluded.outbound_resume,
          failed_since = excluded.failed_since, rate_limited_since = excluded.rate_limited_since, retry_at = excluded.retry_at,
          gap_stored_at = excluded.gap_stored_at, gap_returned_at = excluded.gap_returned_at,
-         first_import_count = excluded.first_import_count`,
+         first_import_count = excluded.first_import_count, finished_at = excluded.finished_at`,
       [
         p.provider, p.status, p.reason, p.lastAttemptAt, p.lastSuccessAt, p.runStartedAt, p.connectedAt,
         p.markConversations, p.markOutbound, p.outboundResume === null ? null : JSON.stringify(p.outboundResume),
-        p.failedSince, p.rateLimitedSince, p.retryAt, p.gap?.storedAt ?? null, p.gap?.returnedAt ?? null, p.firstImportCount,
+        p.failedSince, p.rateLimitedSince, p.retryAt, p.gap?.storedAt ?? null, p.gap?.returnedAt ?? null, p.firstImportCount, p.finishedAt,
       ],
     );
   }

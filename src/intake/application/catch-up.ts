@@ -69,6 +69,8 @@ export class CatchUpUseCase implements CatchUp {
       state.markAttempt(now);
       const from = state.props.markConversations === null ? null : state.props.markConversations - OVERLAP_MS;
       const fromOutbound = state.props.markOutbound === null ? null : state.props.markOutbound - OVERLAP_MS;
+      // the sweeps below move the marks: the gap probe compares against these copies, read before them
+      const marksBefore = state.coverageMarks();
 
       const first = await provider.listConversations({ activeAfter: from, cursor: null, limit: PAGE_SIZE }, signal);
       budget.check();
@@ -88,7 +90,7 @@ export class CatchUpUseCase implements CatchUp {
       await sweepOutbound({ ...sweep, from: fromOutbound, providerNow });
 
       const finishedAt = clock.now();
-      const gap = await probeGap({ listings: totals.listings, messages: this.d.reads.messages, provider: provider.name });
+      const gap = await probeGap({ listings: totals.listings, marksBefore, messages: this.d.reads.messages, provider: provider.name });
       if (gap === null) {
         state.complete(finishedAt);
       } else {
