@@ -28,7 +28,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 ## Reuses
 - `src/intake/ports/event-publisher.ts` `EventPublisher`: the port Intake publishes its events through
 - `src/intake/ports/intake-unit-of-work.ts` `IntakeUnitOfWork`: one transaction that checks the lease first; the repository joins it
-- `src/intake/ports/message-repository.ts` `MessageRepository.listChat`: reads the control chat
+- `src/intake/ports/message-repository.ts` `MessageRepository`: its `listChat` reads the control chat
 - `src/shared/text.ts` `normalizeText`: the comparison form
 - Precedent: SPEC-05-5-owner-question-repository.md, `answer` and `listOpen`
 - Precedent: SPEC-05-12-owner-answered-signal.md, the signal this use case publishes
