@@ -2,6 +2,8 @@
 
 Status: Approved (2026-11-18) · Slice: Setup · Part of [Setup PRD](../PRD.md)
 
+Deferred (REQ-15, 2026-11-24): the local pilot sets up the business profile through the skill's interview (D33, D38). The document stays as written.
+
 ## Summary
 
 Setup helps the owner write a first business profile and catalog, proves everything works with a test message answered by an approved draft, and ends with a summary of what is connected. Test mode does the same with no WhatsApp at all. See [../PRD.md](../PRD.md).
