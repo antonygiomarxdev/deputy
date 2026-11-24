@@ -12,11 +12,12 @@ Last change: 2026-11-24, answers of the lead folded in, no open question left
 One spec is one agent run: at most 80 lines, 3 files and one done command. A spec decides nothing new.
 
 ## Rows
+Quoted from: ../../intake/adr/ADR-012-phone-numbers-parsed-with-libphonenumber.md
 
-- Connection settings (`provider`, `receiving_mode`, `push_on`, `business-number`, `kapso-phone-number-id`, `orders-spreadsheet`, `catalog-store sheet:<id>`) and the owner numbers are changed only with `deputy config set <key> <value>`; an owner number is removed with `deputy config remove owner-number <number>`, a pending change applied and logged like `set`. `deputy secrets list` shows each secret's name and where it is kept, never a value. They live in `~/.deputy/config.json` and the owner-numbers repository. No MCP tool changes them; `set_setting` refuses them and names the command.
-- The command line is an inbound adapter (`src/adapters/cli/`) that never calls a lease-guarded use case. It writes a `pending_changes` row (key, value, typed command, time) or the config or secrets file, and exits; neither needs the lease. The owner process applies pending changes on its next tick without a restart (Intake's `ApplyPendingChanges` logs each owner-number change with the typed command, L4; the `LeaseSupervisor` re-reads `config.json`). With no owner process, they are applied at the next start. The agent conversation never sees the command line.
+- A number typed without a country code is parsed with the owner's country (Setup asks for it, D21) as the default region. Senders arrive in international form and parse without a default. A number the library cannot parse as possible is refused with a message that asks for the country code. Setup and the command line show the E.164 form back before storing it.
+- The business number is read from the provider when it offers it (the Kapso phone number record); otherwise it must be typed with `+` and the country code. It never decides the default country.
 
-R1 is the first row above, R2 the second. The ADR has no row ids, so these labels are local to the spec.
+R1 is the first row above, R2 the second. ADR-012 has no row ids, so these labels are local to the spec. The command contract (a `pending_changes` row, no lease) is ADR-008, the document this spec rests on.
 
 ## Files
 | Path | Create or change | Holds |
@@ -33,7 +34,7 @@ R1 is the first row above, R2 the second. The ADR has no row ids, so these label
 - `src/adapters/clock/system-clock.ts` `SystemClock`: the time of the row
 
 ## Tests first
-Written before the code, without it in view, in `test/adapters/cli/config-business-number.test.ts`. R2: (1) `business-number "+505 8888 1111"` adds one row with key `business_number`, the value as typed, the command and the time, and returns 0; (1b) the parsed E.164 form `+50588881111` is printed before the row is written, and again in the saved line (Intake ADR-012 and TP-04: the command line shows the E.164 form back before storing it); (2) the module imports no `OwnerLease`; (3) with no `deputy.db` the database is created first. R1: (4) the command stored is `deputy config set business-number +505 8888 1111`, the arguments joined by single spaces (the shell removes the quotes); (5) a number without `+` and country code, an unreadable number or a missing value writes nothing, prints one line saying what to type, and returns 1; (6) a storage error returns 2; (7) another key writes no row here.
+Written before the code, without it in view, in `test/adapters/cli/config-business-number.test.ts`. (1) `business-number "+505 8888 1111"` adds one row with key `business_number`, the value as typed, the command and the time, and returns 0; (2) the module imports no `OwnerLease`, so it calls no lease-guarded use case; (3) with no `deputy.db` the database is created first; (4) the command stored is `deputy config set business-number +505 8888 1111`, the arguments joined by single spaces (the shell removes the quotes); (5) a storage error returns 2; (6) another key writes no row here. R1: (7) the parsed E.164 form `+50588881111` is printed before the row is written, and again in the saved line. R2: (8) a number typed without `+` and the country code is refused even when a country is set, prints one line and returns 1; (9) an unreadable number or a missing value writes nothing and returns 1.
 
 ## Build
 ```ts
