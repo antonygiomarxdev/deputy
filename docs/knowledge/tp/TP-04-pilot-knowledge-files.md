@@ -17,7 +17,7 @@ Fixed elsewhere, so not decided again:
 - Knowledge is one bounded context with `domain`, `application`, `ports` and `adapters` (cross-cutting TD-0). Every use case that writes asks `OwnerLease.isOwner()` first (`src/shared/owner-lease.ts`) and refuses with `not_owner`; reads do not ask (FR-KNOWLEDGE-04-8).
 - A refusal is a fixed code with an English default text (D20). No knowledge text is ever part of a code.
 - The owner's words are 1 to 1000 characters (`parseOwnerWords`, `src/shared/owner-words.ts`; Drafts ADR-003).
-- Intake owns the stored messages. Knowledge asks it two questions through its `index.ts`: whether a text equals a stored customer message (`IsCustomerText`, `src/intake/ports/is-customer-text.ts`) and whether a stored message was written by an owner number in the control chat (D37; to be exposed by the Intake documents, FRD-04 Q-2).
+- Intake owns the stored messages. Knowledge reads them through Intake's `index.ts` only: `IsCustomerText` (`src/intake/ports/is-customer-text.ts`) tells whether a text equals a stored customer message, and `ReadChat` with `GetOwnerNumbers` find a stored message in the control chat, which is the chat between the business number and an owner number (D37, FR-INTAKE-05-1 to FR-INTAKE-05-3). No Intake port is added; the Drafts slice does the same with `IntakeCustomerTextCheck` (`src/drafts/adapters/intake/intake-customer-text-check.ts`).
 - The tools are defined with `defineTool` (`src/adapters/mcp/tool.ts`); customer-derived text in a tool result is labeled with `customerText` (`src/adapters/mcp/customer-text.ts`).
 
 ## Requirements served
@@ -82,7 +82,7 @@ flowchart LR
   Rem --> Store
   Rem --> Chk(["MessageChecks"])
   Rem --> Lease
-  Chk --> Intake["Intake index: IsCustomerText, control chat check"]
+  Chk --> Intake["Intake index: IsCustomerText, ReadChat, GetOwnerNumbers"]
   Store --> Files["knowledge folder: four files, history, changes.log"]
 ```
 
@@ -90,10 +90,10 @@ Domain (`src/knowledge/domain/`, no input or output, no package):
 
 - `KnowledgeFileName`: `"profile" | "catalog" | "memory" | "always-ask"` and its file name.
 - `parseCatalogTable(text) -> { ok: true, items } | { ok: false, code: "catalog_unreadable" }`; `renderCatalog(items)` returns "to be confirmed" for an empty price or availability; `diffCatalog(old, new) -> { added, removed, changed }`.
-- `LIMITS`: owner words 1000 (shared); proposed by this draft, not decided by the owner: catalog 500 items, profile and always-ask 20000 characters, memory text 500 characters, history 20 (Q-4).
+- `LIMITS`: owner words 1000 (shared); proposed by this draft, not decided by the owner: catalog 500 items, profile and always-ask 20000 characters, memory text 500 characters, history 20 (Q-3).
 - `memoryEntry(date, text)` returns `"<date>: <text>"`.
 
-Application (`src/knowledge/application/`): `ReadKnowledge`, `SaveKnowledgeFile` (one use case for the three files, the catalog adds its table check), `Remember`. Ports (`src/knowledge/ports/`): `KnowledgeStore` (read a file with its saved time, write a whole file with history, append a line), `ChangeLog`, `MessageChecks` (`isCustomerText(text)`, `ownerControlMessage(id)` returning the stored text or null). Adapters: `src/knowledge/adapters/files/` (store and log), `src/knowledge/adapters/intake/` (message checks over the Intake index), `src/knowledge/adapters/mcp/` (the tools). The composition root `src/main/knowledge.ts` builds them.
+Application (`src/knowledge/application/`): `ReadKnowledge`, `SaveKnowledgeFile` (one use case for the three files, the catalog adds its table check), `Remember`. Ports (`src/knowledge/ports/`): `KnowledgeStore` (read a file with its saved time, write a whole file with history, append a line), `ChangeLog`, `MessageChecks` (`isCustomerText(text)`, `ownerControlMessage(id)` returning the stored text or null). Adapters: `src/knowledge/adapters/files/` (store and log), `src/knowledge/adapters/intake/` (message checks over the Intake index: for each owner number of kind extra it reads that chat, newest 200 messages, and finds the message by its id), `src/knowledge/adapters/mcp/` (the tools). The composition root `src/main/knowledge.ts` builds them.
 
 ## Information
 
@@ -118,7 +118,7 @@ Refusal codes: `not_owner`, `owner_words_missing`, `owner_words_size`, `catalog_
 | The agent supplies made-up owner words | A save without the owner | Known limit (D11); each change is recorded with the words in `changes.log` and the previous version is kept |
 | A path in a tool input | A file outside the folder is read or written | There is no path input; names come from a closed list |
 | A paraphrase of customer text is remembered | Same as the first row | Stated limit; the control chat source needs a stored owner message |
-| A very large text | Plan usage and disk | Size limits in the domain (proposed, Q-4) |
+| A very large text | Plan usage and disk | Size limits in the domain (proposed, Q-3) |
 
 ## Testing
 
@@ -130,12 +130,11 @@ ATDD from the FRD: tests carry `covers: knowledge/FRD-04/<ID>`. The store is tes
 |---|---|---|
 | Reading all four files on every turn grows the plan usage | The $20 plan runs out sooner | Size limits (proposed); `read_knowledge` returns the size of each file (FR-KNOWLEDGE-04-2); Q-3 asks the owner what to do when it grows |
 | The owner edits the catalog into a shape Deputy cannot read | Lookup fails | `read_knowledge` returns the text as it is and adds the notice `catalog_unreadable`; it hides nothing (FR-KNOWLEDGE-04-22) |
-| Intake does not expose the control chat check | `remember` from WhatsApp waits | Build the session source first (FRD-04 Q-2) |
+| The lookup reads only the newest 200 messages of the owner's chat | An older message cannot be used as a source | It is refused as `not_owner_message`; the owner repeats the instruction and the session uses a newer message |
 | A file open in another program on Windows | The save fails | The old text stays; the refusal says to close the file |
 
 ## Open questions
 
 - Q-1 (Lead): the FRD adds `save_profile` and `save_always_ask` to the three tools named in the task; confirm.
-- Q-2 (Lead): the Intake documents must expose whether a stored message came from an owner number in the control chat (D37), or `remember` ships with the session source only.
-- Q-4 (Lead): the limits of 500 catalog items, 20000 characters, 20 previous versions and 500 characters per memory entry are proposed by this draft, not decided by the owner; confirm or replace them.
-- Q-3 (Owner: only the owner knows how much knowledge the agent should read on every turn): what should happen when the memory or the catalog is so long that reading it each turn costs too much of the plan?
+- Q-2 (Owner: only the owner knows how much knowledge the agent should read on every turn): what should happen when the memory or the catalog is so long that reading it each turn costs too much of the plan?
+- Q-3 (Lead): the limits of 500 catalog items, 20000 characters, 20 previous versions and 500 characters per memory entry are proposed by this draft, not decided by the owner; confirm or replace them.

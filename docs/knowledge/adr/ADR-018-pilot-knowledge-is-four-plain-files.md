@@ -19,7 +19,7 @@ REQ-15 and decisions D32, D33 and D38 make setup a conversation in which the own
 - A save writes the whole new text to a temporary file in the same folder, copies the old file to `knowledge/history/<name>.<time>`, then renames the temporary file over the old one. Only the last 20 history copies of a file are kept.
 - Each save appends one line to `knowledge/changes.log`: time, file, the owner's words, a short summary.
 - Reads are never cached: each call reads the files as they are.
-- Proposed limits, not yet decided by the owner (FRD-04 Q-4 and TP-04 Q-4): 500 catalog items, 20000 characters for the profile and the always-ask list, 500 characters per memory entry, and 20 history copies per file.
+- Proposed limits, not yet decided by the owner (FRD-04 Q-3 and TP-04 Q-3): 500 catalog items, 20000 characters for the profile and the always-ask list, 500 characters per memory entry, and 20 history copies per file.
 
 ## Consequences
 - Easier: the owner and the support person read and fix the files with any editor; no proposal state; no credentials of another service.

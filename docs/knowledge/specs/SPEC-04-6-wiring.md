@@ -26,15 +26,16 @@ Quoted from: ../frd/FRD-04-pilot-knowledge-files.md
 ## Reuses
 - `src/main/drafts.ts` `draftsWiring`: the pattern of one builder file per slice (ADR-013)
 - `src/main/tools.ts` `mcpServer`: the place where the tool list is assembled
+- `src/main/drafts.ts` `draftsWiring`: it already hands `intake.isCustomerText` to an Intake adapter (`IntakeCustomerTextCheck`)
 
 ## Tests first
 FR-KNOWLEDGE-04-12, in `test/e2e`, written without the code in view: start the server, save a profile, edit the file by hand, call `read_knowledge` and see the edit.
 
 ## Build
 ```ts
-export function knowledgeWiring(d: { configDir: string; lease: OwnerLease; clock: Clock; checks: MessageChecks }): { tools: ToolDefinition[] };
+export function knowledgeWiring(d: { configDir: string; lease: OwnerLease; clock: Clock; intake: { isCustomerText: IsCustomerText; readChat: ReadChat }; ownerNumbers: { getOwnerNumbers: GetOwnerNumbers } }): { tools: ToolDefinition[] };
 ```
-Until Intake exposes the control chat check (FRD-04 Q-2, SPEC-04-7), the checks object answers `ownerControlMessage` with null, so only the session source works.
+It builds `createIntakeMessageChecks` (SPEC-04-7) from the Intake ports, so the control chat source of `remember` works end to end.
 
 ## Done when
 `bun test test/e2e`
@@ -43,4 +44,4 @@ Until Intake exposes the control chat check (FRD-04 Q-2, SPEC-04-7), the checks 
 The Intake adapter for message checks (SPEC-04-7) and a lookup tool for catalog items by name (FRD-01 rows 3 to 5).
 
 ## Open questions
-Q-1 (Lead): the control chat source of `remember` depends on FRD-04 Q-2, the Intake check for a stored control chat message (D37). Until it is answered this wiring passes a checks object that answers null, and only the session source works.
+None.

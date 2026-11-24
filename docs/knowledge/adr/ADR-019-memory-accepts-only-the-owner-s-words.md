@@ -17,11 +17,11 @@ The memory is read by the agent on every turn, so a line a stranger plants there
 ## Decision
 - `remember({ text, source })` where `source` is `{ kind: "session", ownerWords }` or `{ kind: "control_chat", messageId }`.
 - A session source needs owner words that pass `parseOwnerWords` (1 to 1000 characters).
-- A control chat source needs a stored message that Deputy classified as written by an owner number in the control chat (D37); a customer message or an unknown id is refused. The text to remember must be contained, after normalization, in that stored message; otherwise it is refused with `text_not_in_message`. This follows R-KNOWLEDGE-18: the memory takes the owner's own words, not the agent's rewording of them.
+- A control chat source needs a stored message that an owner number wrote in the control chat (FR-INTAKE-05-1 to FR-INTAKE-05-3), found through Intake's chat read; a customer message or an unknown id is refused. The text to remember must be contained, after normalization, in that stored message; otherwise it is refused with `text_not_in_message`. This follows R-KNOWLEDGE-18: the memory takes the owner's own words, not the agent's rewording of them.
 - A text equal to a stored customer message is refused, whatever the source.
-- The text is 1 to 500 characters (a proposed limit, FRD-04 Q-4); the entry is `<date>: <text>`.
+- The text is 1 to 500 characters (a proposed limit, FRD-04 Q-3); the entry is `<date>: <text>`.
 
 ## Consequences
 - Easier: the owner's WhatsApp answers become knowledge with no extra step; a planted customer sentence is refused when copied whole.
 - Harder: a paraphrase of customer text passes the copy check, and the session source cannot prove who spoke; both are known limits, stated in the FRD and the README.
-- Watch: the check for a control chat message depends on what Intake exposes (FRD-04 Q-2).
+- Watch: the lookup reads the newest 200 messages of each owner number's chat, so an older message is refused as `not_owner_message`.

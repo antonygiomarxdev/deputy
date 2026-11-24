@@ -6,7 +6,7 @@ Status: Draft
 
 In the pilot the business knowledge is four plain text files on the owner's computer: the profile, the catalog, the memory and the always-ask list. The agent reads them with one call and saves them as whole files after the owner agreed; the memory grows only from the owner's own answers. Customer text never writes a knowledge file. Deputy holds no credentials of any other service: the session brings in a spreadsheet, a photo or a document and saves the result.
 
-Last change: 2026-11-24, first draft for REQ-15 and D38.
+Last change: 2026-11-24, first draft for REQ-15 and D38; the control chat is the one Intake FRD-05 defines (FR-INTAKE-05-1 to FR-INTAKE-05-3), so the old question about it is closed.
 
 One feature of the [slice PRD](../PRD.md). It replaces, for the pilot only, the proposal flow of [FRD-01](FRD-01-profile-and-catalog.md) rows 9 to 11 and the spreadsheet row 13; the other FRD-01 rows are kept where this FRD does not restate them. Learned knowledge (FRD-02) and export and wipe (FRD-03) are not built for the pilot.
 
@@ -34,7 +34,7 @@ R-KNOWLEDGE-2, R-KNOWLEDGE-3, R-KNOWLEDGE-5, R-KNOWLEDGE-10, R-KNOWLEDGE-15, R-K
 | FR-KNOWLEDGE-04-12 | WHEN | WHEN the owner edits a knowledge file by hand, Deputy shall read the file as it is on the next call, without a restart. |
 | FR-KNOWLEDGE-04-13 | WHEN | WHEN the agent calls `remember` with a text and a source, Deputy shall append to the memory one entry that carries today's date and the text, and shall return the entry. |
 | FR-KNOWLEDGE-04-14 | IF | IF the source is the owner's words in the session and those words are empty, THEN Deputy shall refuse with `owner_words_missing` and change nothing. |
-| FR-KNOWLEDGE-04-15 | IF | IF the source is a control chat message and Deputy has not stored that message as written by an owner number in the control chat, THEN Deputy shall refuse with `not_owner_message` and change nothing. |
+| FR-KNOWLEDGE-04-15 | IF | IF the source is a message in the control chat (the chat of FR-INTAKE-05-1) and Deputy has not stored that message as written by an owner number in the control chat, THEN Deputy shall refuse with `not_owner_message` and change nothing. |
 | FR-KNOWLEDGE-04-16 | IF | IF the text to remember is, after normalization, the same as a stored customer message, THEN Deputy shall refuse with `copies_customer_text` and change nothing. |
 | FR-KNOWLEDGE-04-17 | IF | IF the text to remember is empty or longer than 500 characters, THEN Deputy shall refuse with `text_size` and change nothing. |
 | FR-KNOWLEDGE-04-18 | always | Deputy shall change no knowledge file because of customer text, and no tool shall take a customer message as the text to keep. |
@@ -145,13 +145,13 @@ n/a: this project keeps its cross-cutting rules in the cross-cutting TP (`docs/t
 - Memory: one entry per line with a date and the owner's text.
 - Always-ask list: one line per class of question, with how to recognize it.
 - For each file: the time it was last saved, up to 20 previous versions, and the change record (time, file, owner's words, summary).
+- The control chat is the chat between the business number and an owner number (FR-INTAKE-05-1); its messages are read through Intake's existing chat read, and a message is a source for the memory only when an owner number wrote it there.
 
 ## Open questions
 
 - Q-1 (Lead): the task named `read_knowledge`, `remember` and `save_catalog`; setup also has to write the profile and the always-ask list, so this FRD adds `save_profile` and `save_always_ask` with the same rule. Confirm, or name another way to write them.
-- Q-2 (Lead): `remember` needs Intake to say whether a stored message was written by an owner number in the control chat (D37). The Intake documents (control chat) must expose that check, or FR-KNOWLEDGE-04-15 waits and only the session source is built first.
-- Q-3 (Owner: only the owner knows how much knowledge the agent should read on every turn): when the memory or the catalog grows so large that reading it each turn costs too much of the plan, should Deputy warn the owner and ask to tidy it?
-- Q-4 (Lead): the numbers in FR-KNOWLEDGE-04-9, -10, -11 and -17 (500 catalog items, 20000 characters, 20 previous versions, 500 characters per memory entry) are proposed by this draft, not decided by the owner; they exist to bound plan usage and disk. Confirm or replace them.
+- Q-2 (Owner: only the owner knows how much knowledge the agent should read on every turn): when the memory or the catalog grows so large that reading it each turn costs too much of the plan, should Deputy warn the owner and ask to tidy it?
+- Q-3 (Lead): the numbers in FR-KNOWLEDGE-04-9, -10, -11 and -17 (500 catalog items, 20000 characters, 20 previous versions, 500 characters per memory entry) are proposed by this draft, not decided by the owner; they exist to bound plan usage and disk. Confirm or replace them.
 
 ## Acceptance criteria
 Generated from the examples, decision table and states; never edited by hand.

@@ -16,7 +16,7 @@ Quoted from: ../frd/FRD-04-pilot-knowledge-files.md
 
 | FR-KNOWLEDGE-04-13 | WHEN | WHEN the agent calls `remember` with a text and a source, Deputy shall append to the memory one entry that carries today's date and the text, and shall return the entry. |
 | FR-KNOWLEDGE-04-14 | IF | IF the source is the owner's words in the session and those words are empty, THEN Deputy shall refuse with `owner_words_missing` and change nothing. |
-| FR-KNOWLEDGE-04-15 | IF | IF the source is a control chat message and Deputy has not stored that message as written by an owner number in the control chat, THEN Deputy shall refuse with `not_owner_message` and change nothing. |
+| FR-KNOWLEDGE-04-15 | IF | IF the source is a message in the control chat (the chat of FR-INTAKE-05-1) and Deputy has not stored that message as written by an owner number in the control chat, THEN Deputy shall refuse with `not_owner_message` and change nothing. |
 | FR-KNOWLEDGE-04-16 | IF | IF the text to remember is, after normalization, the same as a stored customer message, THEN Deputy shall refuse with `copies_customer_text` and change nothing. |
 | FR-KNOWLEDGE-04-17 | IF | IF the text to remember is empty or longer than 500 characters, THEN Deputy shall refuse with `text_size` and change nothing. |
 | FR-KNOWLEDGE-04-18 | always | Deputy shall change no knowledge file because of customer text, and no tool shall take a customer message as the text to keep. |
@@ -71,4 +71,4 @@ Order: lease, size 1 to 500, source check (for a control chat source the text mu
 The Intake adapter behind MessageChecks (SPEC-04-7) and the tools (SPEC-04-5).
 
 ## Open questions
-Q-1 (Lead): this spec depends on FRD-04 Q-2, the Intake check for a stored control chat message (D37). It is built against the MessageChecks port with fakes, so it can start before Intake answers; the control chat source works end to end only after SPEC-04-7.
+None.
