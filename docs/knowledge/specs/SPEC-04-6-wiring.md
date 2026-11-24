@@ -5,7 +5,7 @@ Rests on: ../tp/TP-04-pilot-knowledge-files.md
 
 ## Summary
 
-The composition root builds the store, the use cases and the message checks, and adds the five tools to the server. The end-to-end test saves a profile, edits the file by hand and reads it again without a restart. Last of six runs for FRD-04.
+The composition root builds the store, the use cases and the message checks, and adds the five tools to the server. The end-to-end test saves a profile, edits the file by hand and reads it again without a restart. Sixth of seven runs for FRD-04.
 
 Last change: 2026-11-24, first draft for REQ-15 and D38.
 
@@ -34,13 +34,13 @@ FR-KNOWLEDGE-04-12, in `test/e2e`, written without the code in view: start the s
 ```ts
 export function knowledgeWiring(d: { configDir: string; lease: OwnerLease; clock: Clock; checks: MessageChecks }): { tools: ToolDefinition[] };
 ```
-Until Intake exposes the control chat check (FRD-04 Q-2), the checks adapter answers `isOwnerControlMessage` with false, so only the session source works.
+Until Intake exposes the control chat check (FRD-04 Q-2, SPEC-04-7), the checks object answers `ownerControlMessage` with null, so only the session source works.
 
 ## Done when
 `bun test test/e2e`
 
 ## Out of scope
-The Intake side of the control chat check (Intake documents) and a lookup tool for catalog items by name (FRD-01 rows 3 to 5).
+The Intake adapter for message checks (SPEC-04-7) and a lookup tool for catalog items by name (FRD-01 rows 3 to 5).
 
 ## Open questions
-None.
+Q-1 (Lead): the control chat source of `remember` depends on FRD-04 Q-2, the Intake check for a stored control chat message (D37). Until it is answered this wiring passes a checks object that answers null, and only the session source works.

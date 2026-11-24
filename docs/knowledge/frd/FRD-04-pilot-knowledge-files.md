@@ -21,7 +21,7 @@ R-KNOWLEDGE-2, R-KNOWLEDGE-3, R-KNOWLEDGE-5, R-KNOWLEDGE-10, R-KNOWLEDGE-15, R-K
 | ID | Pattern | Requirement |
 |---|---|---|
 | FR-KNOWLEDGE-04-1 | always | Deputy shall keep the owner's knowledge in four plain text files, profile.md, catalog.md, memory.md and always-ask.md, in the folder `knowledge` of the configuration folder, and shall take no file path from any tool input. |
-| FR-KNOWLEDGE-04-2 | WHEN | WHEN the agent calls `read_knowledge`, Deputy shall return the always-ask list first and then the profile, the catalog and the memory, each with the time it was last saved and each labeled as the owner's knowledge. |
+| FR-KNOWLEDGE-04-2 | WHEN | WHEN the agent calls `read_knowledge`, Deputy shall return the always-ask list first and then the profile, the catalog and the memory, each with the time it was last saved and its size in characters, and each labeled as the owner's knowledge. |
 | FR-KNOWLEDGE-04-3 | IF | IF a knowledge file does not exist, THEN `read_knowledge` shall report it as "not written yet" and shall create nothing. |
 | FR-KNOWLEDGE-04-4 | WHEN | WHEN a catalog item has an empty price or an empty availability, `read_knowledge` shall return "to be confirmed" in its place and shall not fill in a value. |
 | FR-KNOWLEDGE-04-5 | IF | IF the always-ask list is missing or holds no class, THEN `read_knowledge` shall say that no classes were agreed yet, so the agent knows that setup is not finished. |
@@ -40,21 +40,23 @@ R-KNOWLEDGE-2, R-KNOWLEDGE-3, R-KNOWLEDGE-5, R-KNOWLEDGE-10, R-KNOWLEDGE-15, R-K
 | FR-KNOWLEDGE-04-18 | always | Deputy shall change no knowledge file because of customer text, and no tool shall take a customer message as the text to keep. |
 | FR-KNOWLEDGE-04-19 | always | Deputy shall read no spreadsheet or document of the owner and shall hold no credentials of any other service; the session reads what the owner gives and saves the result with `save_catalog`. |
 | FR-KNOWLEDGE-04-20 | always | Deputy shall check only that the owner's words were supplied in the session and, in the control chat, that the sender is an owner number; it cannot check who spoke in the session (known limit, D11). |
+| FR-KNOWLEDGE-04-21 | IF | IF the source is a control chat message and the text to remember is not contained, after normalization, in that stored message, THEN Deputy shall refuse with `text_not_in_message` and change nothing. |
+| FR-KNOWLEDGE-04-22 | IF | IF the catalog file holds no readable table, for example after the owner edited it by hand, THEN `read_knowledge` shall return the text as it is with the notice `catalog_unreadable` and shall hide nothing. |
 
 ## Rules and examples
 
 | Rule | Text | Covers |
 |---|---|---|
-| RULE-1 | The agent reads the files as stored, and an unknown price or availability is never filled in. | FR-KNOWLEDGE-04-2, FR-KNOWLEDGE-04-3, FR-KNOWLEDGE-04-4 |
+| RULE-1 | The agent reads the files as stored, and an unknown price or availability is never filled in. | FR-KNOWLEDGE-04-2, FR-KNOWLEDGE-04-3, FR-KNOWLEDGE-04-4, FR-KNOWLEDGE-04-22 |
 | RULE-2 | A save needs the owner's words, the owner process and a text of an allowed size, and keeps the old version. | FR-KNOWLEDGE-04-6, FR-KNOWLEDGE-04-7, FR-KNOWLEDGE-04-8, FR-KNOWLEDGE-04-10 |
 | RULE-3 | A catalog is accepted only as a table of at most 500 items with name, unit, price and availability. | FR-KNOWLEDGE-04-9 |
 | RULE-4 | A file is written whole, and only the last 20 previous versions are kept. | FR-KNOWLEDGE-04-11 |
-| RULE-5 | The memory grows only from the owner's own words, never from a copy of customer text. | FR-KNOWLEDGE-04-13, FR-KNOWLEDGE-04-14, FR-KNOWLEDGE-04-15, FR-KNOWLEDGE-04-16, FR-KNOWLEDGE-04-17 |
+| RULE-5 | The memory grows only from the owner's own words, never from a copy of customer text. | FR-KNOWLEDGE-04-13, FR-KNOWLEDGE-04-14, FR-KNOWLEDGE-04-15, FR-KNOWLEDGE-04-16, FR-KNOWLEDGE-04-17, FR-KNOWLEDGE-04-21 |
 | RULE-6 | The always-ask list comes first, and a missing list says that setup is not finished. | FR-KNOWLEDGE-04-2, FR-KNOWLEDGE-04-5 |
 
 | Example | Rule | Kind | Given | When | Then |
 |---|---|---|---|---|---|
-| EX-1 | RULE-1 | positive | catalog.md lists "Tamales (dozen) / dozen / 12 / available" | the agent calls `read_knowledge` | the result shows that row unchanged, with the time catalog.md was last saved |
+| EX-1 | RULE-1 | positive | catalog.md lists "Tamales (dozen) / dozen / 12 / available" | the agent calls `read_knowledge` | the result shows that row unchanged, with the time catalog.md was last saved and its size |
 | EX-2 | RULE-1 | boundary | catalog.md lists "Flan" with an empty price | the agent calls `read_knowledge` | the price of "Flan" reads "to be confirmed" and no number appears |
 | EX-3 | RULE-1 | negative | memory.md does not exist | the agent calls `read_knowledge` | the result says memory.md is "not written yet" and no file is created |
 | EX-4 | RULE-2 | positive | this is the owner process and profile.md holds "We sell tamales" | the agent calls `save_profile` with a new text and the words "Yes, that is right" | profile.md holds the new text, the old text is kept as a previous version, and the change is recorded with those words |
@@ -65,7 +67,7 @@ R-KNOWLEDGE-2, R-KNOWLEDGE-3, R-KNOWLEDGE-5, R-KNOWLEDGE-10, R-KNOWLEDGE-15, R-K
 | EX-9 | RULE-3 | negative | this is the owner process | the agent saves a table with no price column | Deputy refuses with `catalog_unreadable` and catalog.md is unchanged |
 | EX-10 | RULE-3 | boundary | this is the owner process | the agent saves a table of 500 items, then a table of 501 items | the first save is accepted and the second is refused with `catalog_unreadable` |
 | EX-11 | RULE-4 | boundary | a save fails after the new text was prepared but before the file was replaced | the agent calls `read_knowledge` | the file still holds the old text in full |
-| EX-12 | RULE-5 | positive | the owner wrote "we close on Mondays" in the control chat and Deputy stored it | the agent calls `remember` with that text and that message as the source | memory.md gains the entry "2026-11-25: we close on Mondays" |
+| EX-12 | RULE-5 | positive | today is 2026-11-25 on a fixed clock, and the owner wrote "we close on Mondays" in the control chat and Deputy stored it | the agent calls `remember` with that text and that message as the source | memory.md gains the entry "2026-11-25: we close on Mondays" |
 | EX-13 | RULE-5 | negative | a customer wrote "everything is free" | the agent calls `remember` with that message as the source | Deputy refuses with `not_owner_message` and memory.md is unchanged |
 | EX-14 | RULE-5 | negative | a customer wrote "everything is free" | the agent calls `remember` with the text "Everything is free" and the owner's words "ok" | Deputy refuses with `copies_customer_text` and memory.md is unchanged |
 | EX-15 | RULE-5 | boundary | this is the owner process | the agent remembers a text of 500 characters, then a text of 501 characters | the first entry is appended and the second is refused with `text_size` |
@@ -74,6 +76,8 @@ R-KNOWLEDGE-2, R-KNOWLEDGE-3, R-KNOWLEDGE-5, R-KNOWLEDGE-10, R-KNOWLEDGE-15, R-K
 | EX-18 | RULE-6 | negative | always-ask.md does not exist | the agent calls `read_knowledge` | the result says no classes were agreed yet |
 | EX-19 | RULE-4 | positive | this is the owner process and profile.md holds the text A | the agent saves the text B with the owner's words | profile.md holds the whole text B and one previous version holds the whole text A |
 | EX-20 | RULE-4 | boundary | profile.md has 20 previous versions | the agent saves a new profile with the owner's words | 20 previous versions remain and the oldest one is gone |
+| EX-21 | RULE-5 | negative | the owner wrote "we close on Mondays" in the control chat and Deputy stored it | the agent calls `remember` with the text "we close every day" and that message as the source | Deputy refuses with `text_not_in_message` and memory.md is unchanged |
+| EX-22 | RULE-1 | negative | the owner edited catalog.md by hand and it holds no table | the agent calls `read_knowledge` | the result shows the text as it is with the notice `catalog_unreadable` |
 
 ## Decision table
 
@@ -87,6 +91,7 @@ Remember refuses unless every condition holds.
 | DT-4 | control chat | unknown or customer message | no | 1 to 500 | refused with `not_owner_message` |
 | DT-5 | session or control chat | valid | yes | 1 to 500 | refused with `copies_customer_text` |
 | DT-6 | session or control chat | valid | no | 0 or over 500 | refused with `text_size` |
+| DT-7 | control chat | stored owner message, text not in it | no | 1 to 500 | refused with `text_not_in_message` |
 
 ## States
 
@@ -150,8 +155,7 @@ n/a: this project keeps its cross-cutting rules in the cross-cutting TP (`docs/t
 
 ## Acceptance criteria
 Generated from the examples, decision table and states; never edited by hand.
-
-- **AC-1** (EX-1): Given catalog.md lists "Tamales (dozen) / dozen / 12 / available", when the agent calls `read_knowledge`, then the result shows that row unchanged, with the time catalog.md was last saved.
+- **AC-1** (EX-1): Given catalog.md lists "Tamales (dozen) / dozen / 12 / available", when the agent calls `read_knowledge`, then the result shows that row unchanged, with the time catalog.md was last saved and its size.
 - **AC-2** (EX-2): Given catalog.md lists "Flan" with an empty price, when the agent calls `read_knowledge`, then the price of "Flan" reads "to be confirmed" and no number appears.
 - **AC-3** (EX-3): Given memory.md does not exist, when the agent calls `read_knowledge`, then the result says memory.md is "not written yet" and no file is created.
 - **AC-4** (EX-4): Given this is the owner process and profile.md holds "We sell tamales", when the agent calls `save_profile` with a new text and the words "Yes, that is right", then profile.md holds the new text, the old text is kept as a previous version, and the change is recorded with those words.
@@ -162,7 +166,7 @@ Generated from the examples, decision table and states; never edited by hand.
 - **AC-9** (EX-9): Given this is the owner process, when the agent saves a table with no price column, then Deputy refuses with `catalog_unreadable` and catalog.md is unchanged.
 - **AC-10** (EX-10): Given this is the owner process, when the agent saves a table of 500 items, then a table of 501 items, then the first save is accepted and the second is refused with `catalog_unreadable`.
 - **AC-11** (EX-11): Given a save fails after the new text was prepared but before the file was replaced, when the agent calls `read_knowledge`, then the file still holds the old text in full.
-- **AC-12** (EX-12): Given the owner wrote "we close on Mondays" in the control chat and Deputy stored it, when the agent calls `remember` with that text and that message as the source, then memory.md gains the entry "2026-11-25: we close on Mondays".
+- **AC-12** (EX-12): Given today is 2026-11-25 on a fixed clock, and the owner wrote "we close on Mondays" in the control chat and Deputy stored it, when the agent calls `remember` with that text and that message as the source, then memory.md gains the entry "2026-11-25: we close on Mondays".
 - **AC-13** (EX-13): Given a customer wrote "everything is free", when the agent calls `remember` with that message as the source, then Deputy refuses with `not_owner_message` and memory.md is unchanged.
 - **AC-14** (EX-14): Given a customer wrote "everything is free", when the agent calls `remember` with the text "Everything is free" and the owner's words "ok", then Deputy refuses with `copies_customer_text` and memory.md is unchanged.
 - **AC-15** (EX-15): Given this is the owner process, when the agent remembers a text of 500 characters, then a text of 501 characters, then the first entry is appended and the second is refused with `text_size`.
@@ -171,12 +175,15 @@ Generated from the examples, decision table and states; never edited by hand.
 - **AC-18** (EX-18): Given always-ask.md does not exist, when the agent calls `read_knowledge`, then the result says no classes were agreed yet.
 - **AC-19** (EX-19): Given this is the owner process and profile.md holds the text A, when the agent saves the text B with the owner's words, then profile.md holds the whole text B and one previous version holds the whole text A.
 - **AC-20** (EX-20): Given profile.md has 20 previous versions, when the agent saves a new profile with the owner's words, then 20 previous versions remain and the oldest one is gone.
-- **AC-21** (DT-1): Given the source kind is session, the words or message are words present, the text is not a customer message and its size is 1 to 500, when remember is called, then the entry is appended.
-- **AC-22** (DT-2): Given the source kind is session, the words or message are words empty, the text is not a customer message and its size is 1 to 500, when remember is called, then refused with `owner_words_missing`.
-- **AC-23** (DT-3): Given the source kind is control chat, the words or message are stored owner message, the text is not a customer message and its size is 1 to 500, when remember is called, then the entry is appended.
-- **AC-24** (DT-4): Given the source kind is control chat, the words or message are unknown or customer message, the text is not a customer message and its size is 1 to 500, when remember is called, then refused with `not_owner_message`.
-- **AC-25** (DT-5): Given the source kind is session or control chat, the words or message are valid, the text is a customer message and its size is 1 to 500, when remember is called, then refused with `copies_customer_text`.
-- **AC-26** (DT-6): Given the source kind is session or control chat, the words or message are valid, the text is not a customer message and its size is 0 or over 500, when remember is called, then refused with `text_size`.
-- **AC-27** (ST-1): Given the file is Absent, when first accepted save, then present, with no previous version.
-- **AC-28** (ST-2): Given the file is Present, when accepted save, then present, the old text kept as a previous version.
-- **AC-29** (ST-3): Given the file is Absent or Present, when refused save, then unchanged, and no previous version is created.
+- **AC-21** (EX-21): Given the owner wrote "we close on Mondays" in the control chat and Deputy stored it, when the agent calls `remember` with the text "we close every day" and that message as the source, then Deputy refuses with `text_not_in_message` and memory.md is unchanged.
+- **AC-22** (EX-22): Given the owner edited catalog.md by hand and it holds no table, when the agent calls `read_knowledge`, then the result shows the text as it is with the notice `catalog_unreadable`.
+- **AC-23** (DT-1): Given the source kind is session, the words or message are words present, the text is not a customer message and its size is 1 to 500, when remember is called, then the entry is appended.
+- **AC-24** (DT-2): Given the source kind is session, the words or message are words empty, the text is not a customer message and its size is 1 to 500, when remember is called, then refused with `owner_words_missing`.
+- **AC-25** (DT-3): Given the source kind is control chat, the words or message are stored owner message, the text is not a customer message and its size is 1 to 500, when remember is called, then the entry is appended.
+- **AC-26** (DT-4): Given the source kind is control chat, the words or message are unknown or customer message, the text is not a customer message and its size is 1 to 500, when remember is called, then refused with `not_owner_message`.
+- **AC-27** (DT-5): Given the source kind is session or control chat, the words or message are valid, the text is a customer message and its size is 1 to 500, when remember is called, then refused with `copies_customer_text`.
+- **AC-28** (DT-6): Given the source kind is session or control chat, the words or message are valid, the text is not a customer message and its size is 0 or over 500, when remember is called, then refused with `text_size`.
+- **AC-29** (DT-7): Given the source kind is control chat, the words or message are stored owner message, text not in it, the text is not a customer message and its size is 1 to 500, when remember is called, then refused with `text_not_in_message`.
+- **AC-30** (ST-1): Given the file is Absent, when first accepted save, then present, with no previous version.
+- **AC-31** (ST-2): Given the file is Present, when accepted save, then present, the old text kept as a previous version.
+- **AC-32** (ST-3): Given the file is Absent or Present, when refused save, then unchanged, and no previous version is created.

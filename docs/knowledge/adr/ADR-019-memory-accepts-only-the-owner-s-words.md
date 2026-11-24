@@ -17,9 +17,9 @@ The memory is read by the agent on every turn, so a line a stranger plants there
 ## Decision
 - `remember({ text, source })` where `source` is `{ kind: "session", ownerWords }` or `{ kind: "control_chat", messageId }`.
 - A session source needs owner words that pass `parseOwnerWords` (1 to 1000 characters).
-- A control chat source needs a stored message that Deputy classified as written by an owner number in the control chat (D37); a customer message or an unknown id is refused.
+- A control chat source needs a stored message that Deputy classified as written by an owner number in the control chat (D37); a customer message or an unknown id is refused. The text to remember must be contained, after normalization, in that stored message; otherwise it is refused with `text_not_in_message`. This follows R-KNOWLEDGE-18: the memory takes the owner's own words, not the agent's rewording of them.
 - A text equal to a stored customer message is refused, whatever the source.
-- The text is 1 to 500 characters; the entry is `<date>: <text>`.
+- The text is 1 to 500 characters (a proposed limit, FRD-04 Q-4); the entry is `<date>: <text>`.
 
 ## Consequences
 - Easier: the owner's WhatsApp answers become knowledge with no extra step; a planted customer sentence is refused when copied whole.

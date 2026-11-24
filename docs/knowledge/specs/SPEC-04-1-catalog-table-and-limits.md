@@ -5,7 +5,7 @@ Rests on: ../tp/TP-04-pilot-knowledge-files.md
 
 ## Summary
 
-The pure rules of the knowledge files: parse a catalog table, count items added, removed and changed, show "to be confirmed" for an empty price or availability, and the size limits. No file access. First of six runs for FRD-04.
+The pure rules of the knowledge files: parse a catalog table, count items added, removed and changed, show "to be confirmed" for an empty price or availability, and the size limits. No file access. First of seven runs for FRD-04.
 
 Last change: 2026-11-24, first draft for REQ-15 and D38.
 
@@ -37,7 +37,7 @@ FR-KNOWLEDGE-04-4, FR-KNOWLEDGE-04-9, FR-KNOWLEDGE-04-10, EX-2, EX-8, EX-9, EX-1
 
 ## Build
 ```ts
-export type Refusal = "not_owner" | "owner_words_missing" | "owner_words_size" | "catalog_unreadable" | "too_large" | "not_owner_message" | "copies_customer_text" | "text_size";
+export type Refusal = "not_owner" | "owner_words_missing" | "owner_words_size" | "catalog_unreadable" | "too_large" | "not_owner_message" | "text_not_in_message" | "copies_customer_text" | "text_size";
 export const LIMITS: { catalogItems: 500; profileChars: 20000; memoryChars: 500; history: 20 };
 export type CatalogItem = { name: string; unit: string; price: string; availability: string };
 export function parseCatalogTable(text: string): { ok: true; items: CatalogItem[] } | { ok: false; code: "catalog_unreadable" };

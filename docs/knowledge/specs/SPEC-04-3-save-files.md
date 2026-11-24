@@ -5,7 +5,7 @@ Rests on: ../tp/TP-04-pilot-knowledge-files.md
 
 ## Summary
 
-The use case that replaces a whole file after the owner's words: owner process, words size, catalog table check, previous version kept, change recorded. Third of six runs for FRD-04.
+The use case that replaces a whole file after the owner's words: owner process, words size, catalog table check, previous version kept, change recorded. Third of seven runs for FRD-04.
 
 Last change: 2026-11-24, first draft for REQ-15 and D38.
 

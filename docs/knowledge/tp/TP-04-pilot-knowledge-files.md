@@ -22,7 +22,7 @@ Fixed elsewhere, so not decided again:
 
 ## Requirements served
 
-FR-KNOWLEDGE-04-1, FR-KNOWLEDGE-04-2, FR-KNOWLEDGE-04-3, FR-KNOWLEDGE-04-4, FR-KNOWLEDGE-04-5, FR-KNOWLEDGE-04-6, FR-KNOWLEDGE-04-7, FR-KNOWLEDGE-04-8, FR-KNOWLEDGE-04-9, FR-KNOWLEDGE-04-10, FR-KNOWLEDGE-04-11, FR-KNOWLEDGE-04-12, FR-KNOWLEDGE-04-13, FR-KNOWLEDGE-04-14, FR-KNOWLEDGE-04-15, FR-KNOWLEDGE-04-16, FR-KNOWLEDGE-04-17, FR-KNOWLEDGE-04-18, FR-KNOWLEDGE-04-19, FR-KNOWLEDGE-04-20.
+FR-KNOWLEDGE-04-1, FR-KNOWLEDGE-04-2, FR-KNOWLEDGE-04-3, FR-KNOWLEDGE-04-4, FR-KNOWLEDGE-04-5, FR-KNOWLEDGE-04-6, FR-KNOWLEDGE-04-7, FR-KNOWLEDGE-04-8, FR-KNOWLEDGE-04-9, FR-KNOWLEDGE-04-10, FR-KNOWLEDGE-04-11, FR-KNOWLEDGE-04-12, FR-KNOWLEDGE-04-13, FR-KNOWLEDGE-04-14, FR-KNOWLEDGE-04-15, FR-KNOWLEDGE-04-16, FR-KNOWLEDGE-04-17, FR-KNOWLEDGE-04-18, FR-KNOWLEDGE-04-19, FR-KNOWLEDGE-04-20, FR-KNOWLEDGE-04-21, FR-KNOWLEDGE-04-22.
 
 ## Decisions
 
@@ -50,7 +50,7 @@ Chosen: Option A. The record of each change (time, file, owner's words, summary)
 
 The memory is read on every turn, so a planted line steers every answer (FR-KNOWLEDGE-04-13 to FR-KNOWLEDGE-04-18).
 
-- **Option A** `remember({ text, source })` with a session source (owner words) or a control chat source (a stored message id), plus a refusal of a text equal to a stored customer message and a size limit of 500 characters. Cost: two checks against Intake. Risk: a paraphrase of customer text passes; the session source cannot prove who spoke.
+- **Option A** `remember({ text, source })` with a session source (owner words) or a control chat source (a stored message id; the text must be contained in that message), plus a refusal of a text equal to a stored customer message and a size limit of 500 characters. Cost: two checks against Intake. Risk: a paraphrase of customer text passes; the session source cannot prove who spoke.
 - **Option B** Only the session source. Cost: none. Risk: the owner's WhatsApp answers cannot become knowledge, and the agent supplies any words.
 - **Option C** No source; the agent writes any text. Cost: none. Risk: one injected customer message can write the memory.
 
@@ -90,10 +90,10 @@ Domain (`src/knowledge/domain/`, no input or output, no package):
 
 - `KnowledgeFileName`: `"profile" | "catalog" | "memory" | "always-ask"` and its file name.
 - `parseCatalogTable(text) -> { ok: true, items } | { ok: false, code: "catalog_unreadable" }`; `renderCatalog(items)` returns "to be confirmed" for an empty price or availability; `diffCatalog(old, new) -> { added, removed, changed }`.
-- `LIMITS`: owner words 1000 (shared), catalog 500 items, profile and always-ask 20000 characters, memory text 500 characters, history 20.
+- `LIMITS`: owner words 1000 (shared); proposed by this draft, not decided by the owner: catalog 500 items, profile and always-ask 20000 characters, memory text 500 characters, history 20 (Q-4).
 - `memoryEntry(date, text)` returns `"<date>: <text>"`.
 
-Application (`src/knowledge/application/`): `ReadKnowledge`, `SaveKnowledgeFile` (one use case for the three files, the catalog adds its table check), `Remember`. Ports (`src/knowledge/ports/`): `KnowledgeStore` (read a file with its saved time, write a whole file with history, append a line), `ChangeLog`, `MessageChecks` (`isCustomerText(text)`, `ownerControlMessage(id)`). Adapters: `src/knowledge/adapters/files/` (store and log), `src/knowledge/adapters/intake/` (message checks over the Intake index), `src/knowledge/adapters/mcp/` (the tools). The composition root `src/main/knowledge.ts` builds them.
+Application (`src/knowledge/application/`): `ReadKnowledge`, `SaveKnowledgeFile` (one use case for the three files, the catalog adds its table check), `Remember`. Ports (`src/knowledge/ports/`): `KnowledgeStore` (read a file with its saved time, write a whole file with history, append a line), `ChangeLog`, `MessageChecks` (`isCustomerText(text)`, `ownerControlMessage(id)` returning the stored text or null). Adapters: `src/knowledge/adapters/files/` (store and log), `src/knowledge/adapters/intake/` (message checks over the Intake index), `src/knowledge/adapters/mcp/` (the tools). The composition root `src/main/knowledge.ts` builds them.
 
 ## Information
 
@@ -106,19 +106,19 @@ Four files, `knowledge/history/<name>.<time>` copies (20 per file) and `knowledg
 | `read_knowledge` | none | the four texts, always-ask first, each with its saved time, or "not written yet" |
 | `save_profile`, `save_always_ask` | `text`, `owner_words` | summary with the new size; or a refusal code |
 | `save_catalog` | `text`, `owner_words` | summary with items added, removed, changed; or a refusal code |
-| `remember` | `text`, `source` (`{kind:"session", owner_words}` or `{kind:"control_chat", message_id}`) | the entry that was appended; or a refusal code |
+| `remember` | `text`, `source` (`{kind:"session", owner_words}` or `{kind:"control_chat", message_id}`); with a control chat source the text must be contained in that stored message | the entry that was appended; or a refusal code |
 
-Refusal codes: `not_owner`, `owner_words_missing`, `owner_words_size`, `catalog_unreadable`, `too_large`, `not_owner_message`, `copies_customer_text`, `text_size`. No tool input is a path.
+Refusal codes: `not_owner`, `owner_words_missing`, `owner_words_size`, `catalog_unreadable`, `too_large`, `not_owner_message`, `text_not_in_message`, `copies_customer_text`, `text_size`. No tool input is a path.
 
 ## Threat model
 
 | Threat | Effect | Control |
 |---|---|---|
-| A customer message tells the agent to remember or save something | A planted rule steers later answers | No tool takes a customer message as the text; a text equal to a stored customer message is refused; the owner reads the entry in the result |
+| A customer message tells the agent to remember or save something | A planted rule steers later answers | No tool takes a customer message as the text; a text equal to a stored customer message is refused; the owner reads the entry in the result; with a control chat source the text must be contained in the stored owner message |
 | The agent supplies made-up owner words | A save without the owner | Known limit (D11); each change is recorded with the words in `changes.log` and the previous version is kept |
 | A path in a tool input | A file outside the folder is read or written | There is no path input; names come from a closed list |
 | A paraphrase of customer text is remembered | Same as the first row | Stated limit; the control chat source needs a stored owner message |
-| A very large text | Plan usage and disk | Size limits in the domain |
+| A very large text | Plan usage and disk | Size limits in the domain (proposed, Q-4) |
 
 ## Testing
 
@@ -128,8 +128,8 @@ ATDD from the FRD: tests carry `covers: knowledge/FRD-04/<ID>`. The store is tes
 
 | Risk | Effect | Mitigation |
 |---|---|---|
-| Reading all four files on every turn grows the plan usage | The $20 plan runs out sooner | Size limits; `read_knowledge` returns sizes; Q-3 asks the owner what to do when it grows |
-| The owner edits the catalog into a shape Deputy cannot read | Lookup fails | `read_knowledge` returns the text as it is and adds the notice `catalog_unreadable`; it hides nothing |
+| Reading all four files on every turn grows the plan usage | The $20 plan runs out sooner | Size limits (proposed); `read_knowledge` returns the size of each file (FR-KNOWLEDGE-04-2); Q-3 asks the owner what to do when it grows |
+| The owner edits the catalog into a shape Deputy cannot read | Lookup fails | `read_knowledge` returns the text as it is and adds the notice `catalog_unreadable`; it hides nothing (FR-KNOWLEDGE-04-22) |
 | Intake does not expose the control chat check | `remember` from WhatsApp waits | Build the session source first (FRD-04 Q-2) |
 | A file open in another program on Windows | The save fails | The old text stays; the refusal says to close the file |
 
@@ -137,4 +137,5 @@ ATDD from the FRD: tests carry `covers: knowledge/FRD-04/<ID>`. The store is tes
 
 - Q-1 (Lead): the FRD adds `save_profile` and `save_always_ask` to the three tools named in the task; confirm.
 - Q-2 (Lead): the Intake documents must expose whether a stored message came from an owner number in the control chat (D37), or `remember` ships with the session source only.
+- Q-4 (Lead): the limits of 500 catalog items, 20000 characters, 20 previous versions and 500 characters per memory entry are proposed by this draft, not decided by the owner; confirm or replace them.
 - Q-3 (Owner: only the owner knows how much knowledge the agent should read on every turn): what should happen when the memory or the catalog is so long that reading it each turn costs too much of the plan?

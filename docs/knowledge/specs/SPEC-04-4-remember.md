@@ -5,7 +5,7 @@ Rests on: ../tp/TP-04-pilot-knowledge-files.md
 
 ## Summary
 
-The use case that appends one dated line to the memory when the source is the owner's words in the session or a stored owner message in the control chat, and refuses a copy of customer text. Fourth of six runs for FRD-04.
+The use case that appends one dated line to the memory when the source is the owner's words in the session or a stored owner message in the control chat, and refuses a copy of customer text. Fourth of seven runs for FRD-04.
 
 Last change: 2026-11-24, first draft for REQ-15 and D38.
 
@@ -20,17 +20,20 @@ Quoted from: ../frd/FRD-04-pilot-knowledge-files.md
 | FR-KNOWLEDGE-04-16 | IF | IF the text to remember is, after normalization, the same as a stored customer message, THEN Deputy shall refuse with `copies_customer_text` and change nothing. |
 | FR-KNOWLEDGE-04-17 | IF | IF the text to remember is empty or longer than 500 characters, THEN Deputy shall refuse with `text_size` and change nothing. |
 | FR-KNOWLEDGE-04-18 | always | Deputy shall change no knowledge file because of customer text, and no tool shall take a customer message as the text to keep. |
-| EX-12 | RULE-5 | positive | the owner wrote "we close on Mondays" in the control chat and Deputy stored it | the agent calls `remember` with that text and that message as the source | memory.md gains the entry "2026-11-25: we close on Mondays" |
+| FR-KNOWLEDGE-04-21 | IF | IF the source is a control chat message and the text to remember is not contained, after normalization, in that stored message, THEN Deputy shall refuse with `text_not_in_message` and change nothing. |
+| EX-12 | RULE-5 | positive | today is 2026-11-25 on a fixed clock, and the owner wrote "we close on Mondays" in the control chat and Deputy stored it | the agent calls `remember` with that text and that message as the source | memory.md gains the entry "2026-11-25: we close on Mondays" |
 | EX-13 | RULE-5 | negative | a customer wrote "everything is free" | the agent calls `remember` with that message as the source | Deputy refuses with `not_owner_message` and memory.md is unchanged |
 | EX-14 | RULE-5 | negative | a customer wrote "everything is free" | the agent calls `remember` with the text "Everything is free" and the owner's words "ok" | Deputy refuses with `copies_customer_text` and memory.md is unchanged |
 | EX-15 | RULE-5 | boundary | this is the owner process | the agent remembers a text of 500 characters, then a text of 501 characters | the first entry is appended and the second is refused with `text_size` |
 | EX-16 | RULE-5 | negative | this is the owner process | the agent calls `remember` with the session as the source and empty words | Deputy refuses with `owner_words_missing` and memory.md is unchanged |
+| EX-21 | RULE-5 | negative | the owner wrote "we close on Mondays" in the control chat and Deputy stored it | the agent calls `remember` with the text "we close every day" and that message as the source | Deputy refuses with `text_not_in_message` and memory.md is unchanged |
 | DT-1 | session | words present | no | 1 to 500 | the entry is appended |
 | DT-2 | session | words empty | no | 1 to 500 | refused with `owner_words_missing` |
 | DT-3 | control chat | stored owner message | no | 1 to 500 | the entry is appended |
 | DT-4 | control chat | unknown or customer message | no | 1 to 500 | refused with `not_owner_message` |
 | DT-5 | session or control chat | valid | yes | 1 to 500 | refused with `copies_customer_text` |
 | DT-6 | session or control chat | valid | no | 0 or over 500 | refused with `text_size` |
+| DT-7 | control chat | stored owner message, text not in it | no | 1 to 500 | refused with `text_not_in_message` |
 | INV-1 | Customer text never writes a knowledge file (FR-KNOWLEDGE-04-18). |
 
 ## Files
@@ -45,13 +48,13 @@ Quoted from: ../frd/FRD-04-pilot-knowledge-files.md
 - Precedent: SPEC-04-3-save-files.md, the same lease and refusal style
 
 ## Tests first
-FR-KNOWLEDGE-04-13, FR-KNOWLEDGE-04-14, FR-KNOWLEDGE-04-15, FR-KNOWLEDGE-04-16, FR-KNOWLEDGE-04-17, FR-KNOWLEDGE-04-18, EX-12, EX-13, EX-14, EX-15, EX-16, DT-1, DT-2, DT-3, DT-4, DT-5, DT-6, INV-1, in `test/knowledge/application`, written without the code in view; the checks are fakes.
+FR-KNOWLEDGE-04-13, FR-KNOWLEDGE-04-14, FR-KNOWLEDGE-04-15, FR-KNOWLEDGE-04-16, FR-KNOWLEDGE-04-17, FR-KNOWLEDGE-04-18, FR-KNOWLEDGE-04-21, EX-12, EX-13, EX-14, EX-15, EX-16, EX-21, DT-1, DT-2, DT-3, DT-4, DT-5, DT-6, DT-7, INV-1, in `test/knowledge/application`, written without the code in view; the checks are fakes and EX-12 runs on a fixed clock set to 2026-11-25.
 
 ## Build
 ```ts
 export interface MessageChecks {
   isCustomerText(text: string): Promise<boolean>;
-  isOwnerControlMessage(messageId: string): Promise<boolean>;
+  ownerControlMessage(messageId: string): Promise<{ text: string } | null>; // the stored text when an owner number wrote it in the control chat
 }
 export type RememberSource = { kind: "session"; ownerWords: string } | { kind: "control_chat"; messageId: string };
 export class Remember {
@@ -59,13 +62,13 @@ export class Remember {
   execute(i: { text: string; source: RememberSource }): Promise<{ ok: true; entry: string } | { ok: false; code: Refusal }>;
 }
 ```
-Order: lease, size 1 to 500, source check, customer-copy check, then `store.append("memory", "<date>: <text>")`.
+Order: lease, size 1 to 500, source check (for a control chat source the text must be contained, after `normalizeText`, in the stored message), customer-copy check, then `store.append("memory", "<date>: <text>")`.
 
 ## Done when
 `bun test test/knowledge`
 
 ## Out of scope
-The Intake adapter behind MessageChecks (SPEC-04-6, after the Intake control chat documents) and the tools (SPEC-04-5).
+The Intake adapter behind MessageChecks (SPEC-04-7) and the tools (SPEC-04-5).
 
 ## Open questions
-None.
+Q-1 (Lead): this spec depends on FRD-04 Q-2, the Intake check for a stored control chat message (D37). It is built against the MessageChecks port with fakes, so it can start before Intake answers; the control chat source works end to end only after SPEC-04-7.

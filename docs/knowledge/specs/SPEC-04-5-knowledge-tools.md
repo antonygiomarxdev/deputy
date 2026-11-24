@@ -5,7 +5,7 @@ Rests on: ../tp/TP-04-pilot-knowledge-files.md
 
 ## Summary
 
-The tools the agent calls: read_knowledge, save_profile, save_catalog, save_always_ask and remember, with no path or URL input, labeled results and the known limit stated in their descriptions. Fifth of six runs for FRD-04.
+The tools the agent calls: read_knowledge, save_profile, save_catalog, save_always_ask and remember, with no path or URL input, labeled results and the known limit stated in their descriptions. Fifth of seven runs for FRD-04.
 
 Last change: 2026-11-24, first draft for REQ-15 and D38.
 
