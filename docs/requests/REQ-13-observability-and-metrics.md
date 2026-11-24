@@ -17,8 +17,6 @@ The owner, 2026-11-24, in a Claude Code session.
 
 > para mi que si deberia, no urge, pero si cuando se empiece a usar, mas que nada para ver que usan que no y ver la direccion del producto, no tanto para ver temas privados
 
-> para mi que si deberia, no urge, pero si cuando se empiece a usar, mas que nada para ver que usan que no y ver la direccion del producto, no tanto para ver temas privados
-
 ## The problem behind it
 The `status` tool shows only intake sync. Logs live on stderr and die with the session, and the agent cannot read recent errors. Nothing counts messages against the Kapso plan limit, and the owner has no numbers about their own business. The maintainers learn nothing about how Deputy runs in the field.
 
