@@ -5,7 +5,7 @@ Rests on: ../frd/FRD-02-owners-go.md
 
 ## Summary
 
-One builder in the composition root makes what the pilot tools need: the pending-go store over the shared database, the always-ask source over Knowledge's readAlwaysAsk, the dependencies of the automatic send and of the send with an owner's go, and the sources of the pilot counts. It takes Intake's event bus and hands it to SPEC-11's subscription; it registers no tool (SPEC-16-2, SPEC-16-3). First of four runs.
+One builder in the composition root makes what the pilot tools need: the pending-go store over the shared database, the always-ask source over Knowledge's readAlwaysAsk, the dependencies of the automatic send and of the send with an owner's go, and the sources of the pilot counts. It takes Intake's event bus and hands it to SPEC-11's subscription; it registers no tool (SPEC-16-2, SPEC-16-3). First of five runs.
 
 Last change: 2026-11-24, first draft for the Drafts pilot wiring.
 

@@ -5,7 +5,7 @@ Rests on: ../frd/FRD-02-owners-go.md
 
 ## Summary
 
-The server builds Intake, then Knowledge, then Drafts with Knowledge's `readAlwaysAsk` and Intake's counts; `draftsWiring` subscribes and reconciles inside itself (SPEC-11) and the server waits for it before it starts the lease supervisor, so the first poll finds every go in place. The end-to-end test proves the order and the restart. Fourth of four runs.
+The server builds Intake, then Knowledge, then Drafts with Knowledge's `readAlwaysAsk` and Intake's counts; `draftsWiring` subscribes and reconciles inside itself (SPEC-11) and the server waits for it before it starts the lease supervisor, so the first poll finds every go in place. The end-to-end test proves the order and the restart. Fourth of five runs.
 
 Last change: 2026-11-24, first draft for the Drafts pilot wiring.
 
@@ -33,9 +33,10 @@ FR-DRAFTS-02-13, FR-DRAFTS-02-15, in `test/e2e/drafts-pilot.test.ts`, written wi
 ## Build
 ```ts
 // serve.ts order
-const wired = intakeWiring(...);
+const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;   // read once (SPEC-16-5)
+const wired = intakeWiring({ ..., zone });
 const knowledge = knowledgeWiring({ ..., intake: wired.intake });          // Knowledge SPEC-04-9
-const { drafts, approvals, pilot } = await draftsWiring({ ..., readAlwaysAsk: knowledge.readAlwaysAsk, dailyCounts: wired.intake.dailyCounts, listAnsweredQuestions: wired.intake.listAnsweredQuestions, events: wired.events }); // subscribes and reconciles inside (SPEC-11), so it is async
+const { drafts, approvals, pilot } = await draftsWiring({ ..., zone, readAlwaysAsk: knowledge.readAlwaysAsk, dailyCounts: wired.intake.dailyCounts, listAnsweredQuestions: wired.intake.listAnsweredQuestions, events: wired.events }); // subscribes and reconciles inside (SPEC-11), so it is async
 const supervisor = superviseLease(...);   // the scheduler starts here: the first poll comes after the reconcile
 ```
 The members `dailyCounts` and `listAnsweredQuestions` and the returned `events` are those of Intake SPEC-05-18 and SPEC-05-19.

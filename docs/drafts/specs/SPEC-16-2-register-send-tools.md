@@ -5,7 +5,7 @@ Rests on: ../frd/FRD-02-owners-go.md
 
 ## Summary
 
-The tool list gets the two pilot send tools, built from the dependency bundles of SPEC-16-1. The registration spreads the bundle, so a field added to `autoSendDeps` later (the token check on send_answer) reaches the tool with no change here. Second of four runs.
+The tool list gets the two pilot send tools, built from the dependency bundles of SPEC-16-1. The registration spreads the bundle, so a field added to `autoSendDeps` later (the token check on send_answer) reaches the tool with no change here. Second of five runs.
 
 Last change: 2026-11-24, first draft for the Drafts pilot wiring.
 

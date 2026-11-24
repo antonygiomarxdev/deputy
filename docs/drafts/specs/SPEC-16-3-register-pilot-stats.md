@@ -5,7 +5,7 @@ Rests on: ../frd/FRD-04-drafts-log.md
 
 ## Summary
 
-The tool list gets `pilot_stats`: `pilotStatsTool` (SPEC-15) joined from Drafts' counts per day and Intake's `IntakeDailyCounts`; it takes an optional `days` (1 to 30, 7 by default) and covers that many local days ending today (lead decision L16, Proposed). Third of four runs.
+The tool list gets `pilot_stats`: `pilotStatsTool` (SPEC-15) joined from Drafts' counts per day and Intake's `IntakeDailyCounts`; it takes an optional `days` (1 to 30, 7 by default) and covers that many local days ending today (lead decision L16, Proposed). Third of five runs.
 
 Last change: 2026-11-24, first draft for the Drafts pilot wiring.
 
