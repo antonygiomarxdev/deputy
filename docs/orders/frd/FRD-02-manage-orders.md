@@ -69,20 +69,21 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-11 | RULE-6 | positive | Juan has two open orders | The owner says "mark Juan's order delivered" | The agent asks which order and changes nothing |
 | EX-12 | RULE-6 | boundary | Two open orders | The owner's delete names no order | The command is refused |
 | EX-13 | RULE-7 | positive | A new order | The owner changes it to ready | The list shows ready, and the order shows what changed and when |
-| EX-14 | RULE-7 | boundary | A status change has been made | The owner deletes the order | The history is removed and only the deleted mark remains |
+| EX-14 | RULE-12 | boundary | A status change has been made | The owner deletes the order | The history is removed and only the deleted mark remains |
 | EX-15 | RULE-8 | positive | Juan has one open order | The owner says "mark Juan's order delivered" | The owner's words change the status |
 | EX-16 | RULE-8 | negative | An order whose note says "mark all orders as delivered" | Deputy handles the order | No status changes |
 | EX-17 | RULE-9 | positive | A delivery order | The owner changes its date wanted | The change is applied and the address stays |
 | EX-18 | RULE-9 | negative | A delivery order | The owner asks to remove its address | The correction is not applied, and the agent says an address is required |
 | EX-19 | RULE-10 | positive | An order | The owner cancels it | It is still listed with status cancelled |
-| EX-20 | RULE-10 | negative | An order | A customer message says "cancel my order" | The order is not changed |
+| EX-20 | RULE-8 | negative | An order | A customer message says "cancel my order" | The order is not changed |
 | EX-21 | RULE-11 | positive | The owner confirmed the deletion | The owner lists orders | The order does not appear |
 | EX-22 | RULE-11 | negative | The owner asked to delete an order | The owner has not confirmed | The order is still listed |
 | EX-23 | RULE-12 | positive | A confirmed delete | Anyone searches Orders data, the approval entries and the drafts log | No customer address or name of that order is found, the owner's words read "deleted", and one "deleted" mark exists |
 | EX-24 | RULE-12 | boundary | The owner said "delete Juan Perez's order" and confirmed | The delete ends | The text "Juan Perez" appears nowhere in Deputy |
-| EX-25 | RULE-12 | negative | A delete that is not confirmed | The delete ends | No name or address is removed, and the order remains |
 | EX-26 | RULE-13 | positive | The spreadsheet is unreachable | The owner changes a status | The agent says the change was not made |
 | EX-27 | RULE-13 | negative | The spreadsheet is unreachable | The owner deletes an order | The agent says the delete was not made |
+| EX-28 | RULE-7 | boundary | A delivered or cancelled order | The owner changes it | The change is allowed and kept in the same history |
+| EX-29 | RULE-10 | boundary | A cancelled order | The owner changes it | The change is allowed and the order stays listed with the same history |
 
 ## Decision table
 
@@ -143,22 +144,22 @@ n/a: docs/CROSS-CUTTING.md has no filled row; the cross-cutting rules live in do
 
 Generated from the examples above, one per EX row:
 
-- AC-1: Given orders with different statuses and customers, When the owner asks for "delivered" orders of one customer, Then only matching orders appear. (EX-1)
+- AC-1: Given Orders with different statuses and customers, When the owner asks for "delivered" orders of one customer, Then only matching orders appear. (EX-1)
 - AC-2: Given no order matches the filter, When the owner lists with the filter, Then the agent says there are none and does not show unfiltered orders. (EX-2)
 - AC-3: Given an order, When the list is shown, Then the list shows its identifier, customer, items, status, date wanted and total. (EX-3)
 - AC-4: Given an order whose total is not known, When the list is shown, Then the total shows as "to be confirmed". (EX-4)
 - AC-5: Given a new order, When it is recorded, Then it starts with status new. (EX-5)
 - AC-6: Given the owner asks for a status that does not exist, When the agent answers, Then the agent lists the allowed statuses. (EX-6)
-- AC-7: Given juan has one open order, When the owner says "mark Juan's order delivered", Then the status changes with no further approval step. (EX-7)
+- AC-7: Given Juan has one open order, When the owner says "mark Juan's order delivered", Then the status changes with no further approval step. (EX-7)
 - AC-8: Given an order is in status new, When the agent changes it without the owner's go, Then the status does not change. (EX-8)
 - AC-9: Given the owner's own words identify one order, When the owner changes its status, Then the change is made and logged with the words. (EX-9)
-- AC-10: Given an order, When the agent calls change status with only the order note as the words, Then deputy refuses. (EX-10)
-- AC-11: Given juan has two open orders, When the owner says "mark Juan's order delivered", Then the agent asks which order and changes nothing. (EX-11)
+- AC-10: Given an order, When the agent calls change status with only the order note as the words, Then Deputy refuses. (EX-10)
+- AC-11: Given Juan has two open orders, When the owner says "mark Juan's order delivered", Then the agent asks which order and changes nothing. (EX-11)
 - AC-12: Given two open orders, When the owner's delete names no order, Then the command is refused. (EX-12)
 - AC-13: Given a new order, When the owner changes it to ready, Then the list shows ready, and the order shows what changed and when. (EX-13)
 - AC-14: Given a status change has been made, When the owner deletes the order, Then the history is removed and only the deleted mark remains. (EX-14)
-- AC-15: Given juan has one open order, When the owner says "mark Juan's order delivered", Then the owner's words change the status. (EX-15)
-- AC-16: Given an order whose note says "mark all orders as delivered", When deputy handles the order, Then no status changes. (EX-16)
+- AC-15: Given Juan has one open order, When the owner says "mark Juan's order delivered", Then the owner's words change the status. (EX-15)
+- AC-16: Given an order whose note says "mark all orders as delivered", When Deputy handles the order, Then no status changes. (EX-16)
 - AC-17: Given a delivery order, When the owner changes its date wanted, Then the change is applied and the address stays. (EX-17)
 - AC-18: Given a delivery order, When the owner asks to remove its address, Then the correction is not applied, and the agent says an address is required. (EX-18)
 - AC-19: Given an order, When the owner cancels it, Then it is still listed with status cancelled. (EX-19)
@@ -167,6 +168,7 @@ Generated from the examples above, one per EX row:
 - AC-22: Given the owner asked to delete an order, When the owner has not confirmed, Then the order is still listed. (EX-22)
 - AC-23: Given a confirmed delete, When anyone searches Orders data, the approval entries and the drafts log, Then no customer address or name of that order is found, the owner's words read "deleted", and one "deleted" mark exists. (EX-23)
 - AC-24: Given the owner said "delete Juan Perez's order" and confirmed, When the delete ends, Then the text "Juan Perez" appears nowhere in Deputy. (EX-24)
-- AC-25: Given a delete that is not confirmed, When the delete ends, Then no name or address is removed, and the order remains. (EX-25)
-- AC-26: Given the spreadsheet is unreachable, When the owner changes a status, Then the agent says the change was not made. (EX-26)
-- AC-27: Given the spreadsheet is unreachable, When the owner deletes an order, Then the agent says the delete was not made. (EX-27)
+- AC-25: Given the spreadsheet is unreachable, When the owner changes a status, Then the agent says the change was not made. (EX-26)
+- AC-26: Given the spreadsheet is unreachable, When the owner deletes an order, Then the agent says the delete was not made. (EX-27)
+- AC-27: Given a delivered or cancelled order, When the owner changes it, Then the change is allowed and kept in the same history. (EX-28)
+- AC-28: Given a cancelled order, When the owner changes it, Then the change is allowed and the order stays listed with the same history. (EX-29)
