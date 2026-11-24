@@ -18,13 +18,13 @@ R-INBOX-15
 | FR-INBOX-03-2 | always | Ignoring happens only on the owner's explicit command in the conversation. The agent never ignores a chat on its own judgment, and customer text can never cause it. |
 | FR-INBOX-03-3 | IF | If the name matches more than one chat, the agent asks which one. Deputy ignores nothing until the owner identifies one chat. |
 | FR-INBOX-03-4 | always | An ignored chat is not pending and is not listed as pending, even when the customer keeps writing. |
-| FR-INBOX-03-5 | always | Every summary states how many chats are ignored and how many of those have unanswered messages, for example "2 chats ignored, 1 with unanswered messages". When none are ignored, nothing is said. An ignore therefore cannot hide a chat silently. |
+| FR-INBOX-03-5 | WHEN | Every summary states how many chats are ignored and how many of those have unanswered messages, for example "2 chats ignored, 1 with unanswered messages". When none are ignored, nothing is said. An ignore therefore cannot hide a chat silently. |
 | FR-INBOX-03-6 | always | The owner can ask which chats are ignored and gets their names or numbers, labeled as customer text, and which have unanswered messages. |
 | FR-INBOX-03-10 | always | The Inbox slice is the single owner of the ignore list. Notify reads it and keeps no copy (see FR-NOTIFY-02-10). The list survives a restart. |
-| FR-INBOX-03-11 | always | Each ignore and each un-ignore is logged with its time and the owner's own words. |
+| FR-INBOX-03-11 | WHEN | Each ignore and each un-ignore is logged with its time and the owner's own words. |
 | FR-INBOX-03-7 | always | The owner can undo ignoring ("stop ignoring Juan"). After that, the chat follows the normal rules: if a customer message waits inside the window with no answer, it is pending again. |
 | FR-INBOX-03-8 | always | Messages that arrive while a chat is ignored are stored as usual. Ignoring hides the chat from the pending list only. |
-| FR-INBOX-03-9 | always | After the owner confirms, the agent says what it did in one line, for example "Ignoring Juan's chat. You can undo this any time." |
+| FR-INBOX-03-9 | WHEN | After the owner confirms, the agent says what it did in one line, for example "Ignoring Juan's chat. You can undo this any time." |
 
 ## Edge cases
 
