@@ -21,7 +21,7 @@ R-DRAFTS-1, R-DRAFTS-2, R-DRAFTS-3, R-DRAFTS-4, R-DRAFTS-5.
 | FR-DRAFTS-01-5 | always | The owner can ask the agent to change a draft's text. Deputy keeps the new text, and the draft goes back to "waiting for the owner's go". Any approval given for the earlier text is void. (R-DRAFTS-4) |
 | FR-DRAFTS-01-6 | always | The owner can reject a draft. A rejected draft is closed and can never be sent. (R-DRAFTS-4) |
 | FR-DRAFTS-01-7 | always | A chat has at most one open reply draft and at most one open order draft (open means waiting, approved, or held, but not yet sent). When the agent creates a new draft for a chat that already has an open draft of the same kind, the new draft replaces the old one, the old one is closed as "replaced", and any approval of the old one is voided. A new reply draft never replaces an order draft, and the other way round. A draft already being sent cannot be replaced. The agent tells the owner that it replaced a draft. (R-DRAFTS-5) |
-| FR-DRAFTS-01-8 | always | Once the provider setting is not dev, Deputy refuses to create a draft for a chat whose only messages are dev test messages, and says why (FR-INTAKE-01-10). (R-DRAFTS-1) |
+| FR-DRAFTS-01-8 | WHILE | Once the provider setting is not dev, Deputy refuses to create a draft for a chat whose only messages are dev test messages, and says why (FR-INTAKE-01-10). (R-DRAFTS-1) |
 
 Example:
 

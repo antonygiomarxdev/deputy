@@ -20,8 +20,8 @@ R-ORDERS-1, R-ORDERS-7, R-ORDERS-8, R-ORDERS-9, R-ORDERS-13, R-ORDERS-16.
 | FR-ORDERS-02-4 | always | The owner can change an order's status and correct its details. Both need the owner's go. An owner's own command about an order ("mark Juan's order delivered") is itself the go. The agent does not ask again. |
 | FR-ORDERS-02-4a | always | Deputy's ways to change or delete an order take the order identifier and the owner's own words. They refuse without both, and refuse words that do not identify one order. Each use is logged with the words. No way accepts customer text, including an order note, as the owner's words. Known limit: Deputy cannot check who spoke (decision D11). |
 | FR-ORDERS-02-5 | WHEN | When the owner's command does not identify one order ("mark the order delivered" with two open orders), it is not a go. The agent asks which one. |
-| FR-ORDERS-02-6 | always | Each change is kept with what changed (old and new value) and when. The owner can see this history on the order. |
-| FR-ORDERS-02-7 | always | Only the owner's own words change an order. Customer text, including a note inside an order, never changes a status or any detail. |
+| FR-ORDERS-02-6 | WHEN | Each change is kept with what changed (old and new value) and when. The owner can see this history on the order. |
+| FR-ORDERS-02-7 | IF | Only the owner's own words change an order. Customer text, including a note inside an order, never changes a status or any detail. |
 | FR-ORDERS-02-8 | always | A corrected order must still hold every required detail (customer, at least one item with a quantity, fulfillment, delivery address for a delivery). A correction that removes one is not applied, and the agent says why. |
 | FR-ORDERS-02-9 | always | Cancelling sets the status to cancelled. The order stays on record and in the list. |
 | FR-ORDERS-02-10 | always | The owner can delete an order. Deputy states which order and that it will be removed. It deletes nothing until the owner explicitly confirms. Deleting is separate from cancelling. |
