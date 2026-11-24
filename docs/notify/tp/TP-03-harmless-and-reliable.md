@@ -126,7 +126,7 @@ MCP: the existing `status` tool (cross-cutting TP) calls `GetSyncStatus` and `No
 
 Outbound ports used: `Notifier`, `SyncStatusReader`, `NoticeRepository`, `NotifySettingsRepository`, `LocalCalendar`, `WaitingCounts` (TP-01 and TP-02). `ClaudeChannelNotifier` rules:
 
-- `availability()`: `off` when `push_on` is false in `config.json`; `unsupported` when the client's `initialize` did not declare `experimental["claude/channel"]`; else `ready`.
+- `availability()`: `off` when `push_on` is false in `config.json`; else `ready`. Amendment from REQ-15, pending owner approval: the earlier rule returned `unsupported` when the client's `initialize` did not declare `experimental["claude/channel"]`. The server declares the capability and cannot see whether the client registered a listener (that needs the launch flag of ADR-018), so `ready` means the server offers the channel, and an unregistered channel ignores the notice, which is accepted. Unverified until the live test.
 - `deliver`: `failed no_session` when the transport is closed or the server is shutting down; `failed write_error` when `notification()` rejects; `delivered` otherwise. It sends `notifications/claude/channel` with `content = text` and `meta` (keys: letters, digits, underscores).
 
 ## Threat model
@@ -153,7 +153,7 @@ Assets: the rule that a notice never causes a send (principle 1); the lack of cu
 | FR-NOTIFY-03-5 | Given a process start with messages missed while no session was open, When catch-up stores 12 messages and the period ends, Then one notice counts them, and no pending counts from the previous process exist. | UC |
 | FR-NOTIFY-03-6 | Given a notice that cannot be delivered (`no_session`), When messages arrive, Then they are stored and the inbox lists them. | UC, E2E |
 | FR-NOTIFY-03-6 | Given a simulated write error from the channel, When a notice is sent, Then it counts as failed, `NotifyStatus` shows the time and reason `write_error`, and `status` shows them. Given a notice written without error, Then it counts as delivered. | UC, AC |
-| FR-NOTIFY-03-6 | Given `ClaudeChannelNotifier` against a fake MCP transport, When the transport is closed, rejects, or the client declared no channel capability, Then the results are `no_session`, `write_error` and `unsupported` respectively. | AC |
+| FR-NOTIFY-03-6 | Given `ClaudeChannelNotifier` against a fake MCP transport, When the transport is closed, rejects, or the client declared no channel capability, Then the results are `no_session`, `write_error` and `unsupported` respectively. Amendment from REQ-15, pending owner approval: with no capability check there is no `unsupported` case; the results are `no_session` and `write_error`. | AC |
 | FR-NOTIFY-03-7 | Given a failed notice for three messages, When the next notice is sent after 60 seconds, Then it counts those three as new, and the pending set holds them once even after two failures. | UC |
 | FR-NOTIFY-03-7 | Given a failed notice and a retry gate of 60 seconds, When `Tick` runs at 30 and at 61 seconds, Then no attempt at 30 and one attempt at 61. | UC |
 | FR-NOTIFY-03-8 | Given the provider unreachable for longer than one catch-up period (`failedSince`, `tellOwner` true), When `Tick` runs, Then one notice `provider_unreachable` with the local time is delivered, and no second one follows during the same outage, including after a restart. | UC |
