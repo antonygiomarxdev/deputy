@@ -1,12 +1,30 @@
-# TP: the local pilot end to end
+# Technical Proposal: the local pilot end to end
 
-Part of [TP.md](../tp/TP.md). Added 2026-11-24 for the local pilot (REQ-15, D31 to D38). It draws how the pieces already specified work together; it decides nothing new.
+Status: Draft
+Part of [TP.md](../tp/TP.md). Added 2026-11-24 for the local pilot (REQ-15, D31 to D38).
 
-Sources: Intake FRD-05, TP-05 and SPEC-05-x; Setup FRD-05 and SPEC-05-x; Knowledge FRD-04 and SPEC-04-x; ADR-018; Drafts pilot specs SPEC-05 to SPEC-13 and Drafts ADR-013 (PR #202, branch docs/drafts-pilot, not merged when this was written).
+## Summary
 
-Spec ids in the drawings use one letter for the slice: I = Intake, D = Drafts, K = Knowledge, S = Setup. `I05-6` is Intake SPEC-05-6; `I03` is Intake SPEC-03 (catch-up); `D07` is Drafts SPEC-07. An arrow with no spec that builds it says GAP, and the GAP list at the end repeats each one.
+How the pilot's pieces work together, drawn from the specs already written: the components, nine sequences, the states of a draft, an owner question and a pending go, and the data. It decides no behavior; every arrow cites the spec that builds it, and six arrows no spec builds are marked GAP and listed under Risks.
 
-## 1. Components
+## Context
+
+Sources: Intake FRD-05, TP-05 and SPEC-05-x; Setup FRD-05 and SPEC-05-x; Knowledge FRD-04 and SPEC-04-x; ADR-018; Drafts pilot specs SPEC-05 to SPEC-13 and Drafts ADR-013 (PR #202, branch docs/drafts-pilot, not merged when this was written). The send design drawn is the final one: `approveWithoutWords(basis, words)` emits the normal Approved event (the `approvals.basis` column), then `startSending`, `driveSend` and `finishSent` with recovery; `send_answer` uses basis automatic and `send_owner_go` uses basis owner_go.
+
+Spec ids in the drawings use one letter for the slice: I = Intake, D = Drafts, K = Knowledge, S = Setup. `I05-6` is Intake SPEC-05-6; `I03` is Intake SPEC-03 (catch-up); `D07` is Drafts SPEC-07.
+
+## Decisions
+
+### TD-1: Where is the end-to-end design recorded?
+
+- **Option A** A companion file under `docs/tp-detail/`, linked from the cross-cutting TP. Cost: one more file. Risk: it can drift from the specs (the GAP list is the check).
+- **Option B** Inline in `docs/tp/TP.md`. Cost: none. Risk: the TP is at 247 of its 250 lines.
+
+Chosen: Option A. ADR: none: it records existing specs and decides no behavior.
+
+## Architecture
+
+### Components
 
 What runs where. The owner talks to Claude Code, the session calls Deputy's tools over stdio, and Deputy talks to Kapso. Nothing else leaves the computer.
 
@@ -60,11 +78,11 @@ flowchart TD
   Know --> Shared
 ```
 
-## 2. Sequences
+### Sequences
 
 Each message names the tool, the spec and the table. "Session" is Claude Code with the skill.
 
-### (a) Install and setup interview
+#### (a) Install and setup interview
 
 ```mermaid
 sequenceDiagram
@@ -89,7 +107,7 @@ sequenceDiagram
   S->>O: tells the owner to write the business number once, opens the window (GAP: no spec for the first message)
 ```
 
-### (b) Customer message to a knowledge-backed automatic answer
+#### (b) Customer message to a knowledge-backed automatic answer
 
 ```mermaid
 sequenceDiagram
@@ -108,15 +126,15 @@ sequenceDiagram
   M->>M: decideAutoSend, send true (D05)
   M->>M: checkFirstSend, window open (D06)
   M->>M: create draft, approveWithoutWords automatic, row in approvals with basis (D09-4, D09-5a, D09-5b)
-  M->>M: driveSend, state sending, lease token re-checked (D03, tables drafts and drafts_log)
+  M->>M: driveSend: startSending, lease token re-checked (D03, tables drafts and drafts_log)
   M->>K: SendText sendId, chat, text (I04, table outgoing)
   K-->>M: accepted
-  M->>M: state sent, log entry automatic (D09-1, D09-2, D09-3a, D09-3b)
+  M->>M: finishSent with recovery, log entry automatic (D03, D09-1, D09-2, D09-3a, D09-3b)
   M-->>S: sent
   O-->>S: reads the count with pilot_stats (D13, D08)
 ```
 
-### (c) Always-ask or unknown: ask the owner, take the answer as the go
+#### (c) Always-ask or unknown: ask the owner, take the answer as the go
 
 ```mermaid
 sequenceDiagram
@@ -147,7 +165,7 @@ sequenceDiagram
   S-->>C: the customer reads the reply
 ```
 
-### (d) The owner's window is closed: ask in the Claude app
+#### (d) The owner's window is closed: ask in the Claude app
 
 ```mermaid
 sequenceDiagram
@@ -162,7 +180,7 @@ sequenceDiagram
   S->>M: ask_owner again (I05-8)
 ```
 
-### (e) The customer window is closed: no send, tell the owner
+#### (e) The customer window is closed: no send, tell the owner
 
 ```mermaid
 sequenceDiagram
@@ -177,7 +195,7 @@ sequenceDiagram
   Note over M: tellOwner on the send_owner_go path: GAP
 ```
 
-### (f) Crash in the middle of a send
+#### (f) Crash in the middle of a send
 
 ```mermaid
 sequenceDiagram
@@ -198,7 +216,7 @@ sequenceDiagram
   Note over M: an owner_go consumed by that send is not restored: GAP
 ```
 
-### (g) Restart with a pending go
+#### (g) Restart with a pending go
 
 ```mermaid
 sequenceDiagram
@@ -214,7 +232,7 @@ sequenceDiagram
   Note over M: an OwnerAnswered published after commit but lost before recordGo is not replayed: GAP
 ```
 
-### (h) Remember from the control chat
+#### (h) Remember from the control chat
 
 ```mermaid
 sequenceDiagram
@@ -232,7 +250,7 @@ sequenceDiagram
   M-->>S: remembered
 ```
 
-### (i) Wake: channel notice, slow loop and catch-up poll
+#### (i) Wake: channel notice, slow loop and catch-up poll
 
 ```mermaid
 sequenceDiagram
@@ -253,7 +271,7 @@ sequenceDiagram
   S->>M: list_pending (I05-3)
 ```
 
-## 3. States
+### States
 
 The draft, with the basis of its approval. `waiting` to `sending` is the one send path; the three bases differ only in how the approval was allowed (D09-4, D09-5a).
 
@@ -296,7 +314,7 @@ stateDiagram-v2
   used --> [*]
 ```
 
-## 4. Data
+## Information
 
 The new tables and the columns the pilot adds to existing ones. Existing tables are shown only where the pilot touches them.
 
@@ -337,7 +355,28 @@ erDiagram
   }
 ```
 
-## 5. GAP list
+## Interfaces
+
+The tools the drawings use and the spec that builds each.
+
+| Tool | Spec |
+|---|---|
+| `check_messages`, `get_chat`, `list_pending` | I03, I05-3 |
+| `ask_owner`, `answer_question` | I05-8 (use cases I05-6, I05-7) |
+| `set_owner_numbers` | I05-11 (use case I05-10) |
+| `send_answer`, `send_owner_go`, `pilot_stats` | D13 (rules D05, D06, D12, D08) |
+| `read_knowledge`, `save_profile`, `save_catalog`, `save_always_ask`, `remember` | K04-5 |
+| `open_key_page`, `list_numbers`, `select_number` | S05-4 |
+
+## Threat model
+
+Nothing new: the drawings show the existing guards. The go comes from the owner's own words (`containsWords`, I05-13); the session can still pass wrong `answerClass` or `knowledge` to `send_answer`, a limit Drafts ADR-013 states (D11).
+
+## Testing
+
+Each arrow's spec carries its own tests first. This file is checked by `check.ts tp` and the Mermaid validator; the GAP list is the list of arrows with no test to point to.
+
+## Risks
 
 An arrow in a drawing that no spec builds. Each is stated as found; none is decided here.
 
@@ -347,3 +386,7 @@ An arrow in a drawing that no spec builds. Each is stated as found; none is deci
 4. A consumed go. Drafts SPEC-07 `takeGo` marks the go used before the send runs; if the send then fails or the process crashes (diagram f), no spec returns the go or tells the session.
 5. A lost signal. `OwnerAnswered` is published in process after the commit (Intake SPEC-05-7); a crash between that commit and Drafts SPEC-11 `recordGo` leaves a closed question with no pending go, and nothing replays it at start (diagram g).
 6. Closed window on the go path. Drafts SPEC-06 sets `tellOwner` for `send_answer`; `send_owner_go` with a closed window returns nothing sent, and no spec says it tells the owner (diagram e).
+
+## Open questions
+
+None: each GAP above is a question for the owner or a spec to write, and none is decided here.
