@@ -46,6 +46,21 @@ Chosen: Option A, because it is the exception the owner accepted, and the schema
 
 ## Architecture
 
+```mermaid
+flowchart LR
+  UC["Use cases of TP-01 to TP-03"] -->|append entries in the unit of work| Mapper["LogMapper"]
+  Mapper --> Log["DraftLog aggregate, append only"]
+  Log --> Repo(["DraftLogRepository"])
+  Repo -.->|takes part in| UoW["UnitOfWork"]
+  UC -.->|log fails: rollback, LogUnavailable, nothing sent| UoW
+  ReadLog["ReadDraftLog"] --> Repo
+  Check["CheckApprovals"] --> Audit["ApprovalAudit"]
+  Check --> Repo
+  Audit --> Repo
+  Orders["Orders: OrderDeleted outbox event"] --> Scrub["OnOrderDeleted"]
+  Scrub -->|scrubOrder, hasOrderDeleted| Repo
+```
+
 Domain (`src/drafts/domain/`):
 - `LogEntry` (value object): `id`, `at`, `kind`, `draft`, `draftKind`, `chat`, `proposedText`, `finalText`, `reason`, `ownerWords`, `approvalEntryId`, `sendId`, `orderRef`, `scrubbed`.
 - `DraftLog` (aggregate): append-only. The only operations are `append(entries)` and, for the scrub, `scrubOrder`. No update, no delete method exists.

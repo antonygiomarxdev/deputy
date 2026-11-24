@@ -73,10 +73,14 @@ flowchart LR
   Msg --> SC["SourceClassifier"]
   SC --> Owners["OwnerNumbers snapshot"]
   SC --> Parts["outgoing_parts lookup"]
+```
+
+```mermaid
+flowchart LR
   DraftsAd["Drafts adapter Sender"] --> Send["SendText"]
   Send --> OutR["OutgoingRepository"]
   Send --> Prov(["Provider port"])
-  Send --> Store
+  Send --> Store["StoreMessages (TP-02)"]
   Resolve["Drafts adapter OutgoingFinder"] --> Find["FindOutgoing"]
   Find --> OutR
   Find --> Re["Message.reclassifyAsDeputySend"]

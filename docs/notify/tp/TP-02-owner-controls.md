@@ -41,6 +41,22 @@ Chosen: Option A. It needs nothing new, is already verified for the spring and f
 
 ## Architecture
 
+```mermaid
+flowchart LR
+  Get["GetNotifySettings"] --> Repo(["NotifySettingsRepository"])
+  Set["SetNotifySettings"] --> Repo
+  Set --> Settings["NotifySettings aggregate"]
+  Tick["Tick"] -->|reads settings at start of call| Repo
+  OnStored["OnMessagesStored"] -->|reads settings at start of call| Repo
+  Settings --> Batch["BatchPeriod, ReminderPeriod"]
+  Settings --> Quiet["QuietSchedule"]
+  Quiet --> Period["QuietPeriod"]
+  Quiet -->|contains, endOf| Cal(["LocalCalendar"])
+  Tick -.->|quiet check at step 3| Quiet
+  Sqlite["sqlite/SqliteNotifySettingsRepository"] -.->|implements| Repo
+  Intl["calendar/IntlLocalCalendar"] -.->|implements| Cal
+```
+
 Same hexagon as TP-01. This TP adds:
 
 - Domain: `NotifySettings` (aggregate: `batch`, `reminder`, `remindersPaused`, `quiet: QuietSchedule`, `timeZone`, `noticesOn`), `BatchPeriod`, `ReminderPeriod`, `QuietSchedule`, `QuietPeriod`.

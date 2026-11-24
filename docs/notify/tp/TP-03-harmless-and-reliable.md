@@ -47,6 +47,19 @@ Chosen: Option A. The FRD asks for "where the owner can see it, for example in t
 
 ## Architecture
 
+```mermaid
+flowchart LR
+  Tick["Tick"] -->|steps 4 and 5| Deliver(["Notifier.deliver"])
+  Deliver -->|delivered| Settle["settle after delivery"]
+  Deliver -->|failed| Settle
+  Deliver -->|exception: failed, write_error| Settle
+  Settle --> Save["NoticeRepository.save"]
+  Outage["OutagePlan in NoticePlanner"] -->|outage and recovery notices, step 5| Tick
+  Channel["ClaudeChannelNotifier"] -.->|implements| Deliver
+  Null["NullNotifier"] -.->|implements| Deliver
+  Status["NotifyStatus, pure read"]
+```
+
 Same hexagon as TP-01. This TP adds:
 
 - Domain: `NoticeState.settle(...)`, `NoticeSession.fail(...)` and `OutagePlan` inside `NoticePlanner`.
