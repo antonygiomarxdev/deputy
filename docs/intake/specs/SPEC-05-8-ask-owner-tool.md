@@ -33,7 +33,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 - Precedent: SPEC-05-7-answer-question.md, the use case `answer_question` calls
 
 ## Tests first
-FR-INTAKE-05-5, FR-INTAKE-05-6, FR-INTAKE-05-9, FR-INTAKE-05-10, FR-INTAKE-05-11, written before the code, without it in view, through the tool definitions with fake use cases. FR-INTAKE-05-5: `ask_owner` with an owner number and a list of questions returns `questionIds`; an empty list is refused by the input check. FR-INTAKE-05-6: a `window_closed` result comes back as an error result whose text says the session must ask in the Claude app and tell the owner to answer on WhatsApp. FR-INTAKE-05-9: `answer_question` with an id and the owner's text returns `recorded`. FR-INTAKE-05-10: an `unknown_question` result is an error result with a plain sentence. FR-INTAKE-05-11: `get_chat` for the control chat returns the messages and an `openQuestions` list of `{ questionId, text, askedAt }`, with no question attached to any message; the tool text labels the owner's text as the owner's words, not customer text, and says the session must match answers to questions.
+FR-INTAKE-05-5, FR-INTAKE-05-6, FR-INTAKE-05-9, FR-INTAKE-05-10, FR-INTAKE-05-11, written before the code, without it in view, through the tool definitions with fake use cases. FR-INTAKE-05-5: `ask_owner` with an owner number and a list of questions returns `questionIds`; an empty list is refused by the input check. FR-INTAKE-05-6: a `window_closed` result comes back as an error result whose text says the session must ask in the Claude app and tell the owner to answer on WhatsApp. FR-INTAKE-05-9: `answer_question` with an id and the owner's text returns `recorded`. FR-INTAKE-05-10: an `unknown_question` result is an error result with a plain sentence; a `not_owner_words` result is an error result saying the text must be the owner's own words from the control chat. FR-INTAKE-05-11: `get_chat` for the control chat returns the messages and an `openQuestions` list of `{ questionId, text, askedAt }`, with no question attached to any message; the tool text labels the owner's text as the owner's words, not customer text, and says the session must match answers to questions.
 
 ## Build
 ```ts
@@ -41,7 +41,7 @@ FR-INTAKE-05-5, FR-INTAKE-05-6, FR-INTAKE-05-9, FR-INTAKE-05-10, FR-INTAKE-05-11
 // tool "answer_question": input { questionId: string, text: string }; output { recorded: true }
 // get_chat on a control chat adds: openQuestions: { questionId, text, askedAt }[]
 ```
-The `window_closed`, `not_an_owner_number`, `not_owner` and `unknown_question` refusals are error results with a plain sentence each.
+The `window_closed`, `not_an_owner_number`, `not_owner`, `unknown_question` and `not_owner_words` refusals are error results with a plain sentence each.
 
 ## Done when
 `bun test test/intake/unit/ask-owner-tool.test.ts`

@@ -38,7 +38,7 @@ Chosen: Option A. ADR: none: a table for one list of rows, as TD-3 of the cross-
 - **Option B** Intake reads a number at the start of the reply and links by it. The owner ruled this out: Deputy does not parse numbers.
 - **Option C** Intake links every reply to the latest open question. Risk: two open questions get mixed.
 
-Chosen: Option A (FR-INTAKE-05-9, FR-INTAKE-05-10, FR-INTAKE-05-11, FR-INTAKE-05-22), by the owner's ruling. ADR: none: a rule of two tools.
+Chosen: Option A (FR-INTAKE-05-9, FR-INTAKE-05-10, FR-INTAKE-05-24, FR-INTAKE-05-11, FR-INTAKE-05-22), by the owner's ruling. ADR: none: a rule of two tools.
 
 ### TD-4: How is a window known?
 
@@ -107,7 +107,7 @@ sequenceDiagram
 Inbound tools (the intake tools file registers them; each calls one use case):
 
 - `ask_owner { number, questions }` (`questions` is a list of texts) returns `{ questionIds }` or `{ refused: "window_closed" | "not_an_owner_number" | "not_owner" }` or the send failure of `SendTextResult`. Lease required.
-- `answer_question { questionId, text }` returns `{ recorded }` or `{ refused: "unknown_question" | "not_owner" }`. Lease required.
+- `answer_question { questionId, text }` returns `{ recorded }` or `{ refused: "unknown_question" | "not_owner_words" | "not_owner" }`. Lease required.
 - `list_pending {}` returns `[{ chat, lastCustomerAt, windowClosesAt }]`, newest first. A read, no lease.
 - `get_chat` gains `windowClosesAt` for a customer chat and, for the control chat, `openQuestions` next to the messages. A read.
 - `set_owner_numbers { number, ownerWords, confirm? }` returns the described number, or `{ added }` with `confirm`. Lease required.
@@ -136,7 +136,7 @@ Nothing else changes in storage (TD-1 and TD-4).
 
 - A customer claims to be the owner: the control chat is decided by the owner numbers only (FR-INTAKE-05-1), so a customer message stays a customer message.
 - The session is talked into asking a stranger: `ask_owner` sends only to an owner number (FR-INTAKE-05-8), so it cannot be used as a send path to a customer.
-- The session is talked into recording an answer the owner never gave, which Drafts would take as a go: Intake does not check the text. A check that the text appears in a control message received after the question was asked is Proposed (FRD-05, second open question) and not decided.
+- The session is talked into recording an answer the owner never gave, which Drafts would take as a go: Intake refuses unless the text is contained in a message the owner sent in the control chat after the question was asked (FR-INTAKE-05-24), the same owner-words rule as Drafts ADR-006. The session can still pick the wrong question for a real owner message; the owner reads the draft before it goes.
 - A stolen owner phone sends instructions: out of scope; removing a number is deferred (FR-INTAKE-05-23).
 
 ## Testing
@@ -152,4 +152,4 @@ Nothing else changes in storage (TD-1 and TD-4).
 
 ## Open questions
 
-See FRD-05: the business number when the provider offers none, and the proposed check that a recorded answer is the owner's text.
+See FRD-05: the business number when the provider offers none.

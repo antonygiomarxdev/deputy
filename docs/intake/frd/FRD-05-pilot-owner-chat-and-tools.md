@@ -44,6 +44,7 @@ R-INTAKE-12, R-INTAKE-13, R-INTAKE-14, R-INTAKE-18
 | FR-INTAKE-05-21 | always | set_owner_numbers adds numbers only. It never removes a number and never changes the business number. |
 | FR-INTAKE-05-22 | WHEN | When Intake closes a question with an answer, it hands Drafts the question id and the text. |
 | FR-INTAKE-05-23 | always | Removing an owner number is deferred until after the pilot; the pilot only adds numbers (FR-INTAKE-05-21). |
+| FR-INTAKE-05-24 | IF | If the text the session records is not contained in a message the owner sent in the control chat after the question was asked, Intake refuses, changes nothing and publishes nothing, so the go comes only from the owner's own words (Drafts ADR-006). |
 
 ## Edge cases
 
@@ -56,4 +57,3 @@ R-INTAKE-12, R-INTAKE-13, R-INTAKE-14, R-INTAKE-18
 ## Open questions
 
 - Q-1 (Lead): the business number when the provider offers none (FR-INTAKE-05-16). FR-INTAKE-05-21 stops set_owner_numbers from setting it, and the pilot has no command line. Kapso provides it, so the owner has not asked for a way; this stays open until a provider that offers none is used.
-- Q-2 (Lead): Proposed, not decided: Intake checks that the text the session records is the owner's, by finding it in a control-chat message received after the question was asked. Without it a session talked into a false answer could approve a draft. The owner has not ruled on it.
