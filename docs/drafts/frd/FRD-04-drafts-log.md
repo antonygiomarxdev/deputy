@@ -16,8 +16,8 @@ R-DRAFTS-15, R-DRAFTS-16, R-DRAFTS-17, R-DRAFTS-18.
 |---|---|---|
 | FR-DRAFTS-04-1 | always | Deputy writes one log entry, with its time and in order, for each event: draft proposed, draft replaced, text changed by the owner, approved, rejected, approval voided, held (with the reason), the owner's choice after a hold, sending, sent, failed, outcome unknown. Each entry names the draft and the chat. (R-DRAFTS-15) |
 | FR-DRAFTS-04-2 | always | The log keeps both the proposed text and the final text of a draft, so the difference between them can be read. (R-DRAFTS-16) |
-| FR-DRAFTS-04-3 | WHEN | Each entry has an identifier. Knowledge can refer to it from a learned item. Knowledge reads the log. Drafts does not push to it. (R-DRAFTS-16) |
-| FR-DRAFTS-04-4 | WHEN | Each approval entry keeps the owner's own words. Every sent entry points to exactly one approval entry that came before it, and the text sent equals the text approved. (R-DRAFTS-17) |
+| FR-DRAFTS-04-3 | always | Each entry has an identifier. Knowledge can refer to it from a learned item. Knowledge reads the log. Drafts does not push to it. (R-DRAFTS-16) |
+| FR-DRAFTS-04-4 | always | Each approval entry keeps the owner's own words. Every sent entry points to exactly one approval entry that came before it, and the text sent equals the text approved. (R-DRAFTS-17) |
 | FR-DRAFTS-04-5 | always | A sent message with no approval entry is a defect. The owner can check by asking the agent, "does every sent message have an approval?" Deputy lists any sent entry that lacks one, or says there is none. (R-DRAFTS-17) |
 | FR-DRAFTS-04-6 | always | The owner can ask the agent to show the log in the conversation, newest first. The owner can limit it to one chat. (R-DRAFTS-18) |
 | FR-DRAFTS-04-7 | always | Entries are never changed or removed by the agent. A correction is a new entry. (R-DRAFTS-15) |

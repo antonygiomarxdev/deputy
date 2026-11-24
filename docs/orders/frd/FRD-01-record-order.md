@@ -15,7 +15,7 @@ R-ORDERS-1, R-ORDERS-2, R-ORDERS-3, R-ORDERS-4, R-ORDERS-5, R-ORDERS-6, R-ORDERS
 | ID | Pattern | Requirement |
 |---|---|---|
 | FR-ORDERS-01-1 | always | The agent prepares an order draft from a chat. It holds: the customer (name and chat), the items with quantities, how it is fulfilled (pickup or delivery), the delivery address when it is a delivery, the date and time wanted, the total when known, notes, and a status. |
-| FR-ORDERS-01-2 | WHEN | Each item has a catalog reference or an explicit "not in catalog" mark. The agent looks items up in the catalog (Knowledge slice). |
+| FR-ORDERS-01-2 | always | Each item has a catalog reference or an explicit "not in catalog" mark. The agent looks items up in the catalog (Knowledge slice). |
 | FR-ORDERS-01-3 | WHEN | When the customer asks for something not in the catalog, the agent tells the owner. The item is recorded with the "not in catalog" mark only when the owner decides so. |
 | FR-ORDERS-01-4 | always | The agent shows the whole order to the owner before recording. The Drafts slice owns the rule for what counts as a go: the owner's reply must identify the order. Orders applies that rule. A customer's own confirmation in the chat is not a go. |
 | FR-ORDERS-01-5 | always | Deputy does not record an order while a required detail is missing: customer, at least one item with a quantity, fulfillment, and, for a delivery, an address. The agent asks the owner for what is missing and names it. |

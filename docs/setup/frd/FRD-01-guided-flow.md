@@ -19,8 +19,8 @@ Order and bootstrap: step 1 puts Deputy in the agent in test mode, so Deputy's s
 | ID | Pattern | Requirement |
 |---|---|---|
 | FR-SETUP-01-1 | always | Deputy offers the agent a way to show the setup status. It lists every step with its state (done, current, to do), the current step's name, how many steps remain, and what the owner must do now. |
-| FR-SETUP-01-2 | WHEN | Every instruction is marked "You do this" or "Your agent can do this". A step the owner must do themselves is never marked as the agent's. |
-| FR-SETUP-01-3 | WHEN | Each step has a check. The agent can run it on request. The next step starts only when the check passes. |
+| FR-SETUP-01-2 | always | Every instruction is marked "You do this" or "Your agent can do this". A step the owner must do themselves is never marked as the agent's. |
+| FR-SETUP-01-3 | always | Each step has a check. The agent can run it on request. The next step starts only when the check passes. |
 | FR-SETUP-01-4 | always | A failed check says in plain words what is wrong and what to do. It never shows an internal error as the only message. |
 | FR-SETUP-01-5 | always | The check for step 1 passes only when the agent can list Deputy's tools and the list holds the tools the later steps need. A claim by the agent that it is connected does not count. If Deputy is absent from the list, the check fails and says Deputy is not installed in the agent. |
 | FR-SETUP-01-6 | always | The owner can stop at any point. Deputy keeps which steps passed. |

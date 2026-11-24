@@ -16,7 +16,7 @@ R-ORDERS-10, R-ORDERS-11, R-ORDERS-12, R-ORDERS-15.
 |---|---|---|
 | FR-ORDERS-03-1 | always | By default Deputy keeps orders on the owner's machine. |
 | FR-ORDERS-03-2 | always | The owner can choose their own spreadsheet instead. When they choose it, the agent tells them the orders will be stored in that spreadsheet and nowhere else outside the machine. Helping the owner pick during first setup belongs to Setup. |
-| FR-ORDERS-03-3 | WHERE | Every behavior in FRD-01 and FRD-02 is the same with either choice: record, list, filter, change, history, cancel, delete. |
+| FR-ORDERS-03-3 | always | Every behavior in FRD-01 and FRD-02 is the same with either choice: record, list, filter, change, history, cancel, delete. |
 | FR-ORDERS-03-4 | always | Order data goes to no service other than the owner's own agent and, if chosen, the owner's own spreadsheet. |
 | FR-ORDERS-03-5 | WHEN | When the spreadsheet cannot be reached, a record, a change or a delete fails. The agent tells the owner. It never reports success. A list says the orders could not be read, and never shows an old copy as current. |
 | FR-ORDERS-03-5a | IF | If one order cannot be read (bad status value, missing field), the list shows it as unreadable with whatever is known, and still shows the others. It never drops or hides an order. |
