@@ -15,6 +15,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 | FR-INTAKE-05-15 | WHEN | When Deputy starts with the Kapso provider and no business number is recorded, Intake asks the provider for the connected number and records it as the business number, logged like an owner-number change with the command "provider". |
 | FR-INTAKE-05-16 | IF | If the provider offers no business number, Intake tells the session that the business number is missing, so the session asks the owner. |
+| FR-INTAKE-05-29 | IF | If this process does not hold the lease, Intake records no business number at start. |
 
 ## Files
 | Path | Create or change | Holds |
@@ -30,14 +31,14 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 - `src/main/serve.ts` `serve`: the start order, where the call goes
 
 ## Tests first
-FR-INTAKE-05-15, FR-INTAKE-05-16, written before the code, without it in view, with a fake provider. FR-INTAKE-05-15: with no business number recorded and the provider offering `+50588881111`, the number is recorded with kind `business` and one log entry whose command is "provider"; with one already recorded nothing changes and the provider is not asked; run twice, it records once. FR-INTAKE-05-16: with the provider offering none, nothing is written and the result is `missing`, which the session reads from the status. A provider error leaves everything unchanged and the result names the error kind.
+FR-INTAKE-05-15, FR-INTAKE-05-16, FR-INTAKE-05-29, written before the code, without it in view, with a fake provider. FR-INTAKE-05-15: with no business number recorded and the provider offering `+50588881111`, the number is recorded with kind `business` and one log entry whose command is "provider"; with one already recorded nothing changes and the provider is not asked; run twice, it records once. FR-INTAKE-05-16: with the provider offering none, nothing is written and the result is `missing`, which the session reads from the status. A provider error leaves everything unchanged and the result names the error kind. FR-INTAKE-05-29: with a lease that is not held, `execute` returns `not_owner`, asks the provider nothing and writes nothing.
 
 ## Build
 ```ts
-export type AdoptResult = { kind: "recorded"; e164: string } | { kind: "already_recorded" } | { kind: "missing" } | { kind: "provider_error"; error: ProviderErrorKind };
+export type AdoptResult = { kind: "recorded"; e164: string } | { kind: "already_recorded" } | { kind: "missing" } | { kind: "provider_error"; error: ProviderErrorKind } | { kind: "not_owner" };
 export interface AdoptBusinessNumber { execute(): Promise<AdoptResult> }
 ```
-`serve` calls `execute` after `applyPendingChanges` and before the provider settings are resolved, because `ResolveProviderSettings` refuses a missing business number today. Only the owner process calls it.
+`serve` calls `execute` after `applyPendingChanges` and before the provider settings are resolved, because `ResolveProviderSettings` refuses a missing business number today. The use case takes `{ holdsLease(): boolean }` and returns `not_owner` when it is false, so only the owner process records the number.
 
 ## Done when
 `bun test test/intake/unit/adopt-business-number.test.ts`

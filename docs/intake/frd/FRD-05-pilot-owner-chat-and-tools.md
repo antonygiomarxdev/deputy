@@ -6,7 +6,7 @@ Status: Draft
 
 In the local pilot (REQ-15) the owner talks to the session through WhatsApp: Deputy sends the owner's open questions in one numbered message, from the business number to the owner's own number, and the owner answers freely. Deputy does not match answers to questions; the session reads the owner's messages with the open questions and records each answer. That chat never counts as a customer chat and never holds a send. Intake also shows each customer chat's 24 hour window and the pending list, reads the business number from the provider, and adds owner numbers after the owner's words and a confirmation.
 
-Last change: 2026-11-24, a question asked with the owner window closed is kept as not sent, and Intake counts per day for the pilot's stats; before that: each question names its customer chat; before that: questions are batched, the session records answers, removing a number is deferred
+Last change: 2026-11-24, Intake lists the answered questions for Drafts and records the business number only under the lease; before that: 2026-11-24, a question asked with the owner window closed is kept as not sent, and Intake counts per day for the pilot's stats; before that: each question names its customer chat; before that: questions are batched, the session records answers, removing a number is deferred
 
 One feature of the [slice PRD](../PRD.md). Pending list: a subset of Inbox FR-INBOX-01 (no summary groups, no ignore list).
 
@@ -48,6 +48,8 @@ R-INTAKE-12, R-INTAKE-13, R-INTAKE-14, R-INTAKE-18
 | FR-INTAKE-05-25 | always | Each question the session asks names the customer chat it is about, and Intake records that chat id with the question. |
 | FR-INTAKE-05-26 | IF | If a question names a chat that is not a stored customer chat, either unknown or an owner's control chat, Intake sends nothing, records nothing and refuses with "unknown chat". |
 | FR-INTAKE-05-27 | WHEN | When Drafts or the session asks for the day's counts, Intake returns for each day the number of customer messages received and the number of owner questions asked, each counted once, and nothing else: no text, name or chat id. |
+| FR-INTAKE-05-28 | WHEN | When Drafts asks for the answered questions at start, Intake returns each question that has an answer with the question id, the customer chat it names, the answer text and the time of the answer, so that an answer given while Drafts was not running is not lost. |
+| FR-INTAKE-05-29 | IF | If this process does not hold the lease, Intake records no business number at start. |
 
 ## Edge cases
 

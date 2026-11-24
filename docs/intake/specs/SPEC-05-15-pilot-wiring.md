@@ -41,7 +41,7 @@ FR-INTAKE-05-5, FR-INTAKE-05-9, FR-INTAKE-05-13, FR-INTAKE-05-15, FR-INTAKE-05-1
 `bun test test/intake/unit/pilot-wiring.test.ts`
 
 ## Out of scope
-The tools themselves (SPEC-05-3, SPEC-05-8, SPEC-05-11), the adoption call in `serve.ts` (SPEC-05-9), Drafts' use of the counts.
+The tools themselves (SPEC-05-3, SPEC-05-8, SPEC-05-11), the adoption call in `serve.ts` (SPEC-05-9), Drafts' use of the counts. The export of the answered questions: SPEC-05-17.
 
 ## Open questions
 None.
