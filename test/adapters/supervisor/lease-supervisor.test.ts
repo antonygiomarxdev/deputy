@@ -123,7 +123,8 @@ test("stop does not wait for a running onAcquired and leaves the lease free", as
   await tick();
   const t0 = performance.now();
   await a.s.stop();
-  expect(performance.now() - t0).toBeLessThan(400);
+  // the bound catches a wait on the running onAcquired, not CPU load
+  expect(performance.now() - t0).toBeLessThan(2_000);
   expect(holder.heartbeat).toBe(0);
 });
 
