@@ -33,7 +33,6 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run typecheck
 
-
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -51,7 +50,7 @@ jobs:
           docs_re='\.md$|^(docs|business|examples)/|^src/[^/]+/docs/|^LICENSE$|^\.github/ISSUE_TEMPLATE/'
           mode=full; reason="event $EVENT runs everything"; e2e=true
           if [ "$EVENT" = pull_request ]; then
-            files=$(git diff --name-only HEAD^1 HEAD)
+            files=$(git diff --name-only --no-renames HEAD^1 HEAD)
             hit=$(printf '%s\n' "$files" | grep -E "$full_re" | head -1 || true)
             if [ -z "$files" ]; then
               mode=full; reason="empty diff, running everything to be safe"
