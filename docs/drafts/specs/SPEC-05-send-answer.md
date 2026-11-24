@@ -22,7 +22,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Reuses
 - Precedent: SPEC-03-safe-send.md, which sends one approved draft through the provider port; this spec decides only whether a send needs a go.
-- Precedent: SPEC-09-4-draft-without-words.md, the Draft method that sends the answer this decision allows.
+- Precedent: SPEC-09-4-draft-without-words.md, the Draft method (`approveWithoutWords`) that approves the answer this decision allows.
 
 ## Tests first
 - FR-DRAFTS-02-13 (1): given an answer whose class is not in the always-ask set and knowledge with one entry, `decideAutoSend` returns `send: true`.
