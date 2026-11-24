@@ -35,7 +35,7 @@ Not for: companies with high volume or a support team. They should hire a custom
 
 These hold for every feature. A requirement that breaks one needs an explicit owner decision.
 
-1. **Nothing goes out without the owner's "go".** The agent shows the draft in the conversation and waits for the owner's approval in that same conversation. No permission dialogs, no "don't ask again". **Draft amendment (REQ-15):** a semi-automatic mode may answer by itself only what the owner's own knowledge backs; every other send still needs the owner's go, asked by WhatsApp or in the conversation. A daily cap, a kill switch and an auto mark in the drafts log are proposed, pending the owner.
+1. **Nothing goes out without the owner's "go".** The agent shows the draft in the conversation and waits for the owner's approval in that same conversation. No permission dialogs, no "don't ask again". **Draft amendment (REQ-15):** a semi-automatic mode may answer by itself only what the owner's own knowledge backs; every other send still needs the owner's go, asked by WhatsApp or in the conversation. A daily cap, a kill switch, an auto mark in the drafts log and a check of the customer window before a first send are proposed, pending the owner.
 2. **The owner's app stays primary.** When the owner answers from the phone, Deputy knows and never answers on top of them.
 3. **No message is lost**, even if the owner's computer was off.
 4. **Agent-agnostic.** The core works with any agent that speaks MCP. Waking the session (push) is an extra for agents that support it.
@@ -86,9 +86,9 @@ flowchart TD
   E -- no --> C
   E -- yes --> F["Agent reads the chat and the knowledge files"]
   F --> G{"Does the knowledge back an answer?"}
-  G -- yes --> H{"Customer 24 h window open?"}
+  G -- yes --> H{"Customer 24 h window open? (proposed check)"}
   H -- yes --> I["Send the answer"]
-  H -- no --> J["No free-form reply after 24 h (Drafts ADR-012)"]
+  H -- no --> J["Tell the owner: the customer's 24 h window is closed (ADR-012, D29)"]
   G -- no --> K{"Owner chat window open?"}
   K -- yes --> L["Ask the owner: business number writes to the owner number"]
   K -- no --> M["Ask in the Claude app and tell the owner to answer on WhatsApp"]
