@@ -46,6 +46,7 @@ R-INTAKE-12, R-INTAKE-13, R-INTAKE-14, R-INTAKE-18
 | FR-INTAKE-05-23 | always | Removing an owner number is deferred until after the pilot; the pilot only adds numbers (FR-INTAKE-05-21). |
 | FR-INTAKE-05-24 | IF | If the text the session records is not contained in a message the owner sent in the control chat after the question was asked, Intake refuses, changes nothing and publishes nothing, so the go comes only from the owner's own words, as docs/adr/ADR-006-draft-send-path.md and Drafts ADR-003 say. The text is contained when it appears in the message on whole-token boundaries; the message may hold more, because one message can answer several questions. |
 | FR-INTAKE-05-25 | always | Each question the session asks names the customer chat it is about, and Intake records that chat id with the question. |
+| FR-INTAKE-05-26 | IF | If a question names a chat that is not a stored customer chat, either unknown or an owner's control chat, Intake sends nothing, records nothing and refuses with "unknown chat". |
 
 ## Edge cases
 
