@@ -296,7 +296,7 @@ None. `drafts.retry_at`, `drafts.attempts`, `pending_choice`, `hold_reason`, `fa
 
 ### Task 7: End to end and crash tests
 - **Tests first:** `test/drafts/acceptance/safe-send.e2e.test.ts` (layer E, the server over stdio with the fake Kapso server of the foundation) and `test/drafts/acceptance/crash.test.ts` (layer X, real processes on one data folder).
-  - FR-DRAFTS-03-5: Given an owner reply from the app that the fake Kapso serves as an outbound echo after the draft, When `approve_draft` is called, Then the answer is `held` with `owner_answered`, the owner's reply appears inside an `<owner_app_reply>` block, the three choices are listed, and the fake Kapso received no send.
+  - FR-DRAFTS-03-5: Given an owner reply from the app that the fake Kapso returns an outbound echo after the draft, When `approve_draft` is called, Then the answer is `held` with `owner_answered`, the owner's reply appears inside an `<owner_app_reply>` block, the three choices are listed, and the fake Kapso received no send.
   - FR-DRAFTS-03-9: Given the fake Kapso reports Deputy's message before Intake has the send id and then again later, When both have arrived, Then the chat read through `get_chat` holds one message with source "sent through Deputy" and the next draft is not held.
   - FR-DRAFTS-03-10: Given the provider reports the sent message again later, Then `get_chat` still shows one message.
   - FR-DRAFTS-03-2: Given the fake Kapso refuses the chat read with 503, Then `approve_draft` answers `held` with `catch_up_failed` and the fake received no send.

@@ -20,8 +20,8 @@ R-ORDERS-1, R-ORDERS-2, R-ORDERS-3, R-ORDERS-4, R-ORDERS-5, R-ORDERS-6, R-ORDERS
 - **FR-ORDERS-01-6.** On the owner's go, Deputy records the order and sets an identifier and a creation time. The agent tells the owner the order is recorded, with the identifier.
 - **FR-ORDERS-01-7.** Recording is idempotent on the identifier of the approved order draft. Approving the same order draft twice records one order. A second order from the same chat is recorded only when the owner approves it as a separate order draft.
 - **FR-ORDERS-01-8.** If recording fails, for example because the owner's spreadsheet is unreachable, the agent tells the owner the order was not recorded. It never reports success for an order that was not stored.
-- **FR-ORDERS-01-9.** Customer text copied into an order (names, notes, addresses) is stored as data. It is never run as an instruction, and it never changes an order's status. The agent shows such text to the owner as customer text.
-- **FR-ORDERS-01-10.** Recording an order sends nothing to the customer. A confirmation to the customer is a separate reply that follows the Drafts slice.
+- **FR-ORDERS-01-9.** The rule is stated in [R-ORDERS-13](../PRD.md). The agent shows such text to the owner as customer text.
+- **FR-ORDERS-01-10.** Recording an order sends nothing to the customer. The rule is stated in [R-ORDERS-14](../PRD.md).
 - **FR-ORDERS-01-11.** An order draft is approved with the same go rule as a reply (FR-DRAFTS-02-9): the owner's reply identifies the order draft, and Drafts keeps an approval entry with the owner's words. Deputy's way to record an order takes the order draft identifier. It refuses unless an approval entry exists for that identifier. A refused record stores nothing.
 - **FR-ORDERS-01-12.** The go binds to the exact order content shown: customer, items, quantities, fulfillment, address, date and time, total and notes. If any of it changed after the owner saw it, the go is void and a new go is needed.
 - **FR-ORDERS-01-13.** Known limit: Deputy cannot check who spoke. It checks that an approval entry with words exists. An agent with other tools could bypass Deputy (decision D11).

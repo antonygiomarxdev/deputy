@@ -77,4 +77,4 @@ Example notice:
 
 ## Open questions
 
-1. Should a message that looks like an order break the batching period and notify sooner? This FRD assumes not. (PRD open question 1.)
+1. The open question is stated in [PRD open question 1](../PRD.md). This FRD assumes not. (PRD open question 1.)
