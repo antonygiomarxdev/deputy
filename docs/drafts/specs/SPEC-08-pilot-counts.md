@@ -5,7 +5,7 @@ Rests on: ../frd/FRD-04-drafts-log.md
 
 ## Summary
 
-Counts per day the automatic answers and the owner's approvals from the drafts log (R-DRAFTS-24). Customer-message and owner-question counts are Intake's and not here. Depends on SPEC-09-3 for the `automatic` column.
+Counts per day the automatic answers and the owner's approvals from the drafts log (R-DRAFTS-24). Customer-message and owner-question counts are Intake's and not here. Depends on SPEC-09-3b for the `automatic` column.
 
 Last change: 2026-11-24, rewritten after review of PR 202 (SPEC-09 split into 09-1 to 09-3; SPEC-07 takes the go from Intake's OwnerAnswered).
 

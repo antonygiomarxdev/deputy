@@ -12,6 +12,7 @@ REQ-15 and owner decision D31 (approved in PRODUCT): in the local pilot Deputy a
 - The 24 hour window check of ADR-012 applies to a first send too: a closed window sends nothing and tells the owner (FR-DRAFTS-03-14).
 - An owner answer to an `ask_owner` question is the go for the next send to the customer chat the question names, within the customer window and for that one send (FR-DRAFTS-02-14). The session maps free-text answers to questions; Deputy does not parse which question a reply answers.
 - The pilot has no daily cap and no kill switch (REQ-15).
+- The go from an owner answer is a separate path: it is logged as an approval with the customer chat and no draft number, which is the exception to R-DRAFTS-19 for an owner answer to an ask_owner question (R-DRAFTS-23, SPEC-12).
 - Known limit: the auto-send gate trusts the session's answerClass and knowledge inputs. Drafts cannot check them, as D11 states for an agent with its own tools.
 
 ## Flow
