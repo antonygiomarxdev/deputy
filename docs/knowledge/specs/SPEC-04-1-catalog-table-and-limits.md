@@ -16,7 +16,7 @@ Quoted from: ../frd/FRD-04-pilot-knowledge-files.md
 
 | FR-KNOWLEDGE-04-4 | WHEN | WHEN a catalog item has an empty price or an empty availability, `read_knowledge` shall return "to be confirmed" in its place and shall not fill in a value. |
 | FR-KNOWLEDGE-04-9 | IF | IF the catalog text holds no table with the columns name, unit, price and availability, or holds no item, or holds more than 500 items, THEN Deputy shall refuse the save with `catalog_unreadable` and change nothing. |
-| FR-KNOWLEDGE-04-10 | IF | IF a profile or an always-ask text is longer than 20000 characters, THEN Deputy shall refuse the save with `too_large` and change nothing. |
+| FR-KNOWLEDGE-04-10 | IF | IF a profile, an always-ask or a memory text is longer than 20000 characters, THEN Deputy shall refuse the save with `too_large` and change nothing. |
 | EX-2 | RULE-1 | boundary | catalog.md lists "Flan" with an empty price | the agent calls `read_knowledge` | the price of "Flan" reads "to be confirmed" and no number appears |
 | EX-8 | RULE-3 | positive | this is the owner process | the agent saves a table of 3 items with name, unit, price and availability | catalog.md holds the table and the summary says 3 items added, 0 removed, 0 changed |
 | EX-9 | RULE-3 | negative | this is the owner process | the agent saves a table with no price column | Deputy refuses with `catalog_unreadable` and catalog.md is unchanged |

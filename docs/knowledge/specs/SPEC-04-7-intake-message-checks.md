@@ -44,7 +44,7 @@ export function createIntakeMessageChecks(i: { isCustomerText: IsCustomerText; r
 `bun test test/knowledge`
 
 ## Out of scope
-The wiring (SPEC-04-6) and any Intake port: none is added.
+The wiring (SPEC-04-6 and SPEC-04-9) and any Intake port: none is added.
 
 ## Open questions
 None.
