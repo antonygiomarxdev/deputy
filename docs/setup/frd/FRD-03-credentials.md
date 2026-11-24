@@ -2,6 +2,8 @@
 
 Status: Approved (2026-11-18) · Slice: Setup · Part of [Setup PRD](../PRD.md)
 
+Deferred (REQ-15, 2026-11-24): the local pilot enters the Kapso key in a Deputy form instead of the steps here (D33). The document stays as written.
+
 ## Summary
 
 The owner's passwords, codes and payment details never pass through the agent. The two secrets Deputy needs are entered by the owner in a place the agent does not read, and never shown back in full. Setup never loosens the rule that nothing goes out without an approved draft. See [../PRD.md](../PRD.md).

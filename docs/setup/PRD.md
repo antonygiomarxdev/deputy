@@ -1,6 +1,16 @@
 # Setup: slice PRD
 
-Status: Approved (2026-11-18) · Part of [Deputy product overview](../PRODUCT.md) · Last updated: 2026-11-17
+Status: Approved (2026-11-18) with amendments from REQ-15 (pending owner approval) · Part of [Deputy product overview](../PRODUCT.md) · Last updated: 2026-11-24 (pilot setup added)
+
+## Summary
+
+Setup takes a non-technical owner from nothing to a working Deputy. The v1 design is a guided, resumable flow (FRD-01 to FRD-04). For the local pilot the owner instead asks the agent to install Deputy from a link, pastes the provider key on a one-time local page, and sets up the business in a conversation run by a skill (R-SETUP-22 to R-SETUP-29, FRD-05).
+
+Last change: 2026-11-24, pilot setup requirements added
+
+## Why
+
+A non-technical owner cannot install a runtime, edit files or type commands (REQ-14), and the pilot needs setup by conversation with no command-line commands (REQ-15).
 
 ## Purpose
 
@@ -54,6 +64,19 @@ Completion
 - **R-SETUP-20.** Setup records the start time and the time of each step, reports the provider's waits separately, and shows the total from the first instruction to the passing round trip.
 - **R-SETUP-21.** After the number is connected, Setup asks the owner how Deputy should receive messages: periodic checking (default, nothing else to set up, a message can arrive a few minutes late) or live delivery (instant, needs an extra advanced step outside the 30-minute path). Setup explains the difference in plain words, records the choice, and the owner can change it later.
 
+Pilot setup (REQ-15, D33, D35, D36, D38, ADR-018)
+
+For the local pilot the guided flow above is deferred: [FRD-01 to FRD-04](frd/FRD-01-guided-flow.md) stay as the later design. Setup is done by asking the agent, and by a skill, with no command-line commands for the owner.
+
+- **R-SETUP-22.** The owner asks the agent to install Deputy from a link. The agent follows one install guide, once, on Windows, macOS or Linux, says what each step does before it runs, and checks that it worked.
+- **R-SETUP-23.** The install puts two things in place: the project's permission rules (allow Deputy's own tools, deny the shell tools) and a shortcut the owner clicks to open the agent session with the wake option (ADR-018).
+- **R-SETUP-24.** The provider's access key is entered on a one-time page that Deputy serves on the owner's computer and stores straight in the secret store. The agent never sees the key and never asks for it in the conversation. This amends R-SETUP-14 and D19 for the pilot (D33).
+- **R-SETUP-25.** After the key is stored, Deputy lists the numbers of the owner's provider account, the owner picks the business number, and Deputy keeps the number's provider id.
+- **R-SETUP-26.** The rest of setup is a conversation run by the skill: how the business works, the catalog, which questions must always be asked of the owner (D38) and the owner's own numbers. The skill writes the knowledge through Knowledge's tools and the owner numbers through Intake's tool. Proposed, extends D33: the owner numbers are recorded only after the owner has stated them and confirmed them in the conversation.
+- **R-SETUP-27.** While a session is open, Deputy keeps the computer from sleeping through idleness, without administrator rights, and releases it when the session ends (D36).
+- **R-SETUP-28.** Setup gives the owner the keep-awake checklist (lid open, plugged in, no shutdown, network on) and says that a closed lid still sleeps the computer (D36). The guide tells the owner to message the business number at least once a day (D36). Proposed, extends D36: the skill also reminds the owner when a day passes without such a message.
+- **R-SETUP-29.** The skill never asks the owner for a permission in the terminal during the daily loop (D35). When it needs the owner's decision it asks by message first. It answers in the owner's language (D20); Proposed: Spanish and English are the two languages of the pilot. Proposed, extends D35: setup is attended, the owner is at the computer, so a permission prompt there for the owner's own sheet or documents is acceptable.
+
 ## Principles honored
 
 - **Principle 1 (nothing goes out without the owner's "go"):** R-SETUP-15 keeps the guarantee from being weakened by setup, and R-SETUP-17 proves it end to end with an approved reply. R-SETUP-12 states the known limit honestly.
@@ -68,7 +91,7 @@ Safety requirements from the product overview:
 - **Owner identity from configuration:** R-SETUP-9.
 - **Webhooks are verified before anything is stored:** when the owner turns on live delivery, Setup collects what is needed to verify them (R-SETUP-14) and checks it works (R-SETUP-2, R-SETUP-17).
 
-## Out of scope
+## Non-goals
 
 - Running the provider's own sign-up screens, or handling payment for the owner. The owner does these (R-SETUP-8, R-SETUP-13).
 - Receiving and storing messages (Intake), drafting (Drafts), and ongoing knowledge upkeep (Knowledge). Setup only starts them.
@@ -87,7 +110,7 @@ Safety requirements from the product overview:
 - **Notify** is offered as an optional extra for agents that support push.
 - External: the provider's account and plan terms, and the WhatsApp Business app on the owner's phone.
 
-## Acceptance criteria
+## Success criteria
 
 1. A new owner on a Business app number reaches a successful test round trip and Setup is marked complete (R-SETUP-17).
 2. At every step the owner can see the step name, the remaining count, and whose action it is (R-SETUP-1, R-SETUP-5).
