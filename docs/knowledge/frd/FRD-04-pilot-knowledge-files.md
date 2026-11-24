@@ -146,6 +146,7 @@ n/a: this project keeps its cross-cutting rules in the cross-cutting TP (`docs/t
 - Q-1 (Lead): the task named `read_knowledge`, `remember` and `save_catalog`; setup also has to write the profile and the always-ask list, so this FRD adds `save_profile` and `save_always_ask` with the same rule. Confirm, or name another way to write them.
 - Q-2 (Lead): `remember` needs Intake to say whether a stored message was written by an owner number in the control chat (D37). The Intake documents (control chat) must expose that check, or FR-KNOWLEDGE-04-15 waits and only the session source is built first.
 - Q-3 (Owner: only the owner knows how much knowledge the agent should read on every turn): when the memory or the catalog grows so large that reading it each turn costs too much of the plan, should Deputy warn the owner and ask to tidy it?
+- Q-4 (Lead): the numbers in FR-KNOWLEDGE-04-9, -10, -11 and -17 (500 catalog items, 20000 characters, 20 previous versions, 500 characters per memory entry) are proposed by this draft, not decided by the owner; they exist to bound plan usage and disk. Confirm or replace them.
 
 ## Acceptance criteria
 Generated from the examples, decision table and states; never edited by hand.

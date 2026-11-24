@@ -1,6 +1,6 @@
 # Knowledge: slice PRD
 
-Status: Draft · Product overview: [PRODUCT.md](../PRODUCT.md)
+Status: Draft, with amendments from REQ-15 (pending owner approval) · Product overview: [PRODUCT.md](../PRODUCT.md)
 
 ## Purpose
 
