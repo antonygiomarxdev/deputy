@@ -50,7 +50,7 @@ Chosen: Option A. The record of each change (time, file, owner's words, summary)
 
 The memory is read on every turn, so a planted line steers every answer (FR-KNOWLEDGE-04-13 to FR-KNOWLEDGE-04-18).
 
-- **Option A** `remember({ text, source })` with a session source (owner words) or a control chat source (a stored message id; the text must be contained in that message), plus a refusal of a text equal to a stored customer message and a size limit of 500 characters. Cost: two checks against Intake. Risk: a paraphrase of customer text passes; the session source cannot prove who spoke.
+- **Option A** `remember({ text, source })` with a session source (owner words) or a control chat source (a stored message id; the text must be contained in that message on whole-token boundaries, as FR-INTAKE-05-24), plus a refusal of a text equal to a stored customer message and a size limit of 500 characters. Cost: two checks against Intake. Risk: a paraphrase of customer text passes; the session source cannot prove who spoke.
 - **Option B** Only the session source. Cost: none. Risk: the owner's WhatsApp answers cannot become knowledge, and the agent supplies any words.
 - **Option C** No source; the agent writes any text. Cost: none. Risk: one injected customer message can write the memory.
 
@@ -106,7 +106,7 @@ Four files, `knowledge/history/<name>.<time>` copies (20 per file) and `knowledg
 | `read_knowledge` | none | the four texts, always-ask first, each with its saved time, or "not written yet" |
 | `save_profile`, `save_always_ask` | `text`, `owner_words` | summary with the new size; or a refusal code |
 | `save_catalog` | `text`, `owner_words` | summary with items added, removed, changed; or a refusal code |
-| `remember` | `text`, `source` (`{kind:"session", owner_words}` or `{kind:"control_chat", message_id}`); with a control chat source the text must be contained in that stored message | the entry that was appended; or a refusal code |
+| `remember` | `text`, `source` (`{kind:"session", owner_words}` or `{kind:"control_chat", message_id}`); with a control chat source the text must be contained in that stored message on whole-token boundaries (FR-INTAKE-05-24) | the entry that was appended; or a refusal code |
 
 Refusal codes: `not_owner`, `owner_words_missing`, `owner_words_size`, `catalog_unreadable`, `too_large`, `not_owner_message`, `text_not_in_message`, `copies_customer_text`, `text_size`. No tool input is a path.
 
@@ -114,7 +114,7 @@ Refusal codes: `not_owner`, `owner_words_missing`, `owner_words_size`, `catalog_
 
 | Threat | Effect | Control |
 |---|---|---|
-| A customer message tells the agent to remember or save something | A planted rule steers later answers | No tool takes a customer message as the text; a text equal to a stored customer message is refused; the owner reads the entry in the result; with a control chat source the text must be contained in the stored owner message |
+| A customer message tells the agent to remember or save something | A planted rule steers later answers | No tool takes a customer message as the text; a text equal to a stored customer message is refused; the owner reads the entry in the result; with a control chat source the text must be contained in the stored owner message on whole-token boundaries, so a fragment of a word is refused |
 | The agent supplies made-up owner words | A save without the owner | Known limit (D11); each change is recorded with the words in `changes.log` and the previous version is kept |
 | A path in a tool input | A file outside the folder is read or written | There is no path input; names come from a closed list |
 | A paraphrase of customer text is remembered | Same as the first row | Stated limit; the control chat source needs a stored owner message |

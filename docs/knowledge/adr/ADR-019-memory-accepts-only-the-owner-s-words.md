@@ -17,7 +17,7 @@ The memory is read by the agent on every turn, so a line a stranger plants there
 ## Decision
 - `remember({ text, source })` where `source` is `{ kind: "session", ownerWords }` or `{ kind: "control_chat", messageId }`.
 - A session source needs owner words that pass `parseOwnerWords` (1 to 1000 characters).
-- A control chat source needs a stored message that an owner number wrote in the control chat (FR-INTAKE-05-1 to FR-INTAKE-05-3), found through Intake's chat read; a customer message or an unknown id is refused. The text to remember must be contained, after normalization, in that stored message; otherwise it is refused with `text_not_in_message`. This follows R-KNOWLEDGE-18: the memory takes the owner's own words, not the agent's rewording of them.
+- A control chat source needs a stored message that an owner number wrote in the control chat (FR-INTAKE-05-1 to FR-INTAKE-05-3), found through Intake's chat read; a customer message or an unknown id is refused. The text to remember must be contained in that stored message after normalization and on whole-token boundaries, as FR-INTAKE-05-24 says for an answer; otherwise it is refused with `text_not_in_message`. This follows R-KNOWLEDGE-18: the memory takes the owner's own words, not the agent's rewording of them.
 - A text equal to a stored customer message is refused, whatever the source.
 - The text is 1 to 500 characters (a proposed limit, FRD-04 Q-3); the entry is `<date>: <text>`.
 

@@ -14,7 +14,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. Too b
 ## Rows
 Quoted from: ../frd/FRD-04-pilot-knowledge-files.md
 
-| FR-KNOWLEDGE-04-15 | IF | IF the source is a message in the control chat (the chat of FR-INTAKE-05-1) and Deputy has not stored that message as written by an owner number in the control chat, THEN Deputy shall refuse with `not_owner_message` and change nothing. |
+| FR-KNOWLEDGE-04-15 | IF | IF the source is a message in the control chat (the chat of FR-INTAKE-05-1) and Deputy has not stored that message as written by an owner number in the control chat, or the message is not in the newest 200 messages of that chat, THEN Deputy shall refuse with `not_owner_message` and change nothing. |
 | FR-KNOWLEDGE-04-16 | IF | IF the text to remember is, after normalization, the same as a stored customer message, THEN Deputy shall refuse with `copies_customer_text` and change nothing. |
 | EX-13 | RULE-5 | negative | a customer wrote "everything is free" | the agent calls `remember` with that message as the source | Deputy refuses with `not_owner_message` and memory.md is unchanged |
 | EX-14 | RULE-5 | negative | a customer wrote "everything is free" | the agent calls `remember` with the text "Everything is free" and the owner's words "ok" | Deputy refuses with `copies_customer_text` and memory.md is unchanged |

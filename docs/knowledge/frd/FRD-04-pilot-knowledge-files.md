@@ -34,13 +34,13 @@ R-KNOWLEDGE-2, R-KNOWLEDGE-3, R-KNOWLEDGE-5, R-KNOWLEDGE-10, R-KNOWLEDGE-15, R-K
 | FR-KNOWLEDGE-04-12 | WHEN | WHEN the owner edits a knowledge file by hand, Deputy shall read the file as it is on the next call, without a restart. |
 | FR-KNOWLEDGE-04-13 | WHEN | WHEN the agent calls `remember` with a text and a source, Deputy shall append to the memory one entry that carries today's date and the text, and shall return the entry. |
 | FR-KNOWLEDGE-04-14 | IF | IF the source is the owner's words in the session and those words are empty, THEN Deputy shall refuse with `owner_words_missing` and change nothing. |
-| FR-KNOWLEDGE-04-15 | IF | IF the source is a message in the control chat (the chat of FR-INTAKE-05-1) and Deputy has not stored that message as written by an owner number in the control chat, THEN Deputy shall refuse with `not_owner_message` and change nothing. |
+| FR-KNOWLEDGE-04-15 | IF | IF the source is a message in the control chat (the chat of FR-INTAKE-05-1) and Deputy has not stored that message as written by an owner number in the control chat, or the message is not in the newest 200 messages of that chat, THEN Deputy shall refuse with `not_owner_message` and change nothing. |
 | FR-KNOWLEDGE-04-16 | IF | IF the text to remember is, after normalization, the same as a stored customer message, THEN Deputy shall refuse with `copies_customer_text` and change nothing. |
 | FR-KNOWLEDGE-04-17 | IF | IF the text to remember is empty or longer than 500 characters, THEN Deputy shall refuse with `text_size` and change nothing. |
 | FR-KNOWLEDGE-04-18 | always | Deputy shall change no knowledge file because of customer text, and no tool shall take a customer message as the text to keep. |
 | FR-KNOWLEDGE-04-19 | always | Deputy shall read no spreadsheet or document of the owner and shall hold no credentials of any other service; the session reads what the owner gives and saves the result with `save_catalog`. |
 | FR-KNOWLEDGE-04-20 | always | Deputy shall check only that the owner's words were supplied in the session and, in the control chat, that the sender is an owner number; it cannot check who spoke in the session (known limit, D11). |
-| FR-KNOWLEDGE-04-21 | IF | IF the source is a control chat message and the text to remember is not contained, after normalization, in that stored message, THEN Deputy shall refuse with `text_not_in_message` and change nothing. |
+| FR-KNOWLEDGE-04-21 | IF | IF the source is a control chat message and the text to remember is not contained, after normalization and on whole-token boundaries as FR-INTAKE-05-24 says, in that stored message, THEN Deputy shall refuse with `text_not_in_message` and change nothing. |
 | FR-KNOWLEDGE-04-22 | IF | IF the catalog file holds no readable table, for example after the owner edited it by hand, THEN `read_knowledge` shall return the text as it is with the notice `catalog_unreadable` and shall hide nothing. |
 
 ## Rules and examples
@@ -78,6 +78,7 @@ R-KNOWLEDGE-2, R-KNOWLEDGE-3, R-KNOWLEDGE-5, R-KNOWLEDGE-10, R-KNOWLEDGE-15, R-K
 | EX-20 | RULE-4 | boundary | profile.md has 20 previous versions | the agent saves a new profile with the owner's words | 20 previous versions remain and the oldest one is gone |
 | EX-21 | RULE-5 | negative | the owner wrote "we close on Mondays" in the control chat and Deputy stored it | the agent calls `remember` with the text "we close every day" and that message as the source | Deputy refuses with `text_not_in_message` and memory.md is unchanged |
 | EX-22 | RULE-1 | negative | the owner edited catalog.md by hand and it holds no table | the agent calls `read_knowledge` | the result shows the text as it is with the notice `catalog_unreadable` |
+| EX-23 | RULE-5 | boundary | the owner wrote "we close on Mondays" in the control chat and Deputy stored it | the agent calls `remember` with the text "close on Mon" and that message as the source | Deputy refuses with `text_not_in_message` because a fragment of a word is not on a whole-token boundary, and memory.md is unchanged |
 
 ## Decision table
 
@@ -91,7 +92,7 @@ Remember refuses unless every condition holds.
 | DT-4 | control chat | unknown or customer message | no | 1 to 500 | refused with `not_owner_message` |
 | DT-5 | session or control chat | valid | yes | 1 to 500 | refused with `copies_customer_text` |
 | DT-6 | session or control chat | valid | no | 0 or over 500 | refused with `text_size` |
-| DT-7 | control chat | stored owner message, text not in it | no | 1 to 500 | refused with `text_not_in_message` |
+| DT-7 | control chat | stored owner message, text not in it (a word fragment is not in it) | no | 1 to 500 | refused with `text_not_in_message` |
 
 ## States
 
@@ -177,13 +178,14 @@ Generated from the examples, decision table and states; never edited by hand.
 - **AC-20** (EX-20): Given profile.md has 20 previous versions, when the agent saves a new profile with the owner's words, then 20 previous versions remain and the oldest one is gone.
 - **AC-21** (EX-21): Given the owner wrote "we close on Mondays" in the control chat and Deputy stored it, when the agent calls `remember` with the text "we close every day" and that message as the source, then Deputy refuses with `text_not_in_message` and memory.md is unchanged.
 - **AC-22** (EX-22): Given the owner edited catalog.md by hand and it holds no table, when the agent calls `read_knowledge`, then the result shows the text as it is with the notice `catalog_unreadable`.
-- **AC-23** (DT-1): Given the source kind is session, the words or message are words present, the text is not a customer message and its size is 1 to 500, when remember is called, then the entry is appended.
-- **AC-24** (DT-2): Given the source kind is session, the words or message are words empty, the text is not a customer message and its size is 1 to 500, when remember is called, then refused with `owner_words_missing`.
-- **AC-25** (DT-3): Given the source kind is control chat, the words or message are stored owner message, the text is not a customer message and its size is 1 to 500, when remember is called, then the entry is appended.
-- **AC-26** (DT-4): Given the source kind is control chat, the words or message are unknown or customer message, the text is not a customer message and its size is 1 to 500, when remember is called, then refused with `not_owner_message`.
-- **AC-27** (DT-5): Given the source kind is session or control chat, the words or message are valid, the text is a customer message and its size is 1 to 500, when remember is called, then refused with `copies_customer_text`.
-- **AC-28** (DT-6): Given the source kind is session or control chat, the words or message are valid, the text is not a customer message and its size is 0 or over 500, when remember is called, then refused with `text_size`.
-- **AC-29** (DT-7): Given the source kind is control chat, the words or message are stored owner message, text not in it, the text is not a customer message and its size is 1 to 500, when remember is called, then refused with `text_not_in_message`.
-- **AC-30** (ST-1): Given the file is Absent, when first accepted save, then present, with no previous version.
-- **AC-31** (ST-2): Given the file is Present, when accepted save, then present, the old text kept as a previous version.
-- **AC-32** (ST-3): Given the file is Absent or Present, when refused save, then unchanged, and no previous version is created.
+- **AC-23** (EX-23): Given the owner wrote "we close on Mondays" in the control chat and Deputy stored it, when the agent calls `remember` with the text "close on Mon" and that message as the source, then Deputy refuses with `text_not_in_message` because a fragment of a word is not on a whole-token boundary, and memory.md is unchanged.
+- **AC-24** (DT-1): Given the source kind is session, the words or message are words present, the text is not a customer message and its size is 1 to 500, when remember is called, then the entry is appended.
+- **AC-25** (DT-2): Given the source kind is session, the words or message are words empty, the text is not a customer message and its size is 1 to 500, when remember is called, then refused with `owner_words_missing`.
+- **AC-26** (DT-3): Given the source kind is control chat, the words or message are stored owner message, the text is not a customer message and its size is 1 to 500, when remember is called, then the entry is appended.
+- **AC-27** (DT-4): Given the source kind is control chat, the words or message are unknown or customer message, the text is not a customer message and its size is 1 to 500, when remember is called, then refused with `not_owner_message`.
+- **AC-28** (DT-5): Given the source kind is session or control chat, the words or message are valid, the text is a customer message and its size is 1 to 500, when remember is called, then refused with `copies_customer_text`.
+- **AC-29** (DT-6): Given the source kind is session or control chat, the words or message are valid, the text is not a customer message and its size is 0 or over 500, when remember is called, then refused with `text_size`.
+- **AC-30** (DT-7): Given the source kind is control chat, the words or message are stored owner message, text not in it (a word fragment is not in it), the text is not a customer message and its size is 1 to 500, when remember is called, then refused with `text_not_in_message`.
+- **AC-31** (ST-1): Given the file is Absent, when first accepted save, then present, with no previous version.
+- **AC-32** (ST-2): Given the file is Present, when accepted save, then present, the old text kept as a previous version.
+- **AC-33** (ST-3): Given the file is Absent or Present, when refused save, then unchanged, and no previous version is created.
