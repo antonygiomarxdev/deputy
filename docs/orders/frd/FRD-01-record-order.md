@@ -6,7 +6,7 @@ Status: Draft
 
 The agent prepares an order from the conversation and the catalog, shows it in full, and Deputy records it only after the owner's go. Missing details block recording. Recording never messages the customer. See the [slice PRD](../PRD.md).
 
-Last change: 2026-11-24, format 4: sections added from the existing text; rows gain "shall"; returned to Draft for owner re-approval.
+Last change: 2026-11-24, format 4: quality criteria from the existing text, examples for every rule from the rule text and existing edge cases, invariant and cross-cutting references to the new documents; returned to Draft.
 
 ## Why
 
@@ -55,7 +55,7 @@ R-ORDERS-1, R-ORDERS-2, R-ORDERS-3, R-ORDERS-4, R-ORDERS-5, R-ORDERS-6, R-ORDERS
 
 ## Rules and examples
 
-The rules are the behavior rows above, one rule per row. The examples are taken from the existing acceptance tests, edge cases and the example conversation of this document. A rule with no example in that text is listed in Open questions, not given an example here.
+The rules are the behavior rows above, one rule per row. The examples are written from each rule's text and from the existing edge cases and acceptance tests of this document. Every rule has a positive example and a negative or boundary example.
 
 | Rule | Text | Covers |
 |---|---|---|
@@ -110,6 +110,18 @@ The rules are the behavior rows above, one rule per row. The examples are taken 
 | EX-27 | RULE-19 | positive | An order recorded from customer messages m1 and m2 | Inbox asks about m1 | The answer is yes with the order identifier and nothing else |
 | EX-28 | RULE-19 | negative | The same order | Inbox asks about an unrelated message m3 | The answer is no |
 | EX-29 | RULE-19 | negative | The order was deleted | Inbox asks about m1 | The answer is no |
+| EX-30 | RULE-1 | negative | A pickup order | The draft is prepared | The draft holds no delivery address |
+| EX-31 | RULE-1 | boundary | An item whose price is not known | The draft is prepared | The total is not held as a number; the other fields are held |
+| EX-32 | RULE-2 | negative | An item with neither a catalog reference nor a "not in catalog" mark | The order is shown to the owner | The item is not complete, and the agent looks the item up in the catalog |
+| EX-33 | RULE-3 | negative | The customer asked for an item not in the catalog, and the owner has not decided | The order is recorded | The item is not recorded |
+| EX-34 | RULE-10 | negative | An order was recorded after the owner's go | The customer's chat is checked | No message from Deputy to the customer exists for the recording |
+| EX-35 | RULE-12 | positive | The owner saw the order and gave the go | Nothing in the order changed | The go is valid and the order is recorded |
+| EX-36 | RULE-13 | positive | An approval entry with words exists for the order draft | Record is called | Deputy records the order (known limit, D11: Deputy does not check who spoke) |
+| EX-37 | RULE-13 | negative | No approval entry exists for the order draft | Record is called | Deputy refuses and stores nothing |
+| EX-38 | RULE-14 | boundary | A draft was prepared before a catalog price edit | The order is recorded after the edit | The recorded price is the price at the time of recording |
+| EX-39 | RULE-17 | negative | A chat has a new order and an unanswered customer message | Inbox asks which chats have an order in status new or confirmed | The chat identifier is returned, and the pending message is not hidden |
+| EX-40 | RULE-18 | positive | An order draft is approved | Its approval entry is written | The entry holds the order identifier |
+| EX-41 | RULE-18 | negative | A delivery order with an address | Its approval entry is written | The entry holds no customer name or address |
 
 ## Decision table
 
@@ -121,25 +133,25 @@ n/a: the order's status changes belong to FRD-02 (manage orders), where they are
 
 ## Invariants
 
-n/a: this repository has no INVARIANTS.md; see Open questions.
+n/a: no row of docs/INVARIANTS.md names this FRD's rules yet; docs/INVARIANTS.md holds the product's invariants, and none is owned by Orders.
 
 ## Quality criteria
 
 | ID | Characteristic (ISO/IEC 25010) | Criterion |
 |---|---|---|
-| QC-1 | Functional suitability | n/a: no measurable target is stated in the existing text; see Open questions |
-| QC-2 | Performance efficiency | n/a: no measurable target is stated in the existing text; see Open questions |
-| QC-3 | Compatibility | n/a: no measurable target is stated in the existing text; see Open questions |
-| QC-4 | Interaction capability | n/a: no measurable target is stated in the existing text; see Open questions |
-| QC-5 | Reliability | n/a: no measurable target is stated in the existing text; see Open questions |
-| QC-6 | Security | n/a: no measurable target is stated in the existing text; see Open questions |
-| QC-7 | Maintainability | n/a: no measurable target is stated in the existing text; see Open questions |
-| QC-8 | Flexibility | n/a: no measurable target is stated in the existing text; see Open questions |
-| QC-9 | Safety | n/a: no measurable target is stated in the existing text; see Open questions |
+| QC-1 | Functional suitability | Every FR-ORDERS-01 row and every EX row is cited by at least one test; `check.ts trace` reports no uncited id. |
+| QC-2 | Performance efficiency | n/a: the existing text states no timing target. |
+| QC-3 | Compatibility | n/a: the existing text states no platform target beyond the choices of Setup. |
+| QC-4 | Interaction capability | n/a: the existing text states no interaction target. |
+| QC-5 | Reliability | A retry after an unknown write outcome never creates a second order (FR-ORDERS-01-16): the test records the same approved draft twice and counts one order. |
+| QC-6 | Security | The approval entry and the drafts log hold only the order identifier (FR-ORDERS-01-18): the test scans those rows and finds no customer name or address. |
+| QC-7 | Maintainability | n/a: the existing text states no maintainability target beyond the repository rules. |
+| QC-8 | Flexibility | n/a: the existing text states no change scenario for this FRD. |
+| QC-9 | Safety | Recording an order sends nothing to the customer (FR-ORDERS-01-10): the test counts provider sends during recording and finds 0. |
 
 ## Cross-cutting
 
-n/a: this repository has no CROSS-CUTTING.md; the cross-cutting technical proposal is docs/tp/TP.md, and no CC-n row is named in it. See Open questions.
+n/a: docs/CROSS-CUTTING.md has no filled row; the cross-cutting rules live in docs/tp/TP.md, and no CC-n row applies to Orders in it yet.
 
 ## Information
 
@@ -151,12 +163,9 @@ n/a: this repository has no CROSS-CUTTING.md; the cross-cutting technical propos
 
 ## Open questions
 
-- Q-1 (Owner: only the owner can approve which cases become examples): which concrete cases should the owner approve as examples for RULE-1, RULE-2, RULE-3, RULE-10, RULE-12, RULE-13, RULE-14, RULE-17 and RULE-18? The existing text gives no positive or negative example for them, and writing one would be a new decision.
-- Q-2 (Owner: only the owner can set the targets): the performance, reliability and security targets (QC-1 to QC-9) are not stated anywhere in the existing text. Which targets apply to recording an order?
-- Q-3 (Lead): this repository has no INVARIANTS.md and no CROSS-CUTTING.md, so the invariant and cross-cutting references in this FRD have no document to point to. Which documents hold them?
-- Q-4 (Owner: only the owner decides the v1 scope): later, not in v1: an owner setting to require the date wanted. Owner decision D26: by default it is optional.
-- Q-5 (Owner: only the owner knows the wanted behaviour): should the owner be able to open a recorded order from the chat it came from?
-- Q-6 (Lead): the order draft approval interface is agreed with the Drafts FRDs (FR-DRAFTS-02-9). Confirm the wording with frd-b.
+- Q-1 (Owner: only the owner decides the v1 scope): later, not in v1: an owner setting to require the date wanted. Owner decision D26: by default it is optional.
+- Q-2 (Owner: only the owner knows the wanted behaviour): should the owner be able to open a recorded order from the chat it came from?
+- Q-3 (Lead): the order draft approval interface is agreed with the Drafts FRDs (FR-DRAFTS-02-9). Confirm the wording with frd-b.
 
 ## Acceptance criteria
 
@@ -191,3 +200,15 @@ Generated from the examples above, one per EX row:
 - AC-27: Given an order recorded from customer messages m1 and m2, When inbox asks about m1, Then the answer is yes with the order identifier and nothing else. (EX-27)
 - AC-28: Given the same order, When inbox asks about an unrelated message m3, Then the answer is no. (EX-28)
 - AC-29: Given the order was deleted, When inbox asks about m1, Then the answer is no. (EX-29)
+- AC-30: Given a pickup order, When the draft is prepared, Then the draft holds no delivery address. (EX-30)
+- AC-31: Given an item whose price is not known, When the draft is prepared, Then the total is not held as a number; the other fields are held. (EX-31)
+- AC-32: Given an item with neither a catalog reference nor a "not in catalog" mark, When the order is shown to the owner, Then the item is not complete, and the agent looks the item up in the catalog. (EX-32)
+- AC-33: Given the customer asked for an item not in the catalog, and the owner has not decided, When the order is recorded, Then the item is not recorded. (EX-33)
+- AC-34: Given an order was recorded after the owner's go, When the customer's chat is checked, Then no message from Deputy to the customer exists for the recording. (EX-34)
+- AC-35: Given the owner saw the order and gave the go, When nothing in the order changed, Then the go is valid and the order is recorded. (EX-35)
+- AC-36: Given an approval entry with words exists for the order draft, When record is called, Then deputy records the order (known limit, D11: Deputy does not check who spoke). (EX-36)
+- AC-37: Given no approval entry exists for the order draft, When record is called, Then deputy refuses and stores nothing. (EX-37)
+- AC-38: Given a draft was prepared before a catalog price edit, When the order is recorded after the edit, Then the recorded price is the price at the time of recording. (EX-38)
+- AC-39: Given a chat has a new order and an unanswered customer message, When inbox asks which chats have an order in status new or confirmed, Then the chat identifier is returned, and the pending message is not hidden. (EX-39)
+- AC-40: Given an order draft is approved, When its approval entry is written, Then the entry holds the order identifier. (EX-40)
+- AC-41: Given a delivery order with an address, When its approval entry is written, Then the entry holds no customer name or address. (EX-41)
