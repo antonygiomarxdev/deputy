@@ -17,7 +17,7 @@ Ports and adapters. Read `CLAUDE.md` and `docs/adr/ADR-000*` first. Code lives i
 ## How we work
 
 - ATDD: write the acceptance tests from the FRD first.
-- Each slice keeps its doc chain (PRODUCT, PRD, FRD, TP, spec) in `src/<slice>/docs/`. Change the doc with the code.
+- Each slice keeps its doc chain (PRODUCT, PRD, FRD, TP, spec) in `docs/<slice>/`. Change the doc with the code.
 - Commits follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`).
 - A user-facing change (feature, fix, breaking config change) needs a changeset: `bun changeset`. Docs-only, test-only and internal chores do not.
 - Keep `README.md` (English) and `README.es.md` (Spanish) in sync.

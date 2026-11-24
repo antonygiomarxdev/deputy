@@ -1,6 +1,6 @@
 # Decisions
 
-Product decisions made by the owner, and design decisions the lead made while reviewing the slice documents. Newest decisions are added at the end with the next number. Technical decisions go in ADRs (`docs/adr/` for decisions that span slices, `src/<slice>/docs/adr/` for one slice), written with the Technical Proposal.
+Product decisions made by the owner, and design decisions the lead made while reviewing the slice documents. Newest decisions are added at the end with the next number. Technical decisions go in ADRs (`docs/adr/` for decisions that span slices, `docs/<slice>/adr/` for one slice), written with the Technical Proposal.
 
 ## Owner decisions
 

@@ -12,7 +12,7 @@ Fixed by the cross-cutting TP, so not decided again:
 - Inbox keeps only the window setting `pending_window_days` and the ignore list (FRD-01 Information). Pending status is never stored.
 - Message source is decided by Intake from the owner-number list and Deputy's send ids (FR-INTAKE-04-3). Inbox reads it and never looks at message text to decide anything (FR-INBOX-01-5).
 - Intake already hides what Inbox must not count. `ListChats` returns only the active provider's world, so under Kapso a chat with only dev messages is absent (FR-INBOX-01-12; Intake TP-01 test FR-INTAKE-01-10). A message from an owner reply, sent through Deputy or from the app, sets `lastAnswerAt`. An echo with no sender or counterpart is stored as source `customer` with mark `not_attributable`, and `ChatStateView.lastAnswerAt` already counts it as an answer in its own chat (Intake TP-02). The history flag never changes `ChatStateView` (FR-INBOX-01-9).
-- Inbox consumes Intake exactly as published in `src/intake/docs/tp/TP-02-receive-and-store.md`:
+- Inbox consumes Intake exactly as published in `docs/intake/tp/TP-02-receive-and-store.md`:
   - `ListChats({ customerMessageSince? }): ChatStateView[]` with `ChatStateView = { chat, mark, conversationRef, unattributedStoredAt, lastCustomerAt, lastCustomerMessageId, lastAnswerAt, lastAnswerSource }`.
   - `ReadChat({ chat, limit?, storedSince? }): ChatView | null` with `MessageView = { id, sender, type, readable, text, transcript, readerText, sentAt, storedAt, source, history, dev, edited, previousTexts, deletedBySender, mark }`.
   - `Mark = "normal" | "group_chat" | "sender_unknown" | "not_attributable"`, `Source = "customer" | "owner_app" | "sent_through_deputy"`.

@@ -2,7 +2,7 @@
 
 Status: Approved (2026-11-18)
 
-Per-FRD TP for [FRD-03](../frd/FRD-03-harmless-and-reliable.md). It builds on [TP-01](TP-01-batched-notice.md) (`Tick`, `NoticeSession`, `Notifier`, `notice_state`) and [TP-02](TP-02-owner-controls.md) (settings, quiet periods). It consumes Intake's `SyncStatusView` and `MessageStored` as published and the cross-cutting [TP.md](../../../../docs/tp/TP.md) (TD-7, TD-2, TD-0) without change.
+Per-FRD TP for [FRD-03](../frd/FRD-03-harmless-and-reliable.md). It builds on [TP-01](TP-01-batched-notice.md) (`Tick`, `NoticeSession`, `Notifier`, `notice_state`) and [TP-02](TP-02-owner-controls.md) (settings, quiet periods). It consumes Intake's `SyncStatusView` and `MessageStored` as published and the cross-cutting [TP.md](../../tp/TP.md) (TD-7, TD-2, TD-0) without change.
 
 ## Context
 

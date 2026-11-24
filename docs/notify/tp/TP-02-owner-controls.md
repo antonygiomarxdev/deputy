@@ -2,7 +2,7 @@
 
 Status: Approved (2026-11-18)
 
-Per-FRD TP for [FRD-02](../frd/FRD-02-owner-controls.md). It builds on [TP-01](TP-01-batched-notice.md) (the `Tick` steps, `Notice`, the ports) and on the cross-cutting [TP.md](../../../../docs/tp/TP.md): TD-3 (SQLite `settings` table), TD-7 (time zone default, quiet periods), TD-8 (settings the owner changes by talking, `set_setting` routing). It does not change them.
+Per-FRD TP for [FRD-02](../frd/FRD-02-owner-controls.md). It builds on [TP-01](TP-01-batched-notice.md) (the `Tick` steps, `Notice`, the ports) and on the cross-cutting [TP.md](../../tp/TP.md): TD-3 (SQLite `settings` table), TD-7 (time zone default, quiet periods), TD-8 (settings the owner changes by talking, `set_setting` routing). It does not change them.
 
 ## Context
 
