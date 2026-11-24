@@ -6,7 +6,7 @@ Status: Draft
 
 In the local pilot (REQ-15) the owner talks to the session through WhatsApp: Deputy sends the owner's open questions in one numbered message, from the business number to the owner's own number, and the owner answers freely. Deputy does not match answers to questions; the session reads the owner's messages with the open questions and records each answer. That chat never counts as a customer chat and never holds a send. Intake also shows each customer chat's 24 hour window and the pending list, reads the business number from the provider, and adds owner numbers after the owner's words and a confirmation.
 
-Last change: 2026-11-24, owner rulings: questions are batched, the session records answers, removing a number is deferred
+Last change: 2026-11-24, each question names its customer chat; before that: questions are batched, the session records answers, removing a number is deferred
 
 One feature of the [slice PRD](../PRD.md). Pending list: a subset of Inbox FR-INBOX-01 (no summary groups, no ignore list).
 
@@ -42,9 +42,11 @@ R-INTAKE-12, R-INTAKE-13, R-INTAKE-14, R-INTAKE-18
 | FR-INTAKE-05-19 | IF | If the number cannot be parsed or needs a country code, Intake refuses with the reason and writes nothing. |
 | FR-INTAKE-05-20 | IF | If this process does not hold the lease, Intake refuses and writes nothing. |
 | FR-INTAKE-05-21 | always | set_owner_numbers adds numbers only. It never removes a number and never changes the business number. |
-| FR-INTAKE-05-22 | WHEN | When Intake closes a question with an answer, it hands Drafts the question id and the text. |
+| FR-INTAKE-05-22 | WHEN | When Intake closes a question with an answer, it hands Drafts the question id, the customer chat the question names and the text. |
 | FR-INTAKE-05-23 | always | Removing an owner number is deferred until after the pilot; the pilot only adds numbers (FR-INTAKE-05-21). |
 | FR-INTAKE-05-24 | IF | If the text the session records is not contained in a message the owner sent in the control chat after the question was asked, Intake refuses, changes nothing and publishes nothing, so the go comes only from the owner's own words, as docs/adr/ADR-006-draft-send-path.md and Drafts ADR-003 say. The text is contained when it appears in the message on whole-token boundaries; the message may hold more, because one message can answer several questions. |
+| FR-INTAKE-05-25 | always | Each question the session asks names the customer chat it is about, and Intake records that chat id with the question. |
+| FR-INTAKE-05-26 | IF | If a question names a chat that is not a stored customer chat, either unknown or an owner's control chat, Intake sends nothing, records nothing and refuses with "unknown chat". |
 
 ## Edge cases
 
