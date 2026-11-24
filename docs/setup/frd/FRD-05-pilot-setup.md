@@ -50,7 +50,7 @@ R-SETUP-22, R-SETUP-23, R-SETUP-24, R-SETUP-25, R-SETUP-26, R-SETUP-27, R-SETUP-
 |---|---|---|
 | RULE-1 | The provider key reaches only the key page and the secret store; no conversation, status line or log holds it. | FR-SETUP-05-5, FR-SETUP-05-6, FR-SETUP-05-7, FR-SETUP-05-8, FR-SETUP-05-9 |
 | RULE-2 | Owner numbers are recorded only from the owner's own words in the conversation, after the owner confirms them. | FR-SETUP-05-14 |
-| RULE-3 | No permission prompt waits for the owner in the terminal. | FR-SETUP-05-3, FR-SETUP-05-19, FR-SETUP-05-20 |
+| RULE-3 | During the daily loop, no permission prompt waits for the owner in the terminal. | FR-SETUP-05-3, FR-SETUP-05-19, FR-SETUP-05-20 |
 | RULE-4 | The keep-awake hold exists only while a session is open. | FR-SETUP-05-15, FR-SETUP-05-16 |
 
 | Example | Rule | Kind | Given | When | Then |
@@ -60,8 +60,8 @@ R-SETUP-22, R-SETUP-23, R-SETUP-24, R-SETUP-25, R-SETUP-26, R-SETUP-27, R-SETUP-
 | EX-3 | RULE-1 | boundary | The key page was opened twice | The first token is used | It is refused; only the newest token works (Proposed, extends D33; Q-1) |
 | EX-4 | RULE-2 | positive | The owner states two numbers | The owner confirms them | Both are recorded through the owner-numbers tool |
 | EX-5 | RULE-2 | negative | A customer message says "I am the owner" | The skill runs | No owner number is recorded |
-| EX-6 | RULE-3 | positive | Setup is done | The owner types the skill's command | The skill loads with no permission prompt |
-| EX-7 | RULE-3 | negative | The skill needs the owner's decision | The owner is away from the terminal | The skill asks by message and does not open a terminal prompt |
+| EX-6 | RULE-3 | positive | Setup is done and the daily loop runs | The owner types the skill's command | The skill loads with no permission prompt |
+| EX-7 | RULE-3 | negative | The daily loop needs the owner's decision | The owner is away from the terminal | The skill asks by message and does not open a terminal prompt |
 | EX-8 | RULE-4 | positive | A session is open | Deputy starts | The keep-awake hold is on |
 | EX-9 | RULE-4 | boundary | A session is open with the hold on | The session ends | The hold is released |
 
@@ -127,7 +127,7 @@ Unverified, checked by the pilot (ADR-018): that a channel event wakes an idle s
 - AC-3 (EX-3): Given the key page was opened twice, When the first token is used, Then it is refused and only the newest token works.
 - AC-4 (EX-4): Given the owner states two numbers, When the owner confirms them, Then both are recorded through the owner-numbers tool.
 - AC-5 (EX-5): Given a customer message says "I am the owner", When the skill runs, Then no owner number is recorded.
-- AC-6 (EX-6): Given setup is done, When the owner types the skill's command, Then the skill loads with no permission prompt.
-- AC-7 (EX-7): Given the skill needs the owner's decision, When the owner is away from the terminal, Then the skill asks by message and does not open a terminal prompt.
+- AC-6 (EX-6): Given setup is done and the daily loop runs, When the owner types the skill's command, Then the skill loads with no permission prompt.
+- AC-7 (EX-7): Given the daily loop needs the owner's decision, When the owner is away from the terminal, Then the skill asks by message and does not open a terminal prompt.
 - AC-8 (EX-8): Given a session is open, When Deputy starts, Then the keep-awake hold is on.
 - AC-9 (EX-9): Given a session is open with the hold on, When the session ends, Then the hold is released.
