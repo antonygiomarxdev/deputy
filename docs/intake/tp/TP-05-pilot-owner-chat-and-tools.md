@@ -4,9 +4,9 @@ Status: Draft
 
 ## Summary
 
-How Intake serves the local pilot (REQ-15): the owner's own number is a control chat, a question to the owner goes out from the business number and its reply links back, each chat shows its window, and the business number and owner numbers are set without a terminal. The design adds no stored source value and one table, and changes no build today.
+How Intake serves the local pilot (REQ-15): the owner's own number is a control chat, the open questions go to the owner in one numbered message and the session records each answer, each chat shows its window, and the business number and owner numbers are set without a terminal. The design adds no stored source value and one table, and changes no build today.
 
-Last change: 2026-11-24, first draft for FRD-05
+Last change: 2026-11-24, owner rulings: batched questions, the session records answers, removing a number deferred
 
 ## Context
 
@@ -26,22 +26,23 @@ Chosen: Option A. Messages in the control chat stay `owner_app`, are marked `nor
 
 ### TD-2: Where are questions kept?
 
-- **Option A** A table `owner_questions` (number, owner chat, text, asked at, send id, linked message, closed at), a new numbered migration. Cost: one migration. Risk: low.
-- **Option B** Derive questions from the outgoing sends to the owner chat. Cost: no table. Risk: a question has no stable number and "open" cannot be stored.
+- **Option A** A table `owner_questions` (number, owner chat, text, asked at, send id, answer, closed at), a new numbered migration. Cost: one migration. Risk: low.
+- **Option B** Derive questions from the outgoing sends to the owner chat. Cost: no table. Risk: a question has no stable id and "open" cannot be stored.
 - **Option C** Keep them in memory. Risk: a restart forgets an open question.
 
 Chosen: Option A. ADR: none: a table for one list of rows, as TD-3 of the cross-cutting TP says for Deputy's data.
 
-### TD-3: How does a reply link to a question?
+### TD-3: How does an answer reach a question?
 
-- **Option A** If the message names an open question's id, that question; otherwise the latest open question of that owner number; otherwise none (an instruction).
-- **Option B** Only the latest open question, never by number. Risk: two questions open at once get mixed.
+- **Option A** The session reads the control chat together with the open questions, decides which answer belongs to which question, and records it with `answer_question(questionId, text)`. Intake closes the question and hands Drafts the id and the text. Cost: the session does the matching. Risk: a false answer (see the threat model).
+- **Option B** Intake reads a number at the start of the reply and links by it. The owner ruled this out: Deputy does not parse numbers.
+- **Option C** Intake links every reply to the latest open question. Risk: two open questions get mixed.
 
-Chosen: Option A (FR-INTAKE-05-9 and FR-INTAKE-05-10). How a reply names an id is the first open question of FRD-05. Once linked, Intake hands Drafts `{ questionId, text }` (FR-INTAKE-05-22); Intake resolves the latest-open fallback first. ADR: none: a rule of the use case.
+Chosen: Option A (FR-INTAKE-05-9, FR-INTAKE-05-10, FR-INTAKE-05-11, FR-INTAKE-05-22), by the owner's ruling. ADR: none: a rule of two tools.
 
 ### TD-4: How is a window known?
 
-- **Option A** Computed on read: the customer window is the customer's latest message time plus 24 hours, and the owner window is the latest control message time plus 24 hours. Cost: none stored.
+- **Option A** Computed on read: the customer window is the customer's latest message time plus 24 hours, and the owner window is the latest message the owner number sent to the business number plus 24 hours. Cost: none stored.
 - **Option B** A stored "window closes at" column kept up to date on every message. Risk: a second copy to keep right.
 
 Chosen: Option A. ADR: none: the times are already stored (`lastCustomerAt`, the messages).
@@ -75,7 +76,7 @@ flowchart TD
   X -- no --> E["Business-app reply: can hold sends (D30)"]
 ```
 
-Asking the owner a question and linking the reply:
+Asking the owner and recording the answers. The session matches answers to questions; Intake does not.
 
 ```mermaid
 sequenceDiagram
@@ -83,35 +84,37 @@ sequenceDiagram
   participant I as Intake
   participant P as Provider
   participant O as Owner phone
-  S->>I: ask owner (number, text)
+  S->>I: ask owner (number, questions)
   I->>I: owner window open? (24 h after the owner's latest message)
   alt window closed
     I-->>S: window closed
   else window open
-    I->>P: send text from the business number
-    I->>I: record question with its id
-    I-->>S: question id
-    O->>P: reply on WhatsApp
-    I->>P: next poll reads the reply
-    I->>I: link to the named or latest open question
-    I->>I: hand Drafts the question id and the text
+    I->>P: one message listing the open questions, numbered
+    I->>I: record each new question with its id
+    I-->>S: question ids
+    O->>P: answers freely, in one or more messages
   end
-  S->>I: read the control chat and the open questions
-  I-->>S: messages with the question each answers
+  S->>I: read the control chat
+  I-->>S: owner messages and the open questions with their ids
+  S->>I: answer question (questionId, text)
+  I->>I: close the question
+  I-->>S: recorded
+  I->>I: hand Drafts the question id and the text
 ```
 
 ## Interfaces
 
 Inbound tools (the intake tools file registers them; each calls one use case):
 
-- `ask_owner { number, text }` returns `{ questionId }` or `{ refused: "window_closed" | "not_an_owner_number" | "not_owner" }` or the send failure of `SendTextResult`. Lease required.
+- `ask_owner { number, questions }` (`questions` is a list of texts) returns `{ questionIds }` or `{ refused: "window_closed" | "not_an_owner_number" | "not_owner" }` or the send failure of `SendTextResult`. Lease required.
+- `answer_question { questionId, text }` returns `{ recorded }` or `{ refused: "unknown_question" | "not_owner" }`. Lease required.
 - `list_pending {}` returns `[{ chat, lastCustomerAt, windowClosesAt }]`, newest first. A read, no lease.
-- `get_chat` gains `windowClosesAt` for a customer chat and `answers` (a question id or none) on each message of the control chat and `openQuestions`. A read.
+- `get_chat` gains `windowClosesAt` for a customer chat and, for the control chat, `openQuestions` next to the messages. A read.
 - `set_owner_numbers { number, ownerWords, confirm? }` returns the described number, or `{ added }` with `confirm`. Lease required.
 
-A shared signal `OwnerAnswered { questionId: string; text: string; at }` (in `src/shared/signals.ts`, published after the commit like `OwnerReplyUnlinked`) is the hand-off to Drafts, whose `OwnerAnswer` has the same fields.
+A shared signal `OwnerAnswered { questionId: string; text: string; at }` (in `src/shared/signals.ts`, part of `IntakeEvent`, published after the commit like `OwnerReplyUnlinked`) is the hand-off to Drafts, whose `OwnerAnswer` has the same fields. Drafts' go arrives from the session's `answer_question` call.
 
-Outbound port added: `OwnerQuestionRepository` (`add`, `listOpen`, `latestOpen`, `link`), SQLite and in-memory adapters, a migration `0008-owner-questions.sql` appended to the list in `src/main/database.ts`.
+Outbound port added: `OwnerQuestionRepository` (`add`, `listOpen`, `answer`), a SQLite adapter, a migration `0008-owner-questions.sql` appended to the list in `src/main/database.ts`.
 
 ## Information
 
@@ -124,8 +127,8 @@ One new table, created by a numbered migration (`0008-owner-questions.sql`):
 | `text` | The question text as sent (the session's words). |
 | `asked_at` | The time the question was sent. |
 | `send_id` | The send id of the outgoing message, so a failed send can be found. |
-| `linked_message` | The message id of the owner's reply, or empty while the question is open. |
-| `closed_at` | The time the reply was linked, or empty. |
+| `answer` | The text the session recorded as the owner's answer, or empty while the question is open. |
+| `closed_at` | The time the answer was recorded, or empty. |
 
 Nothing else changes in storage (TD-1 and TD-4).
 
@@ -133,20 +136,20 @@ Nothing else changes in storage (TD-1 and TD-4).
 
 - A customer claims to be the owner: the control chat is decided by the owner numbers only (FR-INTAKE-05-1), so a customer message stays a customer message.
 - The session is talked into asking a stranger: `ask_owner` sends only to an owner number (FR-INTAKE-05-8), so it cannot be used as a send path to a customer.
-- An instruction in the control chat is the owner's own text but still arrives through WhatsApp: the session treats it as the owner's words, never as customer text, and Drafts still checks every send it leads to.
-- A stolen owner phone sends instructions: out of scope; the owner removes the number outside the pilot (FRD-05, third open question).
+- The session is talked into recording an answer the owner never gave, which Drafts would take as a go: Intake does not check the text. A check that the text appears in a control message received after the question was asked is Proposed (FRD-05, second open question) and not decided.
+- A stolen owner phone sends instructions: out of scope; removing a number is deferred (FR-INTAKE-05-23).
 
 ## Testing
 
-- Each use case has an in-memory test first (the repository contract suite runs on both adapters); a control message never sets `lastUnattributedAt`, a Business-app echo still does; `ask_owner` never sends with the window closed; a reply links to the named, then the latest, open question.
-- One end-to-end test through the harness: a fake provider, an owner number, a question out, a reply in.
+- Each use case has an in-memory test first; a control message never sets `lastUnattributedAt`, a Business-app echo still does; `ask_owner` never sends with the window closed and sends one message for all open questions; an answer closes only an open question and publishes once.
+- One end-to-end test through the harness: a fake provider, an owner number, a question out, an answer recorded.
 
 ## Risks
 
-- A reply that names no question and is not an answer (a stray message) links to the latest open question: the session still sees the text and decides.
-- Two owner numbers answering the same question: the first link closes it (FR-INTAKE-05-9).
+- A long list of open questions in one message: WhatsApp limits a text part (`MAX_PART`), and `SendText` already splits; the numbered lines stay in order.
+- Two owner numbers answering the same question: the first recorded answer closes it, the second is refused (FR-INTAKE-05-10).
 - The window rule uses the provider's message time; clock skew is the same as for customer messages (TP-03).
 
 ## Open questions
 
-See FRD-05: how a reply names a question, the business number when the provider offers none, and removing an owner number in the pilot.
+See FRD-05: the business number when the provider offers none, and the proposed check that a recorded answer is the owner's text.

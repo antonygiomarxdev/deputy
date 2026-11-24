@@ -5,16 +5,16 @@ Rests on: ../frd/FRD-05-pilot-owner-chat-and-tools.md
 
 ## Summary
 
-One new SQLite table `owner_questions` (TP-05 TD-2), created by a numbered migration and added to the list in `src/main/database.ts`. It holds the question number, the owner chat, the text, the time, the send id, the linked message and the closing time. No code reads it yet.
+One new SQLite table `owner_questions` (TP-05 TD-2), created by a numbered migration and added to the list in `src/main/database.ts`. It holds the question number (whose decimal text is the question id), the owner chat, the text, the time, the send id, the answer text and the closing time. No code reads it yet.
 
-Last change: 2026-11-24, first draft from FRD-05
+Last change: 2026-11-24, the table keeps the answer text, not a linked message
 
 One spec is one agent run: at most 80 lines, 3 files and one done command. A spec decides nothing new.
 
 ## Rows
 
-| FR-INTAKE-05-5 | WHEN | When the session asks the owner a question with an owner number and a text, Intake sends the text from the business number to that number, records the question with an id and the time, and returns the id. |
-| FR-INTAKE-05-11 | always | When the session reads the control chat, each message shows the question it answers, if any, and the session can list the open questions. |
+| FR-INTAKE-05-5 | WHEN | When the session asks the owner one or more questions with an owner number, Intake sends one message from the business number to that number that lists every question still open for it, numbered, records each new question with an id and the time, and returns the ids. |
+| FR-INTAKE-05-9 | WHEN | When the session records an answer with the id of an open question and the owner's text, Intake closes that question and keeps the text with it. |
 
 ## Files
 | Path | Create or change | Holds |
@@ -29,18 +29,18 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 - `src/intake/adapters/sqlite/migrations/0007-catchup-finished-at.sql` `ALTER`: the last migration of the slice, the pattern to follow
 
 ## Tests first
-FR-INTAKE-05-5, FR-INTAKE-05-11, written before the code, without it in view, on a fresh database from `openDatabase`. FR-INTAKE-05-5: the table `owner_questions` exists with `number` (an integer primary key that counts up), `owner_chat`, `text`, `asked_at`, `send_id`, `linked_message`, `closed_at`; a row keeps the number (whose decimal text is the question id) and the time it was written with. FR-INTAKE-05-11: a query for open questions (`closed_at` empty) returns the rows not yet linked. A database made before the migration upgrades with its data kept.
+FR-INTAKE-05-5, FR-INTAKE-05-9, written before the code, without it in view, on a fresh database from `openDatabase`. FR-INTAKE-05-5: the table `owner_questions` exists with `number` (an integer primary key that counts up), `owner_chat`, `text`, `asked_at`, `send_id`, `answer`, `closed_at`; a row keeps the number and the time it was written with. FR-INTAKE-05-9: a row can take an answer text and a closing time, and a query for open questions (`closed_at` empty) returns the rows not yet answered. A database made before the migration upgrades with its data kept.
 
 ## Build
 ```sql
 CREATE TABLE owner_questions (
-  number         INTEGER PRIMARY KEY AUTOINCREMENT,
-  owner_chat     TEXT    NOT NULL,
-  text           TEXT    NOT NULL,
-  asked_at       INTEGER NOT NULL,
-  send_id        TEXT    NOT NULL,
-  linked_message TEXT,
-  closed_at      INTEGER
+  number     INTEGER PRIMARY KEY AUTOINCREMENT,
+  owner_chat TEXT    NOT NULL,
+  text       TEXT    NOT NULL,
+  asked_at   INTEGER NOT NULL,
+  send_id    TEXT    NOT NULL,
+  answer     TEXT,
+  closed_at  INTEGER
 );
 CREATE INDEX owner_questions_open ON owner_questions (owner_chat) WHERE closed_at IS NULL;
 ```

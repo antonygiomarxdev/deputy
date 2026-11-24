@@ -43,7 +43,7 @@ isControlChat(chat: ChatId): boolean; // true when chat equals lineChatId(e.numb
 `bun test test/intake/unit/control-chat.test.ts`
 
 ## Out of scope
-Showing the label to the session (SPEC-05-8); the pending list (SPEC-05-2); linking replies (SPEC-05-7).
+Showing the label to the session (SPEC-05-8); the pending list (SPEC-05-2); recording answers (SPEC-05-7).
 
 ## Open questions
 None.
