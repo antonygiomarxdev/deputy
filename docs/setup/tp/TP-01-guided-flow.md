@@ -66,55 +66,71 @@ Chosen: Option B. The agent's own command is the supported way and keeps the age
 
 ## Architecture
 
-Moved verbatim to [TP-01-guided-flow-architecture.md](../tp-detail/TP-01-guided-flow-architecture.md).
+State of a step, and the run:
+
+```mermaid
+stateDiagram-v2
+  [*] --> todo
+  todo --> current: all earlier steps passed or skipped
+  current --> done: check passes
+  current --> current: check fails (reason kept)
+  done --> todo: resume re-check fails
+  todo --> skipped: test mode, steps 2 to 4
+  skipped --> todo: switch to real provider
+```
+
+Parts:
+
+| Folder | Holds |
+|---|---|
+| `domain/` | `SetupProgress` (aggregate), `Step`, `StepId`, `Mode`, `CheckResult`, `Reason` (code, English text, what to do), `Timing` (pure function over activity and wait rows), events `StepPassed`, `StepFailed`, `SetupCompleted` |
+| `application/` | `GetSetupStatus`, `RunSetupCheck`, `ResumeCheck` (shared by both), one `StepCheck` per step, plus the use cases of TP-02 to TP-04 |
+| `ports/` | inbound: the use-case interfaces. Outbound: below |
+| `adapters/` | SQLite repository, Intake and Knowledge and Drafts adapters (call published `index.ts` only), `ConnectionConfigReader`, `SecretVault`, `RequiredTools`, the CLI install adapter, the MCP tool mapping |
+
+Domain rules (`SetupProgress`):
+1. Steps are `install`, `costs`, `connect`, `credentials`, `profile`, `test`, in that order. In test mode `costs`, `connect` and `credentials` are `skipped` (FR-SETUP-04-7).
+2. A step may be recorded as passed only when every earlier step is passed or skipped.
+3. The current step is the first step that is neither passed nor skipped. The remaining count is the steps after it that are not skipped.
+4. A passed step whose check fails on resume goes back to `todo` with the reason, and every later passed step is marked `recheck` and checked in order after it passes again (FRD edge case).
+5. `test` is never re-run on resume. Its stored result stands.
+6. Who acts: each step carries an `actor` per instruction, `owner` or `agent`. An instruction that involves a password, a code, a payment, a terminal command or a phone screen is `owner` by construction (a table in the domain, not set by callers), so a step the owner must do is never marked as the agent's (FR-SETUP-01-2).
+
+Outbound ports owned by Setup (all Promise-returning; shared kernel `Clock`, `OwnerLease`):
+
+```ts
+interface SetupProgressRepository {
+  loadCurrent(): Promise<SetupProgress | null>;
+  save(p: SetupProgress): Promise<void>;                    // one transaction: steps, facts, waits
+  startRun(mode: Mode, carry: StepId[]): Promise<SetupProgress>;   // TP-04
+}
+type ProbeResult =
+  | { ok: true; businessNumber: string | null }             // E.164 when the provider offers it
+  | { ok: false; reason: 'credentials' | 'unreachable' | 'quota' | 'usage_limit' | 'timeout' };
+interface ProviderProbe { check(): Promise<ProbeResult> }   // Intake CheckProviderAccess
+interface SyncStatusReader { read(): Promise<{ status: 'complete' | 'failed'; running: boolean;
+  historyMaybeSyncing: boolean; lastSuccessAt: Instant | null }> }   // Intake GetSyncStatus
+interface OwnerNumbersReader { list(): Promise<{ number: string; kind: 'business' | 'extra' }[]> } // Intake GetOwnerNumbers
+interface ConnectionConfigReader { read(): Promise<{ provider: string | null; receivingMode: string | null;
+  kapsoPhoneNumberId: string | null; pushOn: boolean }> }  // reads config.json only
+interface RequiredTools { names(): string[] }               // the MCP adapter's registry
+interface AgentInstaller { install(agent: AgentId): Promise<{ command: string; ran: boolean; error: string | null }> }
+```
+
+Step checks:
+
+| Step | Check | Kind on resume |
+|---|---|---|
+| 1 install | the agent passes the names of the tools it lists (`seenTools`); passes when every name in `RequiredTools.names()` is in the list. An empty list or no Deputy name fails with `deputy_not_installed`; a partial list fails with `tools_missing` and the names | live |
+| 2 costs | costs shown, and a warning confirmation recorded after the warning was shown (TP-02) | stored |
+| 3 connect | the owner stated the number is connected; the connection config reads back `provider = kapso` and a phone number id; an owner number of kind `business` exists (TP-02). No provider call here, see Context point 1 | live on config, stored on the statement |
+| 4 credentials | the key is present; `ProviderProbe` is ok; the sync is complete (TP-03) | live |
+| 5 profile | the owner confirmed the profile and catalog (TP-04) | stored |
+| 6 test | the round trip is complete (TP-04) | stored, never re-run |
 
 ## Information
 
-Tables owned by Setup (the cross-cutting TP names `setup_progress`; the others hold what a progress row cannot):
-
-```sql
-CREATE TABLE setup_run (
-  id                   INTEGER PRIMARY KEY AUTOINCREMENT,
-  mode                 TEXT NOT NULL CHECK (mode IN ('test','real')),
-  agent                TEXT CHECK (agent IN ('claude-code','codex','cursor','gemini-cli','other')),
-  first_instruction_at TEXT,                 -- UTC ISO-8601; set once
-  completed_at         TEXT,
-  superseded_by        INTEGER REFERENCES setup_run(id)
-);
-CREATE TABLE setup_progress (
-  run_id        INTEGER NOT NULL REFERENCES setup_run(id),
-  step          TEXT NOT NULL CHECK (step IN ('install','costs','connect','credentials','profile','test')),
-  state         TEXT NOT NULL CHECK (state IN ('todo','done','skipped','recheck')),
-  started_at    TEXT,
-  passed_at     TEXT,
-  checked_at    TEXT,
-  check_passed  INTEGER CHECK (check_passed IN (0,1)),
-  reason_code   TEXT,                        -- fixed code, never provider text (D20)
-  reason_params TEXT,                        -- JSON of numbers and fixed names only
-  PRIMARY KEY (run_id, step)
-);
-CREATE TABLE setup_activity (
-  run_id INTEGER NOT NULL REFERENCES setup_run(id),
-  at     TEXT NOT NULL
-);
-CREATE TABLE setup_provider_wait (
-  run_id     INTEGER NOT NULL REFERENCES setup_run(id),
-  kind       TEXT NOT NULL CHECK (kind IN ('connect','delivery','live')),
-  started_at TEXT NOT NULL,
-  ended_at   TEXT,
-  PRIMARY KEY (run_id, kind, started_at)
-);
-CREATE TABLE setup_fact (                    -- append-only facts of TP-02 to TP-04
-  id          INTEGER PRIMARY KEY AUTOINCREMENT,
-  run_id      INTEGER NOT NULL REFERENCES setup_run(id),
-  kind        TEXT NOT NULL,                 -- fixed list in the domain
-  at          TEXT NOT NULL,
-  value       TEXT,                          -- a code or a short fixed value, never a secret
-  owner_words TEXT
-);
-```
-
-`reason_params` and `value` never hold a secret (TP-03, TD-3 there refuses words that contain one). `state` stores `done` and `todo`; "current" is derived (TD-1). All times are UTC.
+Moved verbatim to [TP-01-guided-flow-information.md](../tp-detail/TP-01-guided-flow-information.md).
 
 ## Interfaces
 

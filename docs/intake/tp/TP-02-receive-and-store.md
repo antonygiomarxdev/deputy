@@ -63,7 +63,91 @@ Chosen: Option A. A lost hint costs one late notice, and the next reminder or in
 
 ## Architecture
 
-Moved verbatim to [TP-02-receive-and-store-architecture.md](../tp-detail/TP-02-receive-and-store-architecture.md).
+```mermaid
+flowchart LR
+  Kapso["Kapso webhook, signed"] --> Listener["HTTP listener: size limit, status mapping"]
+  DevR["Dev routes"] --> Live
+  Listener --> Live["ReceiveLiveDelivery"]
+  Live --> Verify["Provider.verifyAndParse"]
+  Live --> Rej["RejectionRepository"]
+  Live --> Store["StoreMessages service"]
+  Catch["CatchUp run, TP-03"] --> Store
+  Store --> Msg["Message.receive: classify, mark, readable"]
+  Store --> Repo["MessageRepository"]
+  Store --> Proj["ChatStateRepository.recompute"]
+  Live --> Pub["EventPublisher: MessageStored"]
+  Catch --> Pub
+  Pub --> Notify["Notify handler, wired in main.ts"]
+  Read["ReadChat, ListChats, ChatExists"] --> Repo
+  Read --> Proj
+```
+
+Domain (all in `src/intake/domain/`, no I/O):
+
+- **Aggregate `Message`.** Root and only entity. Fields below. Invariants: `(provider, providerMessageId)` is never empty; `readable` implies `type = "text"`; `source` is set once, at `receive`, and changes only through `Message.reclassifyAsDeputySend` (TP-04); `history` never changes; `text` changes only through `applyEdit`, which appends the old text to `versions`.
+- **Value objects.** `ChatId`, `MessageId = { provider, providerMessageId }`, `Source` (`customer`, `owner_app`, `sent_through_deputy`), `Mark`, `PhoneNumber` (TP-04).
+- **Domain service `SourceClassifier`** (TP-04) is called by `Message.receive`.
+- **Domain events.** `MessageStored` and `CatchUpFinished` are defined in `src/intake/domain/events.ts` and re-exported by `index.ts`. `OwnerReplyUnlinked` is a cross-slice signal defined in `src/shared/signals.ts` (L8).
+- **Entity `RejectionNote`** (separate small aggregate): `at`, `reason`, `recoverable`, `resolvedAt`. No content field exists, so none can be stored.
+
+```ts
+export type Source = "customer" | "owner_app" | "sent_through_deputy";
+export type Mark = "normal" | "group_chat" | "sender_unknown" | "not_attributable";
+export type RejectionReason =
+  | "bad_signature" | "missing_signature" | "no_secret" | "no_identifier" | "malformed" | "dev_entry_refused";
+
+export interface MessageProps {
+  id: MessageId;
+  chat: ChatId;
+  conversationRef: string | null;
+  sender: PhoneNumber | null;
+  type: string;
+  readable: boolean;
+  text: string | null;
+  transcript: string | null;
+  sentAt: Instant;
+  storedAt: Instant;
+  origin: string | null;
+  source: Source;
+  mark: Mark;
+  history: boolean;
+  dev: boolean;
+  edited: boolean;
+  deletedBySender: boolean;
+}
+
+export interface ReceiveContext {
+  provider: ProviderName;
+  owners: OwnerNumbers;          // snapshot read in the same transaction
+  matchesSend: boolean;          // an outgoing_parts row has this provider id (TP-04)
+  history: boolean;              // decided by the caller (TP-03, TD-3)
+  now: Instant;
+}
+
+export class Message {
+  static receive(p: ProviderMessage, ctx: ReceiveContext): Message | { rejected: "no_identifier" };
+  applyEdit(text: string): MessageVersion;      // returns the version that was replaced
+  markDeletedBySender(): void;
+  readerText(): string;
+}
+```
+
+Domain events:
+
+```ts
+export interface MessageStored {
+  readonly name: "MessageStored";
+  readonly origin: "live" | "catch_up";
+  readonly items: ReadonlyArray<{ chat: ChatId; source: "customer" | "owner_app"; count: number }>;
+  readonly at: Instant;
+}
+```
+
+`OwnerReplyUnlinked { name: "OwnerReplyUnlinked"; at: Instant }` is published once per unit of storage (live delivery or catch-up run) that stored an owner echo it could not tie to a chat (mark `not_attributable`, TP-04). It has no text, no chat and no number. Owner decision D30: Notify turns it into a notice that says why every send is stopped and what the owner must do.
+
+`items` has one entry per chat and source. It holds only messages that were newly stored, not history, not `sent_through_deputy` and not repeats (FR-INTAKE-02-9). It holds no text and no name.
+
+Application: `StoreMessages.store(tx, { provider, events, historyOf })` is async, runs inside one `IntakeUnitOfWork` transaction and returns `{ stored, duplicates, ignored, edits, rejected, summaries }`. `ReceiveLiveDelivery` and the catch-up run call it. After the transaction they fold `summaries` into one `MessageStored` and publish.
 
 ## Information
 
@@ -71,63 +155,7 @@ Moved verbatim to [TP-02-receive-and-store-information.md](../tp-detail/TP-02-re
 
 ## Interfaces
 
-Inbound ports (use cases):
-
-```ts
-export interface ReceiveLiveDelivery {
-  execute(req: { rawBody: Uint8Array; headers: ReadonlyMap<string, string> }): Promise<
-    | { kind: "stored"; stored: number; duplicates: number; ignored: number }
-    | { kind: "rejected"; reason: RejectionReason }
-    | { kind: "storage_failed" }
-    | { kind: "live_off" }
-    | { kind: "refused"; reason: "not_owner" }
-  >;
-}
-```
-
-Listener mapping: `stored` 200; `rejected` 401 (`malformed` 400); `storage_failed` 500; `live_off` 404; `refused` 503. A batch where some items lack an id stores the others, writes one note per bad item and returns `stored`. The `X-Idempotency-Key` header is not used: the provider message id already de-duplicates.
-
-`ReceiveLiveDelivery` steps: lease check; policy (dev, or Kapso with `receiving = live`; otherwise `live_off`); secret present, else note `no_secret`; signature header present, else `missing_signature`; `Provider.verifyAndParse`; for each event, `StoreMessages` in one transaction; publish `MessageStored` after commit.
-
-```ts
-export interface ListRejections {
-  execute(): Promise<{
-    notes: ReadonlyArray<{ at: Instant; reason: RejectionReason; recoverable: boolean; resolved: boolean }>;
-    prunedCount: number;
-    unrecovered: number;
-  }>;
-}
-
-export interface ChatStateView {
-  chat: ChatId; mark: Mark;
-  lastCustomerAt: Instant | null; lastCustomerMessageId: MessageId | null;
-  lastAnswerAt: Instant | null; lastAnswerSource: "owner_app" | "sent_through_deputy" | null;
-  lastUnattributedAt: Instant | null;
-  profileName?: string;      // the provider's profile name: untrusted customer text, a display hint only; consumers escape and label it and never match on it
-}
-export interface ChatView {
-  chat: ChatId;
-  mark: Mark;
-  messages: ReadonlyArray<MessageView>;     // sent order
-}
-export interface MessageView {
-  id: MessageId; chat: ChatId; sender: string | null; type: string; readable: boolean;
-  text: string | null; transcript: string | null; readerText: string;
-  sentAt: Instant; storedAt: Instant; source: Source; history: boolean; dev: boolean;
-  edited: boolean; previousTexts: readonly string[]; deletedBySender: boolean; mark: Mark;
-}
-export interface ReadChat      { execute(q: { chat: ChatId; limit?: number; storedSince?: Instant }): Promise<ChatView | null> }
-export interface ChatExists    { execute(q: { chat: ChatId }): Promise<{ exists: boolean; hasNonDevMessage: boolean; activeWorldIsDev: boolean }> }
-export interface IsCustomerText { execute(q: { text: string }): Promise<{ matches: boolean }> }
-export interface ListChats     { execute(q: { customerMessageSince?: Instant }): Promise<ChatStateView[]> }
-export interface GetMessages   { execute(q: { ids: readonly MessageId[] }): Promise<MessageView[]> }   // pure read, no lease; each view carries its chat and source; unknown ids are absent
-```
-
-`IsCustomerText` (used by Drafts, FR-DRAFTS-02-6) is true when `normalizeText(text)` equals the `text_norm` of any stored message with source `customer`, in any chat and either world. `normalizeText` is one function in `src/shared/`, defined once here and in Drafts TP-02 in the same words: (1) Unicode NFKC; (2) lower case; (3) every `\p{Nd}` digit becomes its ASCII digit (the value is the code point minus the first code point of its contiguous run of ten; NFKC already maps full-width and mathematical digits, but not Arabic-Indic, Persian or Devanagari ones); (4) every run of whitespace becomes one space; (5) leading and trailing characters in `\p{P}`, `\p{S}` or whitespace are removed (`/^[\p{P}\p{S}\s]+|[\p{P}\p{S}\s]+$/gu`), which covers Spanish `¡` and `¿`, full-width Chinese punctuation (NFKC turns `！` and `，` into ASCII, `。` into itself, all `\p{P}`) and emoji at the edges. Inner characters are never touched. Checked in Bun 1.4.4: `¡Hola, Ana!` gives `hola, ana`; `¿Cuánto cuesta?` gives `cuánto cuesta`; `أريد ٣ كيلو` gives `أريد 3 كيلو`; `！！好的，我要３个。。` gives `好的,我要3个`; `ok 👍` gives `ok`. Tests in es, ar and zh with these inputs are in the Testing section of each TP. Number tokens (Drafts) are runs of digits after step 3; a run is not a token when a decimal separator (`.`, `,`, Arabic `٫` or `٬`) joins it to another digit. Intake fills `text_norm` with it when it stores or edits a readable message, and Drafts calls the same function. It is a pure read (no lease). `MessageView.storedAt` is the local time Deputy stored the message; Drafts compares it as well as `sentAt`, because a late owner echo has an old `sentAt`.
-
-`ChatExists.activeWorldIsDev` is true when the active provider is dev, so a caller can apply the rule "under a real provider the chat needs a non-dev message" (FR-DRAFTS-01-8) without knowing a provider name; the adapter test checks it for both providers. `ReadChat` never filters by the history flag and exposes `sentAt`, `storedAt` and `history` on every message; `lastAnswerAt` and `lastUnattributed` also count history messages, so Intake never hides a possible owner answer and Drafts applies its own rule. `ReadChat` without `limit` returns every message; with `limit` it returns the newest by sent order, and `storedSince` additionally returns every message stored at or after that time whatever its sent time, so a late echo is never hidden behind newer-sent messages. `ChatStateView` is `{ chat, mark, conversationRef, unattributedStoredAt, lastCustomerAt, lastCustomerMessageId, lastAnswerAt, lastAnswerSource }`. `ListChats` returns the world of the active provider only (TP-01, TD-2). `ReadChat` returns both worlds' messages for the chat, each marked `dev`. The pure reads do not ask for the lease. `ListChats` is not in the cross-cutting port list; Inbox needs it to find chats (see Open questions).
-
-MCP tools (mapped, no new tool): `get_chat` (`chat`, optional `limit`) calls `ReadChat`; `rejected_deliveries` (no input) calls `ListRejections`. The MCP adapter wraps customer fields in `<customer_text>` blocks (cross-cutting Interfaces); Intake returns raw values and `readerText`.
+Moved verbatim to [TP-02-receive-and-store-interfaces.md](../tp-detail/TP-02-receive-and-store-interfaces.md).
 
 ## Threat model
 

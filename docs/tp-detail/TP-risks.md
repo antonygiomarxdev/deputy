@@ -1,4 +1,4 @@
-# TP: Risks
+# TP: risks
 
 Part of [TP.md](../tp/TP.md). Moved verbatim from there; nothing changed.
 

@@ -1,79 +1,10 @@
-# TP: Architecture
+# TP: architecture
 
 Part of [TP.md](../tp/TP.md). Moved verbatim from there; nothing changed.
 
 ## Architecture
 
-Style: ports and adapters (TD-0). Each slice is a bounded context with four folders. The drawing shows one hexagon per slice, its ports on the edge, and the adapters outside.
-
-```mermaid
-flowchart LR
-  Agent["Agent: Claude Code, Codex, Cursor, Gemini CLI"]
-  Kapso["Kapso API"]
-  Sched["Scheduler adapter"]
-  Hook["Live-delivery HTTP listener, optional"]
-  Cli["Command line adapter: deputy config, deputy secrets"]
-  Cfg["config.json, OS credential store, secrets.env fallback"]
-  MCP["MCP server adapter: tools to use cases"]
-  Chan["Claude channel notifier adapter, optional"]
-  subgraph IntakeCtx["Intake context"]
-    InI(["inbound ports"])
-    IntakeCore["domain and application"]
-    InO(["outbound ports: MessageRepository, Provider, OwnerLease, Clock"])
-    InI --> IntakeCore --> InO
-  end
-  subgraph InboxCtx["Inbox context"]
-    BxI(["inbound ports"])
-    InboxCore["domain and application"]
-    BxO(["outbound ports: IgnoreRepository, MessageReader, CatchUpRunner, DraftsQuery, OrdersQuery"])
-    BxI --> InboxCore --> BxO
-  end
-  subgraph DraftsCtx["Drafts context"]
-    DrI(["inbound ports"])
-    DraftsCore["domain and application"]
-    DrO(["outbound ports: DraftRepository, DraftLog, Sender, ChatFreshness, OrderPreparer, OrderChanger, UnitOfWork"])
-    DrI --> DraftsCore --> DrO
-  end
-  subgraph NotifyCtx["Notify context"]
-    NoI(["inbound ports"])
-    NotifyCore["domain and application"]
-    NoO(["outbound ports: NoticeRepository, Notifier, WaitingCounts"])
-    NoI --> NotifyCore --> NoO
-  end
-  subgraph OthersCtx["Knowledge, Orders, Setup contexts: same four folders"]
-    OtI(["inbound ports"])
-    OtherCore["domain and application"]
-    OtO(["outbound ports: repositories, catalog and profile readers, secrets check"])
-    OtI --> OtherCore --> OtO
-  end
-  Agent --> MCP
-  MCP --> InI
-  MCP --> BxI
-  MCP --> DrI
-  MCP --> OtI
-  Sched --> InI
-  Sched --> NoI
-  Hook --> InI
-  Cli -.->|pending-change row, no lease| SqliteA
-  Cli --> Cfg
-  InO --> SqliteA["SQLite repositories"]
-  InO --> ProvA["Provider adapters: Kapso, dev"]
-  ProvA --> Kapso
-  Kapso -.->|signed webhook| Hook
-  DrO --> SqliteA
-  DrO -.->|SendText, CatchUpChat via published port| InI
-  DrO -.->|PrepareOrder, RecordOrder, ChangeOrder, DeleteOrder| OtI
-  BxO --> SqliteA
-  BxO -.->|ReadChat, ListChats, GetSyncStatus, CatchUp| InI
-  BxO -.->|published inbound ports| DrI
-  BxO -.->|published inbound ports| OtI
-  NoO -.->|events and published ports| InI
-  NoO --> Chan
-  Chan -->|counts only| Agent
-  OtO --> SqliteA
-  OtO --> Files["Owner files and spreadsheet adapters"]
-  Main["src/main.ts: composition root"] -.->|wires| MCP
-```
+(after the diagram)
 
 Folders per slice (`src/<slice>/`):
 

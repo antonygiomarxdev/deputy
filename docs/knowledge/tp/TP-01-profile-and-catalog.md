@@ -112,7 +112,64 @@ Chosen: Option B. It keeps the dependency one way, covers both draft kinds, and 
 
 ## Architecture
 
-Moved verbatim to [TP-01-profile-and-catalog-architecture.md](../tp-detail/TP-01-profile-and-catalog-architecture.md).
+```mermaid
+flowchart LR
+  Agent["Agent"] --> MCP["MCP adapter"]
+  MCP --> Inb(["Inbound ports: GetProfile, FindCatalogItems, GetCatalogItems, CreateTemplates, ProposeChange, ApplyChange, DeclineProposal, ListProposals, CatalogChangedSince, SeedProfileAndCatalog, SetKnowledgeSettings, ApplyCatalogStoreChange"])
+  Setup["Setup adapter"] --> Inb
+  Ord["Orders adapter: CatalogLookup"] --> Inb
+  Mcp2["MCP adapter, list_drafts: adds the catalog mark"] --> Inb
+  Inb --> App["application: one use case per file"]
+  App --> Dom["domain: Profile, CatalogMapping, MappingDetector, Catalog, CatalogMatcher, CatalogChange, Proposal, OwnerWordsPolicy"]
+  App --> Out(["Outbound ports"])
+  Out --> PS["ProfileStore: file adapter"]
+  Out --> CS["CatalogStore: CSV file adapter with papaparse, or Google Sheets adapter with jose"]
+  Out --> Repo["ProposalRepository, KnowledgeLog, KnowledgeSettings, CatalogSeenRepository: SQLite"]
+  Out --> Cust["CustomerTextCheck: calls Intake IsCustomerText"]
+  Out --> Sys["Clock, OwnerLease, Digest, GoogleCredentials"]
+```
+
+Domain (`src/knowledge/domain/`, no I/O, no package):
+
+- `Profile` (value object): parsed from the file text. `sections` (each `{ id, heading, body, state: 'filled' | 'to_be_confirmed' }`), `preamble`, `missing: SectionId[]`. `withSection(id, text)` returns the new file text. A section is empty when its body, after removing HTML comments, heading lines (`^#{1,6} .*$`) and whitespace, is empty. Comments are removed from the text returned to the agent, not from the file.
+- `RawTable` and `CatalogMapping` (value objects, below). `CatalogMapping` fields: `version: 1`, `source: 'file' | 'sheet'`, `delimiter: string | null`, `hasHeader: boolean`, `headerRow: string[]` (the header cells themselves, not a hash, so the stale check is an equality), `decimal: '.' | ',' | '٫' | null`, `thousands: string | null`, `columns: { index: number; role: Role; headerText: string }[]` with `Role = 'id' | 'name' | 'unit' | 'price' | 'currency' | 'availability' | 'notes' | 'ignore'`, `availability: { available: string[]; unavailable: string[] }`, `currencySymbols: Record<string, string>`.
+- `MappingDetector` (domain service, pure): `detect(table, corrections?) -> { mapping, questions, samples }`. Algorithm below.
+- `Catalog` (value object): `Catalog.read(table, mapping, currency) -> CatalogItem[]`. `CatalogItem { row: number; ref: string; name: string; unit: Field; price: PriceField; availability: AvailabilityField; notes: string | null; rowCells: string[] }`.
+- `CatalogMatcher` (pure): `fold(text)`, `match(items, query) -> { item, tier }[]`.
+- `CatalogChange` (pure): builds `CellOp[]` from a proposal and a `Catalog`; checks values (`value_unsafe`, `value_invalid`).
+- `Proposal` (aggregate). Fields: `number`, `kind`, `status`, `target`, `oldValue`, `newValue`, `detail`, `createdAt`, `decidedAt`, `expiresAt`, `supersededBy`. States: `waiting` to `applying` to `applied`; `waiting` to `declined`, `superseded` or `expired`; `applying` back to `waiting` on failure. Invariants: a closed proposal never reopens; `apply` needs words that pass `OwnerWordsPolicy`.
+- `OwnerWordsPolicy` (pure): non-empty and at most 1000 characters after trimming; the proposal number is a whole token (rule in TD-3); `normalizeText(words)` equals neither the proposal's `newValue` nor, through the `CustomerTextCheck` port called by the use case, any stored customer message. The whole-token function is copied from Drafts' domain with the same tests until the lead moves it into `src/shared/` (see Open questions).
+- Events: `ChangeApplied { proposal, target, at }` and `ChangeApplyFailed { proposal, reason, at }`. No slice subscribes in v1; Knowledge's own log is written from them.
+
+### Mapping detection (the part ADR-012 leaves to this TP)
+
+Input: a `RawTable` with the delimiter guess. Output: a suggested `CatalogMapping` and a list of questions. It is a suggestion; the owner confirms it (D22). The header text is never read for meaning; it is shown next to three sample values per column.
+
+1. Header row. The first row is the header unless some column parses as a number in every other row and also in the first row (then `hasHeader = false`). A one-row file has a header and no items (`catalog_empty`).
+2. Per column, over non-blank data cells: `n`, distinct ratio `d`, numeric ratio `r` (share that parses under step 3), mean length, maximum length.
+3. Number format of each numeric column (TD-12, step 2, made exact). Strip `\p{Sc}`, letters and whitespace (including U+00A0, U+202F, U+2009); map every `\p{Nd}` digit to ASCII; keep digits and the separators `.` `,` `٫` `٬` `'` and space. Each value votes by its last separator and the digits after it: 1, 2 or 4 or more digits mean decimal mark (`12,50`, `1.234,5`, `1,234.50`, `٣٫٥٠`, `0.0015`); exactly 3 digits mean thousands mark when the value has two different separators or the same separator repeated with every later group 3 digits long (`1.234.567`); a lone separator followed by exactly 3 digits is ambiguous (`1.234`); a space or apostrophe as last separator is a thousands mark; anything else (`12.5.5`, `abc`) is unreadable. Two different separators in one value fix both marks (`1.234,50` gives decimal `,` and thousands `.`). The column's format is the majority of the unambiguous votes. If the unambiguous votes disagree (some `12,50`, some `12.50`) or none exist and an ambiguous value is present, the detector adds a question (`price_format`: "does 1.234 mean 1234 or 1.234?") with the values, and returns no decimal mark. The mapping cannot be applied while a question is open (`mapping_has_questions`). Checked on a prototype in Bun for: `12,50`, `1.234,5`, `1,234.50`, `$ 12.50`, `1 234,50`, `1.234`, `1,234`, `12`, `٣٫٥٠`, `1,23,456.00`, `1.234.567`, `CHF 1'234.50`, `12.5.5`, `abc` and the empty string; the last two are unreadable.
+4. Roles, in this order, each column taking the first role it satisfies, one column per role except `ignore` and `notes`:
+   - `price`: `r >= 0.8`. If several columns qualify, the one with the highest share of values that have a decimal part wins; the others stay `ignore` and are shown to the owner. A numeric column that is sorted ascending with step 1 is `id`.
+   - `currency`: every non-blank cell is an ISO 4217 code (a constant list in the domain, about 180 codes) or is one to three characters of `\p{Sc}`.
+   - `availability`: at most 4 distinct values and at least 2 rows.
+   - `id`: not numeric, distinct ratio 1, maximum length 24.
+   - `name`: among the remaining text columns, the leftmost with `d >= 0.8`.
+   - `unit`: text, maximum length 24, `d <= 0.6`.
+   - `notes`: text with mean length at least 30.
+   - everything else: `ignore`.
+   Why these numbers: they only decide the first suggestion; the owner sees all columns with samples and corrects any. They are fixed by the fixture tests (Testing), not tuned elsewhere.
+5. Availability vocabulary: the distinct values of the availability column with counts. If there are exactly two, no suggestion is made about which is which (a language-free rule cannot know); both go in a question `availability_words`. The owner's answer lists the available words and the unavailable words.
+6. Currency symbols: the distinct symbols of the currency column that are not ISO codes, each in a question `currency_symbol`, unless the owner's `currency` setting is set and the column has a single symbol (then the symbol maps to that currency, shown for confirmation).
+6b. No `id` role: when no column has the role `id`, the detector adds the notice question `ref_by_name`: item references then come from the folded name (TD-7), so renaming a product changes its reference. The owner sees it at confirmation and may add an id column.
+7. `corrections` (from the agent, after the owner answered): `{ delimiter?, hasHeader?, decimal?, thousands?, roles?: { index, role }[], availability?, currencySymbols? }` override the suggestion; detection is re-run with them and the questions they answer are closed.
+
+### Reading and lookup
+
+`FindCatalogItems` runs these steps in order: the `catalog_store` setting; `CatalogStore.read` with the confirmed delimiter; mapping check; `Catalog.read`; match; cap. Rows with a blank name are ignored. A row shorter than the mapping is padded with blanks (so its missing cells are "to be confirmed"). A price cell is `to_be_confirmed` when empty (`empty`), when it does not parse under the mapping (`unreadable`), or when no currency is known for the row (`no_currency`); in none of these cases is a number returned. The raw cell is returned with every value (`raw`) so the agent sees exactly what the owner stored; the parsed `amount` is a canonical decimal string (`"12.50"`), never a float.
+
+### Apply
+
+`ProposeChange` validates and stores; `ApplyChange` checks words and state, then runs TD-4. For a catalog change the domain re-locates the row: the proposal stores the row's cells as shown (`rowCells`). At apply the current table is searched for rows equal to `rowCells`: none gives `target_changed`; more than one gives `row_ambiguous` (two identical rows; the owner fixes the file); exactly one gives the `CellOp`. For a profile change, the current section body must equal the proposal's `oldValue` or the apply gives `target_changed`.
 
 ## Information
 
@@ -142,38 +199,7 @@ The service account is the owner's own and has the Sheets scope `https://www.goo
 
 ## Testing
 
-ATDD (cross-cutting TD-11). Layers: UC = use case through its inbound port with in-memory adapters and a fake clock; C = adapter contract run on the in-memory and the real store; E = end to end over stdio; ARCH = the architecture test. Fixtures: the same five-product catalog in these files: comma with `.` decimals; semicolon with `,` decimals and `1.234,50`; tab with a byte-order mark; Spanish headers in another column order; Arabic headers with Arabic-Indic digits; a sheet range of strings.
-
-| Acceptance test | FR ids | Layer |
-|---|---|---|
-| Given a profile with seven filled sections, When `get_profile` runs, Then all seven are returned with their text and the guidance code `may_do_is_guidance` | FR-KNOWLEDGE-01-1, FR-KNOWLEDGE-01-2 | UC |
-| Given a profile whose headings are in another language and whose `payment` section is empty, When read, Then `payment` is `to_be_confirmed` and the others are `filled` | FR-KNOWLEDGE-01-1 | UC |
-| Given a profile line "may offer a 10% discount", When a draft is created and listed, Then it is waiting and the provider fake saw no send | FR-KNOWLEDGE-01-2 | E |
-| Given a catalog item with unit, price and availability, When looked up, Then `raw` equals the stored cells and `amount` is the canonical decimal | FR-KNOWLEDGE-01-3 | UC |
-| Given the same catalog in all fixture files, When the mapping is confirmed, Then every file returns the same five items and prices | FR-KNOWLEDGE-01-3 | UC, C |
-| Given three items (one with an id cell, one with a blank id, two sharing a name), When looked up, Then every item has a non-null `ref` (`id:<cell>`, `n:<folded name>`, `n:<name>#2`), and the refs are unchanged after a price edit; with no id column the confirmation carries `ref_by_name` | FR-KNOWLEDGE-01-3 | UC |
-| Given refs of three items and one unknown, When `GetCatalogItems` runs, Then the map holds the three views and `null` for the unknown, the fake sheet counted one read, and an unconfirmed mapping or unreachable catalog gives the same refusal as `find_catalog_items` | FR-KNOWLEDGE-01-3, FR-KNOWLEDGE-01-13 | UC, C |
-| Given an item with an empty price, When looked up, Then the price is `to_be_confirmed` (`empty`) and no number is returned; likewise unreadable and `no_currency` | FR-KNOWLEDGE-01-4 | UC |
-| Given an item with an empty availability, When looked up, Then it is `to_be_confirmed` | FR-KNOWLEDGE-01-4 | UC |
-| Given no item named "flan", When looked up, Then `items` is empty and the note `no_match` is present | FR-KNOWLEDGE-01-5 | UC |
-| Given "Tamales de pollo" and "Tamales de cerdo", When "tamales" is looked up, Then both are returned; given two items with the same name, both are returned; given `pollo` and `polvo`, "pollo" returns only `pollo` | FR-KNOWLEDGE-01-5 | UC |
-| Given any lookup, Then the result carries `catalog_values_only` and no tool compares draft text with the catalog | FR-KNOWLEDGE-01-6 | UC, ARCH |
-| Given a new owner with no files, When `create_templates` runs, Then both files exist with the fields Deputy reads; run again, Then nothing is overwritten | FR-KNOWLEDGE-01-7 | UC |
-| Given the owner edits a price in the file and saves, When the next `find_catalog_items` runs in the same process, Then it returns the new price; same for a profile edit | FR-KNOWLEDGE-01-8 | UC, E |
-| Given the agent proposes marking tamales unavailable and nothing more happens, Then the catalog file is byte-identical | FR-KNOWLEDGE-01-9 | UC |
-| Given a proposal 4, When `apply_change` gets words "yes, 4", Then the catalog shows tamales unavailable, written with the owner's own availability word, and the log holds proposal 4 and the words | FR-KNOWLEDGE-01-9, FR-KNOWLEDGE-01-10 | UC, C |
-| Given a profile `must_not_do` change, When applied without words, Then it is refused as a catalog change is | FR-KNOWLEDGE-01-9, FR-KNOWLEDGE-01-10 | UC |
-| Given a waiting proposal, When applied with no words, with words without the number, with words equal to a customer message, or with an unknown or closed number, Then each is refused with its code and the catalog is unchanged | FR-KNOWLEDGE-01-10 | UC |
-| Given two waiting proposals and the words "ok", Then `words_missing_number` | FR-KNOWLEDGE-01-10 | UC |
-| Given the owner saw proposal 4 (price 12) and the agent then proposed price 15 as proposal 5, When 4 is applied with the first go, Then `proposal_superseded`; when 5 is applied with words naming 4, Then `words_missing_number` | FR-KNOWLEDGE-01-11 | UC |
-| Given a proposal and an owner who changed the same cell by hand afterward, When applied, Then `target_changed` and the owner's edit is kept | FR-KNOWLEDGE-01-11 | UC, C |
-| Given the tool descriptions of `propose_change` and `apply_change`, Then they state that Deputy cannot check who spoke | FR-KNOWLEDGE-01-12 | E |
-| Given a spreadsheet catalog that answers `429` or is unreachable, When looked up or applied, Then the refusal is `catalog_unreachable`, no value is returned and nothing is written | FR-KNOWLEDGE-01-13 | UC, C |
-| Given a spreadsheet catalog, When looked up twice with a value changed between, Then each lookup reads the sheet (the fake counts two reads) | FR-KNOWLEDGE-01-13 | C |
-| Given a draft written at T and a catalog file saved after T, When `CatalogChangedSince(T)` runs, Then `changed` is true; saved before T gives false; a sheet seen for the first time gives false (no baseline yet) | FR-KNOWLEDGE-01-14 | UC, C |
-| Given the same, When the agent calls `list_drafts`, Then the MCP adapter shows "catalog changed since this draft" on a reply and on an order draft, using the draft's `madeAt` | FR-KNOWLEDGE-01-14 | E |
-
-More tests that do not map to one FR: seed revision 1 twice writes once (`unchanged`); revision 2 replaces the seeded files; revision 2 after the owner edited the catalog gives `seed_modified` and keeps the edit; revision 1 after 2 gives `revision_stale`; `set_setting catalog_store sheet:<id>` gives `terminal_only` and `file` is accepted; `ApplyCatalogStoreChange` logs the typed command and clears the mapping; the mapping fixtures detect the same roles in all six files with the header text ignored; an ambiguous `1.234` column raises `price_format` and returns no price; a changed header row gives `catalog_mapping_stale`; a per-product currency column overrides the setting; a crash between `applying` and `applied` is reconciled; `value_unsafe` refuses `=1+1`; a CSV with a byte-order mark, CRLF and a quoted newline round-trips unchanged except for the edited cell; a file open in another program (write fails) leaves the file and the proposal intact.
+Moved verbatim to [TP-01-profile-and-catalog-testing.md](../tp-detail/TP-01-profile-and-catalog-testing.md).
 
 ## Risks
 
