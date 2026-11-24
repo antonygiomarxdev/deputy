@@ -1,4 +1,4 @@
-# SPEC-16: the triage token check
+# SPEC-17: the triage token check
 
 Status: Draft
 Rests on: ../frd/FRD-05-pilot-helper-send.md
@@ -22,8 +22,8 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 | test/drafts/intake-token-check.test.ts | Create | The tests below |
 
 ## Reuses
-- Precedent: docs/intake/specs/SPEC-05-24-triage-wiring.md, which exports `TriageTokens` from the Intake index.
-- Precedent: SPEC-17-send-answer-token.md, the handler that calls the check.
+- Precedent: docs/intake/specs/SPEC-05-26-triage-wiring.md, which exports `TriageTokens` from the Intake index.
+- Precedent: SPEC-18-send-answer-token.md, the handler that calls the check.
 
 ## Tests first
 - FR-DRAFTS-05-1 (1): given a token issued for chat "c1", `matches("c1", token)` is true and `matches("c2", token)` is false.
@@ -40,7 +40,7 @@ export class IntakeTriageTokenCheck implements TriageTokenCheck { constructor(d:
 `bun test test/drafts/intake-token-check.test.ts`
 
 ## Out of scope
-The handler (SPEC-17), the token and the secret (Intake SPEC-05-18 and SPEC-05-24), and the wiring that passes the Intake export to the handler.
+The handler (SPEC-18), the token and the secret (Intake SPEC-05-20 and SPEC-05-26), and the wiring that passes the Intake export to the handler (the send-tool registration of SPEC-16-2, in PR 215).
 
 ## Open questions
 None.

@@ -1,4 +1,4 @@
-# SPEC-17: send_answer refuses a token that is not the chat's
+# SPEC-18: send_answer refuses a token that is not the chat's
 
 Status: Draft
 Rests on: ../frd/FRD-05-pilot-helper-send.md
@@ -23,7 +23,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Reuses
 - Precedent: SPEC-13-pilot-tools.md, the handler this spec extends.
-- Precedent: SPEC-16-triage-token-check.md, the check it calls.
+- Precedent: SPEC-17-triage-token-check.md, the check it calls.
 
 ## Tests first
 - FR-DRAFTS-05-1 (4): given a token that does not belong to the chat id, `send_answer` returns `bad_token`, creates no draft and sends nothing, and does not read the always-ask source or the window.
@@ -40,7 +40,7 @@ export type SendAnswerInput = { chatId: string; token: string; text: string; ans
 `bun test test/drafts/send-answer-token.test.ts`
 
 ## Out of scope
-The decision, the window and the send (SPEC-05, SPEC-06, SPEC-13); the check itself (SPEC-16).
+The decision, the window and the send (SPEC-05, SPEC-06, SPEC-13); the check itself (SPEC-17).
 
 ## Open questions
 None.
