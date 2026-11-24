@@ -6,7 +6,7 @@ Status: Draft
 
 How Intake serves the local pilot (REQ-15): the owner's own number is a control chat, the open questions go to the owner in one numbered message and the session records each answer, each chat shows its window, and the business number and owner numbers are set without a terminal. The design adds no stored source value and one table, and changes no build today.
 
-Last change: 2026-11-24, owner rulings: batched questions, the session records answers, removing a number deferred
+Last change: 2026-11-24, each question names its customer chat; before that: batched questions, the session records answers, removing a number deferred
 
 ## Context
 
@@ -26,7 +26,7 @@ Chosen: Option A. Messages in the control chat stay `owner_app`, are marked `nor
 
 ### TD-2: Where are questions kept?
 
-- **Option A** A table `owner_questions` (number, owner chat, text, asked at, send id, answer, closed at), a new numbered migration. Cost: one migration. Risk: low.
+- **Option A** A table `owner_questions` (number, owner chat, customer chat, text, asked at, send id, answer, closed at), a new numbered migration. Cost: one migration. Risk: low.
 - **Option B** Derive questions from the outgoing sends to the owner chat. Cost: no table. Risk: a question has no stable id and "open" cannot be stored.
 - **Option C** Keep them in memory. Risk: a restart forgets an open question.
 
@@ -84,13 +84,13 @@ sequenceDiagram
   participant I as Intake
   participant P as Provider
   participant O as Owner phone
-  S->>I: ask owner (number, questions)
+  S->>I: ask owner (number, questions, each with its customer chat)
   I->>I: owner window open? (24 h after the owner's latest message)
   alt window closed
     I-->>S: window closed
   else window open
     I->>P: one message listing the open questions, numbered
-    I->>I: record each new question with its id
+    I->>I: record each new question with its id and customer chat
     I-->>S: question ids
     O->>P: answers freely, in one or more messages
   end
@@ -99,20 +99,20 @@ sequenceDiagram
   S->>I: answer question (questionId, text)
   I->>I: close the question
   I-->>S: recorded
-  I->>I: hand Drafts the question id and the text
+  I->>I: hand Drafts the question id, the customer chat and the text
 ```
 
 ## Interfaces
 
 Inbound tools (the intake tools file registers them; each calls one use case):
 
-- `ask_owner { number, questions }` (`questions` is a list of texts) returns `{ questionIds }` or `{ refused: "window_closed" | "not_an_owner_number" | "not_owner" }` or the send failure of `SendTextResult`. Lease required.
+- `ask_owner { number, questions }` (`questions` is a list of `{ chatId, text }`) returns `{ questionIds }` or `{ refused: "window_closed" | "not_an_owner_number" | "not_owner" }` or the send failure of `SendTextResult`. Lease required.
 - `answer_question { questionId, text }` returns `{ recorded }` or `{ refused: "unknown_question" | "not_owner_words" | "not_owner" }`. Lease required.
 - `list_pending {}` returns `[{ chat, lastCustomerAt, windowClosesAt }]`, newest first. A read, no lease.
 - `get_chat` gains `windowClosesAt` for a customer chat and, for the control chat, `openQuestions` next to the messages. A read.
 - `set_owner_numbers { number, ownerWords, confirm? }` returns the described number, or `{ added }` with `confirm`. Lease required.
 
-A shared signal `OwnerAnswered { questionId: string; text: string; at }` (in `src/shared/signals.ts`, part of `IntakeEvent`, published after the commit like `OwnerReplyUnlinked`) is the hand-off to Drafts, whose `OwnerAnswer` has the same fields. Drafts' go arrives from the session's `answer_question` call.
+A shared signal `OwnerAnswered { questionId: string; chatId: string; text: string; at }` (in `src/shared/signals.ts`, part of `IntakeEvent`, published after the commit like `OwnerReplyUnlinked`) is the hand-off to Drafts, whose `OwnerAnswer` has the same fields. Drafts' go arrives from the session's `answer_question` call.
 
 Outbound port added: `OwnerQuestionRepository` (`add`, `listOpen`, `answer`), a SQLite adapter, a migration `0008-owner-questions.sql` appended to the list in `src/main/database.ts`.
 
@@ -124,6 +124,7 @@ One new table, created by a numbered migration (`0008-owner-questions.sql`):
 |---|---|
 | `number` | A whole number in one sequence; its decimal text is the question id the session, the owner and Drafts see. |
 | `owner_chat` | The chat id of the owner number the question went to. |
+| `chat_id` | The customer chat the question is about. |
 | `text` | The question text as sent (the session's words). |
 | `asked_at` | The time the question was sent. |
 | `send_id` | The send id of the outgoing message, so a failed send can be found. |
