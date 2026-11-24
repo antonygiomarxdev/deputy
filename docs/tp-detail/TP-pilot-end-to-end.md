@@ -133,7 +133,7 @@ sequenceDiagram
   K-->>M: accepted
   M->>M: finishSent with recovery, log entry automatic (D03, D09-1, D09-2, D09-3a, D09-3b)
   M-->>S: sent
-  O-->>S: reads the count with pilot_stats (D13, D08, GAP: Intake daily counts are not read)
+  O-->>S: reads the count with pilot_stats (D13, D08, GAP: no Drafts spec reads Intake's counts, I05-14 in PR 212)
 ```
 
 #### (c) Always-ask or unknown: ask the owner, take the answer as the go
@@ -176,10 +176,11 @@ sequenceDiagram
   participant O as Owner
   S->>M: ask_owner number, questions (I05-8, I05-6)
   M->>M: owner window closed, 24 h after the owner's latest message (I05-6, table messages)
-  M-->>S: refused window_closed, nothing sent, nothing recorded (I05-6)
-  S->>O: asks in the Claude app, tells the owner to answer on WhatsApp (I05-8 error text, S05-7 rule)
-  O->>M: writes any message to the business number, window reopens (I03, table messages)
-  S->>M: ask_owner again (GAP: the first question was not kept, so the owner's answer closes nothing)
+  M->>M: record each question as not sent (I05-6 as amended in PR 212, not merged, table owner_questions)
+  M-->>S: not_sent with window_closed and the question ids (I05-6, I05-8)
+  S->>O: asks in the Claude app, tells the owner to answer on WhatsApp (I05-8 result text, S05-7 rule)
+  O->>M: answers on WhatsApp, the window reopens (I03, table messages)
+  S->>M: answer_question questionId, text, closes the kept question (I05-7, I05-13, I05-12)
 ```
 
 #### (e) The customer window is closed: no send, tell the owner
@@ -391,10 +392,10 @@ An arrow in a drawing that no spec builds. Each is stated as found; none is deci
 6. Closed window on the go path. Drafts SPEC-06 sets `tellOwner` for `send_answer`; `send_owner_go` with a closed window returns nothing sent, and no spec says it tells the owner (diagram e).
 7. Provider choice and restart. Setup SPEC-05-8 writes one key of `config.json`; no spec sets the provider to kapso or restarts the server so that serve reads it before the business number is adopted (diagram a).
 8. Always-ask source. Drafts SPEC-05 takes the always-ask set as a parameter sourced from Knowledge's always-ask file; no spec passes that file's content to Drafts (diagram b).
-9. Intake daily counts. Drafts SPEC-08 leaves the customer-message and owner-question counts to Intake, and no merged spec builds or reads them (diagram b).
+9. Intake daily counts. Drafts SPEC-08 leaves the customer-message and owner-question counts to Intake. Intake SPEC-05-14 builds them (PR 212, not merged); no Drafts spec reads them (diagram b).
 10. Composition wiring. Intake and Knowledge have wiring specs; no spec wires the Drafts and Setup pilot use cases and tools into the composition root (the components drawing).
 11. Channel consent. ADR-018 says the first launch with the channel flag shows a consent dialog; no spec has the skill or the install guide tell the owner (diagrams a and i).
-12. Closed owner window. Intake SPEC-05-6 refuses and records nothing when the owner window is closed, so the owner's later answer has no question to close and the re-ask is not an arrow any merged spec builds (diagram d).
+12. Closed owner window. Merged Intake SPEC-05-6 refuses and records nothing when the owner window is closed. PR 212 (not merged) records the question as not sent, so the owner's later answer closes it (diagram d); until it merges the diagram shows the amended behavior.
 
 ## Open questions
 
