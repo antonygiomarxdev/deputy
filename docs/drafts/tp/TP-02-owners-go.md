@@ -196,7 +196,7 @@ Layers: UC use case with in-memory adapters, D domain unit, C adapter contract (
 | Test | FR ids | Layer |
 |---|---|---|
 | FR-DRAFTS-02-1 "go on 1 and 3" approves drafts 1 and 3, each with its own call and its own approval, and draft 2 waits | FR-DRAFTS-02-1, FR-DRAFTS-02-3 | UC |
-| Normalization and number tokens in es: `normalizeText("¡Dale al 3!")` and `normalizeText("dale al 3")` are equal; `"¿Cuánto cuesta?"` becomes `cuánto cuesta`; owner words "¡Dale al 3!" name token 3 | FR-DRAFTS-02-3, FR-DRAFTS-02-6 | D |
+| Normalization and number tokens in es: `normalizeText("¡Envía el 3!")` and `normalizeText("envía el 3")` are equal; `"¿Cuánto cuesta?"` becomes `cuánto cuesta`; owner words "¡Envía el 3!" name token 3 | FR-DRAFTS-02-3, FR-DRAFTS-02-6 | D |
 | Normalization in ar: `"أريد ٣ كيلو"` becomes `"أريد 3 كيلو"`; owner words "وافق على ٣" name token 3 (Arabic-Indic digit, which NFKC alone leaves unchanged); `"٣٫٥"` gives no token | FR-DRAFTS-02-3, FR-DRAFTS-02-6 | D |
 | Normalization in zh: `"！！好的，我要３个。。"` becomes `"好的,我要3个"` (full-width digit and punctuation, edge `。` removed); owner words "好的，发送３号" name token 3 | FR-DRAFTS-02-3, FR-DRAFTS-02-6 | D |
 | An owner words string of 1001 characters is refused; one of 1000 is accepted | FR-DRAFTS-02-3 | D |
