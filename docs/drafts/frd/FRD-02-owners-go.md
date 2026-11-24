@@ -27,7 +27,7 @@ R-DRAFTS-6, R-DRAFTS-7, R-DRAFTS-8, R-DRAFTS-9, R-DRAFTS-10, R-DRAFTS-19, R-DRAF
 | FR-DRAFTS-02-10 | always | An owner's own command about an order ("mark Juan's order delivered") is itself the go for that change, kept with the owner's words like any approval. It counts only when it comes from the owner's conversation (FR-DRAFTS-02-6), never from text found in a customer message. (R-DRAFTS-21) |
 | FR-DRAFTS-02-11 | always | The product documentation and the setup guide say plainly: Deputy controls only its own send path. The known limit is stated in [R-DRAFTS-20](../PRD.md). The guarantee depends on the owner choosing and limiting the agent's tools. (R-DRAFTS-20) |
 | FR-DRAFTS-02-13 | WHERE | In the local pilot, Deputy shall send an answer that the business knowledge backs without the owner's go, unless its class is in the always-ask list. (R-DRAFTS-22) |
-| FR-DRAFTS-02-14 | WHEN | When the session calls the answer tool with a questionId that Intake holds open, the call shall be the go for that one answer only, and Deputy shall not parse which question a free reply answers. (R-DRAFTS-23) |
+| FR-DRAFTS-02-14 | WHEN | When an owner answer to a question about a customer chat arrives, the answer shall be the go for the next send to that chat within the customer window, and for that one send only. (R-DRAFTS-23) |
 
 Example:
 

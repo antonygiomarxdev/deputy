@@ -10,7 +10,7 @@ REQ-15 and owner decision D31 (approved in PRODUCT): in the local pilot Deputy a
 - An automatic send is a send with no owner go. It is allowed only when the answer's class is not in the business's always-ask list (D38). The list is Knowledge's always-ask.md (docs/knowledge/frd/FRD-04-pilot-knowledge-files.md, FR-KNOWLEDGE-04-1).
 - Each automatic send is logged as automatic (FR-DRAFTS-04-11).
 - The 24 hour window check of ADR-012 applies to a first send too: a closed window sends nothing and tells the owner (FR-DRAFTS-03-14).
-- The session maps the owner's free-text answers to the `ask_owner` questions and calls `answer_question` with `{ questionId, text }`; that call is the go for that one answer (FR-DRAFTS-02-14). Deputy does not parse which question a reply answers.
+- An owner answer to an `ask_owner` question is the go for the next send to the customer chat the question names, within the customer window and for that one send (FR-DRAFTS-02-14). The session maps free-text answers to questions; Deputy does not parse which question a reply answers.
 - The pilot has no daily cap and no kill switch (REQ-15).
 - Known limit: the auto-send gate trusts the session's answerClass and knowledge inputs. Drafts cannot check them, as D11 states for an agent with its own tools.
 
@@ -20,7 +20,7 @@ REQ-15 and owner decision D31 (approved in PRODUCT): in the local pilot Deputy a
 flowchart TD
   A["New customer message"] --> B{"Knowledge backs an answer?"}
   B -- no --> Q["ask_owner: question to the owner"]
-  Q --> R["Session calls answer_question: the go for that one answer (FR-DRAFTS-02-14)"]
+  Q --> R["Owner answer: the go for the next send to that chat (FR-DRAFTS-02-14)"]
   B -- yes --> C{"Always-ask class?"}
   C -- yes --> Q
   C -- no --> W{"24 h window open (FR-DRAFTS-03-14)?"}

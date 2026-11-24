@@ -1,46 +1,51 @@
-# SPEC-07: the owner's answer to ask_owner is the go
+# SPEC-07: the owner's answer is the go for the next send to its chat
 
 Status: Draft
 Rests on: ../frd/FRD-02-owners-go.md
 
 ## Summary
 
-Turns Intake's OwnerAnswered signal (from the session's answer_question call) into the go for the draft the session prepared for that question. Intake holds the open questions and publishes only for an open one, so this spec takes no list of open questions (R-DRAFTS-23).
+Records an owner's answer to an `ask_owner` question as the go for the next send to the customer chat the question names (R-DRAFTS-23). Intake's OwnerAnswered carries `questionId`, `chatId`, `text` and `at`, and Intake adds `chatId` to the question in a follow-up PR. The go is taken once, only within the customer window, and approves no other draft.
 
-Last change: 2026-11-24, rewritten after review of PR 202 (SPEC-09 split into 09-1 to 09-3; SPEC-07 takes the go from Intake's OwnerAnswered).
+Last change: 2026-11-24, rewritten around the customer chat after the lead's decision (no draft column; the link is the chat).
 
 One spec is one agent run: at most 80 lines, 3 files and one done command. A spec decides nothing new.
 
 ## Rows
-| FR-DRAFTS-02-14 | WHEN | When the session calls the answer tool with a questionId that Intake holds open, the call shall be the go for that one answer only, and Deputy shall not parse which question a free reply answers. (R-DRAFTS-23) |
+| FR-DRAFTS-02-14 | WHEN | When an owner answer to a question about a customer chat arrives, the answer shall be the go for the next send to that chat within the customer window, and for that one send only. (R-DRAFTS-23) |
 
 ## Files
 | Path | Create or change | Holds |
 |---|---|---|
-| src/drafts/domain/owner-answer.ts | Create | The owner's answer: questionId, text and time, the same fields as Intake's OwnerAnswered |
-| src/drafts/domain/ask-owner-go.ts | Create | goFor: the go for the draft of that question |
+| src/drafts/domain/owner-answer.ts | Create | The owner's answer: questionId, chatId, text and time, the fields of Intake's OwnerAnswered |
+| src/drafts/domain/ask-owner-go.ts | Create | recordGo and takeGo over a pending-go store |
 | test/drafts/ask-owner-go.test.ts | Create | The tests for FR-DRAFTS-02-14 |
 
 ## Reuses
-- Precedent: SPEC-02-owners-go.md, which records an owner's go as an approval entry with the owner's words (ADR-003); this spec records the go the same way, for the draft of one question.
+- Precedent: SPEC-03-safe-send.md, which creates `CUSTOMER_WINDOW_MS`; this spec uses that constant for the window and does not redefine it.
+- Precedent: SPEC-02-owners-go.md, which records an owner's go with the owner's words (ADR-003); the go taken here is logged the same way when it is used.
 
 ## Tests first
-- FR-DRAFTS-02-14 (1): given OwnerAnswered `{ questionId: "3", text: "yes" }` and a draft recorded for question "3", `goFor` returns that draft and the owner's words "yes".
-- FR-DRAFTS-02-14 (2): given a questionId with no draft, `goFor` returns null and records no approval.
-- FR-DRAFTS-02-14 (3): given an empty questionId, `goFor` returns null and records no approval.
+- FR-DRAFTS-02-14 (1): given an answer for chat "c1" with text "yes", `recordGo` stores it, and `takeGo("c1")` within the window returns `{ questionId, ownerWords: "yes" }`.
+- FR-DRAFTS-02-14 (2): given no stored go for a chat, `takeGo` returns null and writes nothing.
+- FR-DRAFTS-02-14 (3): given a go already taken, a second `takeGo` for that chat returns null: the go covers one send.
+- FR-DRAFTS-02-14 (4): given the customer window closed (latest customer message more than `CUSTOMER_WINDOW_MS` ago), `takeGo` returns null and leaves the stored go in place.
 
 ## Build
 ```ts
-export type OwnerAnswer = { questionId: string; text: string; at: number };
-export function goFor(answer: OwnerAnswer, draftFor: (questionId: string) => number | null): { draft: number; ownerWords: string } | null;
+export type OwnerAnswer = { questionId: string; chatId: string; text: string; at: number };
+export type PendingGo = { questionId: string; chatId: string; ownerWords: string; at: number };
+export interface PendingGoStore { put(go: PendingGo): void; take(chatId: string): PendingGo | null; }
+export function recordGo(answer: OwnerAnswer, store: PendingGoStore): void;
+export function takeGo(chatId: string, store: PendingGoStore, latestCustomerSentAt: number | null, now: number): PendingGo | null;
 ```
-Where the go is recorded: the approval entry in Drafts' log (`approved`, with the owner's words in `owner_words`, ADR-003), for the draft `draftFor` returns. Where the link is stored: Intake's `owner_questions` holds the question and closes it on OwnerAnswered; Drafts stores the question id on the draft when the session prepares it, and `draftFor` reads that.
+`takeGo` returns null without touching the store when there is no customer message or the window has closed. The caller (the send path) logs a taken go as an approval with `owner_words` = `ownerWords` (ADR-003).
 
 ## Done when
 `bun test test/drafts/ask-owner-go.test.ts`
 
 ## Out of scope
-The question batching, the numbered WhatsApp message and the answer_question tool's registration (Intake). Deputy never guesses a question from a free reply.
+The question batching and the numbered WhatsApp message (Intake), the `chatId` on the question and on OwnerAnswered (Intake's follow-up PR), the answer_question tool's registration (Intake), and the approval entry written at send time (the send path). Deputy never guesses a question from a free reply.
 
 ## Open questions
-Q-1 (Lead): the draft's question id needs a column on drafts (a migration, in the draft-creation spec), which no spec builds yet. Until that spec exists this go has no draft to find.
+Q-2 (Lead): the pending go must survive a restart, so `PendingGoStore` needs a Drafts table and its migration. No spec builds that table yet; until one does, a go is lost on restart and the owner is asked again.
