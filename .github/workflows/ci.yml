@@ -22,4 +22,7 @@ jobs:
           bun-version: 1.4.4
       - run: bun install --frozen-lockfile
       - run: bun run typecheck
-      - run: bun test
+      - run: sudo apt-get update && sudo apt-get install -y libsecret-1-0 gnome-keyring dbus-user-session
+      # test/e2e/live-delivery.test.ts uses Bun.secrets, which needs a Secret Service on Linux
+      - run: |
+          dbus-run-session -- bash -c 'echo -n ci | gnome-keyring-daemon --unlock --components=secrets > /dev/null; bun test'
