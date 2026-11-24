@@ -1,13 +1,13 @@
-# SPEC-13: the pilot's send tools: send_answer and send_owner_go
+# SPEC-13: the pilot's send tools and pilot_stats
 
 Status: Draft
 Rests on: ../frd/FRD-02-owners-go.md
 
 ## Summary
 
-Registers the two pilot send tools in the MCP server. `send_answer` runs the auto-send decision (SPEC-05), the first-send window check (SPEC-06), then the send with the automatic mark (SPEC-09). `send_owner_go` sends with a taken go (SPEC-12). `pilot_stats` is registered in the same file and returns SPEC-08's counts.
+Registers the two pilot send tools in the MCP server and `pilot_stats` alongside them. Input of `send_answer`: `{ chatId, text, answerClass, knowledge: string[] }`. Flow: the auto-send decision (SPEC-05), the first-send window check (SPEC-06), then a draft created from `text` and sent with `Draft.sendWithoutWords("automatic")` (SPEC-09-4), which marks the send automatic. Input of `send_owner_go`: `{ chatId, text }`, sent as SPEC-12 describes. Known limit (D11): the tools trust the session's `text`, `answerClass` and `knowledge`; Drafts cannot check them.
 
-Last change: 2026-11-24, after the lead's review: split of the migration specs, the tools spec added.
+Last change: 2026-11-24, the input shapes and the Draft path added after the lead's decision.
 
 One spec is one agent run: at most 80 lines, 3 files and one done command. A spec decides nothing new.
 
@@ -20,10 +20,11 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 |---|---|---|
 | src/drafts/adapters/mcp/pilot-tools.ts | Create | The handlers of `send_answer`, `send_owner_go` and `pilot_stats` |
 | src/main/tools.ts | Change | Registers the three tools in the MCP tool list |
-| test/drafts/pilot-tools.test.ts | Create | The tests for the tools below |
+| test/drafts/pilot-tools.test.ts | Create | The tests below |
 
 ## Reuses
-- Precedent: SPEC-03-safe-send.md, whose send path `send_answer` calls for an automatic send; `src/drafts/adapters/mcp/draft-tools.ts` is the existing tool shape to follow.
+- Precedent: SPEC-09-4-draft-without-words.md, the Draft method both sends call.
+- Precedent: draft-tools.ts in `src/drafts/adapters/mcp`, the existing tool shape to follow.
 
 ## Tests first
 - FR-DRAFTS-02-13 (4): given an answer the knowledge backs, outside the always-ask set, in an open window, `send_answer` sends and logs the send as automatic.
@@ -34,16 +35,18 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 ## Build
 ```ts
 // pilot-tools.ts
-export function sendAnswerTool(d: AutoSendDeps): ToolHandler;    // decideAutoSend, checkFirstSend, then send with automatic = true
-export function sendOwnerGoTool(d: OwnerGoDeps): ToolHandler;   // sendWithOwnerGo (SPEC-12)
-export function pilotStatsTool(d: StatsDeps): ToolHandler;      // countsByDay (SPEC-08)
+export type SendAnswerInput = { chatId: string; text: string; answerClass: string; knowledge: string[] };
+export type SendOwnerGoInput = { chatId: string; text: string };
+export function sendAnswerTool(d: AutoSendDeps): (input: SendAnswerInput) => Promise<ToolResult>;
+export function sendOwnerGoTool(d: OwnerGoDeps): (input: SendOwnerGoInput) => Promise<ToolResult>;
+export function pilotStatsTool(d: StatsDeps): () => Promise<ToolResult>;  // countsByDay (SPEC-08)
 ```
 
 ## Done when
 `bun test test/drafts/pilot-tools.test.ts`
 
 ## Out of scope
-The decision (SPEC-05), the window (SPEC-06), the automatic mark (SPEC-09), the go send (SPEC-12), the counts (SPEC-08), and the answer_question tool, which is Intake's.
+The decision (SPEC-05), the window (SPEC-06), the Draft method (SPEC-09-4), the go send (SPEC-12), the counts (SPEC-08), and the answer_question tool, which is Intake's.
 
 ## Open questions
 None.
