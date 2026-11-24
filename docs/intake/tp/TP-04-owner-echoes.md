@@ -69,6 +69,10 @@ flowchart LR
   Sched["Scheduler tick"] --> Apply["ApplyPendingChanges"]
   Apply --> PC
   Apply --> ONR["OwnerNumbersRepository + log"]
+```
+
+```mermaid
+flowchart LR
   Store["StoreMessages (TP-02)"] --> Msg["Message.receive"]
   Msg --> SC["SourceClassifier"]
   SC --> Owners["OwnerNumbers snapshot"]
