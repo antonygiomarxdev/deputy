@@ -1,6 +1,6 @@
 # Deputy: product overview
 
-Status: Approved (2026-11-18) · Last updated: 2026-11-17
+Status: Approved (2026-11-18), with Draft amendments from REQ-15 · Last updated: 2026-11-17
 
 This file holds what every slice shares: the problem, users, principles, scope and the slice map. Each slice (one feature) lives in `src/<slice>/` with its own document chain in `docs/<slice>/`: **PRD** → **FRDs** (`frd/`, with acceptance criteria). Then, after the FRDs: the cross-cutting **TP** (Technical Proposal, `docs/tp/TP.md`), one or more **TPs per FRD** (`tp/`), an **ADR** for each choice (`docs/adr/` or `adr/`), one **spec** per FRD (`specs/`), and the implementation with ATDD (the FRD's acceptance criteria become tests first). The chain is the one in [Scriptorium](https://github.com/antonygiomarxdev/scriptorium). Decisions that span slices: [DECISIONS.md](DECISIONS.md) for product, `docs/adr/` for technical. Shared terms: [GLOSSARY.md](GLOSSARY.md). A slice's PRD cites the principles below; it does not restate them.
 
@@ -35,7 +35,7 @@ Not for: companies with high volume or a support team. They should hire a custom
 
 These hold for every feature. A requirement that breaks one needs an explicit owner decision.
 
-1. **Nothing goes out without the owner's "go".** The agent shows the draft in the conversation and waits for the owner's approval in that same conversation. No permission dialogs, no "don't ask again".
+1. **Nothing goes out without the owner's "go".** The agent shows the draft in the conversation and waits for the owner's approval in that same conversation. No permission dialogs, no "don't ask again". **Draft amendment (REQ-15):** a semi-automatic mode may answer by itself only what the owner's own knowledge backs; every other send still needs the owner's go, asked by WhatsApp or in the conversation. A daily cap, a kill switch, an auto mark in the drafts log and a check of the customer window before a first send are proposed, pending the owner.
 2. **The owner's app stays primary.** When the owner answers from the phone, Deputy knows and never answers on top of them.
 3. **No message is lost**, even if the owner's computer was off.
 4. **Agent-agnostic.** The core works with any agent that speaks MCP. Waking the session (push) is an extra for agents that support it.
@@ -64,13 +64,41 @@ These hold for every feature. A requirement that breaks one needs an explicit ow
 - Agents: Claude Code first; any MCP agent works through pull (UC-1).
 - UC-1, UC-2, UC-3, UC-4 (through the agent's own remote access), UC-5, UC-6, UC-7.
 - Store: local files (catalog, orders, learned knowledge). Google Sheets stays as an option for catalog and orders.
+- **Local pilot (Draft, REQ-15):** Claude Code on the owner's own computer (Windows, macOS, Linux) with the owner's own subscription, no cloud and no separate service, and the semi-automatic mode of principle 1.
 
 ### Not in v1
 
-- **Autopilot rules** (answer some questions without the owner's go). Planned for a later version.
+- **Autopilot rules** (answer some questions without the owner's go), beyond the semi-automatic mode of the local pilot (Draft, REQ-15). Planned for a later version.
 - **Meta Cloud API direct** and the always-on receiver it needs.
 - Other channels (Instagram, Telegram), voice notes, interactive buttons, templates.
 - The current `operator/` "answer on its own" profile. It is removed.
+
+### Local pilot (Draft, REQ-15)
+
+The pilot runs on the owner's computer in Claude Code, with the owner's own subscription. Its daily loop:
+
+```mermaid
+flowchart TD
+  A["Owner opens Claude Code by hand and loads the Deputy skill"] --> B["Deputy keeps the computer awake and catches up on start"]
+  B --> C["Wake: channel or slow loop"]
+  C --> D["check_messages polls Kapso every 1 to 2 min"]
+  D --> E{"New customer message?"}
+  E -- no --> C
+  E -- yes --> F["Agent reads the chat and the knowledge files"]
+  F --> G{"Does the knowledge back an answer?"}
+  G -- yes --> H{"Customer 24 h window open? (proposed check)"}
+  H -- yes --> I["Send the answer"]
+  H -- no --> J["Tell the owner: the customer's 24 h window is closed (ADR-012, D29)"]
+  G -- no --> K{"Owner chat window open?"}
+  K -- yes --> L["Ask the owner: business number writes to the owner number"]
+  K -- no --> M["Ask in the Claude app and tell the owner to answer on WhatsApp"]
+  L --> N["Owner replies on WhatsApp; the next poll returns it"]
+  N --> P["Agent sends the owner's answer to the customer"]
+  M --> N
+  I --> C
+  J --> C
+  P --> C
+```
 
 ## 7. Slice map
 
@@ -99,7 +127,7 @@ Safety is not a slice: section 4 and the safety requirements below apply to all 
 ## 8. Success criteria for v1
 
 - An owner with no coding background completes setup (UC-7) in under 30 minutes with their agent's help.
-- No reply leaves without an explicit owner go in the conversation (verifiable from the drafts log).
+- No reply leaves without an explicit owner go in the conversation (verifiable from the drafts log). Draft amendment (REQ-15): except an answer the semi-automatic mode sends by itself.
 - No customer message is lost between sessions (every inbound message in the provider appears in UC-1).
 - No chat the owner already answered from the app shows up as pending.
 - The owner uses it on a real business for two weeks (dogfooding on a real business).
@@ -131,3 +159,5 @@ Still open:
 3. Anthropic and OpenAI terms for this owner-attended use: confirm before launch.
 4. npm package name (`deputy` is taken).
 5. How learning separates kinds of knowledge (facts, tone, one-customer cases): see the Knowledge slice.
+6. The owner's control chat (the owner writing to the business number) and the hold of D30 (REQ-15, first open question).
+7. Anthropic Consumer Terms 3.7 for a session that answers while the owner is away (REQ-15, second open question).
