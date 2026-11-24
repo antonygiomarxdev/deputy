@@ -38,7 +38,7 @@ const knowledge = knowledgeWiring({ ..., intake: wired.intake });          // Kn
 const { drafts, approvals, pilot } = await draftsWiring({ ..., readAlwaysAsk: knowledge.readAlwaysAsk, dailyCounts: wired.intake.dailyCounts, listAnsweredQuestions: wired.intake.listAnsweredQuestions, events: wired.events }); // subscribes and reconciles inside (SPEC-11), so it is async
 const supervisor = superviseLease(...);   // the scheduler starts here: the first poll comes after the reconcile
 ```
-The members `dailyCounts` and `listAnsweredQuestions` and the returned `events` are those of Intake SPEC-05-18.
+The members `dailyCounts` and `listAnsweredQuestions` and the returned `events` are those of Intake SPEC-05-18 and SPEC-05-19.
 
 ## Done when
 `bun test test/e2e/drafts-pilot.test.ts`

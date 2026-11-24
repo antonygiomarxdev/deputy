@@ -43,7 +43,7 @@ export type PilotWiring = {
 };
 export function pilotWiring(d: { db: SqlDatabase; unitOfWork: UnitOfWork; clock: Clock; chats: ChatReader; readAlwaysAsk: ReadAlwaysAsk; dailyCounts: IntakeDailyCounts; createDraft: CreateDraft; ids: Ids; zone: string; events: IntakeEvents; listAnsweredQuestions: ListAnsweredQuestions }): PilotWiring;
 ```
-`draftsWiring` gains the inputs `readAlwaysAsk` (from `knowledgeWiring`, Knowledge SPEC-04-6), and `dailyCounts`, `listAnsweredQuestions` and `events` (members of Intake's runtime and wiring, Intake SPEC-05-18) and returns `{ drafts, approvals, pilot }`. `AutoSendDeps` and `OwnerGoDeps` hold the fields SPEC-12 and SPEC-13 name: the unit of work, `latestCustomerSentAt`, `now`, `newSendId`, `createDraft`, `driveSend` and the window check.
+`draftsWiring` gains the inputs `readAlwaysAsk` (from `knowledgeWiring`, Knowledge SPEC-04-6), and `dailyCounts`, `listAnsweredQuestions` and `events` (members of Intake's runtime and wiring, Intake SPEC-05-18 and SPEC-05-19; `IntakeEvents` is the type of SPEC-05-18) and returns `{ drafts, approvals, pilot }`. `AutoSendDeps` and `OwnerGoDeps` hold the fields SPEC-12 and SPEC-13 name: the unit of work, `latestCustomerSentAt`, `now`, `newSendId`, `createDraft`, `driveSend` and the window check.
 
 ## Done when
 `bun test test/main/drafts-pilot-wiring.test.ts`
