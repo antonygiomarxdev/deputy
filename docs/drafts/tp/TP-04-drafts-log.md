@@ -46,6 +46,15 @@ Chosen: Option A, because it is the exception the owner accepted, and the schema
 
 ## Architecture
 
+```mermaid
+flowchart LR
+  UC["Use cases of TP-01 to TP-03"] --> LM["LogMapper"] --> DL["DraftLog: append"] --> Repo["DraftLogRepository"]
+  RD["ReadDraftLog"] -->|page| Repo
+  CA["CheckApprovals"] -->|sentWithApproval, stuckDrafts| Repo
+  CA --> AA["ApprovalAudit: pure"]
+  Ev["Orders OrderDeleted outbox event"] --> OD["OnOrderDeleted"] -->|scrubOrder, hasOrderDeleted| Repo
+```
+
 Domain (`src/drafts/domain/`):
 - `LogEntry` (value object): `id`, `at`, `kind`, `draft`, `draftKind`, `chat`, `proposedText`, `finalText`, `reason`, `ownerWords`, `approvalEntryId`, `sendId`, `orderRef`, `scrubbed`.
 - `DraftLog` (aggregate): append-only. The only operations are `append(entries)` and, for the scrub, `scrubOrder`. No update, no delete method exists.
