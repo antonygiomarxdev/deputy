@@ -12,13 +12,14 @@ for (const subject of subjects) {
     });
     afterEach(() => s.cleanup());
 
+    // 600 adds are about 2400 fsyncs on Windows, so the 5 s default is not enough under load
     test("600 notes leave 500 and count 100 pruned", async () => {
       for (let i = 0; i < 600; i++) await s.repos.rejections.add(1_000 + i, "bad_signature", false);
       const { notes, prunedCount } = await s.repos.rejections.list();
       expect(notes).toHaveLength(500);
       expect(prunedCount).toBe(100);
       expect(notes[0]?.at).toBe(1_599);
-    });
+    }, 30_000);
 
     test("a note older than 30 days is pruned at the next add", async () => {
       await s.repos.rejections.add(1_000, "malformed", false);
