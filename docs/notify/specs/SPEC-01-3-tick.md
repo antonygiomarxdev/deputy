@@ -55,4 +55,4 @@ Order: lease; availability; retry gate; due check (`batchStartedAt` plus 10 minu
 Reminders, quiet periods, owner settings and outage notices (deferred, FR-NOTIFY-01-14); the durable notice state and its status line (deferred); the adapters (SPEC-01-4, SPEC-01-5).
 
 ## Open questions
-None.
+None. The question of what a failed read of the waiting chats means was answered as L13 in docs/DECISIONS.md: it is a failed delivery, the batch is kept and retried.
