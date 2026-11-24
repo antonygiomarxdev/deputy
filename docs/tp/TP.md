@@ -3,40 +3,8 @@
 Status: Approved (2026-11-18)., for owner review (amended 2026-11-18 for L7 and L8). Written 2026-11-17 after the FRDs. Each decision (TD) has one ADR in `docs/adr/`. Per-FRD TPs and specs follow this one.
 
 ## Context
-
-What exists. A push-only reply bot: webhook in, `notifications/claude/channel` to the agent, the agent calls `reply` and Deputy sends at once. No draft, no go, no catch-up, no inbox (`docs/research/codebase.md`, conflicts C1 to C20). About 330 lines of server, JSONL history, a CSV store, an `operator/` profile, and a permission relay.
-
-What the FRDs ask. A pull-first assistant. The agent reads an inbox, drafts, and the owner's go in the conversation releases each send. Messages arrive by catch-up (D12). Seven slices: Intake, Inbox, Drafts, Notify, Knowledge, Orders, Setup.
-
-Facts that bind the design:
-
-| Fact | Source | Effect |
-|---|---|---|
-| Only tools are confirmed in every MCP client checked (Claude Code, Codex, Cursor, Gemini CLI, VS Code). Server `instructions` are confirmed for Claude Code, Codex and Gemini CLI. | `docs/research/agents.md` Q2, Q4 | The core is tools plus instructions. Rules also go in tool descriptions. |
-| Claude Code channel push needs `--dangerously-load-development-channels`, is a research preview, and may change. | `agents.md` Q1 | Push is an optional extra. |
-| A stdio server lives as long as its client session. Two sessions mean two processes. | `agents.md` Q3 | One owner process per data folder. |
-| Kapso lists conversations by `last_active_after`, then messages per conversation (newest first, no time filter, cursors). 100 requests per minute on Free. `429` carries `Retry-After`. | `docs/research/kapso.md` Q3, rate limits | Catch-up design (TD-5). |
-| Owner echoes carry `kapso.origin = "business_app"` in the API (live check 2026-11-17). Which webhook event carries them is unknown. | `kapso.md` | Echoes come from catch-up. |
-| Webhooks: HMAC-SHA256 of the raw body in `X-Webhook-Signature`, `X-Idempotency-Key`, 10 s to answer. | `kapso.md` Q4 | Optional live listener. |
-| `bun:sqlite` is built in. No new dependency. | `codebase.md` Dependencies | TD-3. |
-
-Decisions this TP rests on: D14 (hexagonal architecture, DDD and clean architecture; the old code's structure is not kept, only small pieces are reused inside adapters), D1 (the go), D5 (notices), D6 (credentials), D11 (known limit), D12 (receiving), L2 (source), L4 (ignore list and owner numbers), L5 (one numbering), L6 (order entries).
-
-## Requirements served
-
-Every FRD is served. The FRs that shape the architecture most:
-
-- Go and send: FR-DRAFTS-01-1, FR-DRAFTS-01-7, FR-DRAFTS-02-3, FR-DRAFTS-02-5, FR-DRAFTS-02-7, FR-DRAFTS-02-12, FR-DRAFTS-03-1, FR-DRAFTS-03-3, FR-DRAFTS-03-8, FR-DRAFTS-03-13, FR-DRAFTS-04-7, FR-DRAFTS-04-10.
-- Receive and store: FR-INTAKE-01-1, FR-INTAKE-01-9, FR-INTAKE-02-1, FR-INTAKE-02-7, FR-INTAKE-02-9, FR-INTAKE-03-1, FR-INTAKE-03-6, FR-INTAKE-03-10, FR-INTAKE-03-19, FR-INTAKE-03-20, FR-INTAKE-04-5, FR-INTAKE-04-13.
-- Inbox: FR-INBOX-01-1, FR-INBOX-02-2, FR-INBOX-02-16, FR-INBOX-03-10.
-- Notices: FR-NOTIFY-01-1, FR-NOTIFY-01-5, FR-NOTIFY-02-10, FR-NOTIFY-03-4, FR-NOTIFY-03-6.
-- Knowledge and Orders: FR-KNOWLEDGE-01-8, FR-KNOWLEDGE-01-10, FR-KNOWLEDGE-02-5, FR-KNOWLEDGE-03-4, FR-ORDERS-01-7, FR-ORDERS-01-14, FR-ORDERS-02-4, FR-ORDERS-03-5.
-- Setup: FR-SETUP-01-5, FR-SETUP-03-1, FR-SETUP-03-4, FR-SETUP-03-7.
-
-The Interfaces section maps every tool to its FRs.
-
+Moved verbatim to [TP-context.md](../tp-detail/TP-context.md) and [TP-requirements-served.md](../tp-detail/TP-requirements-served.md).
 ## Decisions
-
 ### TD-0: Architecture style
 
 - **Option A** Ports and adapters (hexagonal) with DDD. Each slice is a bounded context with `domain`, `application`, `ports` and `adapters` folders. A small shared kernel. One composition root wires adapters to ports. An architecture test enforces the dependency rule. Cost: more files and interfaces than the current 330-line server; a rewrite. Risk: ceremony beyond what v1 needs (mitigated: one use case per file, no generic frameworks, no event bus library).
@@ -77,7 +45,37 @@ Chosen: Option A, written so that Option C stays one adapter away. Repository ad
 
 Chosen: Option A. One client in one slice means one place paces every request, sends included (FR-INTAKE-03-18). `SendText({sendId, chat, text})` first records the send id and the pending outgoing text, then sends, then stores the provider message id by an upsert. The `Provider` call is `sendText({to, text})`, one part of at most 4000 characters, and returns `{providerMessageId, serverTime}`; the stored send time is that `serverTime`. Echo matching (L2) therefore lives in one slice. Resolving an unknown outcome uses Intake's `FindOutgoing({sendId, chat, since, text})` (see TD-6). It keeps dev and Kapso indistinguishable to other slices (FR-INTAKE-01-4). `graph.ts` keeps `splitText` and the send helper; `meta.ts` goes (FR-INTAKE-01-1). Recorded in ADR-004.
 
-The decisions TD-5, TD-6 and TD-8 moved verbatim to [TP-decisions.md](../tp-detail/TP-decisions.md).
+### TD-5: The catch-up loop
+
+- **Option A** Two sweeps on the provider's clock, each paged in full over a time window and de-duplicated by message id. Sweep 1: conversations active since `mark - overlap`, then each one's messages. Sweep 2: the number's outbound messages (`direction=outbound`), which carry owner echoes. Cost: a few more requests per run. Benefit: owner echoes do not depend on whether an echo moves a conversation's `last_active` (unverified, see Risks).
+- **Option B** One sweep: conversations by `last_active_after`, then their messages. Cost: fewest requests. Risk: an owner echo that does not move `last_active` is missed, and Deputy could then answer over the owner (principle 2).
+- **Option C** A mark from the local clock instead of the provider's. Cost: low. Risk: clock skew larger than the overlap loses messages, and a run that fails never advances the mark.
+
+Chosen: Option A. Details:
+- **Schedule.** On start and every N minutes (default 2, minimum 1, FR-INTAKE-03-21), and when asked. At most one catch-up runs at a time: a single-flight lock in Intake covers the timer and `check_messages`; the second caller waits for the running one and returns its result. The pre-send `CatchUpChat` waits for a running catch-up, then does one chat-scoped read of that conversation (it moves no mark and never waits for a rate limit; on `429` it fails and Drafts holds the send). It keeps the 20 second limit (TD-6). A process that is not the owner runs none (TD-2, D16: a second session is read-only, with no drafting).
+- **Never stop at the first known message.** Each sweep pages its whole time window (messages newest first, 100 per page, until a message is older than `mark - overlap`) and de-duplicates by `(provider, message id)`. A message stored live earlier cannot hide older unstored ones.
+- **Marks.** Each sweep keeps its own mark, a provider timestamp, never the local clock: one for conversations (sweep 1) and one for outbound messages (sweep 2). Sweep 1 sorts the conversations in memory, oldest `last_active` first, and moves its mark as each conversation finishes. Sweep 2 (the outbound listing) is newest first, so a mark cannot move per page without leaving a hole: it saves a resume cursor and its window after each page, and moves its mark only when the sweep ends. A run cut short by `429` or a timeout therefore resumes where it stopped. `catchup_status` has one row per provider, so a switch from dev to Kapso starts its own first import. The overlap (default 10 minutes) covers provider lag only.
+- **Where each run starts.** The first connect imports the whole retention window the provider offers, flagged as history (FR-INTAKE-03-1, FR-INTAKE-03-11). After that, every run reads from `mark - overlap`, however long Deputy was off, so every message not stored yet is covered (principle 3). The inbox window (D3) never limits catch-up: it only decides what counts as pending. Raising it needs no backfill, because the history is already stored.
+- **Rate limits.** Read `X-RateLimit-Remaining` and slow down when low. On `429`, wait `Retry-After`, mark the run incomplete, retry (FR-INTAKE-03-20). Incomplete is stored as status "failed" with reason "rate limited, retrying", because the FRDs define only two values (FR-INTAKE-03-6).
+- **Other.** A timeout ends the run as failed (FR-INTAKE-03-14). One "message stored" signal per run that stored something (FR-INTAKE-03-5). History messages emit none (FR-INTAKE-03-12). Sends share the same request budget (TD-4).
+
+Tests: a live-delivered message is stored while two earlier ones are missing, and catch-up stores both; a run killed by `429` after half the units resumes from the advanced mark; a provider clock an hour off loses nothing; an echo that does not move `last_active` is still found by sweep 2; Deputy is off for 10 days with a 7-day inbox window and nothing is lost; raising the window triggers no extra reads. Recorded in ADR-005.
+ADR: ADR-005
+
+### TD-6: Drafts and the single send path
+
+- **Option A** Tools to create, list, change and reject a draft (reply and order share one numbering, L5), plus `approve_draft`, which takes the draft number, the exact text shown and the owner's words. One call does the whole send path (below). Cost: the most code in v1. Risk: the agent can pass invented "owner words" (accepted, D11; the log keeps them).
+- **Option B** Transactional outbox: `approve_draft` records the approval and queues the send; a separate sender step in the owner process runs the catch-up check and calls the provider. Cost: a queue and a worker, and an approval can sit queued for a while. Risk: the owner is told "approved" before anything is checked; a queued send can fire after the owner changed their mind. Its one gain, a crash-safe retry of the check step, is already covered by "outcome unknown".
+
+Chosen: Option A. The rules live in the `Draft` aggregate (approval, hold, one-use) and the `ApproveDraft` use case; the provider is behind the `Sender` port (TD-4) and the chat check behind `ChatFreshness`. One departure from the lean: the tool takes the text shown, not a hash of it. FR-DRAFTS-02-3 says the agent gives "the text the owner was shown", and an agent cannot compute a hash reliably. Deputy hashes the text itself for the log. The send path for a reply:
+1. Refuse unless: this process holds the lease; the text equals the draft's current text; the owner's words contain the draft number as a whole token; and the draft's current version was returned by `list_drafts` after its last change (the `shown_version` mark).
+2. One transaction (which includes the lease-token check): record the approval (born used), set the draft "sending", write the log (FR-DRAFTS-02-12). No "approved" state is stored.
+3. Run `CatchUpChat` (it waits for a running catch-up, then reads that one conversation), with a time limit (20 seconds). If it fails or the limit expires (result "held, catch-up failed"), or the owner answered from the app, or the customer wrote again since the draft: set the draft "held", void the approval, log it, return the three choices. A timeout never leads to a send.
+4. Re-check the lease token in a transaction right before the provider call; if the lease was lost, hold the send (the process that took over then owns the draft). Then call `SendText({sendId, chat, text})`. The window between this check and the HTTP request is one network call and is accepted. Intake records the send id and pending outgoing text first, sends, then upserts the provider's message id, so an echo stored first is reclassified as "sent through Deputy", not duplicated (FR-INTAKE-04-13).
+5. Record the `SendText` result as accepted, failed (with a reason code), rate limited (with the provider's retry time) or unknown. Any partial failure of a split reply is unknown. A rate-limited send waits in a per-chat queue, is retried at the provider's time with steps 3 and 4 run again, and fails at once when that time is outside the customer's 24-hour window (owner decision D29, Drafts TP-03 TD-3).
+
+Notes. The whole-token and `list_drafts` checks are a typo and ordering guard, not authorization: "ok, 3 kilos is fine" contains "3". What stops a wrong send is that the owner saw this text and answered in the conversation; Deputy cannot verify who spoke (D11). `create_draft` checks that the chat exists in Intake (through `ChatReader`) and that, with a real provider, it has a non-dev message (FR-DRAFTS-01-8). Unknown outcomes are resolved by a `ResolveUnknownSends` use case in Drafts. It asks Intake's `FindOutgoing({sendId, chat, since, text})` through the `OutgoingFinder` port, which links exactly one match to the send id. It runs after the next catch-up: at start, after the first catch-up, and on every `CatchUpFinished` event that stored messages (FR-DRAFTS-03-13). The `RecoverInterrupted` use case runs on every lease acquisition, before the scheduler starts and so before the first catch-up: a draft left "sending" becomes "unknown"; one left "recording" is re-driven. For an order draft, step 4 is `RecordOrder` instead of a send. The approval is marked used and the draft "recording" in step 2; `RecordOrder` is idempotent on the draft number (FR-ORDERS-01-7, FR-ORDERS-01-16), reading before it appends on a spreadsheet; then the draft is marked recorded. A draft left "recording" at start is re-driven, which is safe, unlike a send. A draft left "sending" at start shows "outcome unknown" (FR-DRAFTS-02-12). After a hold, the approval is void and the owner's new go goes through the same tool (FR-DRAFTS-03-5, FR-DRAFTS-03-11). One call approves one draft; an owner sentence naming three drafts means three calls, each logging the same words (FR-DRAFTS-02-3). Order drafts are prepared at `create_draft` by Orders' `PrepareOrder` (through the `OrderPreparer` port): it checks required details, resolves items against the catalog, takes price snapshots and computes the total (FR-ORDERS-01-5, FR-ORDERS-01-14, FR-ORDERS-01-15). `OrderPreparer` also has `revalidate(payload)` returning `{catalogChanged}`, which `ListDrafts` uses for the "catalog changed" mark (FR-KNOWLEDGE-01-14). Changing or deleting a recorded order (`change_order`, `delete_order`) maps to the Drafts use case `ApproveOrderCommand`: it runs the owner-words checks, writes the log entry first, then calls Orders through the Drafts-side port `OrderChanger`. Orders exposes no tool of its own for this and never calls Drafts; its only path back is the `OrderDeleted` event. `ListDrafts` writes the `shown_version` mark, so it runs only in the owner process (D16). Recorded in ADR-006.
+ADR: ADR-006
 
 ### TD-7: Notices and reminders
 
@@ -85,6 +83,30 @@ The decisions TD-5, TD-6 and TD-8 moved verbatim to [TP-decisions.md](../tp-deta
 - **Option B** A long-poll tool, `wait_for_messages`, that the agent calls and that returns when notable messages arrive. Cost: works in any MCP agent, with no research-preview channel. Risk: it holds the agent's turn, tool timeouts differ (Codex defaults to 60 seconds), and the owner cannot use the session for other work while it waits. Not chosen as the default; it stays a later option for agents without push.
 
 Chosen: Option A. The `Notifier` outbound port has a Claude channel adapter and a null adapter. Notices are fixed codes with an English default text, filled with numbers only, so no customer text can enter one (FR-NOTIFY-01-5). Language (D20): Deputy ships no language catalogs; a notice, hold reason, refusal or status reason is a code, the English default text and its numbers, and the server `instructions` tell the agent to say it in the owner's language. Time zone: `time_zone` defaults to the system zone, `Intl.DateTimeFormat().resolvedOptions().timeZone`, read once at first start and stored; the owner can change it by talking (`set_setting`). Quiet periods are wall-clock hours in that zone, evaluated with `Intl.DateTimeFormat` for the zone on each tick, never by adding hours to a UTC offset. DST test (America/New_York, quiet 22:00 to 07:00, checked in Bun): on 2026-03-08 the local time is 01:59 at 06:59Z and 03:01 at 07:01Z (no 02:xx), and the period ends at 11:00Z (07:00 local), so the period that began at 22:00 the evening before lasts 8 real hours; on 2026-11-01 the period ends at 12:00Z (07:00 local) and the period lasts 10 real hours, 01:30 occurs at 05:30Z and at 06:30Z and both are quiet. `Tick` reads the ignore list from Inbox on every notice (FR-NOTIFY-02-10) and the source of each message from Intake (FR-NOTIFY-03-1). A notice written with no error counts as delivered; with no session or an error, it counts as failed and its messages are counted again next time (FR-NOTIFY-03-7). With push off, no notice is sent (FR-NOTIFY-03-4). Recorded in ADR-007.
+
+### TD-8: Secrets and configuration
+
+- **Option A** Secrets and connection settings in a file in the owner's config folder (`~/.deputy/`), which the owner edits by hand. Cost: low. Risk: a poor fit for a non-technical owner and the 30-minute target; a wrong file mode goes unnoticed.
+- **Option B** Terminal commands the owner runs themself: `deputy secrets set <name>` (prompts without echo, stores the value, prints none; where it stores it is Option C and the fallback below) and `deputy config set <key> <value>` (writes `~/.deputy/config.json`). The agent conversation never sees them. Deputy reads the files. Cost: a small command-line adapter. Risk: the owner must open a terminal; an agent with file tools could still read the files (Setup suggests a deny rule).
+- **Option C** The OS credential store through `Bun.secrets` (built into Bun, no dependency): macOS Keychain, libsecret on Linux, Windows Credential Manager (Bun docs, https://bun.com/docs/runtime/secrets). Checked on Windows 11 with Bun 1.4.4: `set`, `get` and `delete` work from source and from a `bun build --compile` binary. Not checked by me on macOS or Linux. Cost: none beyond the call. Risk: the docs call the API experimental and say a secret service must be running on Linux; the docs do not say what happens without one, and a third-party report (NixOS discourse, Proton Drive CLI thread) shows a compiled Bun binary failing with `libsecret not available`. A headless Linux box or container often has no secret service, so the store cannot be the only place.
+
+Chosen: Option B for how the owner enters things (D19), with Option C as the primary store of secrets and a file as the fallback. The earlier text rejected the keychain because Bun had no keychain API and a native dependency was needed; both facts are outdated, since `Bun.secrets` exists. The rule: `deputy secrets set <name>` calls `Bun.secrets.set({ service: "deputy", name, value })`; if the call throws for any reason (no secret service, no libsecret, a locked or denied store), it writes `~/.deputy/secrets.env` instead (`KEY=value`, mode 0600 on POSIX) and prints that the value is in a file and why. Reads try the OS store first and then the file. A value is in one place only: `set` removes the other copy. `check_secrets` says where each secret is ("OS store" or "file"), never the value. Tests: a fake store that works; a fake store that throws (the file is written, mode checked on POSIX, the reason is printed); the read order; the migration of a secret from file to store when the store becomes available. Live checks (launch gate): Windows (done above), macOS and a Linux desktop with GNOME Keyring, and a Linux container without a secret service, from the compiled binary. It meets D6 and FR-SETUP-03-1, and it keeps trust-boundary settings out of any tool the agent can call. The command line is another inbound adapter (`src/adapters/cli/`); it is not part of the MCP server. It never calls a lease-guarded use case, because it may run when no process owns the lease or while another one does. It writes one pending-change row (table `pending_changes`: key, value, the typed command, time) in SQLite, or the config or secrets file, and exits. Neither write needs the lease. The owner process applies pending changes on its next tick without a restart: the scheduler calls Intake's lease-guarded `ApplyPendingChanges`, which applies and logs each owner-number change with the typed command (L4; an add through `set`, a removal through `remove`), and Knowledge's lease-guarded `ApplyCatalogStoreChange`, which applies a `catalog-store` row, clears the catalog mapping and logs the typed command, and the `LeaseSupervisor` re-reads `config.json` for the connection settings. With no owner process, they are applied at the next start.
+
+Sensitive settings are not settable through any MCP tool: `provider`, `receiving_mode`, `push_on`, the owner numbers and every secret. `provider = dev` would open unsigned test entry points; an owner number decides which messages count as the owner's. The owner changes them only from the terminal:
+- `deputy config set provider kapso`, `deputy config set receiving_mode catch-up`, `deputy config set push on`, `deputy config set owner-numbers "+505 8888 0000"`, `deputy config set business-number "+505 8888 1111"`, `deputy config set kapso-phone-number-id <id>`, `deputy config set orders-spreadsheet <id or URL>`, `deputy config set catalog-store sheet:<id>`;
+- `deputy config remove owner-number "+505 8888 0000"` (a pending change, applied and logged like `set`, L4; the business number is not removed this way);
+- `deputy secrets set kapso-api-key`, and the read-only `deputy secrets list` (each secret's name, where it is kept, present or absent, never a value).
+
+The terminal-only keys also include the orders spreadsheet (`orders-spreadsheet`) and a spreadsheet catalog store (`catalog-store sheet:<id>`): each names a destination for personal data that only the owner may choose (D7). The `orders_store` and `catalog_store` settings can be set by talking only to `machine` or `spreadsheet` (with a sheet the owner already entered) and `file`.
+
+How Setup leads without changing anything itself (FR-SETUP-01-11, FR-SETUP-02-8, FR-SETUP-02-13): Setup asks the owner which provider and receiving mode they want and explains the difference. Setup also asks for the owner's country. The country is the default region for parsing typed phone numbers (Intake ADR-012) and the source of the suggested currency (D21: Setup suggests it, the owner confirms; it is stored as Knowledge's `currency`). It is stored as Intake's `country` setting through `SetIntakeSettings`; it is not a trust boundary, so the agent may write it after the owner says it. The business number is read from the provider when the provider offers it; otherwise Setup shows `deputy config set business-number "+<country code> ..."` and the owner must type it with `+` and the country code (no default country applies to it). It shows the exact command and waits. After the owner runs it, Setup reads the result back through a read-only port (`ConnectionConfigReader`, `OwnerNumbersReader`) and confirms it. Setup reads the applied result, not the pending row, and tells the owner to wait for the next tick if it is not applied yet. The owner can also ask the agent which numbers count as the owner's: the read-only tool `list_owner_numbers` (Intake `GetOwnerNumbers`, with the log of typed commands) serves L4. Setup leads the change; the owner's own command makes it.
+
+`check_secrets` reports present and accepted, and the last four characters of long secrets, never a value (FR-SETUP-03-4, FR-SETUP-03-6). "Accepted": the provider key passes one cheap authenticated call through Intake's `CheckProviderAccess` (a conversation listing with limit 1); the Google service account fetches a token and reads the sheet; the webhook secret cannot be probed, so it is "present, well formed", and only the optional live-delivery test (a signed delivery) proves it. Deputy checks the secrets file mode at start on POSIX, when the file fallback is in use, and warns if it is looser than owner-only.
+
+Settings the owner changes by talking are in the database, one owning slice per key: `catch_up_minutes`, `country` (Intake); `pending_window_days` (Inbox); `batch_minutes`, `reminder_minutes`, `reminders_paused`, `quiet_periods`, `time_zone`, `notices_on` (Notify); `orders_store` (Orders); `catalog_store`, `currency`, `catalog_mapping` (Knowledge). `set_setting` routes by key to the owning slice and refuses the sensitive keys with a message that names the terminal command. `.env` stays only as a fallback for `DEPUTY_DATA_DIR`.
+
+Recorded in ADR-008.
+ADR: ADR-008
 
 ### TD-9: What is removed
 
@@ -199,38 +221,20 @@ flowchart LR
   OtO --> Files["Owner files and spreadsheet adapters"]
   Main["src/main.ts: composition root"] -.->|wires| MCP
 ```
-
 Moved verbatim to [TP-architecture.md](../tp-detail/TP-architecture.md).
-
 ## Information
-
 Moved verbatim to [TP-information.md](../tp-detail/TP-information.md).
-
 ## Interfaces
-
 Moved verbatim to [TP-interfaces.md](../tp-detail/TP-interfaces.md).
-
 ## Threat model
-
 Moved verbatim to [TP-threat-model.md](../tp-detail/TP-threat-model.md).
-
 ## Testing
-
 Moved verbatim to [TP-testing.md](../tp-detail/TP-testing.md).
-
 ## Risks
-
 Moved verbatim to [TP-risks.md](../tp-detail/TP-risks.md).
-
 ## Open questions
 
-Closed by the owner (docs/DECISIONS.md):
-- D15: the L6 scrub is one narrow, tested exception to the append-only drafts log. (This closes the old question about the L6 scrub.)
-- D16: a second session is read-only, with no drafting.
-- D17: v1 ships as a compiled binary (`bun build --compile`).
-- D18: live checks (the 30-minute idle timeout, `instructions` delivery, `last_active` on an echo) run first on Claude Code, then Codex.
-- D19: sensitive settings change only through the owner's terminal command; Setup shows the command, waits and confirms (TD-8).
-- FR-INTAKE-03-1 stays as written. The inbox window (D3) never limits catch-up; the TP was fixed to match (TD-5).
+Moved verbatim to [TP-open-questions-closed.md](../tp-detail/TP-open-questions-closed.md).
 
 For the owner:
 

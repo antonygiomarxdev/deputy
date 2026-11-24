@@ -1,0 +1,17 @@
+# TP: requirements-served
+
+Part of [TP.md](../tp/TP.md). Moved verbatim from there; nothing changed.
+
+
+## Requirements served
+
+Every FRD is served. The FRs that shape the architecture most:
+
+- Go and send: FR-DRAFTS-01-1, FR-DRAFTS-01-7, FR-DRAFTS-02-3, FR-DRAFTS-02-5, FR-DRAFTS-02-7, FR-DRAFTS-02-12, FR-DRAFTS-03-1, FR-DRAFTS-03-3, FR-DRAFTS-03-8, FR-DRAFTS-03-13, FR-DRAFTS-04-7, FR-DRAFTS-04-10.
+- Receive and store: FR-INTAKE-01-1, FR-INTAKE-01-9, FR-INTAKE-02-1, FR-INTAKE-02-7, FR-INTAKE-02-9, FR-INTAKE-03-1, FR-INTAKE-03-6, FR-INTAKE-03-10, FR-INTAKE-03-19, FR-INTAKE-03-20, FR-INTAKE-04-5, FR-INTAKE-04-13.
+- Inbox: FR-INBOX-01-1, FR-INBOX-02-2, FR-INBOX-02-16, FR-INBOX-03-10.
+- Notices: FR-NOTIFY-01-1, FR-NOTIFY-01-5, FR-NOTIFY-02-10, FR-NOTIFY-03-4, FR-NOTIFY-03-6.
+- Knowledge and Orders: FR-KNOWLEDGE-01-8, FR-KNOWLEDGE-01-10, FR-KNOWLEDGE-02-5, FR-KNOWLEDGE-03-4, FR-ORDERS-01-7, FR-ORDERS-01-14, FR-ORDERS-02-4, FR-ORDERS-03-5.
+- Setup: FR-SETUP-01-5, FR-SETUP-03-1, FR-SETUP-03-4, FR-SETUP-03-7.
+
+The Interfaces section maps every tool to its FRs.
