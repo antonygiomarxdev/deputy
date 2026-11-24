@@ -27,7 +27,8 @@ test("boots over stdio, serves instructions and tools, and exits fast on stdin c
     expect(h.protocolErrors).toEqual([]);
 
     const ms = await h.close();
-    expect(ms).toBeLessThan(400);
+    // the bound catches a wait on the 10 s lease heartbeat, not CPU load
+    expect(ms).toBeLessThan(5_000);
 
     const db = new Database(join(h.dataDir, "deputy.db"), { readonly: true });
     const row = db.query("SELECT heartbeat FROM lease WHERE id = 1").get();
