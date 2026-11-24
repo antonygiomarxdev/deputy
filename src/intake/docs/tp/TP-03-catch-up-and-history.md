@@ -1,6 +1,6 @@
 # Technical Proposal: Intake FRD-03, Catch-up and history
 
-Status: Approved (2026-11-19). Written 2026-11-17. Cross-cutting TP: `docs/tp/TP.md`, in particular TD-5 (two sweeps on the provider's clock). FRD: `../frd/FRD-03-catch-up-and-history.md`. The `Provider` port and the store path are in `TP-01-providers.md` and `TP-02-receive-and-store.md`.
+Status: Approved (2026-11-24). Written 2026-11-17. Cross-cutting TP: `docs/tp/TP.md`, in particular TD-5 (two sweeps on the provider's clock). FRD: `../frd/FRD-03-catch-up-and-history.md`. The `Provider` port and the store path are in `TP-01-providers.md` and `TP-02-receive-and-store.md`.
 
 ## Context
 
@@ -43,7 +43,7 @@ FR-INTAKE-03-1, FR-INTAKE-03-2, FR-INTAKE-03-3, FR-INTAKE-03-4, FR-INTAKE-03-5, 
 
 ### TD-1: How is a possible gap detected?
 
-FR-INTAKE-03-15 says: when a listing is read to its end and its oldest returned message is O, a gap is possible only if Deputy holds a stored message of that scope older than O, and Deputy's coverage mark for that scope, read before this run's sweeps, is null or older than O. A mark at or after O means Deputy already read up to O.
+FR-INTAKE-03-15 says: when a listing is read to its end and its oldest returned message is O, a gap is possible only if Deputy holds a stored message of that scope older than O, and Deputy's coverage mark for that scope, read before this run's sweeps, is null or older than O. A mark at or after O means Deputy already read up to O. The mark counts only when the previous run finished all its sweeps (ADR-007, rule A); after a stopped run it counts as null.
 
 - **Option A** The comparison as the FRD words it, once per run, over all returned messages. Cost: one number to compare. Risk: false alarms. A quiet shop's newest stored message is old; a brand-new conversation's whole listing is newer and exhausted; the first reply the owner ever sends has the same shape.
 - **Option B** Per listing scope. For every listing a run read to its end (one conversation, or the outbound listing), ask whether Deputy already stores a message of that scope older than the oldest one returned. If it does, the provider no longer holds it. Cost: one repository query per exhausted listing. Risk: a conversation not touched in the run is not checked.
@@ -51,7 +51,7 @@ FR-INTAKE-03-15 says: when a listing is read to its end and its oldest returned 
 
 Chosen: Option B. It raises the status for the FRD's own example (stored 10 days ago, oldest returned 3 days ago, nothing older) and stays silent for quiet periods. The text says "possible". Recorded in ADR-007.
 
-Refined by the coverage mark (2026-11-19, ADR-007). Option B alone reads only the stored side, so the same stretch raised the alarm again on every run while the provider kept dropping it. The probe now also reads the coverage mark: `SyncState.markConversations` for a conversation and `markOutbound` for owner/Deputy, saved in step 2 of the run before the sweeps advance them. A gap needs the pre-run mark null or below O. A mark at or after O means that stretch was already read, so older messages the provider drops are provider retention, not a gap, and the same stretch is not reported again. Accepted limit: with a null mark (before the first catch-up), rows delivered live and older than a short provider retention can raise one `possible_gap`.
+Refined by the coverage mark (2026-11-19, ADR-007). Option B alone reads only the stored side, so the same stretch raised the alarm again on every run while the provider kept dropping it. The probe now also reads the coverage mark: `SyncState.markConversations` for a conversation and `markOutbound` for owner/Deputy, saved in step 2 of the run before the sweeps advance them. A gap needs the pre-run mark null or below O. A mark at or after O means that stretch was already read, so older messages the provider drops are provider retention, not a gap, and the same stretch is not reported again. Accepted limit: with a null mark (before the first catch-up), rows delivered live and older than a short provider retention can raise one `possible_gap`. Rule A (2026-11-20): a stopped run counts as null for the next run, so a run stopped by the budget before a conversation it never read cannot hide a gap there; the accepted cost is one extra `possible_gap` after an interrupted run.
 
 ### TD-2: How does a run wait for the rate limit?
 
@@ -122,7 +122,7 @@ flowchart LR
   Status["GetSyncStatus"] --> Sync
 ```
 
-Domain: **aggregate `SyncState`** (one per provider). Fields: `status`, `reason`, `lastAttemptAt`, `lastSuccessAt`, `connectedAt`, `markConversations`, `markOutbound`, `outboundResume`, `failedSince`, `rateLimitedSince`, `retryAt`, `gap`. Invariants: `status = complete` implies `reason` is null and `lastSuccessAt` is set; a mark never moves back; `connectedAt` is set once; `rateLimitedSince` is set when the first `usage_limit` of a streak starts and cleared by any complete run. Methods: `begin(providerTime)`, `advanceConversations(to)`, `saveOutboundResume(r)`, `complete(providerTime, now)`, `fail(reason, now, retryAfterMs?)`, `tellOwner(now)`, `view(...)`.
+Domain: **aggregate `SyncState`** (one per provider). Fields: `status`, `reason`, `lastAttemptAt`, `lastSuccessAt`, `connectedAt`, `markConversations`, `markOutbound`, `outboundResume`, `failedSince`, `rateLimitedSince`, `retryAt`, `gap`, `finishedAt`. Invariants: `status = complete` implies `reason` is null and `lastSuccessAt` is set; a mark never moves back; `connectedAt` is set once; `rateLimitedSince` is set when the first `usage_limit` of a streak starts and cleared by any complete run. Methods: `begin(providerTime)`, `advanceConversations(to)`, `saveOutboundResume(r)`, `complete(providerTime, now)`, `fail(reason, now, retryAfterMs?)`, `tellOwner(now)`, `view(...)`.
 
 Algorithm, one run (`CatchUp`), steps in order:
 
@@ -160,7 +160,8 @@ CREATE TABLE catchup_status (
   gap_stored_at      INTEGER,
   gap_returned_at    INTEGER,
   first_import_count INTEGER NOT NULL DEFAULT 0,
-  live_verified_at   INTEGER                  -- local clock; set only after a live signature check passed
+  live_verified_at   INTEGER                  -- local clock; set only after a live signature check passed,
+  finished_at        INTEGER                  -- local clock; set when a run's end is saved, cleared when a run begins; null after a crash (migration 0007)
 );
 
 CREATE TABLE settings (          -- shared table, one owner slice per key (cross-cutting Information)
@@ -319,6 +320,10 @@ Layers: UC is a use case with in-memory adapters, a fake provider with scripted 
 | FR-INTAKE-03-13 | Given the provider holds only 3 days while 10 days are stored and the pre-run mark is 10 days ago, When the run ends, Then status is `possible_gap` and the text names the WhatsApp Business app; `oldestStoredAt` is exposed. A stretch the mark already covers is not reported | UC |
 | FR-INTAKE-03-14 | Given the provider does not answer within 15 seconds, When catch-up runs, Then status is `failed`, reason `timeout`, and `ReadInbox` returns with stored data after at most 20 seconds | UC |
 | FR-INTAKE-03-15 | Given the newest stored message is 10 days old, the pre-run mark is 10 days ago, and the exhausted listing's oldest item is 3 days old, When the run ends, Then status is `possible_gap` naming both times. Given a second run with the same listing, Then status is `complete`. Given the mark at O exactly, Then no gap. Given a quiet shop and a new conversation, Then there is no gap | UC |
+| FR-INTAKE-03-15 (rule A) | Given run 1 stopped by the budget after c1 and before c2, c2 holding a message stored from 20 days ago and a listing back to 6 days ago, When run 2 runs, Then status is `possible_gap` naming both times | UC |
+| FR-INTAKE-03-15 (outbound) | Given run 1 complete with `markOutbound` at T and an outbound listing whose oldest item is at or after T less `OVERLAP_MS`, When run 2 runs with an older stored owner message, Then no gap; the mutant that ignores the outbound mark fails | UC |
+| FR-INTAKE-03-15 (resumed) | Given run 1 stopped in the outbound sweep with `outboundResume` saved, When run 2 resumes, Then status is `complete` with no gap when nothing older is stored | UC |
+| FR-INTAKE-03-15 (crashed) | Given run 1 complete, and run 2 that reads c1 (mark saved) and dies before its failure is saved, When run 3 runs, Then status is `possible_gap` naming both times: run 2's marks do not count (finishedAt is cleared when run 2 begins) | UC |
 | FR-INTAKE-03-16 | Given live delivery is on, When a message arrives live, Then periodic catch-up still runs and later returns it | UC |
 | FR-INTAKE-03-17 | Given a message was stored live, When the next run lists it, Then it is stored once and signalled once; a run that finds nothing emits no signal | UC |
 | FR-INTAKE-03-18 | Given an idle shop, When a periodic run finds nothing new, Then it makes one conversation listing, one message read for each conversation active in the last 10 minutes (the overlap), and one outbound page; with no recent activity that is two requests | AC |
