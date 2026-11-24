@@ -5,7 +5,7 @@ Rests on: ../frd/FRD-04-drafts-log.md
 
 ## Summary
 
-Counts per day three things, each from one source and never twice (R-DRAFTS-24): automatic answers (sent log entries with `automatic`), answers sent with an owner's go (used `pending_goes` rows, SPEC-10-2 `usedBetween`), and hand approvals (approvals with basis `owner_words`, SPEC-09-5b `approvalsBetween`). An owner_go approval is counted only as a go answer. The handler `pilotStatsTool` lives in the application layer. Customer-message and owner-question counts are Intake's and not here.
+Counts per day three things, each from one source and never twice (R-DRAFTS-24): automatic answers (sent log entries with `automatic`), answers sent with an owner's go (used `pending_goes` rows, SPEC-10-2 `usedBetween`), and hand approvals (approvals with basis `owner_words`, SPEC-09-5b-1 `approvalsBetween`). An owner_go approval is counted only as a go answer. The handler `pilotStatsTool` lives in the application layer. Customer-message and owner-question counts are Intake's and not here.
 
 Last change: 2026-11-24, after the review of 7a56758: the go is one unit of work with its approval; closed window tells the owner; the always-ask list comes from Knowledge; reconcile on start; the basis is in the log read; pilotStatsTool is in the application layer.
 
@@ -23,7 +23,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Reuses
 - Precedent: SPEC-10-2-pending-go-store.md, whose `usedBetween` read gives the go answers.
-- Precedent: SPEC-09-5b-approvals-basis-repository.md, whose `approvalsBetween` read gives the hand approvals.
+- Precedent: SPEC-09-5b-1-approvals-port.md, whose `approvalsBetween` read gives the hand approvals.
 
 ## Tests first
 - FR-DRAFTS-04-12 (1): given automatic entries, used go rows and approvals on two days, `countsByDay` returns one row per day with `autoAnswers`, `goAnswers` and `ownerApprovals`.

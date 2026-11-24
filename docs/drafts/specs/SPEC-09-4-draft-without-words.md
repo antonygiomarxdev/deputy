@@ -5,7 +5,7 @@ Rests on: ../frd/FRD-02-owners-go.md
 
 ## Summary
 
-Adds `Draft.approveWithoutWords(input)` for the two pilot bases, `automatic` and `owner_go`. It emits the normal `Approved` event with `basis` set and empty owner words for `automatic`. It skips the owner-words check, the `not_shown` check and the `text_differs` check, because the session wrote the text and the owner never saw an automatic one (R-DRAFTS-19 exception, ADR-013). The closed, in-flight and already-approved checks stay. The send runs the existing path unchanged. `DraftSent.automatic` is `basis === "automatic"`. Depends on SPEC-09-5b for the basis column.
+Adds `Draft.approveWithoutWords(input)` for the two pilot bases, `automatic` and `owner_go`. It emits the normal `Approved` event with `basis` set and empty owner words for `automatic`. It skips the owner-words check, the `not_shown` check and the `text_differs` check, because the session wrote the text and the owner never saw an automatic one (R-DRAFTS-19 exception, ADR-013). The closed, in-flight and already-approved checks stay. The send runs the existing path unchanged. `DraftSent.automatic` is `basis === "automatic"`. Depends on SPEC-09-5b-1 for the basis column.
 
 Last change: 2026-11-24, after the review of a17110b: the audit is the approval row; approveWithoutWords skips the shown and text checks; approvals carry an optional basis; counts read approvals; CheckApprovals reports automatic.
 
@@ -44,7 +44,7 @@ approveWithoutWords(input: { basis: PilotBasis; words: string; shownText: string
 `bun test test/drafts/draft-without-words.test.ts`
 
 ## Out of scope
-The migration and repository (SPEC-09-5a, 09-5b), the send itself (driveSend, unchanged), the CheckApprovals report (SPEC-09-6), the decision (SPEC-05), the go store (SPEC-10-2), and the tools (SPEC-13).
+The migration and repository (SPEC-09-5a, 09-5b-1 and 09-5b-2), the send itself (driveSend, unchanged), the CheckApprovals report (SPEC-09-6c), the decision (SPEC-05), the go store (SPEC-10-2), and the tools (SPEC-13).
 
 ## Open questions
 None.

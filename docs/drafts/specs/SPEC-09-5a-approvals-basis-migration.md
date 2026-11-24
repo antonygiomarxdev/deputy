@@ -5,9 +5,9 @@ Rests on: ../frd/FRD-02-owners-go.md
 
 ## Summary
 
-Adds `approvals.basis` (default `owner_words`, so existing approvals read unchanged) and registers the migration. The ADR-010 trigger covers drafts_log only, so approvals need no trigger change. The repository reads and writes it in SPEC-09-5b.
+Adds `approvals.basis` (default `owner_words`, so existing approvals read unchanged) and registers the migration. The ADR-010 trigger covers drafts_log only, so approvals need no trigger change. The repository reads and writes it in SPEC-09-5b-1.
 
-Last change: 2026-11-24, after the lead's decision: approveWithoutWords replaces sendWithoutWords and the approval records its basis.
+Last change: 2026-11-24, after the lead's decision: approveWithoutWords and an approval that records its basis.
 
 One spec is one agent run: at most 80 lines, 3 files and one done command. A spec decides nothing new.
 
@@ -37,7 +37,7 @@ ALTER TABLE approvals ADD COLUMN basis TEXT NOT NULL DEFAULT 'owner_words';
 `bun test test/drafts/contract/approvals-basis-migration.test.ts`
 
 ## Out of scope
-The repository's reads and writes (SPEC-09-5b) and the approval method (SPEC-09-4).
+The repository's reads and writes (SPEC-09-5b-1) and the approval method (SPEC-09-4).
 
 ## Open questions
 None.
