@@ -44,8 +44,7 @@ Key names: the reader's where they exist, `orders-spreadsheet` as Orders TP-03 a
 `bun test test/adapters/cli/config-file-keys.test.ts`
 
 ## Out of scope
-Reducing a spreadsheet URL to its id: Orders TP-03 puts it in the Orders reader, so the command stores the value as typed.
 Owner numbers and the business number (SPEC-08-1, SPEC-08-2); `catalog-store` (SPEC-08-6). Reading the file back is `readConfigFile`, built.
 
 ## Open questions
-None.
+- Q-1 (Lead): Orders TP-03 says `deputy config set orders-spreadsheet <id or URL>` takes an id (20 or more of `A-Z a-z 0-9 _ -`) or a URL, "a URL is reduced to its id", and that `config.json` holds the id. It does not say who reduces it. This spec stores the value as typed. Does the command reduce the URL to its id and check the id, or does the Orders reader do it?
