@@ -43,4 +43,4 @@ export function createTranscriptReader(d: { projectsDir: string; sessionId: () =
 The adding up (SPEC-05-17); the tool and its registration (SPEC-05-19); the next transcript path of an OpenTelemetry route (later).
 
 ## Open questions
-- Q-1 (Lead): the fourth open question of FRD-05: how a helper's part is read from its transcript. Proposed, not decided.
+- Q-1 (Lead): the second open question of FRD-05: how a helper's part is read from its transcript. Proposed, not decided.

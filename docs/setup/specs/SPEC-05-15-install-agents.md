@@ -44,4 +44,4 @@ Order: prerequisites, get the code, install, register the server, copy the skill
 The agent files (SPEC-05-13, SPEC-05-14); the first launch consent dialog (the guide of SPEC-05-1 and the first-message spec).
 
 ## Open questions
-- Q-1 (Lead): `mcp__deputy__*` already allows the send-answer tool; the explicit entry is the lead's instruction and is harmless. The trust-before-rules order is the researcher's finding and is unverified here.
+None. `mcp__deputy__*` already allows the send-answer tool, so the explicit entry is redundant and harmless; the trust-before-rules order is the researcher's finding and is unverified here.

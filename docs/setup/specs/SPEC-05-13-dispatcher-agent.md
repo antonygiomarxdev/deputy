@@ -46,4 +46,4 @@ The setup tools, `set_owner_numbers` and `pilot_stats` that the skill rows alrea
 The helper files (SPEC-05-14); the install step that copies the file (SPEC-05-15); the loop text (SPEC-05-16).
 
 ## Open questions
-- Q-1 (Lead): the lead's list of tools names the pending list, `ask_owner`, `answer_question`, the Knowledge tools and the agent tool. This spec adds the tools the existing skill rows already call (`check_messages`, `get_chat`, the setup tools, `set_owner_numbers`, `pilot_stats`) and `send_owner_go` (the open question of ADR-019). Proposed, not decided.
+None. The list adds to the lead's the tools the existing skill rows already call (`check_messages`, `get_chat`, the setup tools, `set_owner_numbers`, `pilot_stats`); the lead decided that the dispatcher holds `send_owner_go`. Proposed, lead decision.
