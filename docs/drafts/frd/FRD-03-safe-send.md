@@ -1,6 +1,7 @@
 # FRD-03: Safe send and outcome
 
-Status: Draft, with amendments from REQ-15 (pending owner approval)
+Status: Approved (2026-11-24)
+Approval: content 8B4HncwrzlsQ; rests on ../PRD.md hiGOde2AZpUm
 
 ## Summary
 

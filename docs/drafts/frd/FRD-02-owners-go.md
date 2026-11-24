@@ -1,6 +1,7 @@
 # FRD-02: The owner's go
 
-Status: Draft, with amendments from REQ-15 (pending owner approval)
+Status: Approved (2026-11-24)
+Approval: content VDSYG9FAaK7R; rests on ../PRD.md hiGOde2AZpUm
 
 ## Summary
 

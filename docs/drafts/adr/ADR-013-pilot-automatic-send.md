@@ -1,7 +1,7 @@
 # ADR-013: The local pilot sends a knowledge-backed answer without the owner's go
 
 ## Status
-Proposed (2026-11-24), pending owner approval of the REQ-15 amendments
+Accepted (2026-11-24)
 
 ## Context
 REQ-15 and owner decision D31 (approved in PRODUCT): in the local pilot Deputy answers by itself what the business knowledge backs and asks the owner for the rest. This is an exception to R-DRAFTS-2 (never sent at creation) and R-DRAFTS-19 (a go must identify its drafts). D38 sets the always-ask classes per business.

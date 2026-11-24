@@ -1,6 +1,7 @@
 # FRD-04: The drafts log
 
-Status: Draft, with amendments from REQ-15 (pending owner approval)
+Status: Approved (2026-11-24)
+Approval: content nPxxUgG-EnLU; rests on ../PRD.md hiGOde2AZpUm
 
 ## Summary
 

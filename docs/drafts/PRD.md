@@ -1,6 +1,7 @@
 # Drafts: slice PRD
 
-Status: Draft, with amendments from REQ-15 (pending owner approval) · Part of [Deputy product overview](../PRODUCT.md) · Last updated: 2026-11-17
+Status: Approved (2026-11-24) · Part of [Deputy product overview](../PRODUCT.md) · Last updated: 2026-11-17
+Approval: content hiGOde2AZpUm; rests on ../PRODUCT.md EVnyDrK2H9_N
 
 
 ## Purpose
