@@ -48,6 +48,18 @@ Same hexagon as TP-01. This TP adds:
 - Ports: `NotifySettingsRepository`, `LocalCalendar`.
 - Adapters: `sqlite/SqliteNotifySettingsRepository` (the `settings` table, Notify's keys only), `calendar/IntlLocalCalendar`.
 
+```mermaid
+flowchart LR
+  Get["GetNotifySettings"] --> Repo["NotifySettingsRepository"]
+  Set["SetNotifySettings"] --> Repo
+  Sqlite["sqlite/SqliteNotifySettingsRepository: settings table, Notify keys only"] -.->|implements| Repo
+  Tick["Tick"] -->|reads settings at the start of each call| Repo
+  Stored["OnMessagesStored"] -->|reads settings at the start of each call| Repo
+  Tick -->|step 3: quiet| Quiet["QuietSchedule: at most 8 QuietPeriod"]
+  Quiet --> Cal["LocalCalendar"]
+  Intl["calendar/IntlLocalCalendar"] -.->|implements| Cal
+```
+
 Rules in the domain:
 
 - `QuietPeriod { startMinute, endMinute }`, each 0 to 1439 and not equal. `start > end` crosses midnight and is one period (FRD-02 edge case): minute `m` is inside when `m >= start || m < end`; otherwise when `start <= m < end`.

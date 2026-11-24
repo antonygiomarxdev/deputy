@@ -53,6 +53,17 @@ Same hexagon as TP-01. This TP adds:
 - Application: `NotifyStatus` (pure read). `Tick` steps 4 and 5 and the settle step after delivery.
 - Adapters: `channel/ClaudeChannelNotifier` (maps the MCP transport to `delivered`, `no_session`, `write_error`) and `channel/NullNotifier` (`availability` is `off`).
 
+```mermaid
+flowchart LR
+  Tick["Tick: step 4 retry gate, step 5 outage and recovery notice"] -->|OutagePlan| Planner["NoticePlanner"]
+  Tick -->|deliver| Notifier["Notifier port"]
+  Claude["channel/ClaudeChannelNotifier: delivered, no_session, write_error"] -.->|implements| Notifier
+  Null["channel/NullNotifier: availability off"] -.->|implements| Notifier
+  Tick -->|after deliver returns: settle| Settle["NoticeState.settle, NoticeSession.fail"]
+  Settle -->|one save| Repo["NoticeRepository"]
+  Status["NotifyStatus: pure read"]
+```
+
 Settle, after `Notifier.deliver` returns (inside `Tick`, one `NoticeRepository.save`):
 
 | Result | Effect |
