@@ -1,14 +1,14 @@
 # ADR-013: The local pilot sends a knowledge-backed answer without the owner's go
 
 ## Status
-Accepted (2026-11-24)
+Proposed (2026-11-24), pending owner approval of the REQ-15 amendments
 
 ## Context
 REQ-15 and owner decision D31 (approved in PRODUCT): in the local pilot Deputy answers by itself what the business knowledge backs and asks the owner for the rest. This is an exception to R-DRAFTS-2 (never sent at creation) and R-DRAFTS-19 (a go must identify its drafts). D38 sets the always-ask classes per business.
 
 ## Decision
-- An automatic send is a send with no owner go. It is allowed only when the answer's class is not in the business's always-ask list (D38).
-- Each automatic send is logged as automatic, with the knowledge it relied on (FR-DRAFTS-04-11).
+- An automatic send is a send with no owner go. It is allowed only when the answer's class is not in the business's always-ask list (D38). The list comes from the Knowledge slice's always-ask file (#239).
+- Each automatic send is logged as automatic (FR-DRAFTS-04-11).
 - The 24 hour window check of ADR-012 applies to a first send too: a closed window sends nothing and tells the owner (FR-DRAFTS-03-14).
 - The owner's WhatsApp answer to an `ask_owner` question is the go for that one answer (FR-DRAFTS-02-14).
 - The pilot has no daily cap and no kill switch (REQ-15).

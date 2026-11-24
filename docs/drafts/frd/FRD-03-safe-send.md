@@ -2,13 +2,15 @@
 
 Status: Approved (2026-11-18)
 
+Amendments: from REQ-15 (pending owner approval).
+
 ## Summary
 
 Before a send, Deputy checks that the chat is up to date and that the owner has not already answered from the phone. After the send, the owner learns whether it worked. See [the slice PRD](../PRD.md).
 
 ## Requirements covered
 
-R-DRAFTS-11, R-DRAFTS-12, R-DRAFTS-13, R-DRAFTS-14.
+R-DRAFTS-11, R-DRAFTS-12, R-DRAFTS-13, R-DRAFTS-14, R-DRAFTS-22.
 
 ## Behavior
 

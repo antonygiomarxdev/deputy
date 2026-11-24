@@ -2,13 +2,15 @@
 
 Status: Approved (2026-11-18)
 
+Amendments: from REQ-15 (pending owner approval).
+
 ## Summary
 
 A reply, or an order, goes ahead only after the owner's go: a sentence in the conversation that names the draft or drafts it approves. There is no other way to send. See [the slice PRD](../PRD.md).
 
 ## Requirements covered
 
-R-DRAFTS-6, R-DRAFTS-7, R-DRAFTS-8, R-DRAFTS-9, R-DRAFTS-10, R-DRAFTS-19, R-DRAFTS-20, R-DRAFTS-21.
+R-DRAFTS-6, R-DRAFTS-7, R-DRAFTS-8, R-DRAFTS-9, R-DRAFTS-10, R-DRAFTS-19, R-DRAFTS-20, R-DRAFTS-21, R-DRAFTS-22, R-DRAFTS-23.
 
 ## Behavior
 

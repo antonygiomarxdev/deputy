@@ -1,43 +1,48 @@
-# Spec: automatic log entries and daily pilot counts (Drafts FRD-04)
+# SPEC-08: the automatic mark in the log and the pilot counts
 
 Status: Draft
+Rests on: ../frd/FRD-04-drafts-log.md
 
 ## Summary
 
-Marks every automatic send as automatic with the knowledge it relied on, and keeps per-day counts of customer messages, automatic answers, owner questions and owner answers (R-DRAFTS-22, R-DRAFTS-24).
+Marks each automatic send as automatic in drafts_log and counts per day the automatic answers and the owner's approvals (R-DRAFTS-22, R-DRAFTS-24). Customer-message and owner-question counts are Intake's and not here.
 
-Last change: 2026-11-24, new spec for the local pilot (REQ-15, D31, D38).
+Last change: 2026-11-24, rewritten in the format 4 layout after review of PR 202.
 
-## Context
+One spec is one agent run: at most 80 lines, 3 files and one done command. A spec decides nothing new.
 
-Builds these rows of [FRD-04-drafts-log.md](../frd/FRD-04-drafts-log.md):
-
-| FR-DRAFTS-04-11 | always | Each automatic send shall be logged as automatic, with the knowledge it relied on and its draft and time. (R-DRAFTS-22) |
-| FR-DRAFTS-04-12 | always | Deputy shall count per day the customer messages, automatic answers, owner questions and owner answers, and shall show the counts to the owner. (R-DRAFTS-24) |
+## Rows
+| FR-DRAFTS-04-11 | always | Each automatic send shall be logged as automatic, with its draft and time. (R-DRAFTS-22) |
+| FR-DRAFTS-04-12 | always | Deputy shall count per day the automatic answers and the owner's approvals in the drafts log, and shall show the counts to the owner. (R-DRAFTS-24) |
 
 ## Files
 | Path | Create or change | Holds |
 |---|---|---|
-| src/drafts/domain/pilot-stats.ts | Create | The daily counts |
-| test/drafts/pilot-stats.test.ts | Create | Tests for FR-DRAFTS-04-11 and FR-DRAFTS-04-12 |
-| src/drafts/domain/log-entry.ts | Change | Adds the automatic mark and the knowledge reference |
+| src/drafts/adapters/sqlite/migrations/0004-automatic.sql | Create | Adds the automatic column to drafts_log and rebuilds the ADR-010 update trigger so the column is compared like the others |
+| src/drafts/domain/pilot-stats.ts | Create | The per-day counts over automatic answers and owner approvals |
+| test/drafts/pilot-stats.test.ts | Create | The tests for FR-DRAFTS-04-11 and FR-DRAFTS-04-12 |
 
-## Interfaces
+## Reuses
+- Precedent: SPEC-04-drafts-log.md, which appends the log entries this spec marks.
+- ADR-010-scrub-trigger-guard.md: the trigger this migration rebuilds. The migration is appended to the list in `src/main/database.ts`; its position is its `user_version`.
 
+## Tests first
+- FR-DRAFTS-04-11 (1): given an automatic send, the log entry has `automatic` = 1.
+- FR-DRAFTS-04-11 (2): given a send the owner approved by hand, `automatic` = 0.
+- FR-DRAFTS-04-12 (3): given entries on two days, `countsByDay` returns one row per day with that day's automatic answers and owner approvals, and no customer-message or owner-question field.
+
+## Build
 ```ts
-export type DailyCounts = { day: string; customerMessages: number; autoAnswers: number; ownerQuestions: number; ownerAnswers: number };
-export function countsByDay(entries: { at: number; kind: string }[]): DailyCounts[];
+export type DailyCounts = { day: string; autoAnswers: number; ownerApprovals: number };
+export function countsByDay(entries: { at: number; automatic: boolean; kind: "sent" | "approved" }[]): DailyCounts[];
 ```
+The migration adds `automatic INTEGER NOT NULL DEFAULT 0` and drops and recreates the `BEFORE UPDATE` trigger of ADR-010 with `automatic` in its equality list. The ADR-010 scrub rule is unchanged.
 
-## Data
-
-None: this spec adds no stored data beyond the log entry it marks.
-
-## Tasks
-
-### Task 1: Automatic log entries and daily counts
-- **Tests first:** `bun test test/drafts/pilot-stats.test.ts`, written before the code, one test per row above.
-- **Done when:** `bun test test/drafts/pilot-stats.test.ts` passes.
+## Done when
+`bun test test/drafts/pilot-stats.test.ts`
 
 ## Out of scope
-The kill switch and hours, which come later (REQ-15).
+Customer-message and owner-question counts (Intake); the kill switch and hours (later, REQ-15).
+
+## Open questions
+None.
