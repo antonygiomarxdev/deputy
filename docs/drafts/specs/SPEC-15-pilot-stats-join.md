@@ -7,7 +7,7 @@ Rests on: ../frd/FRD-04-drafts-log.md
 
 `pilot_stats` returns one row per day that joins Drafts' `countsByDay` (SPEC-08) with Intake's `IntakeDailyCounts.between(from, to)` (Intake PR 212, which returns `{ day, customerMessages, ownerQuestions }`) by `day`: `{ day, customerMessages, ownerQuestions, autoAnswers, goAnswers, ownerApprovals }`. A day present on one side only gets zero on the other side. Merge order: PR 209 and PR 212 before PR 202.
 
-Last change: 2026-11-24, the joined view split from SPEC-08 so each side has one owner.
+Last change: 2026-11-24, the registration in src/main/tools.ts moved to SPEC-16-3.
 
 One spec is one agent run: at most 80 lines, 3 files and one done command. A spec decides nothing new.
 
@@ -18,7 +18,6 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 | Path | Create or change | Holds |
 |---|---|---|
 | src/drafts/application/pilot-stats-tool.ts | Create | `pilotStatsTool`: joins the two sources by `day` |
-| src/main/tools.ts | Change | Registers `pilot_stats` in the MCP tool list |
 | test/drafts/pilot-stats-tool.test.ts | Create | The tests below |
 
 ## Reuses
@@ -40,7 +39,7 @@ export function pilotStatsTool(d: { drafts: () => Promise<DailyCounts[]>; intake
 `bun test test/drafts/pilot-stats-tool.test.ts`
 
 ## Out of scope
-The Drafts counts (SPEC-08), Intake's counts (Intake PR 212), and the send tools and the rest of the MCP list (SPEC-13).
+The Drafts counts (SPEC-08), Intake's counts (Intake PR 212), the send tools (SPEC-13), and registering `pilot_stats` in the tool list (SPEC-16-3).
 
 ## Open questions
 None.
