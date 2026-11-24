@@ -6,7 +6,7 @@ Status: Draft
 
 In the local pilot (REQ-15) the owner talks to the session through WhatsApp: Deputy sends the owner's open questions in one numbered message, from the business number to the owner's own number, and the owner answers freely. Deputy does not match answers to questions; the session reads the owner's messages with the open questions and records each answer. That chat never counts as a customer chat and never holds a send. Intake also shows each customer chat's 24 hour window and the pending list, reads the business number from the provider, and adds owner numbers after the owner's words and a confirmation.
 
-Last change: 2026-11-24, each question names its customer chat; before that: questions are batched, the session records answers, removing a number is deferred
+Last change: 2026-11-24, Intake lists the answered questions for Drafts and records the business number only under the lease; before that: 2026-11-24, a question asked with the owner window closed is kept as not sent, and Intake counts per day for the pilot's stats; before that: each question names its customer chat; before that: questions are batched, the session records answers, removing a number is deferred
 
 One feature of the [slice PRD](../PRD.md). Pending list: a subset of Inbox FR-INBOX-01 (no summary groups, no ignore list).
 
@@ -26,7 +26,7 @@ R-INTAKE-12, R-INTAKE-13, R-INTAKE-14, R-INTAKE-18
 | FR-INTAKE-05-3 | always | A message in the control chat never holds a send. Only an owner reply to a customer that Deputy cannot tie to a chat holds sends (D30). |
 | FR-INTAKE-05-4 | WHEN | When the owner answers a customer from the WhatsApp Business app, the reply keeps its source "owner from the app", stays in the customer's chat and keeps holding sends as FR-INTAKE-04-11 and D30 say. |
 | FR-INTAKE-05-5 | WHEN | When the session asks the owner one or more questions with an owner number, Intake sends one message from the business number to that number that lists every question still open for it, numbered, records each new question with an id and the time, and returns the ids. |
-| FR-INTAKE-05-6 | IF | If the owner's 24 hour window with the business number is closed, Intake sends nothing, records nothing and returns "window closed", so the session asks in the Claude app and tells the owner to answer on WhatsApp. |
+| FR-INTAKE-05-6 | IF | If the owner's 24 hour window with the business number is closed, Intake sends nothing, records each question as not sent and returns "window closed" with the question ids, so the session asks in the Claude app and tells the owner to answer on WhatsApp. The owner's later answer closes the question as usual, and the next numbered message lists a question that was not sent. |
 | FR-INTAKE-05-7 | always | The owner's window with the business number is open for 24 hours after the latest message that owner number sent to the business number. |
 | FR-INTAKE-05-8 | IF | If the number is not an owner number, Intake sends nothing, records nothing and refuses. |
 | FR-INTAKE-05-9 | WHEN | When the session records an answer with the id of an open question and the owner's text, Intake closes that question and keeps the text with it. |
@@ -47,6 +47,9 @@ R-INTAKE-12, R-INTAKE-13, R-INTAKE-14, R-INTAKE-18
 | FR-INTAKE-05-24 | IF | If the text the session records is not contained in a message the owner sent in the control chat after the question was asked, Intake refuses, changes nothing and publishes nothing, so the go comes only from the owner's own words, as docs/adr/ADR-006-draft-send-path.md and Drafts ADR-003 say. The text is contained when it appears in the message on whole-token boundaries; the message may hold more, because one message can answer several questions. |
 | FR-INTAKE-05-25 | always | Each question the session asks names the customer chat it is about, and Intake records that chat id with the question. |
 | FR-INTAKE-05-26 | IF | If a question names a chat that is not a stored customer chat, either unknown or an owner's control chat, Intake sends nothing, records nothing and refuses with "unknown chat". |
+| FR-INTAKE-05-27 | WHEN | When Drafts or the session asks for the day's counts, Intake returns for each day the number of customer messages received and the number of owner questions asked, each counted once, and nothing else: no text, name or chat id. The day is the local date of the computer Deputy runs on (the runtime's resolved time zone), with no setting. (lead decision, 2026-11-24) |
+| FR-INTAKE-05-28 | WHEN | When Drafts asks for the answered questions at start, Intake returns each question that has an answer with the question id, the customer chat it names, the answer text and the time of the answer, so that an answer given while Drafts was not running is not lost. |
+| FR-INTAKE-05-29 | IF | If this process does not hold the lease, Intake records no business number at start. |
 
 ## Edge cases
 
