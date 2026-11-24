@@ -13,7 +13,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-SETUP-05-15 | WHILE | WHILE a session is open, Deputy shall keep the computer from sleeping through idleness, without administrator rights, and shall release that hold when the session ends (D36; no administrator rights is the owner's choice of option (i) in the keep-awake research of 2026-11-24, not yet in DECISIONS; Q-3 covers how). |
+| FR-SETUP-05-15 | WHILE | WHILE a session is open, Deputy shall keep the computer from sleeping through idleness, without administrator rights, and shall release that hold when the session ends (D36). |
 | FR-SETUP-05-16 | IF | IF the keep-awake hold cannot be started, THEN Deputy shall say so once and keep working. |
 
 ## Files
@@ -49,5 +49,4 @@ The hold is a child process that ends when this process ends, so a crash cannot 
 - The checklist text for the owner: SPEC-05-7. A hold that beats a closed lid: not possible without administrator rights, so not built.
 
 ## Open questions
-Q-1 (Owner: keep-awake is D36; no administrator rights is the owner's choice of option (i) in the keep-awake research): holding it with a child process that ends with Deputy is the proposed design, FRD-05 Q-3.
-Q-2 (Research): the Windows hold. Calling the system function through the runtime's foreign-function module is documented as experimental, so the child-process route needs a short test on a Windows machine before approval.
+Q-1 (Research): the Windows hold. Calling the system function through the runtime's foreign-function module is documented as experimental, so the child-process route needs a short test on a Windows machine before approval.

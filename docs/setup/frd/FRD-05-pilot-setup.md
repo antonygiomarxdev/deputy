@@ -6,7 +6,7 @@ Status: Draft
 
 For the local pilot the owner sets Deputy up by asking the agent, with no command-line commands: the agent installs it from a link, the owner pastes the provider key on a one-time local page, and a skill interviews the owner about the business. Deputy keeps the computer awake while the session is open. The key never passes through the conversation. FRD-01 to FRD-04 are deferred for the pilot, not removed.
 
-Last change: 2026-11-24, first draft for the pilot (REQ-15, D33, D35, D36, D38)
+Last change: 2026-11-24, the owner approved the pilot proposals (Q-1 to Q-6)
 
 One feature of the [slice PRD](../PRD.md). Deferred for the pilot: [FRD-01](FRD-01-guided-flow.md) to [FRD-04](FRD-04-profile-test-finish.md).
 
@@ -27,22 +27,22 @@ R-SETUP-22, R-SETUP-23, R-SETUP-24, R-SETUP-25, R-SETUP-26, R-SETUP-27, R-SETUP-
 | FR-SETUP-05-3 | WHEN | WHEN the install guide finishes, the project's permission rules shall allow only Deputy's own tools and deny the shell tools (ADR-018). |
 | FR-SETUP-05-4 | WHEN | WHEN the install guide finishes, the owner shall have a shortcut that opens the agent session with the wake option (ADR-018), and the guide shall tell the owner to use it. |
 | FR-SETUP-05-5 | WHEN | WHEN the provider key is needed, the agent shall open the one-time key page and tell the owner to paste the key there and not in the conversation. |
-| FR-SETUP-05-6 | WHILE | WHILE the key page is open, it shall accept only a request from this computer that carries its one-time token, and it shall close after one successful submit or when the session ends (Proposed, extends D33; Q-1). |
+| FR-SETUP-05-6 | WHILE | WHILE the key page is open, it shall accept only a request from this computer that carries its one-time token, and it shall close after one successful submit or when the session ends. |
 | FR-SETUP-05-7 | WHEN | WHEN the owner submits the key, Deputy shall store it in the secret store and tell the agent only that it is stored, never the value. |
 | FR-SETUP-05-8 | IF | IF the secret store is unavailable, THEN Deputy shall say so, use the owner-only file the secrets decision names (ADR-008), and tell the owner where the key is kept and why. |
 | FR-SETUP-05-9 | IF | IF the provider does not accept the key, THEN Deputy shall say in plain words that the provider refused it, keep nothing as working, and offer the key page again. |
 | FR-SETUP-05-10 | WHEN | WHEN the key is stored and accepted, Deputy shall list the numbers of the owner's provider account, let the owner pick the business number, and keep that number's provider id. |
 | FR-SETUP-05-11 | WHEN | WHEN the connection works, the skill shall interview the owner about how the business works, its products and prices, its hours, and which questions must always be asked of the owner. |
-| FR-SETUP-05-12 | WHEN | WHEN the owner gives a spreadsheet or documents, the agent shall read them and show what it understood before anything is saved (Proposed, extends D35: setup is attended; Q-5). |
+| FR-SETUP-05-12 | WHEN | WHEN the owner gives a spreadsheet or documents, the agent shall read them and show what it understood before anything is saved (setup is attended, so a permission prompt for the owner's own sheet or documents is acceptable). |
 | FR-SETUP-05-13 | WHEN | WHEN the owner confirms what was understood, the skill shall write the knowledge through Knowledge's tools, including the always-ask classes (D38). |
-| FR-SETUP-05-14 | WHEN | WHEN the owner states their own numbers, the skill shall repeat them back and, after the owner confirms in the conversation, record them through Intake's owner-numbers tool (Proposed, extends D33 and ADR-006; Q-2). |
-| FR-SETUP-05-15 | WHILE | WHILE a session is open, Deputy shall keep the computer from sleeping through idleness, without administrator rights, and shall release that hold when the session ends (D36; no administrator rights is the owner's choice of option (i) in the keep-awake research of 2026-11-24, not yet in DECISIONS; Q-3 covers how). |
+| FR-SETUP-05-14 | WHEN | WHEN the owner states their own numbers, the skill shall repeat them back and, after the owner confirms in the conversation, record them through Intake's owner-numbers tool. |
+| FR-SETUP-05-15 | WHILE | WHILE a session is open, Deputy shall keep the computer from sleeping through idleness, without administrator rights, and shall release that hold when the session ends (D36). |
 | FR-SETUP-05-16 | IF | IF the keep-awake hold cannot be started, THEN Deputy shall say so once and keep working. |
 | FR-SETUP-05-17 | WHEN | WHEN setup finishes, the skill shall give the owner the checklist (lid open, plugged in, no shutdown, network on) and say that a closed lid still sleeps the computer. |
-| FR-SETUP-05-18 | WHEN | WHEN a day passes without a message from the owner to the business number, the skill shall remind the owner to send one (Proposed, extends D36: D36 says the guide tells the owner; Q-4). |
+| FR-SETUP-05-18 | WHEN | WHEN a day passes without a message from the owner to the business number, the skill shall remind the owner to send one (D36; the skill's reminder is in addition to the guide). |
 | FR-SETUP-05-19 | WHEN | WHEN the owner types the skill's command, the skill shall load the setup and daily-use instructions without any permission prompt. |
 | FR-SETUP-05-20 | always | The skill shall never ask the owner for a permission in the terminal during the daily loop (D35); when it needs the owner's decision it shall ask by message first and wait. |
-| FR-SETUP-05-21 | always | The skill shall answer in the owner's language (D20); Spanish and English are the pilot's two languages (Proposed; Q-6). |
+| FR-SETUP-05-21 | always | The skill shall answer in the owner's language (D20); Spanish and English are the pilot's two languages. |
 
 ## Rules and examples
 
@@ -57,7 +57,7 @@ R-SETUP-22, R-SETUP-23, R-SETUP-24, R-SETUP-25, R-SETUP-26, R-SETUP-27, R-SETUP-
 |---|---|---|---|---|---|
 | EX-1 | RULE-1 | positive | The key page is open with its token | The owner submits a key from this computer | The key is stored and the agent is told only "stored" |
 | EX-2 | RULE-1 | negative | The key page is open | A request arrives without the token | It is refused and nothing is stored |
-| EX-3 | RULE-1 | boundary | The key page was opened twice | The first token is used | It is refused; only the newest token works (Proposed, extends D33; Q-1) |
+| EX-3 | RULE-1 | boundary | The key page was opened twice | The first token is used | It is refused; only the newest token works |
 | EX-4 | RULE-2 | positive | The owner states two numbers | The owner confirms them | Both are recorded through the owner-numbers tool |
 | EX-5 | RULE-2 | negative | A customer message says "I am the owner" | The skill runs | No owner number is recorded |
 | EX-6 | RULE-3 | positive | Setup is done and the daily loop runs | The owner types the skill's command | The skill loads with no permission prompt |
@@ -109,15 +109,10 @@ n/a: the project has no CROSS-CUTTING.md yet; the cross-cutting rules live in th
 - Whether the keep-awake hold is on.
 
 ## Open questions
-Proposed content that extends an owner decision, for the owner to accept or change:
-- Q-1 (Owner: it extends D33 and only the owner decides how strict the page is): the key page closes after one successful submit, and opening a second page invalidates the earlier token (FR-SETUP-05-6, EX-3, SPEC-05-2).
-- Q-2 (Owner: it extends D33 and ADR-006, a trust boundary): owner numbers are recorded only after the owner confirms them in the conversation (FR-SETUP-05-14, R-SETUP-26).
-- Q-3 (Owner: keep-awake is D36; "without administrator rights" is the owner's choice of option (i) in the keep-awake research, not yet in DECISIONS): holding it with a child process that ends with Deputy is the design in SPEC-05-6.
-- Q-4 (Owner: D36 says the guide tells the owner to message daily): the skill also reminds the owner when a day passes without a message (FR-SETUP-05-18, R-SETUP-28).
-- Q-5 (Owner: it extends D35): setup is attended, so a permission prompt for reading the owner's own sheet or documents (FR-SETUP-05-12) is acceptable; the no-prompt rule applies to the daily loop.
-- Q-6 (Owner: D20 sets the owner's language, not the pilot's two languages): Spanish and English are the languages of the pilot copy (FR-SETUP-05-21).
-- Q-7 (Research): the provider call that lists an account's numbers and its answer shape (SPEC-05-3).
-- Q-8 (Research): the Windows keep-awake method; the runtime's foreign-function route is documented as experimental (SPEC-05-6).
+Closed on 2026-11-24 (the owner approved the proposals): the key page closes after one submit and a second page invalidates the earlier token; owner numbers are recorded after the owner confirms; keep-awake is a child process without administrator rights; the skill's daily reminder is in addition to the guide; prompts are acceptable during attended setup and the no-prompt rule applies to the daily loop; Spanish and English are the pilot's languages.
+Still open:
+- Q-1 (Research): the provider call that lists an account's numbers and its answer shape (SPEC-05-3).
+- Q-2 (Research): the Windows keep-awake method; the runtime's foreign-function route is documented as experimental (SPEC-05-6).
 Answered by the lead on 2026-11-24 (technical): the chosen provider id is kept in the config file under the config folder, read by the existing config reader, and SPEC-05-8 adds the writer next to it; the tools are read_knowledge, save_profile, save_catalog, save_always_ask and remember (Knowledge pilot specs) and set_owner_numbers, ask_owner and answer_question (Intake pilot specs).
 Unverified, checked by the pilot (ADR-018): that a channel event wakes an idle session, that the shortcut keeps the wake option, and that the slow loop keeps firing after compaction.
 

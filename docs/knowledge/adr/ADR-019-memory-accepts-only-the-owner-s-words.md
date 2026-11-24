@@ -1,7 +1,7 @@
 # ADR-019: The memory accepts only the owner's words
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 `remember` appends to memory.md only when its source is the owner's words in the session or a message Deputy stored as written by an owner number in the control chat, and it refuses a text equal to a stored customer message. From [TP-04](../tp/TP-04-pilot-knowledge-files.md) TD-3.

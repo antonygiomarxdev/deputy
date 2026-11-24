@@ -1,6 +1,9 @@
 # Knowledge: slice PRD
 
-Status: Draft, with amendments from REQ-15 (pending owner approval) · Product overview: [PRODUCT.md](../PRODUCT.md)
+Status: Approved (2026-11-24)
+Approval: content qRjrcWfYwPQI; rests on ../PRODUCT.md EVnyDrK2H9_N
+
+Product overview: [PRODUCT.md](../PRODUCT.md)
 
 ## Purpose
 
