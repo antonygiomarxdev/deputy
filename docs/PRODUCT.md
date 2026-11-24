@@ -1,7 +1,7 @@
 # Deputy: product overview
 
 Status: Approved (2026-11-24)
-Approval: content qoVIg7T_YUu0
+Approval: content EVnyDrK2H9_N
 
 This file holds what every slice shares: the problem, users, principles, scope and the slice map. Each slice (one feature) lives in `src/<slice>/` with its own document chain in `docs/<slice>/`: **PRD** → **FRDs** (`frd/`, with acceptance criteria). Then, after the FRDs: the cross-cutting **TP** (Technical Proposal, `docs/tp/TP.md`), one or more **TPs per FRD** (`tp/`), an **ADR** for each choice (`docs/adr/` or `adr/`), one **spec** per FRD (`specs/`), and the implementation with ATDD (the FRD's acceptance criteria become tests first). The chain is the one in [Scriptorium](https://github.com/antonygiomarxdev/scriptorium). Decisions that span slices: [DECISIONS.md](DECISIONS.md) for product, `docs/adr/` for technical. Shared terms: [GLOSSARY.md](GLOSSARY.md). A slice's PRD cites the principles below; it does not restate them.
 
@@ -76,7 +76,7 @@ These hold for every feature. A requirement that breaks one needs an explicit ow
 
 ### Local pilot (REQ-15)
 
-The pilot runs on the owner's computer in Claude Code, with the owner's own subscription. Its daily loop:
+The pilot runs on the owner's computer in Claude Code, with the owner's own subscription. The pilot has no daily cap and no kill switch; a kill switch and hours come later. Its daily loop:
 
 ```mermaid
 flowchart TD
