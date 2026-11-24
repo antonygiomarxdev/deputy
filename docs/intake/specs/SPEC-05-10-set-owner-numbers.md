@@ -49,7 +49,7 @@ The owner's words are required and stored in the log entry's `command` field wit
 `bun test test/intake/unit/set-owner-numbers.test.ts`
 
 ## Out of scope
-The tool (SPEC-05-11). Removing a number (deferred until after the pilot, FR-INTAKE-05-23) and setting the business number by hand (the open question of FRD-05).
+The tool (SPEC-05-11). Removing a number (FR-INTAKE-05-23: deferred until after the pilot, nothing to build) and setting the business number by hand (the open question of FRD-05).
 
 ## Open questions
 None.

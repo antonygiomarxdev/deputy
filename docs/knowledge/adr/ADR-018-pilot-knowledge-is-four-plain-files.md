@@ -19,9 +19,9 @@ REQ-15 and decisions D32, D33 and D38 make setup a conversation in which the own
 - A save writes the whole new text to a temporary file in the same folder, copies the old file to `knowledge/history/<name>.<time>`, then renames the temporary file over the old one. Only the last 20 history copies of a file are kept.
 - Each save appends one line to `knowledge/changes.log`: time, file, the owner's words, a short summary.
 - Reads are never cached: each call reads the files as they are.
-- Proposed limits, not yet decided by the owner (FRD-04 Q-3 and TP-04 Q-3): 500 catalog items, 20000 characters for the profile and the always-ask list, 500 characters per memory entry, and 20 history copies per file.
+- Limits approved by the owner on 2026-11-24 (FRD-04 Open questions): 500 catalog items, 20000 characters for the profile and the always-ask list, 500 characters per memory entry, and 20 history copies per file.
 
 ## Consequences
 - Easier: the owner and the support person read and fix the files with any editor; no proposal state; no credentials of another service.
-- Harder: the whole text travels through the agent on each save, so a long catalog costs plan usage; the sizes are capped by the proposed limits above.
+- Harder: the whole text travels through the agent on each save, so a long catalog costs plan usage; the sizes are capped by the limits above.
 - Watch: on Windows a file open in another program can make the rename fail; the save then fails with the old text intact.
