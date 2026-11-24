@@ -35,9 +35,9 @@ FR-KNOWLEDGE-04-1, FR-KNOWLEDGE-04-8, FR-KNOWLEDGE-04-12, in `test/e2e`, written
 
 ## Build
 ```ts
-export function knowledgeWiring(d: { configDir: string; lease: OwnerLease; clock: Clock; intake: { isCustomerText: IsCustomerText; readChat: ReadChat }; ownerNumbers: { getOwnerNumbers: GetOwnerNumbers } }): { tools: ToolDefinition[] };
+export function knowledgeWiring(d: { configDir: string; lease: OwnerLease; clock: Clock; intake: { isCustomerText: IsCustomerText; readChat: ReadChat }; ownerNumbers: { getOwnerNumbers: GetOwnerNumbers } }): { tools: ToolDefinition[]; readAlwaysAsk: ReadAlwaysAsk };
 ```
-It builds `createIntakeMessageChecks` (SPEC-04-7) from the Intake ports, so the control chat source of `remember` works end to end.
+It also returns `readAlwaysAsk` for the Drafts wiring, and the hand edit of an always-ask line shows in it on the next call. It builds `createIntakeMessageChecks` (SPEC-04-7) from the Intake ports, so the control chat source of `remember` works end to end.
 
 ## Done when
 `bun test test/e2e`

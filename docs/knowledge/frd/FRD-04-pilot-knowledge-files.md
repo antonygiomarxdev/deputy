@@ -43,6 +43,7 @@ R-KNOWLEDGE-2, R-KNOWLEDGE-3, R-KNOWLEDGE-5, R-KNOWLEDGE-10, R-KNOWLEDGE-15, R-K
 | FR-KNOWLEDGE-04-21 | IF | IF the source is a control chat message and the text to remember is not contained, after normalization and on whole-token boundaries as FR-INTAKE-05-24 says, in that stored message, THEN Deputy shall refuse with `text_not_in_message` and change nothing. |
 | FR-KNOWLEDGE-04-22 | IF | IF the catalog file holds no readable table, for example after the owner edited it by hand, THEN `read_knowledge` shall return the text as it is with the notice `catalog_unreadable` and shall hide nothing. |
 | FR-KNOWLEDGE-04-23 | WHEN | WHEN the memory or the catalog has grown past what fits in each turn, the session shall tell the owner and propose a summary for the owner to approve, and Deputy shall not delete anything on its own. |
+| FR-KNOWLEDGE-04-24 | WHEN | WHEN another slice asks for the always-ask classes, Deputy shall return the entries of always-ask.md as a list, one entry for each non-blank line with its surrounding spaces and a leading list marker removed, and an empty list when the file is missing or holds no entry. |
 
 ## Rules and examples
 
@@ -53,7 +54,7 @@ R-KNOWLEDGE-2, R-KNOWLEDGE-3, R-KNOWLEDGE-5, R-KNOWLEDGE-10, R-KNOWLEDGE-15, R-K
 | RULE-3 | A catalog is accepted only as a table of at most 500 items with name, unit, price and availability. | FR-KNOWLEDGE-04-9 |
 | RULE-4 | A file is written whole, and only the last 20 previous versions are kept. | FR-KNOWLEDGE-04-11 |
 | RULE-5 | The memory grows only from the owner's own words, never from a copy of customer text. | FR-KNOWLEDGE-04-13, FR-KNOWLEDGE-04-14, FR-KNOWLEDGE-04-15, FR-KNOWLEDGE-04-16, FR-KNOWLEDGE-04-17, FR-KNOWLEDGE-04-21 |
-| RULE-6 | The always-ask list comes first, and a missing list says that setup is not finished. | FR-KNOWLEDGE-04-2, FR-KNOWLEDGE-04-5 |
+| RULE-6 | The always-ask list comes first, a missing list says that setup is not finished, and another slice reads the same list as entries. | FR-KNOWLEDGE-04-2, FR-KNOWLEDGE-04-5, FR-KNOWLEDGE-04-24 |
 | RULE-7 | When the memory and the catalog together pass what one turn can carry, `read_knowledge` says so and the session proposes a summary; nothing is shortened or deleted without the owner's approval, and an approved summary replaces the memory as a whole file. | FR-KNOWLEDGE-04-23 |
 
 | Example | Rule | Kind | Given | When | Then |
@@ -85,6 +86,8 @@ R-KNOWLEDGE-2, R-KNOWLEDGE-3, R-KNOWLEDGE-5, R-KNOWLEDGE-10, R-KNOWLEDGE-15, R-K
 | EX-25 | RULE-7 | positive | at the proposed limit of 12000 characters, memory.md holds 7000 characters and catalog.md holds 5001 | the agent calls `read_knowledge` | the result carries the notice `knowledge_long` with the sizes of both files, and memory.md and catalog.md are unchanged |
 | EX-26 | RULE-7 | boundary | at the proposed limit of 12000 characters, memory.md holds 7000 characters and catalog.md holds 5000 | the agent calls `read_knowledge` | the result carries no `knowledge_long` notice |
 | EX-27 | RULE-2 | positive | this is the owner process and memory.md holds 40 entries | the agent calls `save_memory` with a shorter summary text and the owner's words "Yes, use that summary" | memory.md holds the summary, the 40 entries are kept as a previous version, and the change is recorded with those words |
+| EX-28 | RULE-6 | positive | always-ask.md holds the lines "- Delivery price that depends on the address" and "Anything about refunds" and a blank line | another slice asks for the always-ask classes | the list holds "Delivery price that depends on the address" and "Anything about refunds" |
+| EX-29 | RULE-6 | negative | always-ask.md does not exist | another slice asks for the always-ask classes | the list is empty and no file is created |
 
 ## Decision table
 
@@ -194,13 +197,15 @@ Generated from the examples, decision table and states; never edited by hand.
 - **AC-25** (EX-25): Given at the proposed limit of 12000 characters, memory.md holds 7000 characters and catalog.md holds 5001, when the agent calls `read_knowledge`, then the result carries the notice `knowledge_long` with the sizes of both files, and memory.md and catalog.md are unchanged.
 - **AC-26** (EX-26): Given at the proposed limit of 12000 characters, memory.md holds 7000 characters and catalog.md holds 5000, when the agent calls `read_knowledge`, then the result carries no `knowledge_long` notice.
 - **AC-27** (EX-27): Given this is the owner process and memory.md holds 40 entries, when the agent calls `save_memory` with a shorter summary text and the owner's words "Yes, use that summary", then memory.md holds the summary, the 40 entries are kept as a previous version, and the change is recorded with those words.
-- **AC-28** (DT-1): Given the source kind is session, the words or message are words present, the text is not a customer message and its size is 1 to 500, when remember is called, then the entry is appended.
-- **AC-29** (DT-2): Given the source kind is session, the words or message are words empty, the text is not a customer message and its size is 1 to 500, when remember is called, then refused with `owner_words_missing`.
-- **AC-30** (DT-3): Given the source kind is control chat, the words or message are stored owner message, the text is not a customer message and its size is 1 to 500, when remember is called, then the entry is appended.
-- **AC-31** (DT-4): Given the source kind is control chat, the words or message are unknown or customer message, the text is not a customer message and its size is 1 to 500, when remember is called, then refused with `not_owner_message`.
-- **AC-32** (DT-5): Given the source kind is session or control chat, the words or message are valid, the text is a customer message and its size is 1 to 500, when remember is called, then refused with `copies_customer_text`.
-- **AC-33** (DT-6): Given the source kind is session or control chat, the words or message are valid, the text is not a customer message and its size is 0 or over 500, when remember is called, then refused with `text_size`.
-- **AC-34** (DT-7): Given the source kind is control chat, the words or message are stored owner message, text not in it (a word fragment is not in it), the text is not a customer message and its size is 1 to 500, when remember is called, then refused with `text_not_in_message`.
-- **AC-35** (ST-1): Given the file is Absent, when first accepted save, then present, with no previous version.
-- **AC-36** (ST-2): Given the file is Present, when accepted save, then present, the old text kept as a previous version.
-- **AC-37** (ST-3): Given the file is Absent or Present, when refused save, then unchanged, and no previous version is created.
+- **AC-28** (EX-28): Given always-ask.md holds the lines "- Delivery price that depends on the address" and "Anything about refunds" and a blank line, when another slice asks for the always-ask classes, then the list holds "Delivery price that depends on the address" and "Anything about refunds".
+- **AC-29** (EX-29): Given always-ask.md does not exist, when another slice asks for the always-ask classes, then the list is empty and no file is created.
+- **AC-30** (DT-1): Given the source kind is session, the words or message are words present, the text is not a customer message and its size is 1 to 500, when remember is called, then the entry is appended.
+- **AC-31** (DT-2): Given the source kind is session, the words or message are words empty, the text is not a customer message and its size is 1 to 500, when remember is called, then refused with `owner_words_missing`.
+- **AC-32** (DT-3): Given the source kind is control chat, the words or message are stored owner message, the text is not a customer message and its size is 1 to 500, when remember is called, then the entry is appended.
+- **AC-33** (DT-4): Given the source kind is control chat, the words or message are unknown or customer message, the text is not a customer message and its size is 1 to 500, when remember is called, then refused with `not_owner_message`.
+- **AC-34** (DT-5): Given the source kind is session or control chat, the words or message are valid, the text is a customer message and its size is 1 to 500, when remember is called, then refused with `copies_customer_text`.
+- **AC-35** (DT-6): Given the source kind is session or control chat, the words or message are valid, the text is not a customer message and its size is 0 or over 500, when remember is called, then refused with `text_size`.
+- **AC-36** (DT-7): Given the source kind is control chat, the words or message are stored owner message, text not in it (a word fragment is not in it), the text is not a customer message and its size is 1 to 500, when remember is called, then refused with `text_not_in_message`.
+- **AC-37** (ST-1): Given the file is Absent, when first accepted save, then present, with no previous version.
+- **AC-38** (ST-2): Given the file is Present, when accepted save, then present, the old text kept as a previous version.
+- **AC-39** (ST-3): Given the file is Absent or Present, when refused save, then unchanged, and no previous version is created.

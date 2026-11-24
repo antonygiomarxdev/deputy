@@ -22,7 +22,7 @@ Fixed elsewhere, so not decided again:
 
 ## Requirements served
 
-FR-KNOWLEDGE-04-1, FR-KNOWLEDGE-04-2, FR-KNOWLEDGE-04-3, FR-KNOWLEDGE-04-4, FR-KNOWLEDGE-04-5, FR-KNOWLEDGE-04-6, FR-KNOWLEDGE-04-7, FR-KNOWLEDGE-04-8, FR-KNOWLEDGE-04-9, FR-KNOWLEDGE-04-10, FR-KNOWLEDGE-04-11, FR-KNOWLEDGE-04-12, FR-KNOWLEDGE-04-13, FR-KNOWLEDGE-04-14, FR-KNOWLEDGE-04-15, FR-KNOWLEDGE-04-16, FR-KNOWLEDGE-04-17, FR-KNOWLEDGE-04-18, FR-KNOWLEDGE-04-19, FR-KNOWLEDGE-04-20, FR-KNOWLEDGE-04-21, FR-KNOWLEDGE-04-22, FR-KNOWLEDGE-04-23.
+FR-KNOWLEDGE-04-1, FR-KNOWLEDGE-04-2, FR-KNOWLEDGE-04-3, FR-KNOWLEDGE-04-4, FR-KNOWLEDGE-04-5, FR-KNOWLEDGE-04-6, FR-KNOWLEDGE-04-7, FR-KNOWLEDGE-04-8, FR-KNOWLEDGE-04-9, FR-KNOWLEDGE-04-10, FR-KNOWLEDGE-04-11, FR-KNOWLEDGE-04-12, FR-KNOWLEDGE-04-13, FR-KNOWLEDGE-04-14, FR-KNOWLEDGE-04-15, FR-KNOWLEDGE-04-16, FR-KNOWLEDGE-04-17, FR-KNOWLEDGE-04-18, FR-KNOWLEDGE-04-19, FR-KNOWLEDGE-04-20, FR-KNOWLEDGE-04-21, FR-KNOWLEDGE-04-22, FR-KNOWLEDGE-04-23, FR-KNOWLEDGE-04-24.
 
 ## Decisions
 
@@ -107,6 +107,7 @@ Four files, `knowledge/history/<name>.<time>` copies (20 per file) and `knowledg
 | `save_profile`, `save_always_ask`, `save_memory` | `text`, `owner_words` | summary with the new size; or a refusal code |
 | `save_catalog` | `text`, `owner_words` | summary with items added, removed, changed; or a refusal code |
 | `remember` | `text`, `source` (`{kind:"session", owner_words}` or `{kind:"control_chat", message_id}`); with a control chat source the text must be contained in that stored message on whole-token boundaries (FR-INTAKE-05-24) | the entry that was appended; or a refusal code |
+| `readAlwaysAsk()` (an export of `src/knowledge/index.ts` for other slices, not a tool) | none | the entries of always-ask.md as a list of text, empty when missing; Drafts' `send_answer` reads it |
 
 Refusal codes: `not_owner`, `owner_words_missing`, `owner_words_size`, `catalog_unreadable`, `too_large`, `not_owner_message`, `text_not_in_message`, `copies_customer_text`, `text_size`. No tool input is a path.
 
