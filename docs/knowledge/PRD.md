@@ -1,6 +1,6 @@
 # Knowledge: slice PRD
 
-Status: Approved (2026-11-18) · Product overview: [PRODUCT.md](../PRODUCT.md)
+Status: Draft, with amendments from REQ-15 (pending owner approval) · Product overview: [PRODUCT.md](../PRODUCT.md)
 
 ## Purpose
 
@@ -30,6 +30,14 @@ Knowledge is what the agent knows about the owner's business, so its drafts soun
 - **R-KNOWLEDGE-13.** The owner can export all knowledge and wipe all of it. Wiping needs the owner's explicit confirmation. It covers the profile, the catalog and the learned items. A catalog kept in the owner's own spreadsheet is not deleted; Deputy disconnects from it.
 - **R-KNOWLEDGE-14.** The owner can create the business profile and the catalog from templates, and edit them at any time.
 
+Pilot (REQ-15, decisions D32 to D38). The pilot keeps knowledge in plain files and lets the session write them. R-KNOWLEDGE-15 to R-KNOWLEDGE-19 apply to the pilot; the proposal and spreadsheet mechanism of R-KNOWLEDGE-11 and R-KNOWLEDGE-12 is not built for it.
+
+- **R-KNOWLEDGE-15.** Knowledge lives in four plain text files on the owner's computer, in the folder `knowledge` of the configuration folder: the profile (how the business works), the catalog (items, prices, availability), the memory (what the owner taught the agent) and the always-ask list (the classes of question the owner agreed to be asked about). The owner can open and edit them.
+- **R-KNOWLEDGE-16.** The agent reads all four files with one call. A price or availability that is empty is reported as "to be confirmed", never guessed (R-KNOWLEDGE-2, R-KNOWLEDGE-3).
+- **R-KNOWLEDGE-17.** The agent saves the profile, the catalog and the always-ask list as whole files, after showing the owner the text and with the owner's words. Deputy keeps the previous version. The catalog may come from whatever the owner gives (a spreadsheet, a photo, a document), read by the session through the owner's own agent connectors; Deputy holds no credentials of any other service and reads no spreadsheet itself.
+- **R-KNOWLEDGE-18.** The memory grows only from the owner's own answers, given in the control chat or in the session, each entry with its date. Text written by a customer never reaches a knowledge file, directly or through the agent's summary of it.
+- **R-KNOWLEDGE-19.** The always-ask list is returned first, as the classes the agent must ask the owner about before answering (for example a delivery price that depends on the address). Knowledge keeps and returns the list; it does not decide whether a question belongs to a class.
+
 ## Principles honored
 
 - **Principle 5** (it knows what the owner knows): profile, catalog and learned knowledge are the owner's past decisions made available to the agent (R-KNOWLEDGE-1, 2, 4, 8).
@@ -40,7 +48,7 @@ Knowledge is what the agent knows about the owner's business, so its drafts soun
 
 ## Out of scope
 
-- Autopilot: Knowledge never lets Deputy answer without the owner's go.
+- Sending: Knowledge never sends. Whether an answer the knowledge backs may go without the owner's go is decided in Drafts (D31); Knowledge supplies the backing and the always-ask list.
 - Learning from customer messages, from the owner's chats answered in the phone app, or from a customer's reaction to a reply. v1 learns only from owner decisions on drafts.
 - Sharing or syncing knowledge between owners or between machines.
 - Optional catalog in the owner's own spreadsheet: allowed by the v1 scope in PRODUCT.md; its handling belongs to the slice's FRDs and TP, and the catalog is then the only knowledge that leaves the machine.
