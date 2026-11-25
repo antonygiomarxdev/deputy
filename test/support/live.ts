@@ -34,7 +34,7 @@ export async function postDelivery(
 export async function switchToKapso(first: Harness, fakeUrl: string, receivingMode: string | null = null): Promise<Harness> {
   await first.close();
   const db = new Database(join(first.dataDir, "deputy.db"));
-  db.run("INSERT INTO owner_numbers (number, kind, label, added_at) VALUES ('+50588880000', 'business', '', 1)");
+  db.run("INSERT INTO owner_numbers (number, kind, label, added_at) VALUES ('+12125550100', 'business', '', 1)");
   db.close();
   writeConfig(first.configDir, {
     provider: "kapso",

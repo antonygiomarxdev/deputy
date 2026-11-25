@@ -16,18 +16,18 @@ const entry = (raw: string, kind: "business" | "extra"): OwnerNumberEntry => ({
 
 test("has is true for the business number and the extra, false for a third", () => {
   const o = OwnerNumbers.empty();
-  o.add(entry("+50588880000", "business"));
-  o.add(entry("+50599990000", "extra"));
-  expect(o.has(phone("+50588880000"))).toBe(true);
-  expect(o.has(phone("+50599990000"))).toBe(true);
-  expect(o.has(phone("+50577770000"))).toBe(false);
+  o.add(entry("+12125550100", "business"));
+  o.add(entry("+12125550102", "extra"));
+  expect(o.has(phone("+12125550100"))).toBe(true);
+  expect(o.has(phone("+12125550102"))).toBe(true);
+  expect(o.has(phone("+12125550108"))).toBe(false);
   expect(o.has(null)).toBe(false);
 });
 
 test("a second business number is refused", () => {
   const o = OwnerNumbers.empty();
-  o.add(entry("+50588880000", "business"));
-  expect(o.add(entry("+50577770000", "business"))).toEqual({ ok: false, reason: "second_business" });
+  o.add(entry("+12125550100", "business"));
+  expect(o.add(entry("+12125550108", "business"))).toEqual({ ok: false, reason: "second_business" });
 });
 
 test("the same line twice is a duplicate", () => {
@@ -38,14 +38,14 @@ test("the same line twice is a duplicate", () => {
 
 test("removing an absent number is not_present; removing a present one works", () => {
   const o = OwnerNumbers.empty();
-  expect(o.remove(phone("+50588880000"))).toEqual({ ok: false, reason: "not_present" });
-  o.add(entry("+50588880000", "extra"));
-  expect(o.remove(phone("+50588880000"))).toEqual({ ok: true });
+  expect(o.remove(phone("+12125550100"))).toEqual({ ok: false, reason: "not_present" });
+  o.add(entry("+12125550100", "extra"));
+  expect(o.remove(phone("+12125550100"))).toEqual({ ok: true });
   expect(o.entries()).toEqual([]);
 });
 
 test("an empty set is valid and has nobody", () => {
   const o = OwnerNumbers.empty();
-  expect(o.has(phone("+50588880000"))).toBe(false);
+  expect(o.has(phone("+12125550100"))).toBe(false);
   expect(o.business()).toBeNull();
 });
