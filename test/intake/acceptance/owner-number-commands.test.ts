@@ -14,10 +14,10 @@ import { FakeClock } from "../../support/fake-clock";
 import { InMemoryOwnerLease, type LeaseHolder } from "../../support/in-memory-owner-lease";
 import { providerMessage } from "../../support/intake-fixtures";
 
-const BUSINESS = "+50588880000";
-const N2 = "+505 8888 2222";
-const N3 = "+505 8888 3333";
-const N4 = "+505 8888 4444";
+const BUSINESS = "+12125550100";
+const N2 = "+1 212 555 0103";
+const N3 = "+1 212 555 0106";
+const N4 = "+1 212 555 0107";
 const NOW = 50_000;
 const phone = (raw: string): PhoneNumber => {
   const n = PhoneNumber.fromInternational(raw);
@@ -42,7 +42,7 @@ beforeEach(async () => {
   settings = new InMemoryIntakeSettingsRepository();
   service = new StoreMessages({ clock });
   apply = new ApplyPendingChangesUseCase({ lease, unitOfWork: store.unitOfWork, parser: new LibphonenumberParser(), settings, clock });
-  await settings.setCountry("NI", 1);
+  await settings.setCountry("US", 1);
   await store.repos.owners.save(OwnerNumbers.of([entry(BUSINESS, "business")]), []);
 });
 
@@ -68,7 +68,7 @@ describe("ApplyPendingChanges", () => {
     expect(await sourceOf("old")).toBe("customer");
     expect(await sourceOf("new")).toBe("owner_app");
     expect(await store.repos.owners.log()).toEqual([
-      { at: NOW, action: "add", number: "+50588882222", kind: "extra", label: "", command: `deputy config set owner-numbers "${N2}"` },
+      { at: NOW, action: "add", number: "+12125550103", kind: "extra", label: "", command: `deputy config set owner-numbers "${N2}"` },
     ]);
     expect(await unapplied()).toBe(0);
   });
@@ -83,7 +83,7 @@ describe("ApplyPendingChanges", () => {
     expect(await sourceOf("old")).toBe("owner_app");
     expect(await sourceOf("new")).toBe("customer");
     expect(await store.repos.owners.log()).toEqual([
-      { at: NOW, action: "remove", number: "+50588882222", kind: "extra", label: "", command: `deputy config remove owner-number "${N2}"` },
+      { at: NOW, action: "remove", number: "+12125550103", kind: "extra", label: "", command: `deputy config remove owner-number "${N2}"` },
     ]);
   });
 
@@ -93,7 +93,7 @@ describe("ApplyPendingChanges", () => {
     row("owner_number_remove", BUSINESS);
     row("owner_number_remove", N4);
     expect(await apply.execute()).toEqual({ applied: 2 });
-    expect(await numbers()).toEqual([`business ${BUSINESS}`, "extra +50588882222"]);
+    expect(await numbers()).toEqual([`business ${BUSINESS}`, "extra +12125550103"]);
     expect(await store.repos.owners.log()).toEqual([]);
     expect(await unapplied()).toBe(0);
     const lines = log.mock.calls.map((c) => String(c[0]));
@@ -107,25 +107,25 @@ describe("ApplyPendingChanges", () => {
     await setOwners(entry(BUSINESS, "business"), entry(N4, "extra"));
     row("owner_numbers", `${N2}, ${N3}`);
     await apply.execute();
-    expect(await numbers()).toEqual([`business ${BUSINESS}`, "extra +50588882222", "extra +50588883333"]);
+    expect(await numbers()).toEqual([`business ${BUSINESS}`, "extra +12125550103", "extra +12125550106"]);
     const log = await store.repos.owners.log();
-    expect(log.map((l) => `${l.action} ${l.number}`)).toEqual(["remove +50588884444", "add +50588882222", "add +50588883333"]);
+    expect(log.map((l) => `${l.action} ${l.number}`)).toEqual(["remove +12125550107", "add +12125550103", "add +12125550106"]);
   });
 
   test("FR-INTAKE-04-1: a business_number row with another number removes the old and adds the new (two log rows); an empty value or the same line changes nothing", async () => {
-    row("business_number", "+505 8888 7777");
+    row("business_number", "+1 212 555 0105");
     await apply.execute();
-    expect(await numbers()).toEqual(["business +50588887777"]);
+    expect(await numbers()).toEqual(["business +12125550105"]);
     expect((await store.repos.owners.log()).map((l) => `${l.action} ${l.kind} ${l.number}`)).toEqual([
       `remove business ${BUSINESS}`,
-      "add business +50588887777",
+      "add business +12125550105",
     ]);
 
     const log = stderr();
     row("business_number", "");
-    row("business_number", "+50588887777");
+    row("business_number", "+12125550105");
     await apply.execute();
-    expect(await numbers()).toEqual(["business +50588887777"]);
+    expect(await numbers()).toEqual(["business +12125550105"]);
     expect(await store.repos.owners.log()).toHaveLength(2);
     expect(log).not.toHaveBeenCalled(); // an empty value is not an error, it is no change
     log.mockRestore();
@@ -135,17 +135,17 @@ describe("ApplyPendingChanges", () => {
     await setOwners(entry(BUSINESS, "business"), entry(N2, "extra"));
     row("business_number", N2.replace(/ /g, ""));
     await apply.execute();
-    expect(await numbers()).toEqual(["business +50588882222"]);
+    expect(await numbers()).toEqual(["business +12125550103"]);
     expect((await store.repos.owners.log()).map((l) => `${l.action} ${l.kind}`)).toEqual(["remove business", "remove extra", "add business"]);
   });
 
   test("FR-INTAKE-04-14: a number with no country code and no default country is refused: applied, no change, a line on stderr", async () => {
     const log = stderr();
-    await settings.setCountry("NI", 1);
+    await settings.setCountry("US", 1);
     const noCountry = new InMemoryIntakeSettingsRepository();
     const strict = new ApplyPendingChangesUseCase({ lease, unitOfWork: store.unitOfWork, parser: new LibphonenumberParser(), settings: noCountry, clock });
-    row("owner_numbers", "8888 0000");
-    row("business_number", "8888 5555");
+    row("owner_numbers", "212 555 0100");
+    row("business_number", "212 555 0109");
     expect(await strict.execute()).toEqual({ applied: 2 });
     expect(await numbers()).toEqual([`business ${BUSINESS}`]);
     expect(await store.repos.owners.log()).toEqual([]);
@@ -157,7 +157,7 @@ describe("ApplyPendingChanges", () => {
 
   test("a business number is parsed with no default country, even when a country is set", async () => {
     const log = stderr();
-    row("business_number", "8888 5555"); // the country setting is NI, but a business number must carry its country code
+    row("business_number", "212 555 0109"); // the country setting is US, but a business number must carry its country code
     await apply.execute();
     expect(await numbers()).toEqual([`business ${BUSINESS}`]);
     expect(String(log.mock.calls[0]?.[0])).toContain("needs_country_code");
@@ -229,18 +229,18 @@ describe("DescribeNumber", () => {
     new DescribeNumberUseCase({ parser: new LibphonenumberParser(), owners: store.repos.owners, messages: store.repos.messages });
 
   test("FR-INTAKE-04-14: a local number with a default country shows its E.164, whether it is an owner number, and its customer messages", async () => {
-    await put(from("c1", "+50588880001"), from("c2", "+50588880001"));
-    const r = await describeNumber().execute({ raw: "8888 0001", defaultCountry: "NI" });
-    expect(r).toEqual({ e164: "+50588880001", isOwnerNumber: false, customerMessages: 2 });
+    await put(from("c1", "+12125550101"), from("c2", "+12125550101"));
+    const r = await describeNumber().execute({ raw: "212 555 0101", defaultCountry: "US" });
+    expect(r).toEqual({ e164: "+12125550101", isOwnerNumber: false, customerMessages: 2 });
   });
 
   test("with no default country and no plus it asks for a country code; text that is no number is unparseable", async () => {
-    expect(await describeNumber().execute({ raw: "8888 0000", defaultCountry: null })).toEqual({ invalid: "needs_country_code" });
-    expect(await describeNumber().execute({ raw: "abc", defaultCountry: "NI" })).toEqual({ invalid: "unparseable" });
+    expect(await describeNumber().execute({ raw: "212 555 0100", defaultCountry: null })).toEqual({ invalid: "needs_country_code" });
+    expect(await describeNumber().execute({ raw: "abc", defaultCountry: "US" })).toEqual({ invalid: "unparseable" });
   });
 
   test("an owner number is recognized, and writes nothing", async () => {
-    const r = await describeNumber().execute({ raw: "8888 0000", defaultCountry: "NI" });
+    const r = await describeNumber().execute({ raw: "212 555 0100", defaultCountry: "US" });
     expect(r).toEqual({ e164: BUSINESS, isOwnerNumber: true, customerMessages: 0 });
     expect(await store.repos.owners.log()).toEqual([]);
   });
@@ -255,7 +255,7 @@ describe("GetOwnerNumbers", () => {
     row("owner_numbers", `${N2}, ${N3}`, "second command", 2_000);
     await apply.execute();
     const view = await get().execute({ withLog: true });
-    expect(view.numbers.map((n) => `${n.kind} ${n.number}`)).toEqual([`business ${BUSINESS}`, "extra +50588882222", "extra +50588883333"]);
+    expect(view.numbers.map((n) => `${n.kind} ${n.number}`)).toEqual([`business ${BUSINESS}`, "extra +12125550103", "extra +12125550106"]);
     expect(view.log?.map((l) => l.command)).toEqual(["first command", "second command"]);
     expect("log" in (await get().execute({}))).toBe(false);
   });

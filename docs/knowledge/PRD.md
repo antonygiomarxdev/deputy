@@ -1,7 +1,7 @@
 # Knowledge: slice PRD
 
 Status: Approved (2026-11-24)
-Approval: content qRjrcWfYwPQI; rests on ../PRODUCT.md EVnyDrK2H9_N
+Approval: content qRjrcWfYwPQI; rests on ../PRODUCT.md 9kKsOKhERsSe
 
 Product overview: [PRODUCT.md](../PRODUCT.md)
 

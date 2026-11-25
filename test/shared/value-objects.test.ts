@@ -18,13 +18,13 @@ test("sameLine: AR, MX, BR pairs", () => {
   expect(p("+5511987654321").sameLine(p("+551187654321"))).toBe(true);
 });
 
-test("lineKey of NI is its e164", () => {
-  expect(p("+50588880000").lineKey()).toBe("+50588880000");
+test("lineKey of US is its e164", () => {
+  expect(p("+12125550100").lineKey()).toBe("+12125550100");
 });
 
 test("fromInternational normalizes and rejects", () => {
-  for (const raw of ["505-88880000", "50588880000", "+505 8888 0000"]) {
-    expect(p(raw).digits).toBe("50588880000");
+  for (const raw of ["1-212-555-0100", "12125550100", "+1 212 555 0100"]) {
+    expect(p(raw).digits).toBe("12125550100");
   }
   for (const raw of ["12345678", "1234567890123456", "abc12345678"]) {
     expect(PhoneNumber.fromInternational(raw)).toBeNull();

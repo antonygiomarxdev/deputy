@@ -1,6 +1,6 @@
 # Launch gates
 
-Verified 2026-11-18. Bun 1.4.4, Windows 11 Home 10.0.26300 (x64). Compiled with `bun build --compile gates.ts --outfile gates.exe`. Deps: jose 6.2.17, libphonenumber-js 1.13.16, papaparse 5.7.1, country-to-currency 3.0.2. Script and outputs: scratchpad `gates/` (`gates.ts`, `src.txt`, `bin.txt`). Source and compiled outputs were identical line for line.
+Verified 2026-11-18. The example values in the evidence lines (phone number, country, currency) were neutralized after the run; the results are unchanged. Bun 1.4.4, Windows 11 Home 10.0.26300 (x64). Compiled with `bun build --compile gates.ts --outfile gates.exe`. Deps: jose 6.2.17, libphonenumber-js 1.13.16, papaparse 5.7.1, country-to-currency 3.0.2. Script and outputs: scratchpad `gates/` (`gates.ts`, `src.txt`, `bin.txt`). Source and compiled outputs were identical line for line.
 
 | Gate | Source | Compiled | Evidence (command and exact output line) |
 |---|---|---|---|
@@ -11,10 +11,10 @@ Verified 2026-11-18. Bun 1.4.4, Windows 11 Home 10.0.26300 (x64). Compiled with 
 | 4b. `Bun.spawn(["npx","--version"])` | works | works | `4.npx: {"code":0,"out":"11.19.1","err":""}` |
 | 4c. `Bun.spawn(["npx.exe",...])` | fails | fails | `4.npx.exe: FAIL Executable not found in $PATH: "npx.exe"` (no such file; expected) |
 | 4d. `Bun.spawn(["cmd","/c","npx","--version"])` | works | works | `4.shell:true-ish(cmd /c): {"code":0,"out":"11.19.1"}` |
-| 5a. libphonenumber-js | pass | pass | `5.libphonenumber: {"country":"NI","intl":"+505 8888 7777","valid":true}` |
+| 5a. libphonenumber-js | pass | pass | `5.libphonenumber: {"country":"US","intl":"+1 212 555 0105","valid":true}` |
 | 5b. papaparse | pass | pass | `5.papaparse: [{"a":"1","b":"2"}]` |
-| 5c. country-to-currency | pass | pass | `5.country-to-currency: {"NI":"NIO","IN":"INR"}` |
-| 6a. `Intl.supportedValuesOf('currency')` | pass | pass | `6.currency: {"n":307,"hasNIO":true,"hasINR":true}` |
+| 5c. country-to-currency | pass | pass | `5.country-to-currency: {"US":"USD","IN":"INR"}` |
+| 6a. `Intl.supportedValuesOf('currency')` | pass | pass | `6.currency: {"n":307,"hasUSD":true,"hasINR":true}` |
 | 6b. Time zones Chicago / Kolkata | pass | pass | `6.tz: {"chicago":"01/06/2026, 07:00:00 GMT-5","kolkata":"01/06/2026, 17:30:00 GMT+5:30"}` (input 2026-06-01T12:00Z) |
 | 6c. `Intl.Segmenter` graphemes | pass | pass | `6.segmenter: {"graphemes":4,"codepoints":9}` for `a`, family emoji, `é`, flag |
 

@@ -41,19 +41,19 @@ const chatText = async (h: Harness, chat: string) => textOf(await call(h.client,
 
 test("FR-INTAKE-01-3: a tester's message to /dev/deliver is stored and get_chat shows it; a body without chat is a 400 naming it", async () => {
   const h = await boot();
-  const res = await post(h, "/dev/deliver", { chat: "50581112222", from: "50581112222", text: "How much is the cake?" });
+  const res = await post(h, "/dev/deliver", { chat: "12125550111", from: "12125550111", text: "How much is the cake?" });
   expect(res.status).toBe(200);
   expect(await res.json()).toEqual({ result: "stored" });
-  const text = await chatText(h, "+50581112222");
+  const text = await chatText(h, "+12125550111");
   expect(text).toContain("<customer_text>How much is the cake?</customer_text>");
   expect(text).toContain("customer");
 
-  const bad = await post(h, "/dev/deliver", { from: "50581112222", text: "no chat here" });
+  const bad = await post(h, "/dev/deliver", { from: "12125550111", text: "no chat here" });
   expect(bad.status).toBe(400);
   expect((await bad.json()) as { fields: string[] }).toMatchObject({ fields: ["chat"] });
-  expect((await chatText(h, "+50581112222")).split("\n")).toHaveLength(1);
+  expect((await chatText(h, "+12125550111")).split("\n")).toHaveLength(1);
 
-  const badNumber = await post(h, "/dev/deliver", { chat: "not a number", from: "50581112222", text: "x" });
+  const badNumber = await post(h, "/dev/deliver", { chat: "not a number", from: "12125550111", text: "x" });
   expect(badNumber.status).toBe(400);
   expect(await badNumber.json()).toEqual({ error: "invalid_chat" });
 });
@@ -62,32 +62,32 @@ test("FR-INTAKE-01-5: unreadable, transcript, repeated, reversed, owner, history
   const h = await boot();
   const deliver = (chat: string, over: Record<string, unknown>) => post(h, "/dev/deliver", { chat, from: chat, text: "", ...over });
 
-  await deliver("50510000001", { type: "image" });
-  expect(await chatText(h, "+50510000001")).toContain("[image, not readable]");
+  await deliver("12125550151", { type: "image" });
+  expect(await chatText(h, "+12125550151")).toContain("[image, not readable]");
 
-  await deliver("50510000002", { type: "audio", transcript: "two kilos of cheese" });
-  expect(await chatText(h, "+50510000002")).toContain("voice note, transcript: two kilos of cheese");
+  await deliver("12125550152", { type: "audio", transcript: "two kilos of cheese" });
+  expect(await chatText(h, "+12125550152")).toContain("voice note, transcript: two kilos of cheese");
 
-  expect(await (await deliver("50510000003", { text: "once", providerMessageId: "dev-r" })).json()).toEqual({ result: "stored" });
-  expect(await (await deliver("50510000003", { text: "once", providerMessageId: "dev-r" })).json()).toEqual({ result: "duplicate" });
-  expect((await chatText(h, "+50510000003")).split("\n")).toHaveLength(1);
+  expect(await (await deliver("12125550153", { text: "once", providerMessageId: "dev-r" })).json()).toEqual({ result: "stored" });
+  expect(await (await deliver("12125550153", { text: "once", providerMessageId: "dev-r" })).json()).toEqual({ result: "duplicate" });
+  expect((await chatText(h, "+12125550153")).split("\n")).toHaveLength(1);
 
-  await deliver("50510000004", { text: "second", sentAt: 2_000 });
-  await deliver("50510000004", { text: "first", sentAt: 1_000 });
-  const order = (await chatText(h, "+50510000004")).split("\n");
+  await deliver("12125550154", { text: "second", sentAt: 2_000 });
+  await deliver("12125550154", { text: "first", sentAt: 1_000 });
+  const order = (await chatText(h, "+12125550154")).split("\n");
   expect(order[0]).toContain("first");
   expect(order[1]).toContain("second");
 
-  await deliver("50510000005", { text: "from the shop", owner: true });
-  expect(await chatText(h, "+50510000005")).toContain("owner from the app");
+  await deliver("12125550155", { text: "from the shop", owner: true });
+  expect(await chatText(h, "+12125550155")).toContain("owner from the app");
 
-  await deliver("50510000006", { text: "ancient", history: true });
-  expect(await chatText(h, "+50510000006")).toContain("history");
+  await deliver("12125550156", { text: "ancient", history: true });
+  expect(await chatText(h, "+12125550156")).toContain("history");
 
-  const delivery = { chat: "50510000007", from: "50510000007", text: "forged" };
+  const delivery = { chat: "12125550157", from: "12125550157", text: "forged" };
   expect((await post(h, "/dev/forge", { ...delivery, signature: "sha256=00" })).status).toBe(401);
   expect((await post(h, "/dev/forge", delivery)).status).toBe(401);
-  expect((await call(h.client, "get_chat", { chat: "+50510000007" })).isError).toBe(true);
+  expect((await call(h.client, "get_chat", { chat: "+12125550157" })).isError).toBe(true);
   const rejected = textOf(await call(h.client, "rejected_deliveries"));
   expect(rejected).toContain("bad_signature");
   expect(rejected).toContain("missing_signature");
@@ -96,15 +96,15 @@ test("FR-INTAKE-01-5: unreadable, transcript, repeated, reversed, owner, history
 
 test("FR-INTAKE-01-6: a body held with /dev/hold is found by the next catch-up, once", async () => {
   const h = await boot();
-  const res = await post(h, "/dev/hold", { chat: "50520000001", from: "50520000001", text: "held while away" });
+  const res = await post(h, "/dev/hold", { chat: "12125550120", from: "12125550120", text: "held while away" });
   expect(res.status).toBe(204);
-  expect((await call(h.client, "get_chat", { chat: "+50520000001" })).isError).toBe(true);
+  expect((await call(h.client, "get_chat", { chat: "+12125550120" })).isError).toBe(true);
 
   const answer = await call(h.client, "check_messages");
   expect(answer.isError).toBeFalsy();
-  expect(await chatText(h, "+50520000001")).toContain("<customer_text>held while away</customer_text>");
+  expect(await chatText(h, "+12125550120")).toContain("<customer_text>held while away</customer_text>");
   await call(h.client, "check_messages");
-  expect((await chatText(h, "+50520000001")).split("\n")).toHaveLength(1);
+  expect((await chatText(h, "+12125550120")).split("\n")).toHaveLength(1);
 });
 
 test("FR-INTAKE-01-9: under Kapso every /dev path is a 404 with a dev_entry_refused note and nothing stored", async () => {
@@ -114,17 +114,17 @@ test("FR-INTAKE-01-9: under Kapso every /dev path is a 404 with a dev_entry_refu
   await first.close();
   started.pop();
   const db = new Database(join(first.dataDir, "deputy.db"));
-  db.run("INSERT INTO owner_numbers (number, kind, label, added_at) VALUES ('+50588880000', 'business', '', 1)");
+  db.run("INSERT INTO owner_numbers (number, kind, label, added_at) VALUES ('+12125550100', 'business', '', 1)");
   db.close();
   writeConfig(first.configDir, { provider: "kapso", kapso_phone_number_id: "pn-1", receiving_mode: "live" });
   writeFileSync(join(first.configDir, "secrets.env"), "kapso-api-key=key-1\nkapso-webhook-secret=hook-secret\n");
   const h = await boot({ DEPUTY_KAPSO_BASE_URL: fake.url, DEPUTY_PORT: String(first.port) }, { dataDir: first.dataDir, configDir: first.configDir });
 
-  const body = { chat: "50581112222", from: "50581112222", text: "should not land" };
+  const body = { chat: "12125550111", from: "12125550111", text: "should not land" };
   expect((await post(h, "/dev/deliver", body)).status).toBe(404);
   expect((await post(h, "/dev/hold", body)).status).toBe(404);
   expect((await post(h, "/dev/forge", body)).status).toBe(404);
-  expect((await call(h.client, "get_chat", { chat: "+50581112222" })).isError).toBe(true);
+  expect((await call(h.client, "get_chat", { chat: "+12125550111" })).isError).toBe(true);
   const rejected = textOf(await call(h.client, "rejected_deliveries"));
   expect(rejected.match(/dev_entry_refused/g)).toHaveLength(3);
   expect(rejected).not.toContain("should not land");
@@ -132,7 +132,7 @@ test("FR-INTAKE-01-9: under Kapso every /dev path is a 404 with a dev_entry_refu
 
 test("a web page cannot plant a message: an Origin, a plain-text body or a foreign Host is refused and nothing is stored", async () => {
   const h = await boot();
-  const body = JSON.stringify({ chat: "50530000001", from: "50530000001", text: "planted by a page" });
+  const body = JSON.stringify({ chat: "12125550130", from: "12125550130", text: "planted by a page" });
   const send = (path: string, headers: Record<string, string>) => fetch(url(h, path), { method: "POST", headers, body });
   const json = { "content-type": "application/json" };
   expect((await send("/dev/deliver", { ...json, origin: "https://evil.example" })).status).toBe(403);
@@ -141,6 +141,6 @@ test("a web page cannot plant a message: an Origin, a plain-text body or a forei
   // the dev webhook secret is a public constant: a page could sign with it, so the dev webhook is checked too
   expect((await send("/webhook", { ...json, host: "evil.example", "x-webhook-signature": "sha256=00" })).status).toBe(403);
   expect((await send("/webhook", { ...json, origin: "https://evil.example" })).status).toBe(403);
-  expect((await call(h.client, "get_chat", { chat: "+50530000001" })).isError).toBe(true);
+  expect((await call(h.client, "get_chat", { chat: "+12125550130" })).isError).toBe(true);
   expect((await send("/dev/deliver", json)).status).toBe(200);
 });

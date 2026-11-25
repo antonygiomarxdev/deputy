@@ -4,7 +4,7 @@
 Accepted (2026-11-18)
 
 ## Context
-The availability column holds the owner's own words (`yes`, `sí`, `agotado`, `متوفر`). Orders and the agent need to know whether an item can be ordered, and "mark unavailable" needs the word to write. A currency cell may hold a symbol (`$`) that is `USD`, `MXN` or `NIO` depending on the country. D20 forbids per-language catalogs; D22 says detect, show, confirm once. From TP-01 TD-6.
+The availability column holds the owner's own words (`yes`, `sí`, `agotado`, `متوفر`). Orders and the agent need to know whether an item can be ordered, and "mark unavailable" needs the word to write. A currency cell may hold a symbol (`$`) that is `USD`, `MXN` or `USD` depending on the country. D20 forbids per-language catalogs; D22 says detect, show, confirm once. From TP-01 TD-6.
 
 ## Decision
 - The mapping stores `availability: { available: string[]; unavailable: string[] }` and `currencySymbols: Record<string, string>`.
