@@ -65,6 +65,8 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-16 | RULE-7 | boundary | The owner is looking at the older draft for a chat | the agent creates a new draft for that chat | the owner is told the older one was replaced |
 | EX-17 | RULE-8 | positive | The provider setting is Kapso and the chat has only dev test messages | the agent creates a draft for it | Deputy refuses |
 | EX-18 | RULE-8 | negative | The provider setting is dev | the agent creates a draft for a dev-only chat | this rule does not refuse it |
+| EX-19 | RULE-4 | positive | Two chats have waiting drafts | Inbox asks which chats have a draft waiting | it gets exactly those two chats, each with the time its draft was written |
+| EX-20 | RULE-6 | negative | The owner asks to reject a draft that was already sent, rejected or replaced | Deputy handles it | Deputy says it is closed and changes nothing |
 
 ## Decision table
 
@@ -140,3 +142,5 @@ Generated from the examples above, one per EX row:
 - AC-16: Given the owner is looking at the older draft for a chat, When the agent creates a new draft for that chat, Then the owner is told the older one was replaced. (EX-16)
 - AC-17: Given the provider setting is Kapso and the chat has only dev test messages, When the agent creates a draft for it, Then Deputy refuses. (EX-17)
 - AC-18: Given the provider setting is dev, When the agent creates a draft for a dev-only chat, Then this rule does not refuse it. (EX-18)
+- AC-19: Given two chats have waiting drafts, When Inbox asks which chats have a draft waiting, Then it gets exactly those two chats, each with the time its draft was written. (EX-19)
+- AC-20: Given the owner asks to reject a draft that was already sent, rejected or replaced, When Deputy handles it, Then Deputy says it is closed and changes nothing. (EX-20)

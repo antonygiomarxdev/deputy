@@ -67,7 +67,7 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-7 | RULE-4 | positive | Three sent messages | the owner asks whether every send has an approval | each sent entry points to one earlier approval entry holding the owner's words |
 | EX-8 | RULE-4 | negative | A sent entry text differs from the approved text | the owner runs the check | Deputy reports it as a defect |
 | EX-9 | RULE-5 | positive | A sent entry with no approval entry before it | the owner runs the check | Deputy reports it as a defect |
-| EX-10 | RULE-5 | negative | A provider accepted a send and the log cannot be written afterwards | the write fails | the owner is told, no second send happens, and the gap is shown |
+| EX-10 | RULE-5 | boundary | A provider accepted a send and the log cannot be written afterwards | the write fails | the owner is told, no second send happens, and the gap is shown |
 | EX-11 | RULE-6 | positive | Log entries for two chats | the owner asks for the log of one chat | only that chat's entries show, newest first |
 | EX-12 | RULE-6 | boundary | An empty log | the owner asks for it | Deputy says there is nothing yet |
 | EX-13 | RULE-7 | positive | An entry exists | the agent tries to change it | it is refused |
@@ -84,6 +84,9 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-24 | RULE-12 | negative | A day with no answers | the counts are shown | that day shows no answers |
 | EX-25 | RULE-13 | positive | Automatic answers on three local days | the session asks for the pilot counts without a number | the last 7 local days ending today are returned |
 | EX-26 | RULE-13 | negative | The session asks for counts with 0, 31 or a fraction of days | Deputy handles it | the request is refused |
+| EX-27 | RULE-13 | boundary | The session asks for one day | the pilot counts are asked for with 1 | only today is returned |
+| EX-28 | RULE-13 | boundary | The session asks for the pilot counts with 30 | the counts are returned | the last 30 local days ending today are returned |
+| EX-29 | RULE-5 | positive | One automatic send and one owner's go send | the log is read | each shows its basis in the log, automatic or the owner's go |
 
 ## Decision table
 
@@ -165,3 +168,6 @@ Generated from the examples above, one per EX row:
 - AC-24: Given a day with no answers, When the counts are shown, Then that day shows no answers. (EX-24)
 - AC-25: Given automatic answers on three local days, When the session asks for the pilot counts without a number, Then the last 7 local days ending today are returned. (EX-25)
 - AC-26: Given the session asks for counts with 0, 31 or a fraction of days, When Deputy handles it, Then the request is refused. (EX-26)
+- AC-27: Given the session asks for one day, When the pilot counts are asked for with 1, Then only today is returned. (EX-27)
+- AC-28: Given the session asks for the pilot counts with 30, When the counts are returned, Then the last 30 local days ending today are returned. (EX-28)
+- AC-29: Given one automatic send and one owner's go send, When the log is read, Then each shows its basis in the log, automatic or the owner's go. (EX-29)

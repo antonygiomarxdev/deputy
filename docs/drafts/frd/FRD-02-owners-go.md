@@ -94,10 +94,18 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-31 | RULE-15 | positive | A go is not yet used and Deputy restarts | the next send is attempted | the go still stands |
 | EX-32 | RULE-15 | negative | A newer go for the same chat replaces an older one | the older go is used | it is no longer a go |
 | EX-33 | RULE-4 | positive | The owner approves draft 2 with "go on 2" | the approval is recorded | draft 2 has one approval, for this one send only |
+| EX-34 | RULE-13 | negative | The answer is not backed by the business knowledge | Deputy considers sending it | the owner's go is needed |
+| EX-35 | RULE-14 | boundary | An owner answer to a question about a customer chat arrived, and the customer's window is now closed | the next send to that chat is attempted | the go stays, and nothing is sent |
 
 ## Decision table
 
-n/a: each go rule has one condition on the owner's words, and the send checks are the decision table of FRD-03, so no decision table is needed here.
+The pilot send rule (FR-DRAFTS-02-13) depends on two conditions: whether the business knowledge backs the answer, and whether its class is in the always-ask list.
+
+| ID | Backed by the business knowledge | Class in the always-ask list | Result |
+|---|---|---|---|
+| DT-1 | yes | no | sent without the owner's go (pilot rule) |
+| DT-2 | yes | yes | the owner's go is needed |
+| DT-3 | no | any | the owner's go is needed |
 
 ## States
 
@@ -186,3 +194,5 @@ Generated from the examples above, one per EX row:
 - AC-31: Given a go is not yet used and Deputy restarts, When the next send is attempted, Then the go still stands. (EX-31)
 - AC-32: Given a newer go for the same chat replaces an older one, When the older go is used, Then it is no longer a go. (EX-32)
 - AC-33: Given the owner approves draft 2 with "go on 2", When the approval is recorded, Then draft 2 has one approval, for this one send only. (EX-33)
+- AC-34: Given the answer is not backed by the business knowledge, When Deputy considers sending it, Then the owner's go is needed. (EX-34)
+- AC-35: Given an owner answer to a question about a customer chat arrived, and the customer's window is now closed, When the next send to that chat is attempted, Then the go stays, and nothing is sent. (EX-35)
