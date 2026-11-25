@@ -161,7 +161,7 @@ n/a: docs/CROSS-CUTTING.md has no filled row; the cross-cutting rules live in do
 
 ## Open questions
 
-- Q-1 (Owner: only the owner decides whether an order-looking message breaks the batching period): should a message that looks like an order break the batching period and notify sooner? This FRD assumes not (PRD open question 1).
+Closed on 2026-11-25 (owner): a message that looks like an order does not break the batching period; it waits for the period like any other message (PRD open question 1).
 
 ## Acceptance criteria
 

@@ -1,7 +1,7 @@
 # ADR-019: The Deputy session dispatches and background helpers do the work
 
 ## Status
-Proposed (2026-11-24), pending owner approval of the lead's choices marked Proposed
+Accepted (2026-11-25). The three unverified items under Consequences are checked in the live test.
 
 ## Summary
 The pilot's main session works like the lead of an agent team: it never blocks. It checks messages, answers quick questions, asks the owner, and hands each incoming chat to a cheap background helper. Long work the owner asks for goes to a background helper that reports back. The main session has no internet and no send tool; a helper sends only for the one chat it was given, with a token Deputy checks. Nothing here changes who may approve a send.
@@ -56,5 +56,5 @@ flowchart TD
 ## Consequences
 - Easier: the main session answers the owner while helpers work; the cheap model reads chats; the web is off by construction.
 - Harder: one agent file per helper is installed and kept in step with the tool names; a helper can still pass a wrong answer class to `send_answer` (D11); the token secret is a new thing to protect.
-- Unverified, and the pilot checks it: that a finished helper wakes an idle main session, that `--agent` and the shortcut keep each other across restarts, the transcript format behind `token_stats`, and that a helper's transcript carries its agent name (otherwise `token_stats` reports the part as "helper").
+- Live-test checks (unverified until the pilot runs): that a finished helper wakes an idle main session, that `--agent` and the shortcut keep each other across restarts, the transcript format behind `token_stats`, and that a helper's transcript carries its agent name (otherwise `token_stats` reports the part as "helper").
 - Answered by the lead on 2026-11-24: the dispatcher holds `send_owner_go`, and the triage helper has `read_knowledge`.
