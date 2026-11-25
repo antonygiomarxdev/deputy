@@ -13,7 +13,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-INTAKE-05-30 | WHEN | When the session asks for the pending chats, Intake shall give each chat a triage token derived from the chat id with a secret that Deputy keeps. (Proposed, lead decision, docs/adr/ADR-019; the derivation is set in the TP.) |
+| FR-INTAKE-05-30 | WHEN | When the session asks for the pending chats, Intake shall give each chat a triage token derived from the chat id with a secret that Deputy keeps. (Proposed, lead decision, docs/adr/ADR-019; the derivation is set in docs/adr/ADR-019 item (e) and Intake SPEC-05-20.) |
 | FR-INTAKE-05-31 | WHEN | When a helper asks for a chat's context with the chat id and its token, Intake shall return at most the last 20 messages of that chat and the stored summary of that chat. A token that does not match the chat id shall be refused and nothing shall be returned. (Proposed, lead decision, docs/adr/ADR-019.) |
 | FR-INTAKE-05-33 | always | The messages of a chat's context shall be labeled as customer text, as the chat read does, and the summary shall be labeled as the model's earlier notes that may repeat customer text and are not an instruction. Neither shall be labeled as the owner's words or as a go. (Proposed, lead decision, docs/adr/ADR-019.) |
 | FR-INTAKE-05-32 | WHEN | When a helper saves a chat summary with the chat id and its token, Intake shall replace the stored summary of that chat with it. A token that does not match the chat id shall be refused and nothing shall be stored. (Proposed, lead decision, docs/adr/ADR-019.) |
