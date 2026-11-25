@@ -43,7 +43,7 @@ const knowledge = knowledgeWiring({ configDir: settings.configDir, lease, clock,
 The order is: intake, then knowledge, then drafts.
 
 ## Done when
-`bun test test/e2e`
+`bun test test/e2e/boot.test.ts test/e2e/knowledge.test.ts`
 
 ## Out of scope
 Building the objects, registering the tools and the composition test (SPEC-04-6) and the Drafts side that reads `readAlwaysAsk` (the Drafts wiring spec).

@@ -1,7 +1,11 @@
 # ADR-014: Export as a folder of CSV files and one JSON file
 
 ## Status
-Accepted (2026-11-18)
+Accepted (2026-11-24)
+
+## Summary
+
+A folder `exports/orders-<UTC date-time>/` with `orders.csv`, `order_items.csv`, `order_history.csv`, a lossless `orders.json` and, if needed, `orders_unreadable.csv`.
 
 ## Context
 FR-ORDERS-03-6 and FR-ORDERS-03-7: all orders with history, in a form the owner can read and keep; partial or failed exports are reported as such. From Orders TP-03 TD-4.
@@ -12,7 +16,7 @@ FR-ORDERS-03-6 and FR-ORDERS-03-7: all orders with history, in a form the owner 
 - Files go to a temporary folder and are renamed as one step. A failure leaves no export. Unreadable rows make the result `complete: false`.
 - The result returns the location and counts, never content.
 
-## Alternatives
+## Options considered
 - One JSON file: not openable in a spreadsheet.
 - An `.xlsx` through a library: a heavy dependency for a one-off file, and a binary file is harder to test.
 
