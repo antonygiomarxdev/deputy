@@ -177,16 +177,16 @@ describe("intake settings", () => {
   test("only the lease holder changes a setting", async () => {
     isOwner = false;
     expect(await minutes(5)).toEqual({ ok: false, reason: "not_owner" });
-    expect(await country("NI")).toEqual({ ok: false, reason: "not_owner" });
+    expect(await country("US")).toEqual({ ok: false, reason: "not_owner" });
     expect(await settings.getCatchUpMinutes()).toBe(2);
     expect(await settings.getCountry()).toBeNull();
   });
 
   test("a country is stored and shown; an unknown one is refused and keeps the old value", async () => {
-    expect(await country("NI")).toEqual({ ok: true, value: "NI" });
-    expect(await new GetIntakeSettingsUseCase(settings).execute()).toEqual({ catchUpMinutes: 2, country: "NI" });
-    expect(await country("XX")).toEqual({ ok: false, reason: "unknown_country", kept: "NI" });
-    expect(await settings.getCountry()).toBe("NI");
+    expect(await country("US")).toEqual({ ok: true, value: "US" });
+    expect(await new GetIntakeSettingsUseCase(settings).execute()).toEqual({ catchUpMinutes: 2, country: "US" });
+    expect(await country("XX")).toEqual({ ok: false, reason: "unknown_country", kept: "US" });
+    expect(await settings.getCountry()).toBe("US");
   });
 
   test("an unknown country with none set keeps null", async () => {
@@ -196,7 +196,7 @@ describe("intake settings", () => {
   test("the change time is the clock's, for the period and for the country", async () => {
     await minutes(4);
     expect(settings.changedAt.get("catch_up_minutes")).toBe(NOW);
-    await country("NI");
+    await country("US");
     expect(settings.changedAt.get("country")).toBe(NOW);
   });
 });

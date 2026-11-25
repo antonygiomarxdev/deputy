@@ -19,14 +19,14 @@ describe("DevProvider keeps the delivered type", () => {
     const subject = await openSqliteSubject();
     cleanups.push(() => subject.cleanup());
     const dev = new DevProvider({ db: subject.db, clock: new FakeClock(1_000) });
-    const body = { chat: "50581112222", from: "50581112222", text: "", type: "image", providerMessageId: "img-1" };
+    const body = { chat: "12125550111", from: "12125550111", text: "", type: "image", providerMessageId: "img-1" };
 
     const parsed = dev.verifyAndParse(signed(body));
     expect(parsed.kind).toBe("ok");
     if (parsed.kind === "ok") expect(parsed.events[0]).toMatchObject({ kind: "message", message: { type: "image" } });
 
     await dev.hold(body);
-    const page = await dev.listMessages({ scope: { conversationRef: "50581112222" }, cursor: null, limit: 10 });
+    const page = await dev.listMessages({ scope: { conversationRef: "12125550111" }, cursor: null, limit: 10 });
     expect(page.items.map((m) => m.type)).toEqual(["image"]);
   });
 
@@ -34,8 +34,8 @@ describe("DevProvider keeps the delivered type", () => {
     const subject = await openSqliteSubject();
     cleanups.push(() => subject.cleanup());
     const dev = new DevProvider({ db: subject.db, clock: new FakeClock(1_000) });
-    const owner = dev.verifyAndParse(signed({ chat: "50581112222", from: "50581112222", text: "sent by me", owner: true, providerMessageId: "o-1" }));
-    const customer = dev.verifyAndParse(signed({ chat: "50581112222", from: "50581112222", text: "hello", providerMessageId: "i-1" }));
+    const owner = dev.verifyAndParse(signed({ chat: "12125550111", from: "12125550111", text: "sent by me", owner: true, providerMessageId: "o-1" }));
+    const customer = dev.verifyAndParse(signed({ chat: "12125550111", from: "12125550111", text: "hello", providerMessageId: "i-1" }));
     expect(owner.kind === "ok" && owner.events[0]?.kind === "message" ? owner.events[0].message.direction : null).toBe("outbound");
     expect(customer.kind === "ok" && customer.events[0]?.kind === "message" ? customer.events[0].message.direction : null).toBe("inbound");
   });

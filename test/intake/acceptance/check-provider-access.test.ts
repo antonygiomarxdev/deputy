@@ -33,7 +33,7 @@ const phoneRecord: unknown = JSON.parse(
 );
 
 test("FR-INTAKE-01-8: the business number comes back in E.164", async () => {
-  expect(await check(phoneRecord).run()).toEqual({ ok: true, businessNumber: "+50588881111" });
+  expect(await check(phoneRecord).run()).toEqual({ ok: true, businessNumber: "+12125550104" });
 });
 
 test("FR-INTAKE-01-8: a record without a number gives null", async () => {
