@@ -113,8 +113,8 @@ n/a: docs/CROSS-CUTTING.md has no filled row; the cross-cutting rules live in do
 
 ## Open questions
 
-- Q-1 (Owner: only the owner decides the fallback when push is removed): if push in the agent changes or is removed, should Notify fall back to anything, or do nothing? This FRD assumes nothing (PRD open question 2).
-- Q-2 (Lead: answered in ADR-008, to confirm): where does the owner see that a notice failed?
+Closed on 2026-11-25 (owner): Notify has no fallback if push goes away; the slow loop of ADR-018 covers the wake (PRD open question 2).
+Closed on 2026-11-25 (Proposed, lead): a failed notice shows in `status` only.
 
 ## Acceptance criteria
 
