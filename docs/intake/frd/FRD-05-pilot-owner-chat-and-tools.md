@@ -110,7 +110,7 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-19 | RULE-10 | positive | A customer's latest message was 3 hours ago | the chat is read | it shows when its window closes, 24 hours after that message |
 | EX-20 | RULE-10 | negative | A chat's latest customer message is older than the pending window | the pending list is asked for | the chat is not listed |
 | EX-21 | RULE-11 | positive | The pending list is asked for | it is produced | it holds no summary groups, no ignore list and no message text |
-| EX-45 | RULE-11 | boundary | A pending chat with a customer message inside the window | the pending list is shown | the list shows the chat and the time its window closes, and no message text
+| EX-45 | RULE-11 | boundary | A pending chat with a customer message inside the window | the pending list is shown | the list shows the chat and the time its window closes, and no message text |
 | EX-22 | RULE-2 | negative | The control chat has a pending message | the pending list is asked for | the control chat is never listed |
 | EX-23 | RULE-12 | positive | Deputy starts with Kapso and no business number is recorded | Intake asks the provider | it records the connected number as the business number, logged with the command provider |
 | EX-24 | RULE-12 | negative | The provider offers no business number | Intake is asked | it tells the session the business number is missing |
@@ -125,7 +125,7 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-33 | RULE-16 | positive | The session records a text that the owner sent in the control chat after the question was asked | Intake checks it | it records the answer |
 | EX-34 | RULE-16 | negative | The session records a text that is not in any owner message | Intake checks it | it refuses, changes nothing and publishes nothing |
 | EX-35 | RULE-17 | positive | The session asks a question about a customer chat | Intake records it | the chat id is recorded with the question |
-| EX-46 | RULE-17 | boundary | A question is sent while the provider is unreachable | the send fails | no question is recorded, with or without a chat id
+| EX-46 | RULE-17 | boundary | A question is sent while the provider is unreachable | the send fails | no question is recorded |
 | EX-36 | RULE-7 | boundary | A question names an owner's control chat | Intake is asked to send it | it refuses with unknown chat |
 | EX-37 | RULE-18 | positive | Drafts or the session asks for the day's counts | Intake answers | each day shows the number of customer messages and owner questions, counted once |
 | EX-38 | RULE-18 | negative | The day's counts are returned | they are read | they hold no text, name or chat id |
@@ -235,5 +235,5 @@ Generated from the examples above, one per EX row:
 - AC-42: Given a chat's summary repeats a customer's words, When it is read, Then it is not labeled as the owner's words or as a go. (EX-42)
 - AC-43: Given the dispatcher asks for the owner's answers, When Intake returns them, Then the control-chat messages since the oldest open question, and the open questions with their ids and text. (EX-43)
 - AC-44: Given the dispatcher asks for the owner's answers and no question is open, When Intake returns them, Then none is returned, and no customer chat is included. (EX-44)
-- AC-45: Given A pending chat with a customer message inside the window, When the pending list is shown, Then undefined. (EX-45)
-- AC-46: Given A question is sent while the provider is unreachable, When the send fails, Then undefined. (EX-46)
+- AC-45: Given a pending chat with a customer message inside the window, When the pending list is shown, Then the list shows the chat and the time its window closes, and no message text. (EX-45)
+- AC-46: Given a question is sent while the provider is unreachable, When the send fails, Then no question is recorded. (EX-46)
