@@ -1,7 +1,7 @@
 # ADR-005: Local time through a calendar port over Intl, with a minute scan
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

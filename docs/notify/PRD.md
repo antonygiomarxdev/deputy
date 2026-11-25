@@ -1,6 +1,7 @@
 # Notify: slice PRD
 
-Status: Draft · Part of [Deputy product overview](../PRODUCT.md)
+Status: Approved (2026-11-24) · Part of [Deputy product overview](../PRODUCT.md)
+Approval: content hT5PZKK8ppvj; rests on ../PRODUCT.md 9kKsOKhERsSe
 
 ## Summary
 

@@ -1,7 +1,7 @@
 # ADR-002: New messages are recounted at send time against Inbox's pending set
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

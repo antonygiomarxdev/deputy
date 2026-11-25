@@ -1,7 +1,7 @@
 # ADR-007: Provider outages are announced from Intake's sync status, once per streak
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

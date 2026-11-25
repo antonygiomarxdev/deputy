@@ -1,7 +1,7 @@
 # ADR-006: A failed notice returns its batch to pending and is retried after 60 seconds
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

@@ -1,7 +1,7 @@
 # ADR-004: Notify settings are a typed aggregate that validates itself
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

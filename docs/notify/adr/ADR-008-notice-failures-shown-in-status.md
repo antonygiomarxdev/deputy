@@ -1,7 +1,7 @@
 # ADR-008: Failed notices are shown in the status tool only
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

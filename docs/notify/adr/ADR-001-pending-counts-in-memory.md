@@ -1,7 +1,7 @@
 # ADR-001: Pending counts live in the memory of the owner process
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

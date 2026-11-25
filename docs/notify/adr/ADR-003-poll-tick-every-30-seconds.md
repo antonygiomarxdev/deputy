@@ -1,7 +1,7 @@
 # ADR-003: A scheduler ticks every 30 seconds and Tick computes what is due
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 
