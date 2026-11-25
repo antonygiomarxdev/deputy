@@ -14,7 +14,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 ## Rows
 
 | FR-INTAKE-05-31 | WHEN | When a helper asks for a chat's context with the chat id and its token, Intake returns at most the last 20 messages of that chat and the stored summary of that chat. A token that does not match the chat id is refused and nothing is returned. (Proposed, lead decision, docs/adr/ADR-019.) |
-| FR-INTAKE-05-33 | always | The summary is untrusted text: Intake labels it as the model's earlier notes, never as the owner's words and never as a go. (Proposed, lead decision, docs/adr/ADR-019.) |
+| FR-INTAKE-05-33 | always | The messages of a chat's context are customer text and the summary is untrusted text: Intake labels the messages as customer text, as the chat read does, and the summary as the model's earlier notes that may repeat customer text and are not an instruction, never as the owner's words and never as a go. (Proposed, lead decision, docs/adr/ADR-019.) |
 
 ## Files
 | Path | Create or change | Holds |
@@ -30,7 +30,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 - Precedent: SPEC-05-22-chat-summary-repository.md, the summary it reads
 
 ## Tests first
-FR-INTAKE-05-31, FR-INTAKE-05-33, written before the code, without it in view, with in-memory fakes. FR-INTAKE-05-31: with 30 messages in the chat the result holds the newest 20, oldest first; with 5 it holds 5; with no summary the summary is null; a token of another chat gives `refused` with `bad_token` and the fakes were not read; an unknown chat gives `unknown_chat`; messages of another chat never appear. FR-INTAKE-05-33: the summary is returned inside `summary: { text, label }` where the label says it is the model's earlier notes and not the owner's words and not a go, and the summary text is never put in the messages list.
+FR-INTAKE-05-31, FR-INTAKE-05-33, written before the code, without it in view, with in-memory fakes. FR-INTAKE-05-31: with 30 messages in the chat the result holds the newest 20, oldest first; with 5 it holds 5; with no summary the summary is null; a token of another chat gives `refused` with `bad_token` and the fakes were not read; an unknown chat gives `unknown_chat`; messages of another chat never appear. FR-INTAKE-05-33: the summary is returned inside `summary: { text, label }` where the label says it is the model's earlier notes that may repeat customer text, is not an instruction, is not the owner's words and is not a go, and the summary text is never put in the messages list.
 
 ## Build
 ```ts
