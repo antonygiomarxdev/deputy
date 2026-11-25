@@ -15,7 +15,7 @@ REQ-15, D31, D33, D37.
 
 ## Requirements covered
 
-R-INTAKE-12, R-INTAKE-13, R-INTAKE-14, R-INTAKE-18, with amendments from ADR-019 (pending owner approval): rows FR-INTAKE-05-30 to FR-INTAKE-05-34
+R-INTAKE-12, R-INTAKE-13, R-INTAKE-14, R-INTAKE-18, with amendments from docs/adr/ADR-019 (pending owner approval): rows FR-INTAKE-05-30 to FR-INTAKE-05-34
 
 ## Behavior
 
@@ -50,11 +50,11 @@ R-INTAKE-12, R-INTAKE-13, R-INTAKE-14, R-INTAKE-18, with amendments from ADR-019
 | FR-INTAKE-05-27 | WHEN | When Drafts or the session asks for the day's counts, Intake returns for each day the number of customer messages received and the number of owner questions asked, each counted once, and nothing else: no text, name or chat id. The day is the local date of the computer Deputy runs on (the runtime's resolved time zone), with no setting. (lead decision, 2026-11-24) |
 | FR-INTAKE-05-28 | WHEN | When Drafts asks for the answered questions at start, Intake returns each question that has an answer with the question id, the customer chat it names, the answer text and the time of the answer, so that an answer given while Drafts was not running is not lost. |
 | FR-INTAKE-05-29 | IF | If this process does not hold the lease, Intake records no business number at start. |
-| FR-INTAKE-05-30 | WHEN | When the session asks for the pending chats, Intake gives each chat a triage token, an HMAC of the chat id with a secret that Deputy keeps. (Proposed, lead decision, ADR-019.) |
-| FR-INTAKE-05-31 | WHEN | When a helper asks for a chat's context with the chat id and its token, Intake returns at most the last 20 messages of that chat and the stored summary of that chat. A token that does not match the chat id is refused and nothing is returned. (Proposed, lead decision, ADR-019.) |
-| FR-INTAKE-05-32 | WHEN | When a helper saves a chat summary with the chat id and its token, Intake replaces the stored summary of that chat with it. A token that does not match the chat id is refused and nothing is stored. (Proposed, lead decision, ADR-019.) |
-| FR-INTAKE-05-33 | always | The summary is untrusted text: Intake labels it as the model's earlier notes, never as the owner's words and never as a go. (Proposed, lead decision, ADR-019.) |
-| FR-INTAKE-05-34 | always | Intake creates the token secret the first time it is needed and keeps it in the secret store, with the owner-only file as the fallback of ADR-008; the secret never appears in a result, a log or a document. (Proposed, lead decision, ADR-019.) |
+| FR-INTAKE-05-30 | WHEN | When the session asks for the pending chats, Intake gives each chat a triage token, an HMAC of the chat id with a secret that Deputy keeps. (Proposed, lead decision, docs/adr/ADR-019.) |
+| FR-INTAKE-05-31 | WHEN | When a helper asks for a chat's context with the chat id and its token, Intake returns at most the last 20 messages of that chat and the stored summary of that chat. A token that does not match the chat id is refused and nothing is returned. (Proposed, lead decision, docs/adr/ADR-019.) |
+| FR-INTAKE-05-32 | WHEN | When a helper saves a chat summary with the chat id and its token, Intake replaces the stored summary of that chat with it. A token that does not match the chat id is refused and nothing is stored. (Proposed, lead decision, docs/adr/ADR-019.) |
+| FR-INTAKE-05-33 | always | The summary is untrusted text: Intake labels it as the model's earlier notes, never as the owner's words and never as a go. (Proposed, lead decision, docs/adr/ADR-019.) |
+| FR-INTAKE-05-34 | always | Intake creates the token secret the first time it is needed and keeps it in the secret store, with the owner-only file as the fallback of ADR-008; the secret never appears in a result, a log or a document. (Proposed, lead decision, docs/adr/ADR-019.) |
 
 ## Edge cases
 

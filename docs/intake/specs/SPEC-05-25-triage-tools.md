@@ -13,9 +13,9 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-INTAKE-05-30 | WHEN | When the session asks for the pending chats, Intake gives each chat a triage token, an HMAC of the chat id with a secret that Deputy keeps. (Proposed, lead decision, ADR-019.) |
-| FR-INTAKE-05-31 | WHEN | When a helper asks for a chat's context with the chat id and its token, Intake returns at most the last 20 messages of that chat and the stored summary of that chat. A token that does not match the chat id is refused and nothing is returned. (Proposed, lead decision, ADR-019.) |
-| FR-INTAKE-05-32 | WHEN | When a helper saves a chat summary with the chat id and its token, Intake replaces the stored summary of that chat with it. A token that does not match the chat id is refused and nothing is stored. (Proposed, lead decision, ADR-019.) |
+| FR-INTAKE-05-30 | WHEN | When the session asks for the pending chats, Intake gives each chat a triage token, an HMAC of the chat id with a secret that Deputy keeps. (Proposed, lead decision, docs/adr/ADR-019.) |
+| FR-INTAKE-05-31 | WHEN | When a helper asks for a chat's context with the chat id and its token, Intake returns at most the last 20 messages of that chat and the stored summary of that chat. A token that does not match the chat id is refused and nothing is returned. (Proposed, lead decision, docs/adr/ADR-019.) |
+| FR-INTAKE-05-32 | WHEN | When a helper saves a chat summary with the chat id and its token, Intake replaces the stored summary of that chat with it. A token that does not match the chat id is refused and nothing is stored. (Proposed, lead decision, docs/adr/ADR-019.) |
 
 ## Files
 | Path | Create or change | Holds |

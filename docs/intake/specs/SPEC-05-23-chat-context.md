@@ -13,8 +13,8 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-INTAKE-05-31 | WHEN | When a helper asks for a chat's context with the chat id and its token, Intake returns at most the last 20 messages of that chat and the stored summary of that chat. A token that does not match the chat id is refused and nothing is returned. (Proposed, lead decision, ADR-019.) |
-| FR-INTAKE-05-33 | always | The summary is untrusted text: Intake labels it as the model's earlier notes, never as the owner's words and never as a go. (Proposed, lead decision, ADR-019.) |
+| FR-INTAKE-05-31 | WHEN | When a helper asks for a chat's context with the chat id and its token, Intake returns at most the last 20 messages of that chat and the stored summary of that chat. A token that does not match the chat id is refused and nothing is returned. (Proposed, lead decision, docs/adr/ADR-019.) |
+| FR-INTAKE-05-33 | always | The summary is untrusted text: Intake labels it as the model's earlier notes, never as the owner's words and never as a go. (Proposed, lead decision, docs/adr/ADR-019.) |
 
 ## Files
 | Path | Create or change | Holds |

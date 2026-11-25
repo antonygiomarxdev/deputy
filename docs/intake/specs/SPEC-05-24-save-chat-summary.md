@@ -13,8 +13,8 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-INTAKE-05-32 | WHEN | When a helper saves a chat summary with the chat id and its token, Intake replaces the stored summary of that chat with it. A token that does not match the chat id is refused and nothing is stored. (Proposed, lead decision, ADR-019.) |
-| FR-INTAKE-05-33 | always | The summary is untrusted text: Intake labels it as the model's earlier notes, never as the owner's words and never as a go. (Proposed, lead decision, ADR-019.) |
+| FR-INTAKE-05-32 | WHEN | When a helper saves a chat summary with the chat id and its token, Intake replaces the stored summary of that chat with it. A token that does not match the chat id is refused and nothing is stored. (Proposed, lead decision, docs/adr/ADR-019.) |
+| FR-INTAKE-05-33 | always | The summary is untrusted text: Intake labels it as the model's earlier notes, never as the owner's words and never as a go. (Proposed, lead decision, docs/adr/ADR-019.) |
 
 ## Files
 | Path | Create or change | Holds |

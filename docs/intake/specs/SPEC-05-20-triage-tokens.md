@@ -13,8 +13,8 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-INTAKE-05-30 | WHEN | When the session asks for the pending chats, Intake gives each chat a triage token, an HMAC of the chat id with a secret that Deputy keeps. (Proposed, lead decision, ADR-019.) |
-| FR-INTAKE-05-34 | always | Intake creates the token secret the first time it is needed and keeps it in the secret store, with the owner-only file as the fallback of ADR-008; the secret never appears in a result, a log or a document. (Proposed, lead decision, ADR-019.) |
+| FR-INTAKE-05-30 | WHEN | When the session asks for the pending chats, Intake gives each chat a triage token, an HMAC of the chat id with a secret that Deputy keeps. (Proposed, lead decision, docs/adr/ADR-019.) |
+| FR-INTAKE-05-34 | always | Intake creates the token secret the first time it is needed and keeps it in the secret store, with the owner-only file as the fallback of ADR-008; the secret never appears in a result, a log or a document. (Proposed, lead decision, docs/adr/ADR-019.) |
 
 ## Files
 | Path | Create or change | Holds |
