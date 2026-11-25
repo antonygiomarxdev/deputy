@@ -1,7 +1,11 @@
 # ADR-008: Corrections are a patch, and items are kept by position
 
 ## Status
-Accepted (2026-11-18)
+Accepted (2026-11-24)
+
+## Summary
+
+`change` is an object with any of `status`, `customer_name`, `fulfillment`, `address`, `wanted_date`, `wanted_time`, `notes`, `items`.
 
 ## Context
 FR-ORDERS-02-4, FR-ORDERS-02-6, FR-ORDERS-02-8 and FR-ORDERS-01-14: corrections keep a history, must leave the order valid, and must not re-price items from the current catalog. From Orders TP-02 TD-2.
@@ -12,7 +16,7 @@ FR-ORDERS-02-4, FR-ORDERS-02-6, FR-ORDERS-02-8 and FR-ORDERS-01-14: corrections 
 - The result must pass the same invariants as a record; otherwise nothing is written. One history entry per changed field, written with the new state in one `update`.
 - Any status may follow any other.
 
-## Alternatives
+## Options considered
 - Replace the whole order and diff: every item is re-resolved, so a quantity correction re-prices the rest.
 - One tool per field: many tools, and Drafts' `change_order` carries one `change` object.
 
