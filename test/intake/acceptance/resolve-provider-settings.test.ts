@@ -1,9 +1,3 @@
-// covers: intake/FRD-01/EX-1
-// covers: intake/FRD-01/EX-2
-// covers: intake/FRD-01/EX-11
-// covers: intake/FRD-01/EX-12
-// covers: intake/FRD-01/EX-17
-// covers: intake/FRD-01/EX-18
 import { describe, expect, test } from "bun:test";
 import { Secret } from "../../../src/intake/domain/secret";
 import { OwnerNumbers } from "../../../src/intake/domain/owner-numbers";
@@ -40,11 +34,13 @@ async function resolve(
 const kapsoAll = { provider: "kapso", apiKey: true, phoneNumberId: "123", business: true };
 
 describe("FR-INTAKE-01-1", () => {
+  // covers: intake/FRD-01/EX-1
   test("provider meta is refused and the message names kapso and dev", async () => {
     const r = await resolve({ provider: "meta" });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.message).toBe("provider must be kapso or dev, got 'meta'");
   });
+  // covers: intake/FRD-01/EX-2
   test.each([null, ""])("provider %p gives dev with a notice and never kapso", async (provider) => {
     const r = await resolve({ provider, ...{ apiKey: true, phoneNumberId: "1", business: true } });
     expect(r).toEqual({ ok: true, provider: "dev", receiving: "catch_up", notices: ["no provider set, using dev"] });
@@ -64,6 +60,7 @@ describe("FR-INTAKE-01-8", () => {
     const r = await resolve({ ...kapsoAll, apiKeyValue });
     expect(r).toEqual({ ok: false, message: "Kapso needs: api key. Run Setup." });
   });
+  // covers: intake/FRD-01/EX-17
   test("every missing item is listed", async () => {
     const r = await resolve({ provider: "kapso", receivingMode: "live" });
     expect(r).toEqual({ ok: false, message: "Kapso needs: api key, phone number id, webhook secret, business number. Run Setup." });
@@ -91,6 +88,7 @@ describe("FR-INTAKE-01-11", () => {
     const r = await resolve({ ...kapsoAll, receivingMode: "weekly" });
     expect(r).toEqual({ ok: false, message: "receiving_mode must be catch-up or live, got 'weekly'" });
   });
+  // covers: intake/FRD-01/EX-18
   test("dev with live is catch_up", async () => {
     expect(await resolve({ provider: "dev", receivingMode: "live" })).toEqual({ ok: true, provider: "dev", receiving: "catch_up", notices: [] });
   });

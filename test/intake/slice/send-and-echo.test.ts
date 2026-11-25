@@ -1,7 +1,3 @@
-// covers: intake/FRD-04/EX-11
-// covers: intake/FRD-04/EX-12
-// covers: intake/FRD-04/EX-15
-// covers: intake/FRD-04/EX-16
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { createSqliteOwnerLease } from "../../../src/adapters/sqlite/sqlite-owner-lease";
 import { DevDeliveries } from "../../../src/intake/adapters/dev/dev-deliveries";

@@ -1,5 +1,3 @@
-// covers: intake/FRD-02/EX-17
-// covers: intake/FRD-02/EX-18
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { parseChatId, type ChatId } from "../../../src/shared/chat-id";
 import { receive } from "../../support/intake-fixtures";

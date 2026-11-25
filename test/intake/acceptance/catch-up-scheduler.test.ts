@@ -1,9 +1,3 @@
-// covers: intake/FRD-03/EX-25
-// covers: intake/FRD-03/EX-26
-// covers: intake/FRD-03/EX-27
-// covers: intake/FRD-03/EX-28
-// covers: intake/FRD-03/EX-35
-// covers: intake/FRD-03/EX-36
 import { Secret } from "../../../src/intake/domain/secret";
 import { beforeEach, describe, expect, test } from "bun:test";
 import { InMemoryIntakeSettingsRepository } from "../../../src/intake/adapters/memory/in-memory-intake-settings-repository";
@@ -79,6 +73,9 @@ describe("CatchUpScheduler with the real use case", () => {
     }
   };
 
+  // covers: intake/FRD-02/EX-24
+  // covers: intake/FRD-03/EX-25
+  // covers: intake/FRD-03/EX-28
   test("FR-INTAKE-03-10: with the default period it runs at 0, 2, 4, 6, 8 and 10 minutes and stores what arrived without being asked", async () => {
     provider.serverTime = START;
     const s = scheduler();
@@ -129,6 +126,7 @@ describe("CatchUpScheduler with the real use case", () => {
     expect(runs).toEqual([0, MIN]);
   });
 
+  // covers: intake/FRD-03/EX-27
   test("FR-INTAKE-03-16: with live delivery on, the scheduler still runs periodically", async () => {
     const runtime = createIntakeRuntime({
       repos: store.repos,

@@ -1,9 +1,3 @@
-// covers: intake/FRD-04/EX-1
-// covers: intake/FRD-04/EX-2
-// covers: intake/FRD-04/EX-7
-// covers: intake/FRD-04/EX-8
-// covers: intake/FRD-04/EX-21
-// covers: intake/FRD-04/EX-22
 import { afterEach, expect, test, setDefaultTimeout } from "bun:test";
 import { call, holdOwnerReply, insertPendingChange, removeHarnessDirs, startServer, waitForOwner, type Harness, E2E_TIMEOUT_MS } from "../support/harness";
 import { postDelivery } from "../support/live";
@@ -37,6 +31,7 @@ const textOf = (r: Awaited<ReturnType<typeof call>>): string => {
   return first !== undefined && first.type === "text" ? first.text : "";
 };
 
+// covers: intake/FRD-04/EX-7
 test("FR-INTAKE-04-4: a reply the owner wrote from the app while Deputy was off is found by check_messages and shown as the owner's", async () => {
   const h = await boot();
   await holdOwnerReply(h, { chat: CUSTOMER, text: "Yes, until 6 pm.", sentAt: Date.now() });

@@ -1,9 +1,3 @@
-// covers: intake/FRD-03/EX-13
-// covers: intake/FRD-03/EX-14
-// covers: intake/FRD-03/EX-23
-// covers: intake/FRD-03/EX-24
-// covers: intake/FRD-03/EX-35
-// covers: intake/FRD-03/EX-36
 // covers: drafts/FRD-03/EX-1
 // covers: drafts/FRD-03/EX-30
 import { beforeEach, describe, expect, test } from "bun:test";
@@ -256,6 +250,7 @@ describe("CatchUpChat", () => {
     expect(await rows()).toEqual(["anon", "p3", "p2", "p1"]);
   });
 
+  // covers: intake/FRD-03/EX-42
   test("new non-history messages are announced once as catch_up; none, no event", async () => {
     provider.hold("c1", "5491123456789", [msg("a", NOW - 5_000)]);
     await catchUp().execute({ trigger: "timer" });

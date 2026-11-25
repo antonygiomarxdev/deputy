@@ -1,7 +1,3 @@
-// covers: intake/FRD-03/EX-15
-// covers: intake/FRD-03/EX-16
-// covers: intake/FRD-03/EX-17
-// covers: intake/FRD-03/EX-18
 import { describe, expect, test } from "bun:test";
 import { probeGap, type ListingRead } from "../../../src/intake/application/gap-probe";
 import type { MessageRepositoryGap } from "../../../src/intake/ports/message-repository";

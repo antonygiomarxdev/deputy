@@ -1,5 +1,3 @@
-// covers: intake/FRD-03/EX-19
-// covers: intake/FRD-03/EX-20
 import { describe, expect, test } from "bun:test";
 import { formatInstant, reasonText } from "../../../src/intake/domain/status-text";
 import type { SyncReason } from "../../../src/intake/domain/sync-state";

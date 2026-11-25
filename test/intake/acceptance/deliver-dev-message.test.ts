@@ -1,11 +1,3 @@
-// covers: intake/FRD-01/EX-3
-// covers: intake/FRD-01/EX-4
-// covers: intake/FRD-01/EX-5
-// covers: intake/FRD-01/EX-6
-// covers: intake/FRD-01/EX-9
-// covers: intake/FRD-01/EX-10
-// covers: intake/FRD-01/EX-13
-// covers: intake/FRD-01/EX-14
 import { afterEach, describe, expect, test } from "bun:test";
 import { DevDeliveries } from "../../../src/intake/adapters/dev/dev-deliveries";
 import { DevProvider } from "../../../src/intake/adapters/dev/dev-provider";
@@ -51,6 +43,8 @@ async function world() {
 }
 
 describe("DeliverDevMessage", () => {
+  // covers: intake/FRD-01/EX-3
+  // covers: intake/FRD-01/EX-14
   test("FR-INTAKE-01-3: a delivery is stored with every field and ReadChat returns it", async () => {
     const w = await world();
     const rt = w.devRuntime();
@@ -116,6 +110,7 @@ describe("DeliverDevMessage", () => {
     });
   });
 
+  // covers: intake/FRD-02/EX-8
   test("an owner reply and a history message keep their marks", async () => {
     const w = await world();
     const rt = w.devRuntime();
@@ -126,6 +121,7 @@ describe("DeliverDevMessage", () => {
     expect(byId.get("h-1")).toMatchObject({ history: true, source: "customer" });
   });
 
+  // covers: intake/FRD-01/EX-13
   test("FR-INTAKE-01-9: under Kapso it is refused, nothing is stored and a dev_entry_refused note is kept", async () => {
     const w = await world();
     const rt = w.runtime(new FakeProvider("kapso"), null);
@@ -139,6 +135,7 @@ describe("DeliverDevMessage", () => {
     expect(await w.subject.db.query("SELECT COUNT(*) AS n FROM dev_holdings")).toEqual([{ n: 0 }]);
   });
 
+  // covers: intake/FRD-01/EX-5
   test("FR-INTAKE-01-4: a dev message and a Kapso message show the same fields and the same source meaning", async () => {
     const w = await world();
     await w.devRuntime().deliverDevMessage.execute({ chat: "12125550111", from: "12125550111", text: "same words", providerMessageId: "dev-a" });
@@ -156,6 +153,8 @@ describe("DeliverDevMessage", () => {
     expect([devOne?.dev, kapsoOne?.dev]).toEqual([true, false]);
   });
 
+  // covers: intake/FRD-01/EX-9
+  // covers: intake/FRD-01/EX-15
   test("FR-INTAKE-01-7 and 01-10: after a switch to Kapso the dev messages are kept, marked dev, hidden from the chat list, and announce nothing", async () => {
     const w = await world();
     await w.devRuntime().deliverDevMessage.execute({ chat: "12125550111", from: "12125550111", text: "unanswered" });

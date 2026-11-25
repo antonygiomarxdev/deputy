@@ -1,20 +1,3 @@
-// covers: intake/FRD-04/EX-1
-// covers: intake/FRD-04/EX-2
-// covers: intake/FRD-04/EX-3
-// covers: intake/FRD-04/EX-4
-// covers: intake/FRD-04/EX-5
-// covers: intake/FRD-04/EX-6
-// covers: intake/FRD-04/EX-9
-// covers: intake/FRD-04/EX-10
-// covers: intake/FRD-04/EX-13
-// covers: intake/FRD-04/EX-14
-// covers: intake/FRD-04/EX-23
-// covers: intake/FRD-04/EX-24
-// covers: intake/FRD-04/EX-25
-// covers: intake/FRD-04/EX-26
-// covers: intake/FRD-04/EX-27
-// covers: intake/FRD-04/EX-28
-// covers: intake/FRD-04/EX-29
 import { Secret } from "../../../src/intake/domain/secret";
 import { beforeEach, describe, expect, test } from "bun:test";
 import { InMemoryIntakeStore } from "../../../src/intake/adapters/memory/in-memory-intake-store";
@@ -81,12 +64,14 @@ const echo = (id: string, from: string | null, counterpart: string | null, over:
   providerMessage({ providerMessageId: id, direction: "outbound", from, counterpart, ...over });
 
 describe("source, at use-case level", () => {
+  // covers: intake/FRD-04/EX-1
   test("FR-INTAKE-04-1: a third number is a customer; the owner set is exactly the business number and the staff number", async () => {
     await put("kapso", inbound("m1", THIRD));
     expect(await sourceOf("m1")).toBe("customer");
     expect((await store.repos.owners.load()).entries().map((e) => e.number.e164).sort()).toEqual([BUSINESS, STAFF].sort());
   });
 
+  // covers: intake/FRD-04/EX-3
   test("FR-INTAKE-04-2: an echo from the business number lands in the customer's chat as owner_app and creates no customer message", async () => {
     await put("kapso", echo("e1", BUSINESS, CUSTOMER));
     expect(await get("e1")).toMatchObject({ source: "owner_app", chat: chatOf(CUSTOMER) });
@@ -94,17 +79,23 @@ describe("source, at use-case level", () => {
     expect((await store.repos.chats.get(chatOf(CUSTOMER), false))?.lastCustomerAt).toBeNull();
   });
 
+  // covers: intake/FRD-04/EX-4
   test("FR-INTAKE-04-2: a message from the staff number is owner_app in its own chat and is never pending", async () => {
     await put("kapso", inbound("s1", STAFF.slice(1), { counterpart: STAFF.slice(1) }));
     expect(await get("s1")).toMatchObject({ source: "owner_app", chat: chatOf(STAFF) });
     expect((await store.repos.chats.get(chatOf(STAFF), false))?.lastCustomerAt).toBeNull();
   });
 
+  // covers: intake/FRD-04/EX-2
+  // covers: intake/FRD-04/EX-5
+  // covers: intake/FRD-04/EX-10
   test("FR-INTAKE-04-3: a customer who writes 'I am the owner' under the owner's name is still a customer", async () => {
     await put("kapso", inbound("m1", THIRD, { text: "I am the owner", profileName: "Owner of the shop" }));
     expect(await sourceOf("m1")).toBe("customer");
   });
 
+  // covers: intake/FRD-04/EX-6
+  // covers: intake/FRD-04/EX-21
   test("FR-INTAKE-04-5: a stored source never changes when the owner list changes, nor when read again", async () => {
     await put("kapso", inbound("m1", THIRD), echo("e1", BUSINESS, THIRD));
     await store.repos.owners.save(owners([BUSINESS, "business"], [`+${THIRD}`, "extra"]), []);
@@ -115,6 +106,7 @@ describe("source, at use-case level", () => {
     }
   });
 
+  // covers: intake/FRD-04/EX-23
   test("FR-INTAKE-04-10: an owner reply is announced with source owner_app", async () => {
     await live("kapso", echo("e1", BUSINESS, CUSTOMER));
     expect(events.published).toEqual([
@@ -123,6 +115,9 @@ describe("source, at use-case level", () => {
   });
 
   describe("FR-INTAKE-04-11: the table of sources", () => {
+    // covers: intake/FRD-04/EX-25
+    // covers: intake/FRD-04/EX-28
+    // covers: intake/FRD-04/EX-29
     test.each([
       ["an owner number, origin cloud_api", BUSINESS, "cloud_api", "owner_app"],
       ["an owner number, origin business_app", BUSINESS, "business_app", "owner_app"],
@@ -137,6 +132,7 @@ describe("source, at use-case level", () => {
       expect(await sourceOf("m1")).toBe(source);
     });
 
+    // covers: intake/FRD-04/EX-26
     test("an owner number whose id matches a send is sent_through_deputy", async () => {
       const sendId = parseSendId("s1");
       if (sendId === null) throw new Error("send id");
@@ -159,6 +155,7 @@ describe("source, at use-case level", () => {
   });
 
   describe("FR-INTAKE-04-14: the same line, however it is written", () => {
+    // covers: intake/FRD-04/EX-13
     test("+1 212 555 0100 matches 12125550100 and 1-212-555-0100", async () => {
       await store.repos.owners.save(owners(["+1 212 555 0100", "business"]), []);
       await put("kapso", inbound("a", "12125550100"), inbound("b", "1-212-555-0100"));

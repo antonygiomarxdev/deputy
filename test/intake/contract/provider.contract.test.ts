@@ -1,9 +1,3 @@
-// covers: intake/FRD-01/EX-3
-// covers: intake/FRD-01/EX-4
-// covers: intake/FRD-01/EX-5
-// covers: intake/FRD-01/EX-6
-// covers: intake/FRD-01/EX-7
-// covers: intake/FRD-01/EX-8
 import { signHmacSha256Hex } from "../../../src/intake/adapters/hmac";
 import { KapsoProvider } from "../../../src/intake/adapters/kapso/kapso-provider";
 import { LibphonenumberParser } from "../../../src/intake/adapters/phone/libphonenumber-parser";

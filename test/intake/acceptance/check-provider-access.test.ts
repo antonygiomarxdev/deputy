@@ -1,5 +1,3 @@
-// covers: intake/FRD-01/EX-17
-// covers: intake/FRD-01/EX-18
 import { afterEach, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";

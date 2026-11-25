@@ -1,15 +1,3 @@
-// covers: intake/FRD-02/EX-1
-// covers: intake/FRD-02/EX-2
-// covers: intake/FRD-02/EX-3
-// covers: intake/FRD-02/EX-4
-// covers: intake/FRD-02/EX-13
-// covers: intake/FRD-02/EX-14
-// covers: intake/FRD-02/EX-17
-// covers: intake/FRD-02/EX-18
-// covers: intake/FRD-02/EX-24
-// covers: intake/FRD-02/EX-25
-// covers: intake/FRD-02/EX-26
-// covers: intake/FRD-02/EX-27
 import { Secret } from "../../../src/intake/domain/secret";
 import { beforeEach, describe, expect, test } from "bun:test";
 import { InMemoryIntakeStore } from "../../../src/intake/adapters/memory/in-memory-intake-store";
@@ -81,6 +69,8 @@ describe("ReceiveLiveDelivery", () => {
     expect(provider.verifyCalls[0]?.secret).toBe("secret");
   });
 
+  // covers: intake/FRD-02/EX-2
+  // covers: intake/FRD-02/EX-4
   test("FR-INTAKE-02-2: each failed verification writes one note and stores nothing", async () => {
     for (const kind of ["bad_signature", "missing_signature", "no_secret", "malformed"] as const) {
       provider.parsed = { kind };
@@ -111,6 +101,8 @@ describe("ReceiveLiveDelivery", () => {
     expect(await store.repos.syncState.liveVerifiedAt("kapso")).toBeNull();
   });
 
+  // covers: intake/FRD-02/EX-13
+  // covers: intake/FRD-02/EX-18
   test("FR-INTAKE-02-7: the same delivery three times is one row and one MessageStored", async () => {
     provider.deliver(providerMessage());
     const results = [await build().execute(request), await build().execute(request), await build().execute(request)];
@@ -195,6 +187,7 @@ describe("ReceiveLiveDelivery", () => {
     expect(await find("m1")).toBeNull();
   });
 
+  // covers: intake/FRD-02/EX-26
   test("FR-INTAKE-02-14: a live delivery and a catch-up page store the same row, except storedAt", async () => {
     const fixtures: ProviderMessage[] = [
       providerMessage({ providerMessageId: "a", sentAt: 100, profileName: "Ana" }),

@@ -1,5 +1,3 @@
-// covers: intake/FRD-03/EX-11
-// covers: intake/FRD-03/EX-12
 import { describe, expect, test } from "bun:test";
 import { SyncState } from "../../../src/intake/domain/sync-state";
 

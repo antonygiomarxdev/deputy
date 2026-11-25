@@ -1,9 +1,3 @@
-// covers: intake/FRD-03/EX-15
-// covers: intake/FRD-03/EX-16
-// covers: intake/FRD-03/EX-17
-// covers: intake/FRD-03/EX-18
-// covers: intake/FRD-03/EX-43
-// covers: intake/FRD-03/EX-44
 import { beforeEach, describe, expect, test } from "bun:test";
 import { RUN_BUDGET_MS } from "../../../src/intake/domain/constants";
 import { InMemoryIntakeSettingsRepository } from "../../../src/intake/adapters/memory/in-memory-intake-settings-repository";
@@ -80,6 +74,7 @@ describe("the gap probe", () => {
       new StoreMessages({ clock }).store(r, { provider: "kapso", events: messages.map((message) => ({ kind: "message" as const, message })) }),
     );
 
+  // covers: intake/FRD-03/EX-15
   test("FR-INTAKE-03-15: the newest stored message is 10 days old and the exhausted listing starts 3 days ago: possible_gap", async () => {
     await storeDirectly(msg("old", NOW - 10 * DAY));
     provider.hold("c1", "5491123456789", [msg("recent", NOW - 3 * DAY)]);
@@ -96,6 +91,7 @@ describe("the gap probe", () => {
     expect(done?.name === "CatchUpFinished" && [done.status, done.reason]).toEqual(["failed", "possible_gap"]);
   });
 
+  // covers: intake/FRD-03/EX-43
   test("FR-INTAKE-03-13: the provider holds 3 days while 10 are stored: the view exposes how far back Deputy goes", async () => {
     await storeDirectly(msg("old", NOW - 10 * DAY));
     provider.hold("c1", "5491123456789", [msg("recent", NOW - 3 * DAY)]);

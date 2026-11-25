@@ -1,11 +1,3 @@
-// covers: intake/FRD-03/EX-5
-// covers: intake/FRD-03/EX-6
-// covers: intake/FRD-03/EX-11
-// covers: intake/FRD-03/EX-12
-// covers: intake/FRD-03/EX-23
-// covers: intake/FRD-03/EX-24
-// covers: intake/FRD-03/EX-27
-// covers: intake/FRD-03/EX-28
 import { Database } from "bun:sqlite";
 import { afterEach, expect, test, setDefaultTimeout } from "bun:test";
 import { writeFileSync } from "node:fs";
@@ -78,6 +70,7 @@ test("FR-INTAKE-03-6: after a failed run with reason credentials, status holds t
   expect(text).not.toMatch(/\b401\b/);
 });
 
+// covers: intake/FRD-03/EX-5
 test("FR-INTAKE-03-3: a forged catch-up delivery with no signature is refused, and check_messages ignores what it is given", async () => {
   const h = await boot();
   await waitForOwner(h);

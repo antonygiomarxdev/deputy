@@ -1,5 +1,3 @@
-// covers: intake/FRD-04/EX-15
-// covers: intake/FRD-04/EX-16
 import { describe, expect, test } from "bun:test";
 import { MAX_PART, SPLIT_LOOKBACK_UNITS } from "../../../src/intake/domain/constants";
 import { splitText } from "../../../src/intake/domain/split-text";

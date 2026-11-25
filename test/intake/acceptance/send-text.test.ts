@@ -1,11 +1,3 @@
-// covers: intake/FRD-04/EX-11
-// covers: intake/FRD-04/EX-12
-// covers: intake/FRD-04/EX-15
-// covers: intake/FRD-04/EX-16
-// covers: intake/FRD-04/EX-17
-// covers: intake/FRD-04/EX-18
-// covers: intake/FRD-04/EX-19
-// covers: intake/FRD-04/EX-20
 import { Secret } from "../../../src/intake/domain/secret";
 import { beforeEach, describe, expect, test } from "bun:test";
 import { InMemoryIntakeStore } from "../../../src/intake/adapters/memory/in-memory-intake-store";
@@ -73,6 +65,7 @@ const fail = (kind: ConstructorParameters<typeof ProviderError>[0], retryAfterMs
   new ProviderError(kind, retryAfterMs, mayHaveBeenAccepted);
 
 describe("SendText", () => {
+  // covers: intake/FRD-04/EX-15
   test("FR-INTAKE-04-6: one message linked to the send, sentAt the provider time, origin null, the send sent, the ids listed", async () => {
     const r = await send.execute({ sendId: sid("s1"), chat, text: "Hello" });
     expect(r).toEqual({ kind: "sent", providerMessageIds: ["wamid.SENT1"] });
@@ -83,6 +76,8 @@ describe("SendText", () => {
     expect(provider.sent.map((s) => [s.to.digits, s.text])).toEqual([[CUSTOMER, "Hello"]]);
   });
 
+  // covers: intake/FRD-04/EX-17
+  // covers: intake/FRD-04/EX-18
   test("FR-INTAKE-04-7: the provider's own report of the send, live and in catch-up, stays one message and emits no MessageStored", async () => {
     await send.execute({ sendId: sid("s1"), chat, text: "Hello" });
     const events = new RecordingEventPublisher();
@@ -101,6 +96,7 @@ describe("SendText", () => {
     expect(same[0]?.props.source).toBe("sent_through_deputy");
   });
 
+  // covers: intake/FRD-04/EX-11
   test("FR-INTAKE-04-13: a report stored as owner_app before the send was recorded is reclassified, once, with no signal", async () => {
     // the provider accepted the send and a catch-up stored its report before SendText recorded the id
     await store.unitOfWork.run((r) => service.store(r, { provider: "kapso", events: [{ kind: "message", message: echo("wamid.SENT1") }] }));
@@ -296,6 +292,8 @@ describe("SendText", () => {
 type SendTextUseCaseLike = Pick<SendTextUseCase, "execute">;
 
 describe("SendText on the SQLite adapters", () => {
+  // covers: intake/FRD-04/EX-19
+  // covers: intake/FRD-04/EX-20
   test("FR-INTAKE-04-8: a send changes only outgoing, outgoing_parts, messages and chats, and no Drafts table exists", async () => {
     const s = await openSqliteSubject();
     try {

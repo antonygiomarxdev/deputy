@@ -1,19 +1,3 @@
-// covers: intake/FRD-01/EX-15
-// covers: intake/FRD-01/EX-16
-// covers: intake/FRD-02/EX-5
-// covers: intake/FRD-02/EX-6
-// covers: intake/FRD-02/EX-7
-// covers: intake/FRD-02/EX-8
-// covers: intake/FRD-02/EX-11
-// covers: intake/FRD-02/EX-12
-// covers: intake/FRD-02/EX-15
-// covers: intake/FRD-02/EX-16
-// covers: intake/FRD-02/EX-19
-// covers: intake/FRD-02/EX-20
-// covers: intake/FRD-02/EX-21
-// covers: intake/FRD-02/EX-22
-// covers: intake/FRD-02/EX-23
-// covers: intake/FRD-02/EX-28
 import { beforeEach, describe, expect, test } from "bun:test";
 import { InMemoryIntakeStore } from "../../../src/intake/adapters/memory/in-memory-intake-store";
 import { ChatExistsUseCase } from "../../../src/intake/application/chat-exists";
@@ -67,6 +51,9 @@ const readChat = () => new ReadChatUseCase(store.repos);
 const listChats = (provider: ProviderName = "kapso") => new ListChatsUseCase({ repos: store.repos, provider });
 
 describe("read use cases", () => {
+  // covers: intake/FRD-02/EX-3
+  // covers: intake/FRD-02/EX-5
+  // covers: intake/FRD-02/EX-6
   test("FR-INTAKE-02-3: ListRejections shows time and reason only; the no-id note stays unrecovered until resolved", async () => {
     await arrive([msg({ providerMessageId: null })], 2_000);
     const list = new ListRejectionsUseCase(store.repos);
@@ -213,6 +200,7 @@ describe("read use cases", () => {
     expect(await readChat().execute({ chat: otherChat })).toBeNull();
   });
 
+  // covers: intake/FRD-02/EX-19
   test("FR-INTAKE-02-12: an edited message shows edited and its earlier text", async () => {
     await arrive([msg({ providerMessageId: "m1", text: "first" })], 2_000);
     await arrive([{ kind: "edit", providerMessageId: "m1", text: "second" }], 3_000);
