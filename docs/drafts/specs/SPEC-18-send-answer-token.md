@@ -44,7 +44,7 @@ export type SendAnswerInput = { chatId: string; token: string; text: string; ans
 `bun test test/drafts/send-answer-token.test.ts`
 
 ## Out of scope
-The decision, the window and the send (SPEC-05, SPEC-06, SPEC-13); the check itself (SPEC-17); the registration, which is unchanged (SPEC-16-2).
+The decision, the window and the send (SPEC-05, SPEC-06, SPEC-13); the check itself (SPEC-17); the registration, which is unchanged (SPEC-16-2); passing Intake's `triageTokens` through `draftsWiring` and `serve.ts` (SPEC-19).
 
 ## Open questions
 None.
