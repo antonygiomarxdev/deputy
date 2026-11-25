@@ -1,8 +1,12 @@
 # Technical Proposal: Learned knowledge (Knowledge FRD-02)
 
-Status: Approved (2026-11-18)
+Status: Draft
 
 Follows the cross-cutting TP (`docs/tp/TP.md`) and TP-01 of this slice, which defines the proposal mechanism (TP-01 TD-3, ADR-003), the `proposals` and `knowledge_log` tables and the `OwnerWordsPolicy`. "Cross-cutting TD-n" means a decision there.
+
+## Summary
+
+Fixed by the cross-cutting TP and TP-01, so not decided again:
 
 ## Context
 
@@ -33,6 +37,7 @@ FR-KNOWLEDGE-02-1, FR-KNOWLEDGE-02-2, FR-KNOWLEDGE-02-3, FR-KNOWLEDGE-02-4, FR-K
 
 ### TD-1: How does Knowledge find the drafts the owner approved, corrected or rejected?
 
+ADR: ADR-007
 FR-KNOWLEDGE-02-1 and FR-KNOWLEDGE-02-2: Deputy reads the log and can propose a lesson after an approval (unchanged or corrected). FR-KNOWLEDGE-02-3: a rejection leads to a lesson only with the owner's ok. The log can hold thousands of entries; an owner may not look at lessons for days.
 
 - **Option A** Keep a cursor (`knowledge_state.log_cursor`, the last log entry id scanned) and a table of pointers `lesson_sources(draft_number, chat, outcome, entry_id, entry_at)`. Each call reads from the cursor in pages of 100 (at most 5 pages), keeps a pointer for each reply draft with an `approved` or `rejected` entry, and advances the cursor after each page. Texts are read from the log again when shown. Cost: one small table and one row of state. Risk: a wipe must delete the pointers and move the cursor (TP-03).
@@ -43,6 +48,7 @@ Chosen: Option A. It loses nothing, stores no reply text, and a wipe of pointers
 
 ### TD-2: How does Deputy show the customer message a lesson came from?
 
+ADR: ADR-008
 FR-KNOWLEDGE-02-4: the owner sees the exact wording and the customer message it came from, labeled as customer text. The `approved` entry has no message reference. Drafts keeps `answers_message_id` in its own table, but the published log view does not carry it.
 
 - **Option A** Use published ports only. Read the draft's `proposed` entry from the log (a chat-scoped read, newest first, up to 100 entries, first entry with that draft number and kind `proposed`) to get the time T the draft was made. Then call Intake `ReadChat` (newest 50 messages) and take the newest message with source `customer` that Deputy had stored at or before T. This is the rule Drafts uses to pick the message a draft answers (the latest customer message when the draft was made, Drafts TP-01 TD-2). If nothing is found, the view says `message_unavailable` and the lesson can still be proposed. Cost: two reads. Risk: a chat with more than 100 log entries between the proposal and the approval, or more than 50 messages since, shows `message_unavailable`.
@@ -53,6 +59,7 @@ Chosen: Option B. The earlier plan was Option A with Option B as a request; the 
 
 ### TD-3: How does Deputy detect that a lesson disagrees with the catalog?
 
+ADR: ADR-009
 FR-KNOWLEDGE-02-10: lessons are free text, so Deputy does not detect conflicts in them. For each catalog item a lesson links to or names, Deputy also returns the catalog value, marked "catalog wins; lesson differs" when the lesson holds a different price or availability.
 
 - **Option A** A lesson may carry up to five structured `claims`: `{ item: string, field: 'price' | 'availability', value: string }`, written by the agent when it proposes and shown to the owner with the wording (the owner confirms both). At list time Deputy resolves each claim's item in the catalog (the `exact` tier of TP-01 TD-2), compares the claim with the catalog value, and returns the catalog value with the marker when they differ. A price claim is a plain decimal compared as a decimal string against the parsed catalog amount; an availability claim is `available` or `unavailable`, compared with the catalog value read through the mapping. Items named in the wording (a folded item name found inside the folded wording) are returned with their catalog data but no marker. Cost: a small structure the agent must fill. Risk: a lesson with no claims is not checked; the limit is stated and the tool description tells the agent to attach claims when a lesson holds a price or availability.
@@ -63,6 +70,7 @@ Chosen: Option A. It is language-free, exact, and checked by the owner at confir
 
 ### TD-4: How does the owner's confirmation bind to the wording, and how is a decline remembered?
 
+ADR: ADR-010
 FR-KNOWLEDGE-02-5b: a confirmation binds to the exact wording shown last; if the wording changes, a new confirmation holding that wording is needed. Edge case: a declined lesson is not proposed again for the same draft.
 
 - **Option A** A wording change creates a new proposal with a new number; the waiting one becomes `superseded` (TP-01 TD-3). The keep call carries the wording shown and the proposal number as arguments; it is refused when the wording differs from the stored one. A partial unique index on `proposals(draft_number)` for kind `lesson` and status `waiting`, `applying`, `applied` or `declined` allows one live proposal per draft, so a declined draft stays closed and a second proposal can only replace a waiting one. Cost: after a change the agent keeps the new proposal; the owner needs no number (TD-5). Risk: none beyond TP-01.
@@ -72,6 +80,7 @@ Chosen: Option A. The old confirmation names a number that no longer accepts a k
 
 ### TD-5: How does the owner approve a lesson in plain words?
 
+ADR: ADR-017
 Owner decision D27: the agent proposes a lesson in plain words with its kind (for example: "here *pesos* means the local currency, so 20 pesos is written $20", kind currency). The owner answers in plain words, with no number. A plain "yes" approves only when exactly one lesson is waiting and the agent just asked about it. Otherwise the agent asks which one. Lessons about how Deputy answers on the owner's number (prices, currency names, wording) are the main case. The Drafts number rule for sending drafts does not change.
 
 - **Option A** Deputy decides by its own state, not by reading the words. `keep_lesson` is accepted without a number in the words only when the named proposal is the only lesson proposal in state `waiting` and it was shown (by `propose_lesson` or `list_proposals`) at most 10 minutes ago. If two or more wait, it is refused with `which_lesson` and returns each waiting proposal's number, kind and wording; the agent asks which one, and the owner's next words must hold that number (the TP-01 rule). If the proposal was shown longer ago, it is refused with `ask_again`; the agent shows it again and asks. Cost: one time constant and a `shownAt` mark in `detail`. Risk: a "yes" for something else within 10 minutes keeps the lesson; the owner sees the wording first, the lesson can be edited or deleted, and the log holds the words.

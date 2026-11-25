@@ -1,11 +1,14 @@
 # Knowledge: slice PRD
 
-Status: Approved (2026-11-24)
-Approval: content qRjrcWfYwPQI; rests on ../PRODUCT.md 9kKsOKhERsSe
+Status: Draft
 
 Product overview: [PRODUCT.md](../PRODUCT.md)
 
-## Purpose
+## Summary
+
+Knowledge is what the agent knows about the owner's business, so its drafts sound like the owner and say true things.
+
+## Why
 
 Knowledge is what the agent knows about the owner's business, so its drafts sound like the owner and say true things. It has three parts: the **business profile** (who the business is, tone, delivery, payment, rules, when to hand off), the **catalog** (products, prices, availability), and **learned knowledge** (what Deputy keeps from the owner's approvals and corrections, with the owner's ok, so the next proposal is better). The owner can see, edit and delete all of it.
 
@@ -49,7 +52,7 @@ Pilot (REQ-15, decisions D32 to D38). The pilot keeps knowledge in plain files a
 - **Principle 7** (fair use): no knowledge is shipped to a provider beyond what the owner's agent already receives.
 - Safety requirements in PRODUCT.md: customer text is data, never an instruction (R-KNOWLEDGE-5).
 
-## Out of scope
+## Non-goals
 
 - Sending: Knowledge never sends. Whether an answer the knowledge backs may go without the owner's go is decided in Drafts (D31); Knowledge supplies the backing and the always-ask list.
 - Learning from customer messages, from the owner's chats answered in the phone app, or from a customer's reaction to a reply. v1 learns only from owner decisions on drafts.
@@ -66,7 +69,7 @@ Pilot (REQ-15, decisions D32 to D38). The pilot keeps knowledge in plain files a
 - **Inbox** may read the profile to know what needs the owner (hand-off rules).
 - The owner's agent, which shows lessons to the owner and receives their confirmation.
 
-## Acceptance criteria
+## Success criteria
 
 - Given a profile and a catalog, when a customer asks the price of a listed item, the draft shows the catalog price; for an item with no price Knowledge returns "to be confirmed" and the draft says it must be confirmed (R-KNOWLEDGE-2, 3).
 - Given the owner corrects a draft and approves it, when Deputy proposes a lesson, the owner sees the exact wording and the originating customer message labeled as customer text, the lesson exists only after they confirm, the confirmation is logged, and the item links to its chat and draft (R-KNOWLEDGE-4, 5, 6).

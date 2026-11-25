@@ -1,8 +1,12 @@
 # Technical Proposal: Where knowledge lives, export and wipe (Knowledge FRD-03)
 
-Status: Approved (2026-11-18)
+Status: Draft
 
 Follows the cross-cutting TP (`docs/tp/TP.md`), TP-01 (profile, catalog, proposals, `OwnerWordsPolicy`) and TP-02 (lessons) of this slice. "Cross-cutting TD-n" means a decision there.
+
+## Summary
+
+Fixed by the cross-cutting TP and the earlier TPs, so not decided again:
 
 ## Context
 
@@ -26,6 +30,7 @@ FR-KNOWLEDGE-03-1, FR-KNOWLEDGE-03-2, FR-KNOWLEDGE-03-3, FR-KNOWLEDGE-03-4, FR-K
 
 ### TD-1: In what form is the export?
 
+ADR: ADR-011
 FR-KNOWLEDGE-03-3: one export that holds everything (profile, catalog, lessons), in a form the owner can read and keep. FRD-03 information adds the lessons' links and the confirmation log. FRD open question: one file or several.
 
 - **Option A** One UTF-8 JSON file `exports/knowledge-<UTC time to the millisecond>.json` in the data folder. It holds `format`, `version`, `exportedAt`, `complete`, and one object per part: `profile` (the file text exactly as stored), `catalog` (`source`, the table as rows of strings, the delimiter, the confirmed mapping and the currency), `lessons` (all fields and claims), `proposals` (all rows except wipe requests), `log` (all knowledge log entries). Written to a temp file and renamed; mode 0600 on POSIX. Cost: one writer and one document builder. Risk: JSON is less pleasant to read than Markdown for a non-technical owner; the agent reads it to them on request.
@@ -36,6 +41,7 @@ Chosen: Option A. One file is "one export"; raw text is kept exactly (a profile 
 
 ### TD-2: How does a wipe delete files and rows that cannot share a transaction?
 
+ADR: ADR-012
 FR-KNOWLEDGE-03-5 and FR-KNOWLEDGE-03-9: after a confirmed wipe nothing remains except one entry (that a wipe happened, when, the owner's words). Edge cases: a wipe that fails halfway says what remains and never reports success; a second wipe says there is nothing to delete. The files and the database cannot be changed in one transaction.
 
 - **Option A** An intent row first, then resumable idempotent steps. Transaction 1 inserts the `knowledge_wipes` row with status `running`, the time and the owner's words, and marks the confirmation `applied`. Then delete the profile file, then the catalog file (or disconnect the sheet). Then transaction 2 deletes the database rows, resets the settings and the cursor, and sets the wipe row to `done` (or `partial` when a file step failed). Every step is safe to repeat. A wipe left `running` by a crash is finished by the next wipe-related call (`RequestWipe` and `WipeKnowledge` reconcile first) and marked `done` or `partial`. Cost: one table and one reconcile step. Risk: a crash leaves content for a while (reported as `partial` on the next request).
@@ -46,6 +52,7 @@ Chosen: Option A. The intent row is the audit entry the FRD wants and the thing 
 
 ### TD-3: How does the owner's confirmation name the wipe?
 
+ADR: ADR-013
 FR-KNOWLEDGE-03-4: Deputy first states what will be deleted, deletes nothing until the owner confirms, and the confirmation "names the action". FR-KNOWLEDGE-03-8: one way to wipe, taking the owner's words that name the action; refuses without them. The owner speaks any language.
 
 - **Option A** The proposal number of TP-01 TD-3: `request_wipe` creates a proposal and the owner's words must contain its number. Cost: nothing new. Risk: numbers are small and shared with drafts: the owner's "go on 7" for draft 7 while proposal 7 is a waiting wipe would delete everything, and a request left from last week still accepts "7".
@@ -56,6 +63,7 @@ Chosen: Option B. The code only keeps an accidental or stale confirmation out; i
 
 ### TD-4: What protects the owner's own files from a wipe confirmed with invented words?
 
+ADR: ADR-016
 The wipe deletes `profile.md` and `catalog.csv`, which the owner wrote. The six-digit code is shown to the agent, so an injected agent could request and confirm a wipe with invented words (D11). FR-KNOWLEDGE-03-7 says Deputy suggests an export before a wipe and does not require it of the owner.
 
 - **Option A** `WipeKnowledge` writes a complete export itself (TD-1) before it deletes anything, and refuses (`export_write_failed` or `export_incomplete`) when it cannot. The profile, a catalog file, the lessons, proposals and log must all be `ok`; a sheet catalog may fail to read because the wipe never deletes the sheet. The owner does nothing extra. Cost: an export file stays after the wipe. Risk: "no knowledge remains" is then true of the database and the files, not of that copy; the result gives its path and says deleting it is the owner's choice.

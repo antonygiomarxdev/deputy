@@ -1,8 +1,12 @@
 # Technical Proposal: Business profile and catalog (Knowledge FRD-01)
 
-Status: Approved (2026-11-18)
+Status: Draft
 
 Follows the cross-cutting TP (`docs/tp/TP.md`). "Cross-cutting TD-n" means a decision there. This TP also defines the proposal mechanism that FRD-02 and FRD-03 reuse (TP-02, TP-03).
+
+## Summary
+
+Fixed by the cross-cutting TP, so not decided again:
 
 ## Context
 
@@ -32,6 +36,7 @@ FR-KNOWLEDGE-01-1, FR-KNOWLEDGE-01-2, FR-KNOWLEDGE-01-3, FR-KNOWLEDGE-01-4, FR-K
 
 ### TD-1: How does Deputy find the sections of the profile?
 
+ADR: ADR-001
 The profile is a Markdown file the owner edits. Deputy must return "to be confirmed" for an empty section (FR-KNOWLEDGE-01-1, edge case "required field is empty") and must replace one section when a change is applied (FR-KNOWLEDGE-01-9). Owners write in any language, so the heading text cannot be assumed.
 
 - **Option A** A marker comment before each section, `<!-- deputy:section=payment -->`, with a fixed English id (`description`, `tone_language`, `may_do`, `must_not_do`, `pickup_delivery`, `payment`, `handoff`). The heading text after it is free. Cost: the template carries seven marker lines, and an owner can delete one. Risk: a deleted marker. The reader then reports `section_missing` for that id, still returns all text of the file, and a change to that section appends a new marked section at the end.
@@ -42,6 +47,7 @@ Chosen: Option A, because it is the only one that works for any heading language
 
 ### TD-2: How is a catalog item found by name?
 
+ADR: ADR-002
 FR-KNOWLEDGE-01-3 to FR-KNOWLEDGE-01-5: look up by name; no match says so; several matches are all returned. The FRD asks which matching is acceptable. Owners write names in any language and script.
 
 - **Option A** Fold both sides, then two tiers. Folding: Unicode NFKC, lower case, and removal of combining marks that follow a Latin, Greek, Cyrillic, Arabic or Hebrew letter (checked: `Piña` gives `pina`; Arabic harakat and Hebrew niqqud are removed; the Devanagari `कि` is kept, because in those scripts a mark changes the word). Tier `exact`: folded names are equal. Tier `contains`: every word of the query (split on whitespace and punctuation) is a substring of the folded name; a name written without spaces, such as Chinese, is one word and matches by substring. Both tiers are returned, `exact` first, each marked. Cost: a small pure function, no dependency. Risk: a short query matches many items (`pan` matches `panela`); mitigated by returning every match, never a pick, and by a cap with the total.
@@ -52,6 +58,7 @@ Chosen: Option A. It finds the plural and accent variants owners and customers a
 
 ### TD-3: How does the owner's go identify one proposal and bind to its values?
 
+ADR: ADR-003
 FR-KNOWLEDGE-01-10 and FR-KNOWLEDGE-01-11: apply takes the proposal identifier and the owner's words, refuses words that do not identify the proposal ("the Drafts rule for a go"), and the go binds to the old and new values shown. Edge case: with two proposals waiting, "ok" is not a go. The same mechanism serves lessons (TP-02) and the wipe (TP-03).
 
 - **Option A** Proposals are immutable and numbered. The number is a plain integer shown as "Proposal 4". The owner's words must contain the number as a whole token, using the same rule as Drafts (a maximal run of digits after mapping every `\p{Nd}` digit to ASCII, not part of a decimal). A change is a new proposal with a new number; a waiting proposal for the same target and field is marked `superseded`. Applying the old number is refused with `proposal_superseded`, and the new number needs new words. The words must not equal a stored customer message (Intake `IsCustomerText`) and must not equal the proposal's own new text. Cost: the owner says a number. Risk: a number shared with Drafts ("go on 3") can name a proposal 3; accepted for changes (a typo guard, not authorization; cross-cutting TD-6 and D11) and tightened for the wipe (TP-03).
@@ -62,6 +69,7 @@ Chosen: Option A. It is the Drafts rule, so one owner habit covers drafts and pr
 
 ### TD-4: How is a confirmed change written to the owner's file or spreadsheet?
 
+ADR: ADR-004
 An apply must change one cell (or add one row) in a catalog the owner also edits by hand, or one section of the profile, and must never lose the owner's other content.
 
 - **Option A** Cell operations with a row check done by the store adapter. The domain locates the row and produces `CellOp`s, each carrying the whole row as it was read. The adapter re-reads, checks that the row still equals it, and writes. File store: parse, change the cell, `unparse` with the same delimiter and line break, keep the byte-order mark and the final line break, check that parsing the output gives the expected table, write a temp file in the same folder, copy the old file to `catalog.csv.deputy-bak` (one copy, overwritten each time), rename the temp over the file. Sheet store: re-read the row, compare, then `values.update` of that one cell with `USER_ENTERED`. Cost: two row reads on a sheet and a small adapter per store. Risk: a change by the owner between the re-read and the write (a few milliseconds) is accepted.
@@ -72,6 +80,7 @@ Chosen: Option A. It is the only option that neither overwrites a hand edit nor 
 
 ### TD-5: How does Deputy know when the catalog was last saved?
 
+ADR: ADR-005
 FR-KNOWLEDGE-01-14: when the agent lists a waiting draft, Deputy marks it if the catalog was saved after the draft was written.
 
 - **Option A** Ask the storage for its modified time: the file's mtime, and for a spreadsheet the Drive API `modifiedTime`. Cost: exact for both. Risk: the Drive API is a second Google API the owner must enable in the same cloud project and a second scope (`drive.metadata.readonly`) on the service account, an extra setup step for a non-technical owner.
@@ -82,6 +91,7 @@ Chosen: Option B. The mtime is exact and free for files, which is the default; a
 
 ### TD-6: How does Deputy know which words mean "available" and which symbols mean which currency?
 
+ADR: ADR-006
 The availability column holds the owner's words (`yes`, `sí`, `agotado`, `1`, `متوفر`). Orders and the agent need to know whether an item can be ordered, and a change "mark unavailable" needs the word to write. A currency cell can hold a code (`USD`) or a symbol (`$`, which is also `USD`, `MXN`, `COP`).
 
 - **Option A** The mapping holds the vocabulary. Detection lists the distinct values of the availability column with counts and suggests none as meaning yes or no unless the column has exactly two distinct values; the owner marks each value `available` or `unavailable` when confirming the mapping, once. A symbol in a currency column is resolved the same way (`{ "$": "USD" }`), and ISO 4217 codes need no entry. Cost: one extra answer at confirmation. Risk: a new word added later (`pronto`) is unknown; the item then shows availability "to be confirmed" with reason `unrecognized` until the owner extends the mapping through a new proposal.
@@ -92,6 +102,7 @@ Chosen: Option A. It is the same idea as D22 (detect, show, confirm once) and wo
 
 ### TD-7: What is the stable reference of a catalog item?
 
+ADR: ADR-014
 Orders stores a reference and a snapshot, and later re-reads the item by that reference (`GetCatalogItems`). The owner's file has no key Deputy controls.
 
 - **Option A** The owner's id column when the mapping has one (`id:<cell>`), otherwise the folded name (`n:<folded name>`, the folding of TD-2). A repeated reference (two blank or equal ids, two rows with one name) gets the suffix `#2`, `#3` in file order. Cost: no state. Risk: without an id column, renaming a product changes its reference, and reordering rows that share a name swaps their suffixes. The mapping confirmation says so (question code `ref_by_name`, shown only when no column has the role `id`), so the owner can add an id column.
@@ -102,6 +113,7 @@ Chosen: Option A. It is never null, needs no write, and is stable across price, 
 
 ### TD-8: Who adds the "catalog changed since this draft" mark to a listed draft?
 
+ADR: ADR-015
 FR-KNOWLEDGE-01-14. Knowledge already depends on Drafts (it reads the drafts log, FR-KNOWLEDGE-02-1), so Drafts must not depend on Knowledge.
 
 - **Option A** Drafts' `ListDrafts` calls Knowledge through a Drafts outbound port. Cost: one call site. Risk: a cycle between two slices; the architecture test of TP-02 (no Drafts use case has a port to Knowledge) would fail.
