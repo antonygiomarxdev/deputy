@@ -1,6 +1,10 @@
 # Technical Proposal: Intake FRD-01, Providers
 
-Status: Approved (2026-11-18). Written 2026-11-17. Cross-cutting TP: `docs/tp/TP.md` (cited as "cross-cutting TD-n"). FRD: `../frd/FRD-01-providers.md`. This TP also defines the `Provider` port and the shared Intake types that TP-02, TP-03 and TP-04 use.
+Status: Draft
+
+## Summary
+
+What the cross-cutting TP already fixes.
 
 ## Context
 
@@ -25,6 +29,7 @@ FR-INTAKE-01-1, FR-INTAKE-01-2, FR-INTAKE-01-3, FR-INTAKE-01-4, FR-INTAKE-01-5, 
 
 ### TD-1: Where do the dev test entry points live?
 
+ADR: ADR-001
 FR-INTAKE-01-3, 01-5 and 01-6 need ways to create messages, forged deliveries and "missed" messages. FR-INTAKE-01-9 says they exist only under dev.
 
 - **Option A** Loopback HTTP routes (`/dev/deliver`, `/dev/hold`, `/dev/forge`) on the listener, registered only when the provider is dev. A dev message is signed with a fixed dev secret and goes through `ReceiveLiveDelivery`, so it takes the Kapso path. Cost: a small adapter and a loopback port in dev mode. Risk: a constant secret, so dev mode must stay on loopback.
@@ -35,6 +40,7 @@ Chosen: Option A. The old code already has dev routes, tests post to them, and t
 
 ### TD-2: How are dev messages kept out of real use after a switch?
 
+ADR: ADR-002
 FR-INTAKE-01-7 keeps stored messages; FR-INTAKE-01-10 and L3 hide dev messages once the provider is Kapso.
 
 - **Option A** A `dev` flag on each message and on the chat state key `(chat_id, dev)`. Intake's list and signal paths return only the world that matches the active provider. Cost: a column and one repository filter. Risk: under dev, real chats are hidden too (stricter than L3).

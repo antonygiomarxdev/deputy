@@ -85,8 +85,8 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-25 | RULE-12 | negative | A lesson with the same price as the catalog | Deputy returns the lessons | no conflict marker is returned |
 | EX-26 | RULE-13 | positive | The owner confirms, edits or deletes a lesson | the next draft is written | the change applies |
 | EX-27 | RULE-13 | negative | A draft written before the change is saved | the change is saved | the change does not apply to that draft |
-| EX-28 | RULE-10 | negative | A lesson was deleted | the agent drafts | the deleted lesson is not used
-| EX-29 | RULE-6 | positive | A proposed lesson waits and Deputy restarts | the owner confirms later | the proposal is still there
+| EX-28 | RULE-10 | negative | A lesson was deleted | the agent drafts | the deleted lesson is not used |
+| EX-29 | RULE-6 | positive | A proposed lesson waits and Deputy restarts | the owner confirms later | the proposal is still there |
 
 ## Decision table
 

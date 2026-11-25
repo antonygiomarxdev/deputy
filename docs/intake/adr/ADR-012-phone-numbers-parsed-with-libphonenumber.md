@@ -1,7 +1,11 @@
 # ADR-012: Phone numbers are parsed to E.164 with libphonenumber-js and compared by a per-country line key
 
 ## Status
-Accepted (2026-11-18)
+Proposed
+
+## Summary
+
+The `PhoneNumber` value object in `src/shared` holds an E.164 string and computes `lineKey()` with plain code.
 
 ## Context
 FR-INTAKE-04-14: "+1 212 555 0100", "1-212-555-0100" and "12125550100" are one number, for owner numbers and senders. Deputy serves owners in many countries. Owners type numbers in local formats, with or without a country code or a national trunk prefix. A configured number that never matches makes the owner's own replies look like customer messages.
@@ -32,7 +36,7 @@ Sources, all third-party except one sentence:
 - The rules are a table in the value object, one entry per country. A new country is a new entry and a test.
 - Launch gate (live check, first on Kapso): send one message through Deputy to a number in AR, MX and BR where one is available, and record the sender and counterpart format in the echo and in the inbound message. If a format differs from this table, fix the table before launch.
 
-## Alternatives
+## Options considered
 - A hand-written digits-only rule (strip non-digits, 9 to 15 digits). Rejected: it cannot add a missing country code or handle national prefixes. A local number is refused or stored wrong, and the owner's replies stop matching.
 - Require a leading `+` and the country code. Rejected: it fails FR-INTAKE-04-14 ("1-212-555-0100" must match) and puts formatting work on a non-technical owner.
 - Compare E.164 strings only (the first version of this ADR). Rejected: for an Argentine or Mexican owner the id `5491123456789` and the typed `+54 11 2345 6789` never match, so every owner reply from the phone app is classed as `customer`, and Deputy would answer a chat the owner already answered.

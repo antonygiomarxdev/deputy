@@ -74,7 +74,7 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-16 | RULE-8 | boundary | The round trip has not passed | the owner asks for the final summary | no final summary is shown, because the summary is shown on completion |
 | EX-17 | RULE-9 | positive | Notify is available for the agent | Setup offers push notices | they are labeled optional |
 | EX-18 | RULE-9 | negative | The agent does not support push notices | Setup completes | it completes without them |
-| EX-19 | RULE-3 | positive | The owner approved the draft | the reply arrives on the other phone | Setup is marked complete and shows the final summary
+| EX-19 | RULE-3 | positive | The owner approved the draft | the reply arrives on the other phone | Setup is marked complete and shows the final summary |
 
 ## Decision table
 

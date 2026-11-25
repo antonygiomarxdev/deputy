@@ -1,7 +1,11 @@
 # ADR-011: A report is linked to a Deputy send by the provider message id, with a text match only for unknown outcomes
 
 ## Status
-Accepted (2026-11-18)
+Proposed
+
+## Summary
+
+`SendText` writes an `outgoing` row (send id, chat, text, parts) first, sends each part, then in one transaction stores the provider id of that part in `outgoing_parts` and upserts the message with source `sent_through_deputy`.
 
 ## Context
 L2: a message is "sent through Deputy" only when it matches a Deputy send identifier. The provider's way of echoing an API-sent message is unconfirmed (FRD-04 open question 2). The report can arrive before or after Deputy stores the id. From the Intake TP-04, TD-1.
@@ -12,7 +16,7 @@ L2: a message is "sent through Deputy" only when it matches a Deputy send identi
 - A message is `sent_through_deputy` only through a row in `outgoing_parts`.
 - When the outcome is unknown, `FindOutgoing` looks in the stored owner-number messages of the chat since the send for one message per part with exactly the part text. Exactly one per part links them to the send id. Anything else leaves the send unknown.
 
-## Alternatives
+## Options considered
 - Match every echo by chat, text and time: a staff member sending the same words would be labelled Deputy.
 - A client reference field on the send: Kapso documents none that comes back on an echo.
 
