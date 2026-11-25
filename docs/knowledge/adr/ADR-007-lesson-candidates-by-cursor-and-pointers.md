@@ -1,7 +1,11 @@
 # ADR-007: Lesson candidates are found by a log cursor and stored as pointers
 
 ## Status
-Accepted (2026-11-18)
+Proposed
+
+## Summary
+
+`knowledge_state.log_cursor` holds the id of the last log entry scanned.
 
 ## Context
 FR-KNOWLEDGE-02-1: Knowledge reads the drafts log and is not told by Drafts. FR-KNOWLEDGE-02-2 and FR-KNOWLEDGE-02-3: an approval (unchanged or corrected) or a rejection can lead to a proposed lesson. The log grows without limit and the owner may not look for days. From TP-02 TD-1.
@@ -13,7 +17,7 @@ FR-KNOWLEDGE-02-1: Knowledge reads the drafts log and is not told by Drafts. FR-
 - A candidate is a pointer with no lesson proposal in status `waiting`, `applying`, `applied` or `declined` for that draft. Texts are read again from the log by entry id when shown.
 - Five pages bound one call to about 500 local reads; the cursor continues in the next call.
 
-## Alternatives
+## Options considered
 - Read the newest 100 entries on every call: 30 drafts at about six entries each is 180 entries a day, so an approval from the morning is out of the window by evening and is lost without a trace.
 - Copy the reply texts into Knowledge: a second copy of text with names, prices and addresses that Drafts can never correct and every wipe must find.
 

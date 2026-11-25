@@ -1,7 +1,11 @@
 # ADR-012: A wipe records its intent first and runs idempotent steps
 
 ## Status
-Accepted (2026-11-18)
+Proposed
+
+## Summary
+
+Before transaction 1, a complete export is written (ADR-016); if it fails, nothing is deleted.
 
 ## Context
 FR-KNOWLEDGE-03-5 and FR-KNOWLEDGE-03-9: after a confirmed wipe nothing remains except one entry holding the time and the owner's words. FRD edge cases: a wipe that fails halfway says what remains and never reports success; a second wipe says there is nothing to delete. Files and database rows cannot be changed in one transaction. From TP-03 TD-2.
@@ -16,7 +20,7 @@ FR-KNOWLEDGE-03-5 and FR-KNOWLEDGE-03-9: after a confirmed wipe nothing remains 
 - The cursor moves so that the approvals already in the drafts log are not offered as lessons again after a wipe.
 - The wipe changes no other slice: Orders keep their snapshots, Drafts and their log stay (FR-KNOWLEDGE-03-10).
 
-## Alternatives
+## Options considered
 - Delete rows in one transaction, then the files, with no intent row: a crash after the commit leaves the profile and catalog on disk with no record that the owner confirmed, and nothing triggers the rest.
 - Move the files to a trash folder first and delete it last: a copy of the profile and catalog stays in the data folder until the last step, which defeats a wipe, and the PRD says wipe deletes.
 

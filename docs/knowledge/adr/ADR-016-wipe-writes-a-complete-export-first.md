@@ -1,7 +1,11 @@
 # ADR-016: A wipe writes a complete export first and refuses if it cannot
 
 ## Status
-Accepted (2026-11-18)
+Proposed
+
+## Summary
+
+`WipeKnowledge` runs the export of ADR-011 after the words and the code are accepted and before transaction 1 of ADR-012.
 
 ## Context
 A wipe deletes the owner's own `profile.md` and `catalog.csv`. The confirmation code is shown to the agent, so an injected agent could request and confirm a wipe with invented owner words (D11). FR-KNOWLEDGE-03-7: Deputy suggests an export before a wipe and does not require one of the owner. From TP-03 TD-4.
@@ -12,7 +16,7 @@ A wipe deletes the owner's own `profile.md` and `catalog.csv`. The confirmation 
 - Otherwise it refuses (`export_write_failed` or `export_incomplete`), and nothing is deleted.
 - The result carries the export path and says the export stays and that deleting it is the owner's choice. A wipe cannot be undone inside Deputy; this file is the only way back.
 
-## Alternatives
+## Options considered
 - Refuse unless the owner exported recently (`export_required`): it makes an export mandatory for the owner, which the FRD says not to, and needs a saved time for the profile and the lessons that Knowledge does not keep.
 - No protection beyond the code and the words: authored files are lost for good by a forged confirmation.
 

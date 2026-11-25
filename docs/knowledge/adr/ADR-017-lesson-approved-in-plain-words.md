@@ -1,7 +1,11 @@
 # ADR-017: A lesson is approved in plain words, by state
 
 ## Status
-Accepted (2026-11-18)
+Proposed
+
+## Summary
+
+`keep_lesson` takes the proposal number as an argument.
 
 ## Context
 Owner decision D27: the owner answers a lesson in their own words, not only "yes", with no number. The agent interprets the answer, learning how the owner speaks, and asks when in doubt. An answer that names no lesson approves only when exactly one lesson is waiting and the agent just asked about it; otherwise the agent asks which one. Deputy cannot read a "yes" in every language (D20), so the rule must rest on Deputy's own state. The Drafts number rule for sending drafts does not change. From TP-02 TD-5.
@@ -15,7 +19,7 @@ Owner decision D27: the owner answers a lesson in their own words, not only "yes
 - The words are still non-empty, at most 1000 characters, and equal neither the wording nor a stored customer message.
 - A lesson has a `kind` (`currency`, `price`, `wording`, `other`) shown with the wording.
 
-## Alternatives
+## Options considered
 - Keep the number in the words: the friction the owner rejected.
 - Read the words for a yes: a word list per language.
 
