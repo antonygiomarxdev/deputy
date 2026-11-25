@@ -1,8 +1,13 @@
 # Inbox: slice PRD
 
-Status: Approved (2026-11-18) · Part of [Deputy product overview](../PRODUCT.md)
+Status: Approved (2026-11-24) · Part of [Deputy product overview](../PRODUCT.md)
+Approval: content ERHzPV4_xdXF; rests on ../PRODUCT.md 9kKsOKhERsSe
 
-## Purpose
+## Summary
+
+Inbox answers the owner's question "what's pending?" with the chats waiting for a reply, sorted by what they need.
+
+## Why
 
 Inbox answers one question for the owner: "what's pending?". It decides which chats are waiting for a reply, sorts them by what they need, and gives the agent a summary the owner can act on. It works for any agent through pull: the owner asks, the agent reads the inbox. It does not need push.
 
@@ -39,7 +44,7 @@ Inbox only reads, apart from one owner setting: ignoring a chat. It sends nothin
 - **Principle 4 (agent-agnostic).** R-INBOX-10 makes the summary work by pull, with no push needed.
 - **Principle 1 (nothing goes out without the owner's go).** Inbox only reads and summarizes. It has no send path, and drafts it lists are not sent by listing them.
 
-## Out of scope
+## Non-goals
 
 - Receiving, verifying, storing messages, deciding message source, and catch-up (Intake).
 - Writing drafts, the owner's go, and sending (Drafts).
@@ -56,7 +61,7 @@ Inbox only reads, apart from one owner setting: ignoring a chat. It sends nothin
 - **Orders** tells Inbox which customer messages are already recorded as orders (R-INBOX-16).
 - **Setup** provides the owner's numbers, which Intake uses to decide source, and the owner's choice of N.
 
-## Acceptance criteria
+## Success criteria
 
 1. Three customer messages in three chats, none answered: the summary lists all three (R-INBOX-4).
 2. The owner answers one of them from the app: that chat leaves the pending list and appears under "already answered by the owner" (R-INBOX-2, R-INBOX-5).
