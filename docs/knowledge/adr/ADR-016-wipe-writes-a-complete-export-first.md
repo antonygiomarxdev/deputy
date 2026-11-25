@@ -1,7 +1,7 @@
 # ADR-016: A wipe writes a complete export first and refuses if it cannot
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

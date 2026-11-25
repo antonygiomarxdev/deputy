@@ -1,7 +1,7 @@
 # ADR-008: The customer message of a lesson is read by its id, which the drafts log view carries
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

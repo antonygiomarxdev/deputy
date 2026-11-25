@@ -1,7 +1,7 @@
 # ADR-010: The scrub exception is guarded in the trigger
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

@@ -1,6 +1,7 @@
 # FRD-03: Where knowledge lives, export and wipe
 
-Status: Draft
+Status: Approved (2026-11-25)
+Approval: content OE8o8ezn7VOc; rests on ../PRD.md zcjRAPpV8iOY
 
 
 ## Summary

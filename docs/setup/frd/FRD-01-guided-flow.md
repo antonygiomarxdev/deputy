@@ -1,6 +1,7 @@
 # FRD-01: Guided flow
 
-Status: Draft · Slice: Setup · Part of [Setup PRD](../PRD.md)
+Status: Approved (2026-11-25) · Slice: Setup · Part of [Setup PRD](../PRD.md)
+Approval: content noPahJbV_gxJ; rests on ../PRD.md SshZ554utN5k
 
 Deferred (REQ-15, 2026-11-24): the local pilot replaces the guided flow with a Deputy skill (D33). The document stays as written.
 

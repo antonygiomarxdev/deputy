@@ -1,7 +1,7 @@
 # ADR-010: A change of wording is a new proposal, and a decided draft stays closed
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

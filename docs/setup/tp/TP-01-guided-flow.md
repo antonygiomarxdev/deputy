@@ -1,6 +1,7 @@
 # Technical Proposal: Guided flow (Setup FRD-01)
 
-Status: Draft
+Status: Approved (2026-11-25)
+Approval: content bRKTssKtnC6q; rests on ../frd/FRD-01-guided-flow.md noPahJbV_gxJ; rests on ../../tp/TP.md EF063EDZvKuZ
 
 Follows the cross-cutting TP (`docs/tp/TP.md`). "Cross-cutting TD-n" means a decision there. This TP also fixes the Setup domain that TP-02, TP-03 and TP-04 build on.
 

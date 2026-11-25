@@ -1,7 +1,7 @@
 # ADR-013: A wipe is confirmed with a random six-digit code that expires in ten minutes
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

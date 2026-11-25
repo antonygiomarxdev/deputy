@@ -1,6 +1,7 @@
 # Technical Proposal: The owner's go (Drafts FRD-02)
 
-Status: Draft. Follows the cross-cutting TP (`docs/tp/TP.md`) and builds on TP-01 (the `Draft` aggregate, the `drafts` table, the unit of work). "Cross-cutting TD-n" means a decision there.
+Status: Approved (2026-11-25). Follows the cross-cutting TP (`docs/tp/TP.md`) and builds on TP-01 (the `Draft` aggregate, the `drafts` table, the unit of work). "Cross-cutting TD-n" means a decision there.
+Approval: content AEZJrlA7RO0u; rests on ../frd/FRD-02-owners-go.md tJy1qMZI3-Ym; rests on ../../tp/TP.md EF063EDZvKuZ
 
 ## Summary
 

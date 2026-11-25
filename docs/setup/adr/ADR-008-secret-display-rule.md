@@ -1,7 +1,7 @@
 # ADR-008: A secret shows its last four characters only when it has 20 or more
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

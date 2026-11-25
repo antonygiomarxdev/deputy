@@ -1,7 +1,7 @@
 # ADR-014: The currency is suggested from the country by a maintained package behind a port
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

@@ -1,6 +1,7 @@
 # Technical Proposal: Costs, warnings and connecting the number (Setup FRD-02)
 
-Status: Draft
+Status: Approved (2026-11-25)
+Approval: content OYc0w_OW3RKo; rests on ../frd/FRD-02-connect-number.md O-q0NoXhjU8X; rests on ../../tp/TP.md EF063EDZvKuZ
 
 Follows the cross-cutting TP (`docs/tp/TP.md`) and Setup TP-01 (the `SetupProgress` aggregate, the step list, the tables `setup_run`, `setup_progress`, `setup_fact`, the ports `ProviderProbe`, `SyncStatusReader`, `OwnerNumbersReader`, `ConnectionConfigReader`). "Cross-cutting TD-n" means a decision there.
 

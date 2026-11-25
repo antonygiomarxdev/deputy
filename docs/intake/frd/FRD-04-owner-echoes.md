@@ -1,6 +1,7 @@
 # FRD-04: Owner replies and source
 
-Status: Draft
+Status: Approved (2026-11-25)
+Approval: content _z8OPmkwqtev; rests on ../PRD.md cI-9187LdITZ
 
 
 ## Summary

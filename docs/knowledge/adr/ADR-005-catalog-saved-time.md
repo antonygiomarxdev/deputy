@@ -1,7 +1,7 @@
 # ADR-005: Catalog saved time is the file's mtime, or a content fingerprint for a sheet
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

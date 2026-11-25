@@ -1,7 +1,7 @@
 # ADR-003: Live deliveries are verified inside the use case through the Provider port
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

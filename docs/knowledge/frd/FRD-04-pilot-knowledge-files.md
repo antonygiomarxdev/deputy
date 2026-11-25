@@ -1,6 +1,7 @@
 # FRD-04: Knowledge files for the pilot
 
-Status: Draft
+Status: Approved (2026-11-25)
+Approval: content 09v3QSgMhCdq; rests on ../PRD.md zcjRAPpV8iOY
 
 ## Summary
 

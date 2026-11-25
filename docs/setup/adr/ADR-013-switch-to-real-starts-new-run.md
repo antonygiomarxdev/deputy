@@ -1,7 +1,7 @@
 # ADR-013: Switching from test mode to the real provider starts a new run
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

@@ -1,7 +1,7 @@
 # ADR-011: A report is linked to a Deputy send by the provider message id, with a text match only for unknown outcomes
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

@@ -1,6 +1,7 @@
 # Technical Proposal: Knowledge files for the pilot (Knowledge FRD-04)
 
-Status: Draft
+Status: Approved (2026-11-25)
+Approval: content yc8oB2PMpIe0; rests on ../frd/FRD-04-pilot-knowledge-files.md 09v3QSgMhCdq; rests on ../../tp/TP.md EF063EDZvKuZ
 
 ## Summary
 

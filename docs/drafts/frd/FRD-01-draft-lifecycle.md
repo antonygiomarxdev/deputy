@@ -1,6 +1,7 @@
 # FRD-01: Draft lifecycle
 
-Status: Draft
+Status: Approved (2026-11-25)
+Approval: content iWkSoph0UXxd; rests on ../PRD.md 5O_P25il8pzW
 
 
 ## Summary

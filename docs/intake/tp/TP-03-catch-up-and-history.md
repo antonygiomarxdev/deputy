@@ -1,6 +1,7 @@
 # Technical Proposal: Intake FRD-03, Catch-up and history
 
-Status: Draft
+Status: Approved (2026-11-25)
+Approval: content Rp96sNHOsYw-; rests on ../frd/FRD-03-catch-up-and-history.md U_anxOFjkRSz; rests on ../../tp/TP.md EF063EDZvKuZ
 
 ## Summary
 

@@ -1,7 +1,7 @@
 # ADR-004: One use per approval, enforced by a revision check
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

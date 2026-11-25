@@ -1,7 +1,7 @@
 # ADR-012: Phone numbers are parsed to E.164 with libphonenumber-js and compared by a per-country line key
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

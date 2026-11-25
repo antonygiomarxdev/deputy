@@ -1,7 +1,7 @@
 # ADR-003: Refuse owner words that are copied customer or draft text
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

@@ -1,7 +1,7 @@
 # ADR-007: The owner's choice after a hold is read from the next call
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

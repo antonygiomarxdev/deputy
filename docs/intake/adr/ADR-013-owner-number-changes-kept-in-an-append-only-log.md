@@ -1,7 +1,7 @@
 # ADR-013: Owner numbers keep a separate append-only change log
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

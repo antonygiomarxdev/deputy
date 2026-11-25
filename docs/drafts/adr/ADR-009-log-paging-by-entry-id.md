@@ -1,7 +1,7 @@
 # ADR-009: The log is paged by entry id
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

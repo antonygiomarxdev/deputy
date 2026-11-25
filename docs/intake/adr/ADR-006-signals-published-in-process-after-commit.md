@@ -1,7 +1,7 @@
 # ADR-006: "Message stored" signals are published in process after commit, grouped per run
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

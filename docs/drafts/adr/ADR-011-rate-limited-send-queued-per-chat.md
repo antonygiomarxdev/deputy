@@ -1,7 +1,7 @@
 # ADR-011: A rate-limited send is queued per chat and retried with every check
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

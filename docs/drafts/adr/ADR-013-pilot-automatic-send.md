@@ -1,7 +1,7 @@
 # ADR-013: The local pilot sends a knowledge-backed answer without the owner's go
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

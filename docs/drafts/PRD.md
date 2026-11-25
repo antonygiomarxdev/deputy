@@ -1,7 +1,7 @@
 # Drafts: slice PRD
 
-Status: Draft
-Approval: content hiGOde2AZpUm; rests on ../PRODUCT.md 9kKsOKhERsSe
+Status: Approved (2026-11-25)
+Approval: content 5O_P25il8pzW; rests on ../PRODUCT.md 9kKsOKhERsSe
 
 
 ## Summary

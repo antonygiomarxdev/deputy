@@ -1,7 +1,7 @@
 # ADR-009: A message is history when its origin says so or it was sent before Deputy connected
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

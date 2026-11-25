@@ -1,6 +1,7 @@
 # Knowledge: slice PRD
 
-Status: Draft
+Status: Approved (2026-11-25)
+Approval: content zcjRAPpV8iOY; rests on ../PRODUCT.md 9kKsOKhERsSe
 
 Product overview: [PRODUCT.md](../PRODUCT.md)
 

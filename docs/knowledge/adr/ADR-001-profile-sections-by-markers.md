@@ -1,7 +1,7 @@
 # ADR-001: Profile sections are found by marker comments
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

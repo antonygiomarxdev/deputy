@@ -1,7 +1,7 @@
 # ADR-002: Time is recorded as events and computed on read
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

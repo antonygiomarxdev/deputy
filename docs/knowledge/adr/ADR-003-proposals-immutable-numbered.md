@@ -1,7 +1,7 @@
 # ADR-003: Proposals are immutable and numbered; the owner's words must contain the number
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

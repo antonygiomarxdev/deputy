@@ -1,7 +1,7 @@
 # ADR-007: Live delivery passes only on a signature-verified delivery seen by Intake
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

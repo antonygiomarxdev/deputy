@@ -1,7 +1,7 @@
 # ADR-007: Lesson candidates are found by a log cursor and stored as pointers
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

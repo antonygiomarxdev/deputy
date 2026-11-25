@@ -1,6 +1,7 @@
 # FRD-01: Business profile and catalog
 
-Status: Draft
+Status: Approved (2026-11-25)
+Approval: content 40wrxQnfp-5V; rests on ../PRD.md zcjRAPpV8iOY
 
 
 ## Summary

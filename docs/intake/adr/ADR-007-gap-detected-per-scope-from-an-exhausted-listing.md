@@ -1,7 +1,7 @@
 # ADR-007: A possible gap is detected per listing scope, when an exhausted listing lacks a message Deputy already stored
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

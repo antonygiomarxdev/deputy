@@ -1,7 +1,7 @@
 # ADR-017: A lesson is approved in plain words, by state
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

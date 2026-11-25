@@ -1,6 +1,7 @@
 # FRD-01: Providers
 
-Status: Draft
+Status: Approved (2026-11-25)
+Approval: content 2fjCdf6zb9nI; rests on ../PRD.md cI-9187LdITZ
 
 
 ## Summary

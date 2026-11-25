@@ -1,6 +1,7 @@
 # Technical Proposal: The owner's control chat and the pilot tools (Intake FRD-05)
 
-Status: Draft
+Status: Approved (2026-11-25)
+Approval: content XC472R0ntXaC; rests on ../frd/FRD-05-pilot-owner-chat-and-tools.md v-MGekQaQc5c; rests on ../../tp/TP.md EF063EDZvKuZ
 
 ## Summary
 

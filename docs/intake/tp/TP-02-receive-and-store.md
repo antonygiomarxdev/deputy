@@ -1,6 +1,7 @@
 # Technical Proposal: Intake FRD-02, Receive, verify and store
 
-Status: Draft
+Status: Approved (2026-11-25)
+Approval: content bxJu4EXtIOq0; rests on ../frd/FRD-02-receive-and-store.md p5kRoy5qsJF9; rests on ../../tp/TP.md EF063EDZvKuZ
 
 ## Summary
 

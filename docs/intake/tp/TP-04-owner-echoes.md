@@ -1,6 +1,7 @@
 # Technical Proposal: Intake FRD-04, Owner replies and source
 
-Status: Draft
+Status: Approved (2026-11-25)
+Approval: content Z4FuxkIDc3mh; rests on ../frd/FRD-04-owner-echoes.md _z8OPmkwqtev; rests on ../../tp/TP.md EF063EDZvKuZ
 
 ## Summary
 

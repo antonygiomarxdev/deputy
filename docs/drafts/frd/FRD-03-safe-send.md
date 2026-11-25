@@ -1,6 +1,7 @@
 # FRD-03: Safe send and outcome
 
-Status: Draft
+Status: Approved (2026-11-25)
+Approval: content Hlb-AXBc9tyr; rests on ../PRD.md 5O_P25il8pzW
 
 
 ## Summary

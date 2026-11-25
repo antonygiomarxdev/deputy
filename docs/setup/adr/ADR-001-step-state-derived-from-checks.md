@@ -1,7 +1,7 @@
 # ADR-001: The current step is derived from checks, not stored as a pointer
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

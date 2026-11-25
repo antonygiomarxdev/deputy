@@ -1,6 +1,7 @@
 # FRD-02: Costs, warnings and connecting the number
 
-Status: Draft · Slice: Setup · Part of [Setup PRD](../PRD.md)
+Status: Approved (2026-11-25) · Slice: Setup · Part of [Setup PRD](../PRD.md)
+Approval: content O-q0NoXhjU8X; rests on ../PRD.md SshZ554utN5k
 
 Deferred (REQ-15, 2026-11-24): the local pilot connects Kapso and records the numbers through the skill and Intake FRD-05 (D33). The document stays as written.
 

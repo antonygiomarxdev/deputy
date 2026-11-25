@@ -1,6 +1,7 @@
 # FRD-04: Profile, catalog, test and finish
 
-Status: Draft · Slice: Setup · Part of [Setup PRD](../PRD.md)
+Status: Approved (2026-11-25) · Slice: Setup · Part of [Setup PRD](../PRD.md)
+Approval: content By4tdSuDVJcu; rests on ../PRD.md SshZ554utN5k
 
 Deferred (REQ-15, 2026-11-24): the local pilot sets up the business profile through the skill's interview (D33, D38). The document stays as written.
 
