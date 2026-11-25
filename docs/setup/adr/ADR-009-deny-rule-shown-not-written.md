@@ -1,7 +1,7 @@
 # ADR-009: Setup shows a deny rule for the agent and never writes it
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

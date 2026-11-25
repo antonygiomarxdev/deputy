@@ -1,7 +1,7 @@
 # ADR-012: The round trip is derived from evidence, with only the arrival as the owner's word
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

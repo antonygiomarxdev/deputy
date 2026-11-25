@@ -1,7 +1,7 @@
 # ADR-006: Owner numbers are proposed in Setup and applied by the owner's terminal command
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

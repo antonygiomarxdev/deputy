@@ -1,7 +1,7 @@
 # ADR-011: The profile and catalog draft waits in Setup until the owner confirms
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

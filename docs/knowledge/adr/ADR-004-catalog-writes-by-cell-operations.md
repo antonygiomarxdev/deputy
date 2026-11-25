@@ -1,7 +1,7 @@
 # ADR-004: A confirmed change is written as cell operations with a row check
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

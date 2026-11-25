@@ -1,6 +1,7 @@
 # Technical Proposal: Intake FRD-01, Providers
 
-Status: Draft
+Status: Approved (2026-11-25)
+Approval: content doD7iTku48gK; rests on ../frd/FRD-01-providers.md 2fjCdf6zb9nI; rests on ../../tp/TP.md EF063EDZvKuZ
 
 ## Summary
 

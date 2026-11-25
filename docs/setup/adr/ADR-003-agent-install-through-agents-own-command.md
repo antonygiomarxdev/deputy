@@ -1,7 +1,7 @@
 # ADR-003: Install into the agent with the agent's own add command
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

@@ -1,7 +1,7 @@
 # ADR-010: CatchUpChat waits for the running catch-up, then reads that one conversation
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

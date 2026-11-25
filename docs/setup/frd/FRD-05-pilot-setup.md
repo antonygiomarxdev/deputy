@@ -1,6 +1,7 @@
 # FRD-05: Pilot setup by asking the agent
 
-Status: Draft
+Status: Approved (2026-11-25)
+Approval: content 2KZfaY-I45MG; rests on ../PRD.md SshZ554utN5k
 
 ## Summary
 

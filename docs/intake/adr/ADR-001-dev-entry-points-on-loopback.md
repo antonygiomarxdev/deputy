@@ -1,7 +1,7 @@
 # ADR-001: Dev test entry points are loopback HTTP routes that exist only under the dev provider
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

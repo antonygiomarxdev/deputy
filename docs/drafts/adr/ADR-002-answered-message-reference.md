@@ -1,7 +1,7 @@
 # ADR-002: A draft keeps a reference to the message it answers, not a copy
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

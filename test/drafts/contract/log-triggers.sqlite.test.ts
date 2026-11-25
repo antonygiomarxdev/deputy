@@ -14,6 +14,7 @@ describe("FR-DRAFTS-04-7: drafts_log is append-only", () => {
     await expect(db.run("DELETE FROM drafts_log")).rejects.toThrow("append-only");
   });
 
+  // covers: drafts/FRD-04/EX-13
   test("an UPDATE of a reply entry aborts, scrub flag included", async () => {
     const db = await openLogDatabase();
     await db.run(insert("proposed", "reply"));

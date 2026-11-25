@@ -1,7 +1,7 @@
 # ADR-005: Order commands get their go in Drafts, which then calls Orders
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

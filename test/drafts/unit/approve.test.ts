@@ -21,6 +21,7 @@ const go = (over: Partial<Parameters<Draft["approve"]>[0]> = {}) => ({
 });
 
 describe("approve", () => {
+  // covers: drafts/FRD-02/EX-5
   test("FR-DRAFTS-02-3: a shown draft with the exact text gives a used Approval and the Approved event", () => {
     const d = draft();
     const r = d.approve(go());

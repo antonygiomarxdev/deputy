@@ -1,6 +1,7 @@
 # FRD-02: Learned knowledge
 
-Status: Draft
+Status: Approved (2026-11-25)
+Approval: content Djc7h77WAie-; rests on ../PRD.md zcjRAPpV8iOY
 
 
 ## Summary

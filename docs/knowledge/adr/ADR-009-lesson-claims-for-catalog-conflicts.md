@@ -1,7 +1,7 @@
 # ADR-009: A lesson may carry structured claims, and the catalog wins when they differ
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

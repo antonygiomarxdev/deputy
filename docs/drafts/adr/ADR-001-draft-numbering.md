@@ -1,7 +1,7 @@
 # ADR-001: Draft numbers come from a counter row
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

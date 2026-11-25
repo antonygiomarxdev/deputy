@@ -1,7 +1,7 @@
 # ADR-004: The chat state projection is recomputed in the same transaction that stores messages
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

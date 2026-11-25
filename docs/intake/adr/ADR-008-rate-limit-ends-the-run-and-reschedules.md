@@ -1,7 +1,7 @@
 # ADR-008: A rate limit ends the run, records the retry time, and the scheduler resumes it
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

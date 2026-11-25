@@ -1,6 +1,7 @@
 # Technical Proposal: Where knowledge lives, export and wipe (Knowledge FRD-03)
 
-Status: Draft
+Status: Approved (2026-11-25)
+Approval: content 2XwX0uAwh8hZ; rests on ../frd/FRD-03-export-and-wipe.md OE8o8ezn7VOc; rests on ../../tp/TP.md EF063EDZvKuZ
 
 Follows the cross-cutting TP (`docs/tp/TP.md`), TP-01 (profile, catalog, proposals, `OwnerWordsPolicy`) and TP-02 (lessons) of this slice. "Cross-cutting TD-n" means a decision there.
 

@@ -15,6 +15,7 @@ const create = (h: H, text: string, kind: "reply" | "order" = "reply") =>
   kind === "reply" ? h.createDraft.run({ kind, chat: "chat-a", text }) : h.createDraft.run({ kind, chat: "chat-a", order: { summary: text } });
 
 describe("FR-DRAFTS-04-1: every event writes its entry", () => {
+  // covers: drafts/FRD-04/EX-1
   test("a draft proposed, changed, approved and sent leaves one entry per event, in order, naming the draft and the chat", async () => {
     const h = makeDrafts({ chats });
     await create(h, "ten");
@@ -88,6 +89,7 @@ describe("FR-DRAFTS-04-1: approval voided", () => {
 });
 
 describe("FR-DRAFTS-04-2 and -4", () => {
+  // covers: drafts/FRD-04/EX-3
   test("a draft the owner edited and sent keeps the proposed and the final text, and they differ", async () => {
     const h = makeDrafts({ chats });
     await create(h, "ten");
@@ -101,6 +103,7 @@ describe("FR-DRAFTS-04-2 and -4", () => {
     expect(log.find((e) => e.kind === "sent")?.finalText).toBe("eleven");
   });
 
+  // covers: drafts/FRD-04/EX-7
   test("the approved entry holds the owner's whole sentence and the send id; the entries of the attempt point to it", async () => {
     const h = makeDrafts({ chats });
     await create(h, "ten");
@@ -139,6 +142,8 @@ describe("FR-DRAFTS-04-2 and -4", () => {
 });
 
 describe("FR-DRAFTS-04-8 and -9: orders", () => {
+  // covers: drafts/FRD-04/EX-15
+  // covers: drafts/FRD-04/EX-17
   test("an approved order logs approved, sending and recorded with the owner's words and the order id, and no text", async () => {
     const h = makeDrafts({ chats });
     await create(h, "2 cakes for Friday", "order");
@@ -151,6 +156,7 @@ describe("FR-DRAFTS-04-8 and -9: orders", () => {
     for (const e of log) expect(e.draftKind).toBe("order");
   });
 
+  // covers: drafts/FRD-04/EX-18
   test("no log entry has a name or an address field", async () => {
     const h = makeDrafts({ chats, orderChats: { "o-1": "chat-a" } });
     await create(h, "2 cakes", "order");

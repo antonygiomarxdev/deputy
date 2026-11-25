@@ -1,6 +1,7 @@
 # FRD-05: The owner's control chat and the pilot tools
 
-Status: Draft
+Status: Approved (2026-11-25)
+Approval: content v-MGekQaQc5c; rests on ../PRD.md cI-9187LdITZ
 
 
 ## Summary

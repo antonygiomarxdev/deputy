@@ -48,6 +48,8 @@ async function nextNumber(h: Harness, chat: string): Promise<number> {
   return Number(m[1]);
 }
 
+// covers: drafts/FRD-04/EX-2
+// covers: drafts/FRD-04/EX-11
 test("FR-DRAFTS-04-6: the log of one chat shows only that chat, newest first, in the order of the story", async () => {
   const h = await boot();
   await story(h, CHAT_A, "How much is the cake?", "It costs 10", "It costs 12", "go", 1_000);
@@ -82,6 +84,7 @@ test("FR-DRAFTS-04-6: a long log pages with before, newest first, without repeat
   expect(all).toEqual([...all].sort((x, y) => y - x));
 });
 
+// covers: drafts/FRD-04/EX-12
 test("FR-DRAFTS-04-6: an empty log says nothing yet; a chat with no entries says so", async () => {
   const h = await boot();
   expect((await run(h, "drafts_log")).text).toBe("nothing yet");
@@ -97,6 +100,7 @@ test("FR-DRAFTS-04-5: after a sent message, check_approvals says every sent mess
   expect((await run(h, "check_approvals")).text).toBe("every sent message has an approval");
 });
 
+// covers: drafts/FRD-04/EX-14
 test("FR-DRAFTS-04-7: no tool changes or deletes a log entry, and the instructions say the log is a record", async () => {
   const h = await boot();
   const tools = (await h.client.listTools()).tools;

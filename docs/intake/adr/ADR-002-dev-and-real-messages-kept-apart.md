@@ -1,7 +1,7 @@
 # ADR-002: Dev and real messages are kept apart by a dev flag on the message and on the chat key
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

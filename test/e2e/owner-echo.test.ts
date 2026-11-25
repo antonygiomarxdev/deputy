@@ -31,6 +31,7 @@ const textOf = (r: Awaited<ReturnType<typeof call>>): string => {
   return first !== undefined && first.type === "text" ? first.text : "";
 };
 
+// covers: intake/FRD-04/EX-7
 test("FR-INTAKE-04-4: a reply the owner wrote from the app while Deputy was off is found by check_messages and shown as the owner's", async () => {
   const h = await boot();
   await holdOwnerReply(h, { chat: CUSTOMER, text: "Yes, until 6 pm.", sentAt: Date.now() });

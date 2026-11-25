@@ -70,6 +70,7 @@ test("FR-INTAKE-03-6: after a failed run with reason credentials, status holds t
   expect(text).not.toMatch(/\b401\b/);
 });
 
+// covers: intake/FRD-03/EX-5
 test("FR-INTAKE-03-3: a forged catch-up delivery with no signature is refused, and check_messages ignores what it is given", async () => {
   const h = await boot();
   await waitForOwner(h);

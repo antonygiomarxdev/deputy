@@ -1,7 +1,7 @@
 # ADR-010: Owner words that contain a stored secret are refused
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

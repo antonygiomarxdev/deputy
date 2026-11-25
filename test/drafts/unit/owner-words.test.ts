@@ -15,6 +15,7 @@ describe("ownerWordsShape", () => {
     expect(ownerWordsShape(words, 3)).toEqual({ ok: false, code: "words_missing_number" });
   });
 
+  // covers: drafts/FRD-02/EX-4
   test("FR-DRAFTS-02-3: whole-token cases", () => {
     expect(wholeNumberTokens("go on 13")).toEqual([13]);
     expect(ownerWordsShape("go on 13", 1)).toEqual({ ok: false, code: "words_missing_number" });

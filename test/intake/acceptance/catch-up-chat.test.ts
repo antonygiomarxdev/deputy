@@ -1,3 +1,5 @@
+// covers: drafts/FRD-03/EX-1
+// covers: drafts/FRD-03/EX-30
 import { beforeEach, describe, expect, test } from "bun:test";
 import { InMemoryIntakeSettingsRepository } from "../../../src/intake/adapters/memory/in-memory-intake-settings-repository";
 import { InMemoryIntakeStore } from "../../../src/intake/adapters/memory/in-memory-intake-store";
@@ -248,6 +250,7 @@ describe("CatchUpChat", () => {
     expect(await rows()).toEqual(["anon", "p3", "p2", "p1"]);
   });
 
+  // covers: intake/FRD-03/EX-42
   test("new non-history messages are announced once as catch_up; none, no event", async () => {
     provider.hold("c1", "5491123456789", [msg("a", NOW - 5_000)]);
     await catchUp().execute({ trigger: "timer" });

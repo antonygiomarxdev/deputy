@@ -68,6 +68,8 @@ describe.each(subjects)("OnOrderDeleted on %s (FR-DRAFTS-04-10)", (_name, make) 
     return { uow, holder, useCase };
   };
 
+  // covers: drafts/FRD-04/EX-19
+  // covers: drafts/FRD-04/EX-20
   test("the order's log entries, draft row and approvals are scrubbed column by column; the references and rows stay", async () => {
     const { uow, useCase } = await setup();
     expect(await useCase.run(event())).toEqual({ scrubbed: 3 });

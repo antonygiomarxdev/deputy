@@ -1,7 +1,7 @@
 # ADR-015: The MCP adapter adds the "catalog changed" mark to listed drafts
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

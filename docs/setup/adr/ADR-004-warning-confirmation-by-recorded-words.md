@@ -1,7 +1,7 @@
 # ADR-004: The sync warning is confirmed by the owner's own words, recorded after it was shown
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

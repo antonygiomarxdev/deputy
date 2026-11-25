@@ -1,6 +1,7 @@
 # FRD-03: Credentials and safety
 
-Status: Draft · Slice: Setup · Part of [Setup PRD](../PRD.md)
+Status: Approved (2026-11-25) · Slice: Setup · Part of [Setup PRD](../PRD.md)
+Approval: content BSNIj-PPdqM3; rests on ../PRD.md SshZ554utN5k
 
 Deferred (REQ-15, 2026-11-24): the local pilot enters the Kapso key in a Deputy form instead of the steps here (D33). The document stays as written.
 

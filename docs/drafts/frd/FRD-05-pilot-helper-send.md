@@ -1,6 +1,7 @@
 # FRD-05: A helper sends only to the chat it was given
 
-Status: Draft
+Status: Approved (2026-11-25)
+Approval: content bXh6IQTvbW3n; rests on ../PRD.md 5O_P25il8pzW
 
 ## Summary
 

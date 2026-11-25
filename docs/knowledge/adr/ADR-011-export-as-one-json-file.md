@@ -1,7 +1,7 @@
 # ADR-011: The export is one JSON file in the data folder
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

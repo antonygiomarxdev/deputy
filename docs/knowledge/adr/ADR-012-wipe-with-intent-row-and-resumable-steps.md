@@ -1,7 +1,7 @@
 # ADR-012: A wipe records its intent first and runs idempotent steps
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

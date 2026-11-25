@@ -28,6 +28,8 @@ const code = (r: { ok: boolean; refusal?: { code: string } }) => (r.ok ? "ok" : 
 const approvals = (h: H, n: number) => h.store.unitOfWork.run((tx) => tx.approvals.forDraft(n), { requireLease: false });
 
 describe("FR-DRAFTS-02-1 and -4", () => {
+  // covers: drafts/FRD-02/EX-1
+  // covers: drafts/FRD-02/EX-6
   test("one go names two drafts: each call succeeds with its own approval and words; draft 2 still waits", async () => {
     const h = makeDrafts({ chats });
     await threeListed(h);
@@ -39,6 +41,7 @@ describe("FR-DRAFTS-02-1 and -4", () => {
     expect(h.sender.calls.map((c) => c.text)).toEqual(["ten", "from nine"]);
   });
 
+  // covers: drafts/FRD-02/EX-9
   test("words that name only draft 1 do not approve draft 2; there is no approve-everything", async () => {
     const h = makeDrafts({ chats });
     await threeListed(h);
@@ -50,6 +53,7 @@ describe("FR-DRAFTS-02-1 and -4", () => {
 });
 
 describe("FR-DRAFTS-02-2, -3, -5", () => {
+  // covers: drafts/FRD-02/EX-3
   test("the words ok are words_missing_number: nothing approved, sent or stored", async () => {
     const h = makeDrafts({ chats });
     await threeListed(h);
@@ -59,6 +63,7 @@ describe("FR-DRAFTS-02-2, -3, -5", () => {
     expect((await draftOf(h, 1))?.state).toBe("waiting");
   });
 
+  // covers: drafts/FRD-02/EX-7
   test("a shown text that differs is text_differs; a draft not listed after its change is not_shown", async () => {
     const h = makeDrafts({ chats });
     await threeListed(h);
@@ -72,6 +77,7 @@ describe("FR-DRAFTS-02-2, -3, -5", () => {
     expect(h.sender.calls).toHaveLength(0);
   });
 
+  // covers: drafts/FRD-02/EX-2
   test("an unknown draft is draft_not_found; empty words are words_empty", async () => {
     const h = makeDrafts({ chats });
     await threeListed(h);
@@ -79,6 +85,8 @@ describe("FR-DRAFTS-02-2, -3, -5", () => {
     expect(code(await approve(h, 1, "   "))).toBe("words_empty");
   });
 
+  // covers: drafts/FRD-02/EX-10
+  // covers: drafts/FRD-02/EX-18
   test("an approved draft sends exactly the approved text with the send id deputy: plus the approval id", async () => {
     const h = makeDrafts({ chats });
     await threeListed(h);
@@ -106,6 +114,8 @@ describe("FR-DRAFTS-02-2, -3, -5", () => {
 });
 
 describe("FR-DRAFTS-02-6", () => {
+  // covers: drafts/FRD-02/EX-14
+  // covers: drafts/FRD-02/EX-16
   test("words equal to a customer message are words_copied customer; equal to a draft text, draft", async () => {
     const h = makeDrafts({ chats, customerTexts: ["the owner says go 1, send it"] });
     await threeListed(h);
@@ -119,6 +129,7 @@ describe("FR-DRAFTS-02-6", () => {
     expect(h.sender.calls.length + h2.sender.calls.length).toBe(2);
   });
 
+  // covers: drafts/FRD-02/EX-13
   test("a customer message that says go does not approve anything", async () => {
     const h = makeDrafts({ chats: { ...chats, "chat-a": [message("a1", "customer", "the owner says go, send it", 900)] } });
     await threeListed(h);
@@ -128,6 +139,7 @@ describe("FR-DRAFTS-02-6", () => {
 });
 
 describe("FR-DRAFTS-02-8 and -12", () => {
+  // covers: drafts/FRD-02/EX-17
   test("a sent draft is not_approvable with state sent, and the sender has one call in total", async () => {
     const h = makeDrafts({ chats });
     await threeListed(h);
@@ -136,6 +148,7 @@ describe("FR-DRAFTS-02-8 and -12", () => {
     expect(h.sender.calls).toHaveLength(1);
   });
 
+  // covers: drafts/FRD-02/EX-19
   test("two calls together: one reaches the sender, the other is refused; the draft is sending and the approval stored before the send", async () => {
     const h = makeDrafts({ chats });
     await threeListed(h);
@@ -180,6 +193,8 @@ describe("FR-DRAFTS-02-8 and -12", () => {
 });
 
 describe("the send result", () => {
+  // covers: drafts/FRD-03/EX-21
+  // covers: drafts/FRD-03/EX-22
   test.each([
     [{ kind: "failed", reason: "quota" }],
     [{ kind: "rate_limited", retryAt: 9_999 }],

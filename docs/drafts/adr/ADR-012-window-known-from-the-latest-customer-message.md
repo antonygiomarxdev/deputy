@@ -1,7 +1,7 @@
 # ADR-012: The 24-hour window is counted from the customer's latest message
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

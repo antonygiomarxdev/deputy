@@ -1,7 +1,7 @@
 # ADR-006: What counts as new since the draft
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

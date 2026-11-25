@@ -1,7 +1,7 @@
 # ADR-014: A catalog item reference is the id cell, or the folded name
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

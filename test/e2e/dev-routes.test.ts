@@ -39,6 +39,7 @@ const post = (h: Harness, path: string, body: unknown) =>
   fetch(url(h, path), { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
 const chatText = async (h: Harness, chat: string) => textOf(await call(h.client, "get_chat", { chat }));
 
+// covers: intake/FRD-01/EX-4
 test("FR-INTAKE-01-3: a tester's message to /dev/deliver is stored and get_chat shows it; a body without chat is a 400 naming it", async () => {
   const h = await boot();
   const res = await post(h, "/dev/deliver", { chat: "12125550111", from: "12125550111", text: "How much is the cake?" });
@@ -107,6 +108,7 @@ test("FR-INTAKE-01-6: a body held with /dev/hold is found by the next catch-up, 
   expect((await chatText(h, "+12125550120")).split("\n")).toHaveLength(1);
 });
 
+// covers: intake/FRD-01/EX-13
 test("FR-INTAKE-01-9: under Kapso every /dev path is a 404 with a dev_entry_refused note and nothing stored", async () => {
   const fake = startFakeKapso({ apiKey: "key-1", phoneNumberId: "pn-1" });
   fakes.push(fake);

@@ -1,7 +1,7 @@
 # ADR-006: Availability words and currency symbols are confirmed in the mapping
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

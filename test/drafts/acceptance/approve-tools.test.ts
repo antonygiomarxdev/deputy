@@ -21,6 +21,7 @@ const byName = (name: string) => {
 };
 
 describe("the tool list", () => {
+  // covers: drafts/FRD-02/EX-15
   test("FR-DRAFTS-02-7: exactly one tool says it sends, and it is approve_draft", () => {
     const sending = tools().filter((t) => /\bsend/i.test(t.description));
     expect(sending.map((t) => t.name)).toEqual(["approve_draft"]);

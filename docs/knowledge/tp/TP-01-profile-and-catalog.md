@@ -1,6 +1,7 @@
 # Technical Proposal: Business profile and catalog (Knowledge FRD-01)
 
-Status: Draft
+Status: Approved (2026-11-25)
+Approval: content weBoWKFcD1gA; rests on ../frd/FRD-01-profile-and-catalog.md 40wrxQnfp-5V; rests on ../../tp/TP.md EF063EDZvKuZ
 
 Follows the cross-cutting TP (`docs/tp/TP.md`). "Cross-cutting TD-n" means a decision there. This TP also defines the proposal mechanism that FRD-02 and FRD-03 reuse (TP-02, TP-03).
 

@@ -1,7 +1,7 @@
 # ADR-005: Rejection notes are bounded to 500 rows and 30 days, with a counter for what was pruned
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

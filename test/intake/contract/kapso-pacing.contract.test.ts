@@ -87,6 +87,7 @@ describe("FR-INTAKE-03-18: what an idle shop costs", () => {
     });
   };
 
+  // covers: intake/FRD-03/EX-31
   test("a periodic run that finds nothing new makes one listing, one read per conversation active in the last 10 minutes, and one outbound page", async () => {
     const { clock, fake, provider } = setup(undefined, false);
     fake.state.conversations.push(conversation("recent-a", START - 3 * MIN), conversation("recent-b", START - 9 * MIN), conversation("old", START - 5 * 60 * MIN));
@@ -122,6 +123,7 @@ describe("FR-INTAKE-03-18: what an idle shop costs", () => {
 describe("FR-INTAKE-03-19: reads keep a reserve of the minute", () => {
   const read = (provider: KapsoProvider) => provider.listMessages({ scope: { conversationRef: "c1" }, cursor: null, limit: 1 }, abort);
 
+  // covers: intake/FRD-03/EX-33
   test("250 reads never reach 0 remaining and never see a 429; the waits end at the next provider minute plus the margin", async () => {
     const { clock, fake, provider } = setup();
     for (let i = 0; i < 250; i++) await read(provider);

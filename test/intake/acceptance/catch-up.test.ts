@@ -81,6 +81,9 @@ describe("CatchUp", () => {
   const finished = () => publisher.published.filter((e) => e.name === "CatchUpFinished");
   const rows = async () => (await store.repos.messages.listChat(CHAT, {})).map((m) => m.props.id.providerMessageId);
 
+  // covers: intake/FRD-02/EX-25
+  // covers: intake/FRD-03/EX-1
+  // covers: intake/FRD-03/EX-8
   test("FR-INTAKE-03-1: the first run stores three customer messages and an owner reply, listing from the start", async () => {
     provider.serverTime = 10_000;
     provider.hold("c1", "5491123456789", [msg("a", 100), msg("b", 200), msg("c", 300), echo("o", 250)]);
@@ -91,6 +94,7 @@ describe("CatchUp", () => {
     expect((await store.repos.messages.find({ provider: "kapso", providerMessageId: "o" }))?.props.source).toBe("owner_app");
   });
 
+  // covers: intake/FRD-03/EX-3
   test("FR-INTAKE-03-2: what arrived while Deputy was off is stored by the next session", async () => {
     provider.serverTime = 10_000;
     provider.hold("c1", "5491123456789", [msg("a", 100)]);
@@ -102,6 +106,7 @@ describe("CatchUp", () => {
     expect(await rows()).toEqual(["a", "later"]);
   });
 
+  // covers: intake/FRD-03/EX-7
   test("FR-INTAKE-03-4: SPEC-02 rules apply to listed messages (readable, duplicates, order, owner echo)", async () => {
     provider.serverTime = 10_000;
     provider.hold("c1", "5491123456789", [
@@ -119,6 +124,8 @@ describe("CatchUp", () => {
     expect(await props("o")).toMatchObject({ source: "owner_app" });
   });
 
+  // covers: intake/FRD-03/EX-9
+  // covers: intake/FRD-03/EX-10
   test("FR-INTAKE-03-5: one folded MessageStored for a run that stores messages, none otherwise; CatchUpFinished always", async () => {
     provider.serverTime = 10_000;
     provider.hold("c1", "5491123456789", [msg("a", 100)]);
@@ -146,6 +153,7 @@ describe("CatchUp", () => {
     expect(last?.name === "CatchUpFinished" && [last.status, last.reason, last.storedCount]).toEqual(["complete", null, 0]);
   });
 
+  // covers: intake/FRD-03/EX-23
   test("FR-INTAKE-03-9: asking again with nothing new adds no row and no signal; concurrent calls share one run", async () => {
     provider.serverTime = 10_000;
     provider.hold("c1", "5491123456789", [msg("a", 100)]);
@@ -162,6 +170,9 @@ describe("CatchUp", () => {
     expect(messageStored()).toHaveLength(0);
   });
 
+  // covers: intake/FRD-03/EX-39
+  // covers: intake/FRD-03/EX-40
+  // covers: intake/FRD-03/EX-41
   test("FR-INTAKE-03-11 and 12: the first import marks history by connect time and announces none of it", async () => {
     provider.serverTime = 100 * DAY;
     provider.hold("c1", "5491123456789", [
@@ -241,6 +252,7 @@ describe("CatchUp", () => {
     expect(provider.calls).toHaveLength(0);
   });
 
+  // covers: intake/FRD-01/EX-7
   test("FR-INTAKE-01-6: a message held at the dev provider and never delivered is found by catch-up, once", async () => {
     const sqlite = await openSqliteSubject();
     try {

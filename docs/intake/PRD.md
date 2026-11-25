@@ -1,6 +1,7 @@
 # Intake: slice PRD
 
-Status: Draft · Part of [Deputy product overview](../PRODUCT.md) · Last updated: 2026-11-17
+Status: Approved (2026-11-25) · Part of [Deputy product overview](../PRODUCT.md) · Last updated: 2026-11-17
+Approval: content cI-9187LdITZ; rests on ../PRODUCT.md 9kKsOKhERsSe
 
 ## Summary
 

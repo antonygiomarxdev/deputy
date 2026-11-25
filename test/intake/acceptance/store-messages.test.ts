@@ -38,6 +38,7 @@ describe("StoreMessages", () => {
     store.unitOfWork.run((r) => service.store(r, { provider, events }));
   const find = (id: string) => store.repos.messages.find({ provider: "kapso", providerMessageId: id });
 
+  // covers: intake/FRD-02/EX-14
   test("FR-INTAKE-02-7: the same message three times is one row", async () => {
     const first = await run([msg({ text: "first" })]);
     const second = await run([msg({ text: "changed" })]);
@@ -69,6 +70,7 @@ describe("StoreMessages", () => {
     expect((await find("deputy-1"))?.props.mark).toBe("normal");
   });
 
+  // covers: intake/FRD-02/EX-20
   test("FR-INTAKE-02-12: edit, delete, ignored events and edits of unknown messages", async () => {
     await run([msg({ text: "old" })]);
     const out = await run([
@@ -101,6 +103,8 @@ describe("StoreMessages", () => {
     expect(await store.repos.chats.get(CHAT, false)).toMatchObject({ lastCustomerAt: 400, lastCustomerMessageId: "h" });
   });
 
+  // covers: intake/FRD-02/EX-21
+  // covers: intake/FRD-02/EX-22
   test("FR-INTAKE-02-13: group and sender-unknown messages are kept and do not move lastCustomerAt", async () => {
     await run([msg({ providerMessageId: "plain", sentAt: 100 })]);
     await run([

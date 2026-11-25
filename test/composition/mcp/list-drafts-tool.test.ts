@@ -32,6 +32,8 @@ describe("list_drafts and the catalog check", () => {
     expect(calls).toBe(0);
   });
 
+  // covers: knowledge/FRD-01/EX-25
+  // covers: knowledge/FRD-01/EX-26
   test("the check is called once, with every draft's madeAt, and a 'changed' answer shows the mark", async () => {
     const seen: string[][] = [];
     const r = await tool([view({ number: 1 }), view({ number: 2, madeAt: "2026-11-18T11:00:00.000Z" })], async (since) => {

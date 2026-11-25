@@ -33,6 +33,7 @@ async function run(name: string, args: Record<string, unknown> = {}) {
   return { isError: r.isError === true, text: first !== undefined && first.type === "text" ? first.text : "" };
 }
 
+// covers: intake/FRD-02/EX-15
 test("FR-INTAKE-02-8: get_chat lists messages stored in reversed order in sent order, customer text inside its label", async () => {
   const server = await boot();
   for (const [t, at] of [["third", 3_000], ["first", 1_000], ["second", 2_000]] as const) {

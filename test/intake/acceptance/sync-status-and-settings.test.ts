@@ -59,6 +59,7 @@ describe("GetSyncStatus", () => {
     });
   });
 
+  // covers: intake/FRD-03/EX-11
   test("FR-INTAKE-03-6: six hours after the last success the view says so and carries the newest stored time", async () => {
     await storeOne(NOW - 7 * HOUR);
     const state = SyncState.initial("kapso");
@@ -157,6 +158,7 @@ describe("intake settings", () => {
   const minutes = (value: number) => set().execute({ key: "catch_up_minutes", value, ownerWords: words });
   const country = (value: string) => set().execute({ key: "country", value, ownerWords: words });
 
+  // covers: intake/FRD-03/EX-37
   test("FR-INTAKE-03-21: a period below one minute is refused and the period is unchanged", async () => {
     await minutes(5);
     expect(await minutes(0.5)).toEqual({ ok: false, reason: "not_an_integer", minimum: 1, kept: 5 });

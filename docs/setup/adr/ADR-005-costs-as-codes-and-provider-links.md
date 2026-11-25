@@ -1,7 +1,7 @@
 # ADR-005: Costs are shown as codes and provider links, with no figures kept
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

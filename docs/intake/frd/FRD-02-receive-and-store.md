@@ -1,6 +1,7 @@
 # FRD-02: Receive, verify and store
 
-Status: Draft
+Status: Approved (2026-11-25)
+Approval: content p5kRoy5qsJF9; rests on ../PRD.md cI-9187LdITZ
 
 
 ## Summary

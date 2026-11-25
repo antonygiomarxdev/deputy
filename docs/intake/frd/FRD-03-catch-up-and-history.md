@@ -1,6 +1,7 @@
 # FRD-03: Catch-up and history
 
-Status: Draft
+Status: Approved (2026-11-25)
+Approval: content U_anxOFjkRSz; rests on ../PRD.md cI-9187LdITZ
 
 
 ## Summary

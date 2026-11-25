@@ -26,6 +26,7 @@ for (const subject of subjects) {
     });
     afterEach(() => s.cleanup());
 
+    // covers: intake/FRD-02/EX-7
     test("FR-INTAKE-02-4: find returns every field and the versions", async () => {
       const m = receive({ providerMessageId: "a", text: "old", profileName: "Ana", origin: "cloud_api" });
       await s.repos.messages.insertIfNew(m);
@@ -51,6 +52,7 @@ for (const subject of subjects) {
       expect(both).toHaveLength(2);
     });
 
+    // covers: intake/FRD-02/EX-16
     test("FR-INTAKE-02-8: sent order is (sentAt, arrival)", async () => {
       await s.repos.messages.insertIfNew(receive({ providerMessageId: "late", sentAt: 300 }));
       await s.repos.messages.insertIfNew(receive({ providerMessageId: "early", sentAt: 100 }));

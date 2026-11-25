@@ -1,7 +1,7 @@
 # ADR-002: Catalog lookup folds case and accents and returns exact and contained matches
 
 ## Status
-Proposed
+Accepted (2026-11-25)
 
 ## Summary
 

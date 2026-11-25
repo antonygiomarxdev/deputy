@@ -89,6 +89,7 @@ describe("CatchUp failures", () => {
       new StoreMessages({ clock }).store(r, { provider: "kapso", events: messages.map((message) => ({ kind: "message" as const, message })) }),
     );
 
+  // covers: intake/FRD-03/EX-19
   test("FR-INTAKE-03-7: unreachable, credentials and quota fail with their own sentence and the newest stored time", async () => {
     await storeDirectly(msg("old", 5_000));
     const sentences = {
@@ -107,6 +108,9 @@ describe("CatchUp failures", () => {
     }
   });
 
+  // covers: intake/FRD-03/EX-20
+  // covers: intake/FRD-03/EX-21
+  // covers: intake/FRD-03/EX-22
   test("FR-INTAKE-03-8: a run that stored 2 of 5 messages and then failed keeps them and never reads as complete", async () => {
     provider.pageSize = 1;
     provider.hold("c1", "5491123456789", [1, 2, 3, 4, 5].map((n) => msg(`m${n}`, n * 100)));
@@ -151,6 +155,8 @@ describe("CatchUp failures", () => {
     });
   });
 
+  // covers: intake/FRD-03/EX-35
+  // covers: intake/FRD-03/EX-36
   test("FR-INTAKE-03-20: a 429 keeps messages and marks, sets retryAt, tells nobody at first, tells after 10 minutes, and a complete run clears it", async () => {
     provider.pageSize = 1;
     provider.hold("c1", "5491123456789", [msg("a", 100), msg("b", 200)]);
