@@ -4,7 +4,7 @@
 Accepted (2026-11-18)
 
 ## Context
-FR-INTAKE-04-14: "+505 8888 0000", "505-88880000" and "50588880000" are one number, for owner numbers and senders. Deputy serves owners in many countries. Owners type numbers in local formats, with or without a country code or a national trunk prefix. A configured number that never matches makes the owner's own replies look like customer messages.
+FR-INTAKE-04-14: "+1 212 555 0100", "1-212-555-0100" and "12125550100" are one number, for owner numbers and senders. Deputy serves owners in many countries. Owners type numbers in local formats, with or without a country code or a national trunk prefix. A configured number that never matches makes the owner's own replies look like customer messages.
 
 A second problem: the id WhatsApp reports is not always the number a person dials. Argentina: WhatsApp ids carry a `9` after `54` (`5491123456789`), the dialled number does not (`541123456789`). Mexico: ids carry a `1` after `52` (`5215512345678`), the dialled number does not. Brazil: the ninth digit may be present or missing in the id (`5511987654321` or `551187654321`). I checked with `libphonenumber-js` 1.13.16: `+5491123456789` and `+541123456789` both parse as valid AR numbers but are different strings; `+5215512345678` parses with `isValid() = false`, `+525512345678` as valid MX.
 
@@ -34,7 +34,7 @@ Sources, all third-party except one sentence:
 
 ## Alternatives
 - A hand-written digits-only rule (strip non-digits, 9 to 15 digits). Rejected: it cannot add a missing country code or handle national prefixes. A local number is refused or stored wrong, and the owner's replies stop matching.
-- Require a leading `+` and the country code. Rejected: it fails FR-INTAKE-04-14 ("505-88880000" must match) and puts formatting work on a non-technical owner.
+- Require a leading `+` and the country code. Rejected: it fails FR-INTAKE-04-14 ("1-212-555-0100" must match) and puts formatting work on a non-technical owner.
 - Compare E.164 strings only (the first version of this ADR). Rejected: for an Argentine or Mexican owner the id `5491123456789` and the typed `+54 11 2345 6789` never match, so every owner reply from the phone app is classed as `customer`, and Deputy would answer a chat the owner already answered.
 - Rewrite the provider's id to the dialled form before storing. Rejected: a send to the rewritten id may fail (Argentina and Mexico need the inserted digit on some routes) and the original is evidence for the launch gate.
 - Query the provider for the canonical id of each number. Rejected: one request per number against a 100-requests-per-minute limit, and Kapso documents no such call.
@@ -45,7 +45,7 @@ Sources, all third-party except one sentence:
 - Watch: the table rests on third-party sources until the launch gate runs. Other countries may insert digits too (none found in the sources); the table is the one place to add them.
 
 ## Tests
-- `lineKey` and `sameLine` for AR, MX and BR, both forms of each, one case that must not match (`+5491123456789` and `+5491123456780`), and a country with no rule (NI `+50588880000`).
+- `lineKey` and `sameLine` for AR, MX and BR, both forms of each, one case that must not match (`+5491123456789` and `+5491123456780`), and a country with no rule (US `+12125550100`).
 - An owner number typed as `+54 11 2345-6789` classifies a sender `5491123456789` as `owner_app`. The same for MX `+52 55 1234 5678` with sender `5215512345678`, and BR `+55 11 8765-4321` with sender `5511987654321`.
 - A typed local number (`011 15 2345 6789`, region AR) stores `+5491123456789`; Setup shows it back.
 - The provider's id is stored unchanged.

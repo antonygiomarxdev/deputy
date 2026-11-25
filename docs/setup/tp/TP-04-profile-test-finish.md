@@ -74,7 +74,7 @@ Chosen: Option B. Timing stays honest, and the old run stays as history. Recorde
 
 D21: Setup suggests the currency from the owner's country, the owner confirms. Deputy serves many countries.
 
-- **Option A** The maintained package `country-to-currency` 3.0.2 (MIT, last published 2026-11-10, no dependencies, 251 country codes), behind a `CurrencySuggester` port. Checked in Bun 1.4.4 on Windows, from source and from a `bun build --compile` binary: `NI` gave `NIO`, `MX` gave `MXN`, `AR` gave `ARS`, `US` gave `USD`, `DE` gave `EUR`, and an unknown code gave `undefined`. Cost: one dependency inside one adapter. Risk: a country with more than one used currency (for example some that also use the US dollar) gets one suggestion; the owner confirms, so a wrong suggestion costs a correction.
+- **Option A** The maintained package `country-to-currency` 3.0.2 (MIT, last published 2026-11-10, no dependencies, 251 country codes), behind a `CurrencySuggester` port. Checked in Bun 1.4.4 on Windows, from source and from a `bun build --compile` binary: `US` gave `USD`, `MX` gave `MXN`, `AR` gave `ARS`, `US` gave `USD`, `DE` gave `EUR`, and an unknown code gave `undefined`. Cost: one dependency inside one adapter. Risk: a country with more than one used currency (for example some that also use the US dollar) gets one suggestion; the owner confirms, so a wrong suggestion costs a correction.
 - **Option B** A hand-written table. Cost: no dependency. Risk: about 250 entries to keep current as currencies change (the ones that changed in recent years are the reason to avoid it).
 - **Option C** No suggestion: the owner types a currency code. Cost: nothing to build. Risk: contradicts D21, and a non-technical owner does not know their ISO 4217 code.
 
@@ -214,7 +214,7 @@ ATDD. UC means a use case with in-memory adapters: a fake `KnowledgeSeeder` that
 | FR-SETUP-04-9 | Given setup is complete, When the summary is requested, Then it lists the provider or `test`, the receiving mode, the owner numbers, the data folder, the pending example and the total with the provider wait apart; given not complete, Then `not_complete` | UC |
 | FR-SETUP-04-10 | Given the summary, When it is read, Then it names push notices as `optional` and Setup completed without it | UC |
 
-Currency tests (D21, in `FR-SETUP-04-2`): given country `NI` the suggestion is `NIO`, with `MX` it is `MXN`, with an unknown code it is `null` and the owner is asked to name the currency; a confirmed currency different from the suggestion is stored as confirmed. The adapter test runs the real `country-to-currency` package and fails when a code is missing.
+Currency tests (D21, in `FR-SETUP-04-2`): given country `US` the suggestion is `USD`, with `MX` it is `MXN`, with an unknown code it is `null` and the owner is asked to name the currency; a confirmed currency different from the suggestion is stored as confirmed. The adapter test runs the real `country-to-currency` package and fails when a code is missing.
 
 ## Risks
 
