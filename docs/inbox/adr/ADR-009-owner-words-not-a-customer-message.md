@@ -1,7 +1,11 @@
 # ADR-009: Owner words that equal a customer message are refused
 
 ## Status
-Accepted (2026-11-18)
+Accepted (2026-11-24)
+
+## Summary
+
+`IgnoreChat` requires `ownerWords` (the shared `OwnerWords`) and refuses with `owner_words_copied_from_customer` when Intake's `IsCustomerText` says the normalized words equal a stored customer message.
 
 ## Context
 FR-INBOX-03-2: ignoring happens only on the owner's explicit command and customer text can never cause it. Deputy cannot verify who spoke (D11), so the owner's words are logged for audit (L4). An injected agent could pass the customer's own sentence as the owner's words. Drafts already refuses approval words that equal a stored customer message. From TP-03 TD-2.
@@ -11,7 +15,7 @@ FR-INBOX-03-2: ignoring happens only on the owner's explicit command and custome
 - `UnignoreChat` requires the words but skips the copied-text check, because it only makes a chat visible again.
 - The check runs through an Inbox outbound port, `CustomerTextCheck`, implemented by an adapter that calls Intake's published port.
 
-## Alternatives
+## Options considered
 - Log the words only: a relayed customer sentence would sit in the log as the owner's.
 - A two-step token: the same agent makes both calls, so the second call proves nothing.
 
