@@ -16,7 +16,7 @@ REQ-14 (non-technical owners) and REQ-15 (local pilot). Decisions D33, D35, D36 
 
 ## Requirements covered
 
-R-SETUP-22, R-SETUP-23, R-SETUP-24, R-SETUP-25, R-SETUP-26, R-SETUP-27, R-SETUP-28, R-SETUP-29, R-SETUP-30, R-SETUP-31, R-SETUP-32, R-SETUP-33, R-SETUP-34.
+R-SETUP-22, R-SETUP-23, R-SETUP-24, R-SETUP-25, R-SETUP-26, R-SETUP-27, R-SETUP-28, R-SETUP-29, R-SETUP-30, R-SETUP-31, R-SETUP-32, R-SETUP-33, R-SETUP-34, R-SETUP-35.
 
 ## Behavior
 
@@ -69,6 +69,9 @@ R-SETUP-22, R-SETUP-23, R-SETUP-24, R-SETUP-25, R-SETUP-26, R-SETUP-27, R-SETUP-
 | FR-SETUP-05-45 | WHEN | WHEN the install guide writes the permission rules, it shall do so only after the project folder is trusted, so the install steps are ordered that way. (Proposed, lead decision.) |
 | FR-SETUP-05-46 | WHEN | WHEN a round of the daily loop runs, the dispatcher shall also collect the results of the helpers that finished. (Proposed, lead decision.) |
 | FR-SETUP-05-47 | always | Helpers shall not ask the owner anything; only the dispatcher asks. (Proposed, lead decision.) |
+| FR-SETUP-05-48 | WHEN | WHEN the owner asks how much of the plan the pilot used, Deputy shall return, per day, per part (dispatcher, triage helper, web helper) and per model, the input, output, cache-creation and cache-read token counts. (Proposed, lead decision.) |
+| FR-SETUP-05-49 | always | The token counts shall come only from the usage, the model and the time of each transcript entry, and the result shall hold no text, no id and no path. (Proposed, lead decision.) |
+| FR-SETUP-05-50 | IF | IF a transcript file is missing or its format is not the expected one, THEN Deputy shall say so and return no numbers for it. (Proposed, lead decision.) |
 
 ## Rules and examples
 
@@ -83,6 +86,7 @@ R-SETUP-22, R-SETUP-23, R-SETUP-24, R-SETUP-25, R-SETUP-26, R-SETUP-27, R-SETUP-
 | RULE-7 | Setup is finished only after the owner's first message has arrived. | FR-SETUP-05-31, FR-SETUP-05-32 |
 | RULE-8 | The main session never blocks, has no internet and has no send tool; long work and web work go to helpers. | FR-SETUP-05-37, FR-SETUP-05-38, FR-SETUP-05-40, FR-SETUP-05-41 |
 | RULE-9 | A helper holds only the tools for its chat or its job, raises no prompt and asks the owner nothing. | FR-SETUP-05-39, FR-SETUP-05-42, FR-SETUP-05-47 |
+| RULE-10 | The token counts reveal usage and nothing else, and a format Deputy does not know gives no numbers. | FR-SETUP-05-48, FR-SETUP-05-49, FR-SETUP-05-50 |
 
 | Example | Rule | Kind | Given | When | Then |
 |---|---|---|---|---|---|
@@ -107,6 +111,9 @@ R-SETUP-22, R-SETUP-23, R-SETUP-24, R-SETUP-25, R-SETUP-26, R-SETUP-27, R-SETUP-
 | EX-19 | RULE-9 | positive | Three chats are pending | A round runs | Three triage helpers each hold one chat's token and the one with an answer sends it |
 | EX-20 | RULE-9 | negative | A triage helper needs the owner's decision | It cannot ask the owner | It returns one line to the dispatcher |
 | EX-21 | RULE-9 | boundary | The tool refused a triage helper's token | The helper reads the refusal | The helper stops, reports it and does not try another chat |
+| EX-22 | RULE-10 | positive | The session and one triage helper ran today | The owner asks how much of the plan was used | Deputy returns today's four token counts for the dispatcher and for the triage helper, per model |
+| EX-23 | RULE-10 | negative | A transcript entry holds a customer message | The counts are built | The result holds none of the message text, ids or paths |
+| EX-24 | RULE-10 | boundary | A transcript file has a format Deputy does not know | The owner asks for the counts | Deputy says the format is not recognized and returns no numbers for that file |
 
 ## Decision table
 n/a: no behavior here depends on more than three conditions.
@@ -155,7 +162,7 @@ n/a: the project has no CROSS-CUTTING.md yet; the cross-cutting rules live in th
 
 ## Open questions
 Closed on 2026-11-24 (the owner approved the proposals): the key page closes after one submit and a second page invalidates the earlier token; owner numbers are recorded after the owner confirms; keep-awake is a child process without administrator rights; the skill's daily reminder is in addition to the guide; prompts are acceptable during attended setup and the no-prompt rule applies to the daily loop; Spanish and English are the pilot's languages.
-Closed on 2026-11-25 (owner): the rows FR-SETUP-05-22 to FR-SETUP-05-47 are approved, and rows FR-SETUP-05-37 to FR-SETUP-05-47 are revisited if the live test contradicts them.
+Closed on 2026-11-25 (owner): the rows FR-SETUP-05-22 to FR-SETUP-05-50 are approved, and rows FR-SETUP-05-37 to FR-SETUP-05-50 are revisited if the live test contradicts them.
 None of the research questions is open. The provider call that lists an account's numbers is recorded as L11 and the Windows keep-awake call as L12 (DECISIONS), both from the research of 2026-11-24.
 Answered by the lead on 2026-11-24 (technical): the chosen provider id is kept in the config file under the config folder, read by the existing config reader, and SPEC-05-8 adds the writer next to it; the tools are read_knowledge, save_profile, save_catalog, save_always_ask and remember (Knowledge pilot specs) and set_owner_numbers, ask_owner and answer_question (Intake pilot specs).
 Unverified, checked by the pilot (ADR-018): that a channel event wakes an idle session, that the shortcut keeps the wake option, and that the slow loop keeps firing after compaction.
@@ -182,3 +189,6 @@ Unverified, checked by the pilot (ADR-018): that a channel event wakes an idle s
 - AC-19 (EX-19): Given three chats are pending, When a round runs, Then three triage helpers each hold one chat's token and the one with an answer sends it.
 - AC-20 (EX-20): Given a triage helper needs the owner's decision, When it cannot ask the owner, Then it returns one line to the dispatcher.
 - AC-21 (EX-21): Given the tool refused a triage helper's token, When the helper reads the refusal, Then the helper stops, reports it and does not try another chat.
+- AC-22 (EX-22): Given the session and one triage helper ran today, When the owner asks how much of the plan was used, Then Deputy returns today's four token counts for the dispatcher and for the triage helper, per model.
+- AC-23 (EX-23): Given a transcript entry holds a customer message, When the counts are built, Then the result holds none of the message text, ids or paths.
+- AC-24 (EX-24): Given a transcript file has a format Deputy does not know, When the owner asks for the counts, Then Deputy says the format is not recognized and returns no numbers for that file.
