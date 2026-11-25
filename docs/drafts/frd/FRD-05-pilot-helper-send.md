@@ -4,24 +4,24 @@ Status: Draft
 
 ## Summary
 
-In the dispatcher session of the local pilot (ADR-019) a background triage helper sends an answer with `send_answer`. Deputy gives each pending chat a triage token (Intake FRD-05), and refuses a send whose token does not belong to its chat id, so a helper can send only to the chat it was given. The token does not prove that the helper's text is right (D11). See [the slice PRD](../PRD.md).
+In the dispatcher session of the local pilot (docs/adr/ADR-019) a background triage helper sends an answer with `send_answer`. Deputy gives each pending chat a triage token (Intake FRD-05), and refuses a send whose token does not belong to its chat id, so a helper can send only to the chat it was given. The token does not prove that the helper's text is right (D11). See [the slice PRD](../PRD.md).
 
 Last change: 2026-11-24, first draft. A new FRD rather than a change to the approved FRD-02, so that FRD-02 keeps its approval.
 
 ## Why
 
-ADR-019 (the dispatcher session and its helpers) and the owner's decision of 2026-11-24 that the main session never sends. R-DRAFTS-22 lets the pilot send an answer the knowledge backs without the owner's go; this row limits which chat a helper can reach.
+docs/adr/ADR-019 (the dispatcher session and its helpers) and the owner's decision of 2026-11-24 that the main session never sends. R-DRAFTS-22 lets the pilot send an answer the knowledge backs without the owner's go; this row limits which chat a helper can reach.
 
 ## Requirements covered
 
-R-DRAFTS-22, with amendments from ADR-019 (pending owner approval): rows FR-DRAFTS-05-1 and FR-DRAFTS-05-2.
+R-DRAFTS-22, with amendments from docs/adr/ADR-019 (pending owner approval): rows FR-DRAFTS-05-1 and FR-DRAFTS-05-2.
 
 ## Behavior
 
 | ID | Pattern | Requirement |
 |---|---|---|
-| FR-DRAFTS-05-1 | WHEN | When `send_answer` is called, Deputy shall verify that the triage token belongs to the chat id and shall refuse a token that does not match, creating and sending nothing. (ADR-019, Proposed, lead decision.) |
-| FR-DRAFTS-05-2 | WHEN | When `send_answer` is called with a token that belongs to the chat id, Deputy shall go on with the checks of FR-DRAFTS-02-13 (the always-ask list, the knowledge and the customer window) exactly as without a token. (ADR-019, Proposed, lead decision.) |
+| FR-DRAFTS-05-1 | WHEN | When `send_answer` is called, Deputy shall verify that the triage token belongs to the chat id and shall refuse a token that does not match, creating and sending nothing. (docs/adr/ADR-019, Proposed, lead decision.) |
+| FR-DRAFTS-05-2 | WHEN | When `send_answer` is called with a token that belongs to the chat id, Deputy shall go on with the checks of FR-DRAFTS-02-13 (the always-ask list, the knowledge and the customer window) exactly as without a token. (docs/adr/ADR-019, Proposed, lead decision.) |
 
 ## Rules and examples
 
