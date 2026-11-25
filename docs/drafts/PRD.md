@@ -1,7 +1,7 @@
 # Drafts: slice PRD
 
-Status: Approved (2026-11-24) · Part of [Deputy product overview](../PRODUCT.md) · Last updated: 2026-11-17
-Approval: content hiGOde2AZpUm; rests on ../PRODUCT.md EVnyDrK2H9_N
+Status: Approved (2026-11-24)
+Approval: content hiGOde2AZpUm; rests on ../PRODUCT.md 9kKsOKhERsSe
 
 
 ## Purpose
