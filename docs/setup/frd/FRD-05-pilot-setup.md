@@ -6,7 +6,7 @@ Status: Draft
 
 For the local pilot the owner sets Deputy up by asking the agent, with no command-line commands: the agent installs it from a link, the owner pastes the provider key on a one-time local page, and a skill interviews the owner about the business. Deputy keeps the computer awake while the session is open. The key never passes through the conversation. FRD-01 to FRD-04 are deferred for the pilot, not removed.
 
-Last change: 2026-11-24, rows 22 to 36 marked as proposed lead decisions; the owner reopens the session from the shortcut; the first message gates Ready
+Last change: 2026-11-24, the session dispatches to background helpers (rows 37 to 47); the loop rows 23 to 25 name the triage helper; before that: rows 22 to 36 marked as proposed lead decisions; the owner reopens the session from the shortcut; the first message gates Ready
 
 One feature of the [slice PRD](../PRD.md). Deferred for the pilot: [FRD-01](FRD-01-guided-flow.md) to [FRD-04](FRD-04-profile-test-finish.md).
 
@@ -16,7 +16,7 @@ REQ-14 (non-technical owners) and REQ-15 (local pilot). Decisions D33, D35, D36 
 
 ## Requirements covered
 
-R-SETUP-22, R-SETUP-23, R-SETUP-24, R-SETUP-25, R-SETUP-26, R-SETUP-27, R-SETUP-28, R-SETUP-29, R-SETUP-30, R-SETUP-31.
+R-SETUP-22, R-SETUP-23, R-SETUP-24, R-SETUP-25, R-SETUP-26, R-SETUP-27, R-SETUP-28, R-SETUP-29, R-SETUP-30, R-SETUP-31, R-SETUP-32, R-SETUP-33, R-SETUP-34.
 
 ## Behavior
 
@@ -44,9 +44,9 @@ R-SETUP-22, R-SETUP-23, R-SETUP-24, R-SETUP-25, R-SETUP-26, R-SETUP-27, R-SETUP-
 | FR-SETUP-05-20 | always | The skill shall never ask the owner for a permission in the terminal during the daily loop (D35); when it needs the owner's decision it shall ask by message first and wait. |
 | FR-SETUP-05-21 | always | The skill shall answer in the owner's language (D20); Spanish and English are the pilot's two languages. |
 | FR-SETUP-05-22 | WHEN | WHEN a round of the daily loop starts, the skill shall check for new messages, list the pending chats and read the knowledge before it answers any chat. (Proposed, lead decision.) |
-| FR-SETUP-05-23 | WHEN | WHEN a pending question is backed by the knowledge and its class is not in the always-ask list, the skill shall answer it by sending the answer itself. (Proposed, lead decision.) |
-| FR-SETUP-05-24 | WHEN | WHEN a pending question is in an always-ask class or the knowledge does not back it, the skill shall collect it and ask the owner once per round, in one message that lists every open question. (Proposed, lead decision.) |
-| FR-SETUP-05-25 | WHEN | WHEN the owner has answered in the control chat, the skill shall match each answer to its question, close the question, and send the reply to the customer with the owner's answer as the go. (Proposed, lead decision.) |
+| FR-SETUP-05-23 | WHEN | WHEN a pending question is backed by the knowledge and its class is not in the always-ask list, the triage helper shall answer it by sending the answer itself with the token of that chat. (Proposed, lead decision.) |
+| FR-SETUP-05-24 | WHEN | WHEN a pending question is in an always-ask class or the knowledge does not back it, the triage helper shall return one line with the question, and the dispatcher shall collect the lines and ask the owner once per round, in one message that lists every open question. (Proposed, lead decision.) |
+| FR-SETUP-05-25 | WHEN | WHEN the owner has answered in the control chat, the dispatcher shall match each answer to its question, close the question, and send the reply to the customer with the owner's answer as the go. (Proposed, lead decision.) |
 | FR-SETUP-05-26 | IF | IF a send is refused because the customer's window is closed, THEN the skill shall tell the owner in the session that the window is closed and shall not retry. (Proposed, lead decision.) |
 | FR-SETUP-05-27 | IF | IF the owner's own window is closed when the skill asks the owner, THEN the skill shall tell the owner in the session to write any message to the business number, and once that message has arrived the skill shall ask again, so that the questions that were not sent go out in one numbered message and the owner's answers close the recorded questions. (Proposed, lead decision.) |
 | FR-SETUP-05-28 | WHEN | WHEN the owner states a rule to keep, in the control chat or in the session, the skill shall save it with the owner's own words. (Proposed, lead decision.) |
@@ -58,6 +58,17 @@ R-SETUP-22, R-SETUP-23, R-SETUP-24, R-SETUP-25, R-SETUP-26, R-SETUP-27, R-SETUP-
 | FR-SETUP-05-34 | WHEN | WHEN the connection settings are written, the skill shall tell the owner to close the session and reopen it from the shortcut, so that the consent dialog of the wake option is answered on that first launch while the owner is present, and after the reopening the skill shall continue setup where it stopped. (Proposed, lead decision.) |
 | FR-SETUP-05-35 | IF | IF a Deputy tool reports an error, such as a refused key, a failing check for messages or a failed send, THEN the skill shall tell the owner in plain words, by message first and in the session when the owner's window is closed. (Proposed, lead decision.) |
 | FR-SETUP-05-36 | WHEN | WHEN the owner asks the agent to install Deputy from a link, the install guide shall first check that the runtime Deputy needs, git and the agent are present, and say what to install when one is missing. (Proposed, lead decision.) |
+| FR-SETUP-05-37 | always | The main session shall never block: it checks messages, answers quick questions and asks the owner, and it hands long work to a background helper that reports back. (Owner decision of 2026-11-24, docs/adr/ADR-019.) |
+| FR-SETUP-05-38 | always | Work shall count as long when it reads a spreadsheet or documents, builds or changes the catalog, searches the web or summarizes many chats; one read of one chat and one question to the owner are not long. (Proposed, lead decision.) |
+| FR-SETUP-05-39 | WHEN | WHEN a round lists pending chats, the dispatcher shall hand each chat, with its token, to a triage helper that runs in the background and reads the knowledge itself. (Proposed, lead decision.) |
+| FR-SETUP-05-40 | always | The Deputy session shall have no internet access unless the owner asks. (Owner decision of 2026-11-24, docs/adr/ADR-019.) |
+| FR-SETUP-05-41 | WHEN | WHEN the owner asks for a web lookup or research, the dispatcher shall run the web helper for that request only, with the owner's own request as its prompt and never customer text, and show its result to the owner, with no terminal prompt. (Proposed, lead decision.) |
+| FR-SETUP-05-42 | always | No helper shall raise a permission prompt in the daily loop; a call that is not allowed is refused, not asked (FR-SETUP-05-20). (Proposed, lead decision.) |
+| FR-SETUP-05-43 | WHEN | WHEN the install guide finishes, the agent definitions of the dispatcher, the triage helper and the web helper shall be installed as plain files in the project's agents folder. (Proposed, lead decision.) |
+| FR-SETUP-05-44 | WHEN | WHEN the owner uses the shortcut, the session shall start as the dispatcher with the wake option (ADR-018, docs/adr/ADR-019). (Proposed, lead decision.) |
+| FR-SETUP-05-45 | WHEN | WHEN the install guide writes the permission rules, it shall do so only after the project folder is trusted, so the install steps are ordered that way. (Proposed, lead decision.) |
+| FR-SETUP-05-46 | WHEN | WHEN a round of the daily loop runs, the dispatcher shall also collect the results of the helpers that finished. (Proposed, lead decision.) |
+| FR-SETUP-05-47 | always | Helpers shall not ask the owner anything; only the dispatcher asks. (Proposed, lead decision.) |
 
 ## Rules and examples
 
@@ -67,9 +78,11 @@ R-SETUP-22, R-SETUP-23, R-SETUP-24, R-SETUP-25, R-SETUP-26, R-SETUP-27, R-SETUP-
 | RULE-2 | Owner numbers are recorded only from the owner's own words in the conversation, after the owner confirms them. | FR-SETUP-05-14 |
 | RULE-3 | During the daily loop, no permission prompt waits for the owner in the terminal. | FR-SETUP-05-3, FR-SETUP-05-19, FR-SETUP-05-20 |
 | RULE-4 | The keep-awake hold exists only while a session is open. | FR-SETUP-05-15, FR-SETUP-05-16 |
-| RULE-5 | The skill answers by itself only what the knowledge backs and the always-ask list does not cover; everything else goes to the owner in one batched message. | FR-SETUP-05-23, FR-SETUP-05-24, FR-SETUP-05-25 |
+| RULE-5 | The triage helper answers by itself only what the knowledge backs and the always-ask list does not cover; everything else goes to the owner in one batched message, asked by the dispatcher. | FR-SETUP-05-23, FR-SETUP-05-24, FR-SETUP-05-25 |
 | RULE-6 | A closed window is told to the owner, never retried and never worked around. | FR-SETUP-05-26, FR-SETUP-05-27 |
 | RULE-7 | Setup is finished only after the owner's first message has arrived. | FR-SETUP-05-31, FR-SETUP-05-32 |
+| RULE-8 | The main session never blocks, has no internet and has no send tool; long work and web work go to helpers. | FR-SETUP-05-37, FR-SETUP-05-38, FR-SETUP-05-40, FR-SETUP-05-41 |
+| RULE-9 | A helper holds only the tools for its chat or its job, raises no prompt and asks the owner nothing. | FR-SETUP-05-39, FR-SETUP-05-42, FR-SETUP-05-47 |
 
 | Example | Rule | Kind | Given | When | Then |
 |---|---|---|---|---|---|
@@ -82,12 +95,18 @@ R-SETUP-22, R-SETUP-23, R-SETUP-24, R-SETUP-25, R-SETUP-26, R-SETUP-27, R-SETUP-
 | EX-7 | RULE-3 | negative | The daily loop needs the owner's decision | The owner is away from the terminal | The skill asks by message and does not open a terminal prompt |
 | EX-8 | RULE-4 | positive | A session is open | Deputy starts | The keep-awake hold is on |
 | EX-9 | RULE-4 | boundary | A session is open with the hold on | The session ends | The hold is released |
-| EX-10 | RULE-5 | positive | The knowledge backs the opening hours and opening hours are not always-ask | A customer asks when the shop opens | The skill sends the answer itself |
-| EX-11 | RULE-5 | negative | The delivery price is an always-ask class | A customer asks for a delivery price | The skill sends nothing and collects the question for the owner |
+| EX-10 | RULE-5 | positive | The knowledge backs the opening hours and opening hours are not always-ask | A customer asks when the shop opens | The triage helper sends the answer itself |
+| EX-11 | RULE-5 | negative | The delivery price is an always-ask class | A customer asks for a delivery price | The triage helper sends nothing and returns the question for the owner |
 | EX-12 | RULE-6 | positive | The customer's window is closed | The skill tries to send | The skill tells the owner and does not retry |
 | EX-13 | RULE-6 | boundary | The owner's window is closed | The skill asks the owner a question | The skill tells the owner in the session to write to the business number; after the owner writes, the skill asks again and the not-sent questions go out in one numbered message, and the owner's answers close them |
 | EX-14 | RULE-7 | positive | The owner sent the first message | The skill checks | The message is in the control chat and setup is reported as finished |
 | EX-15 | RULE-7 | negative | The owner has not written yet | The skill checks | The skill says it has not arrived and setup is not reported as finished |
+| EX-16 | RULE-8 | positive | The owner asks to build the catalog from a long spreadsheet | The dispatcher runs | A background helper builds it and the dispatcher keeps answering messages |
+| EX-17 | RULE-8 | negative | A customer asks something the knowledge does not cover | Nobody asked for research | The dispatcher does not search the web and asks the owner |
+| EX-18 | RULE-8 | boundary | The owner asks in a message to look something up online | The dispatcher runs | The web helper runs for that request only and its result is shown to the owner |
+| EX-19 | RULE-9 | positive | Three chats are pending | A round runs | Three triage helpers each hold one chat's token and the one with an answer sends it |
+| EX-20 | RULE-9 | negative | A triage helper needs the owner's decision | It cannot ask the owner | It returns one line to the dispatcher |
+| EX-21 | RULE-9 | boundary | The tool refused a triage helper's token | The helper reads the refusal | The helper stops, reports it and does not try another chat |
 
 ## Decision table
 n/a: no behavior here depends on more than three conditions.
@@ -136,7 +155,7 @@ n/a: the project has no CROSS-CUTTING.md yet; the cross-cutting rules live in th
 
 ## Open questions
 Closed on 2026-11-24 (the owner approved the proposals): the key page closes after one submit and a second page invalidates the earlier token; owner numbers are recorded after the owner confirms; keep-awake is a child process without administrator rights; the skill's daily reminder is in addition to the guide; prompts are acceptable during attended setup and the no-prompt rule applies to the daily loop; Spanish and English are the pilot's languages.
-Q-1 (Owner: the rows FR-SETUP-05-22 to FR-SETUP-05-36 are lead decisions built on the approved pilot decisions, not decided by the owner): approve them or change them.
+Closed on 2026-11-25 (owner): the rows FR-SETUP-05-22 to FR-SETUP-05-47 are approved, and rows FR-SETUP-05-37 to FR-SETUP-05-47 are revisited if the live test contradicts them.
 None of the research questions is open. The provider call that lists an account's numbers is recorded as L11 and the Windows keep-awake call as L12 (DECISIONS), both from the research of 2026-11-24.
 Answered by the lead on 2026-11-24 (technical): the chosen provider id is kept in the config file under the config folder, read by the existing config reader, and SPEC-05-8 adds the writer next to it; the tools are read_knowledge, save_profile, save_catalog, save_always_ask and remember (Knowledge pilot specs) and set_owner_numbers, ask_owner and answer_question (Intake pilot specs).
 Unverified, checked by the pilot (ADR-018): that a channel event wakes an idle session, that the shortcut keeps the wake option, and that the slow loop keeps firing after compaction.
@@ -151,9 +170,15 @@ Unverified, checked by the pilot (ADR-018): that a channel event wakes an idle s
 - AC-7 (EX-7): Given the daily loop needs the owner's decision, When the owner is away from the terminal, Then the skill asks by message and does not open a terminal prompt.
 - AC-8 (EX-8): Given a session is open, When Deputy starts, Then the keep-awake hold is on.
 - AC-9 (EX-9): Given a session is open with the hold on, When the session ends, Then the hold is released.
-- AC-10 (EX-10): Given the knowledge backs the opening hours and opening hours are not always-ask, When a customer asks when the shop opens, Then the skill sends the answer itself.
-- AC-11 (EX-11): Given the delivery price is an always-ask class, When a customer asks for a delivery price, Then the skill sends nothing and collects the question for the owner.
+- AC-10 (EX-10): Given the knowledge backs the opening hours and opening hours are not always-ask, When a customer asks when the shop opens, Then the triage helper sends the answer itself.
+- AC-11 (EX-11): Given the delivery price is an always-ask class, When a customer asks for a delivery price, Then the triage helper sends nothing and returns the question for the owner.
 - AC-12 (EX-12): Given the customer's window is closed, When the skill tries to send, Then the skill tells the owner and does not retry.
 - AC-13 (EX-13): Given the owner's window is closed, When the skill asks the owner a question, Then the skill tells the owner in the session to write to the business number; after the owner writes, the skill asks again and the not-sent questions go out in one numbered message, and the owner's answers close them.
 - AC-14 (EX-14): Given the owner sent the first message, When the skill checks, Then the message is in the control chat and setup is reported as finished.
 - AC-15 (EX-15): Given the owner has not written yet, When the skill checks, Then the skill says it has not arrived and setup is not reported as finished.
+- AC-16 (EX-16): Given the owner asks to build the catalog from a long spreadsheet, When the dispatcher runs, Then a background helper builds it and the dispatcher keeps answering messages.
+- AC-17 (EX-17): Given a customer asks something the knowledge does not cover and nobody asked for research, When the dispatcher runs, Then it does not search the web and asks the owner.
+- AC-18 (EX-18): Given the owner asks in a message to look something up online, When the dispatcher runs, Then the web helper runs for that request only and its result is shown to the owner.
+- AC-19 (EX-19): Given three chats are pending, When a round runs, Then three triage helpers each hold one chat's token and the one with an answer sends it.
+- AC-20 (EX-20): Given a triage helper needs the owner's decision, When it cannot ask the owner, Then it returns one line to the dispatcher.
+- AC-21 (EX-21): Given the tool refused a triage helper's token, When the helper reads the refusal, Then the helper stops, reports it and does not try another chat.
