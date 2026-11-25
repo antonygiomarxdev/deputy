@@ -1,6 +1,7 @@
 # Orders: slice PRD
 
-Status: Draft · Part of [Deputy product overview](../PRODUCT.md)
+Status: Approved (2026-11-24) · Part of [Deputy product overview](../PRODUCT.md)
+Approval: content ocA-729zpAGS; rests on ../PRODUCT.md 9kKsOKhERsSe
 
 ## Summary
 

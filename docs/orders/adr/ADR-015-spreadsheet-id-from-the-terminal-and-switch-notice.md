@@ -1,7 +1,7 @@
 # ADR-015: The spreadsheet id comes from the terminal; a switch leaves a notice
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

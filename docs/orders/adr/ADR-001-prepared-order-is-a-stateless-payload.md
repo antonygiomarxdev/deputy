@@ -1,7 +1,7 @@
 # ADR-001: A prepared order travels as a stateless payload
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

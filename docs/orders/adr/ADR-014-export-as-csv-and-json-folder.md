@@ -1,7 +1,7 @@
 # ADR-014: Export as a folder of CSV files and one JSON file
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

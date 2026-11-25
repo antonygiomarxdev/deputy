@@ -1,7 +1,7 @@
 # ADR-013: A small Sheets client over fetch and jose
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

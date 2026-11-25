@@ -1,7 +1,7 @@
 # ADR-012: Spreadsheet layout with atomic writes and strict reads
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

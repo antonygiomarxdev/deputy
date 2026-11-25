@@ -1,7 +1,7 @@
 # ADR-010: A delete uses an intent row, an outbox and secure delete
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

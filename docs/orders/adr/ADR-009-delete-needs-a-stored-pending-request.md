@@ -1,7 +1,7 @@
 # ADR-009: A delete needs a stored pending request
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

@@ -1,7 +1,7 @@
 # ADR-004: The date and time wanted are civil date and time, with no zone
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

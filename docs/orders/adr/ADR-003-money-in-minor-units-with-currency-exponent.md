@@ -1,7 +1,7 @@
 # ADR-003: Money is integer minor units, with the exponent of each currency from a port
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

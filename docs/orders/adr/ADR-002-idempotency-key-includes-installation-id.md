@@ -1,7 +1,7 @@
 # ADR-002: The idempotency key is the installation id plus the draft number
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

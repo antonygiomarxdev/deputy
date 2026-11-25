@@ -1,7 +1,7 @@
 # ADR-011: One repository port, and filtering in the use case
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

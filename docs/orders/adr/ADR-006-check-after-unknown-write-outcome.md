@@ -1,7 +1,7 @@
 # ADR-006: After an unknown write outcome, check the store before saying anything
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

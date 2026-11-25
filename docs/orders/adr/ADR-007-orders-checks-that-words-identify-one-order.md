@@ -1,7 +1,7 @@
 # ADR-007: Orders checks that the owner's words identify one order
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

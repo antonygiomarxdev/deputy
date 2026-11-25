@@ -1,7 +1,7 @@
 # ADR-008: Corrections are a patch, and items are kept by position
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

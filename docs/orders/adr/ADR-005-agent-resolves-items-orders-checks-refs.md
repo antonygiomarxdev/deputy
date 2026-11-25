@@ -1,7 +1,7 @@
 # ADR-005: The agent resolves items; Orders checks the reference
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 
