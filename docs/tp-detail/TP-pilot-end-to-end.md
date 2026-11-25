@@ -1,0 +1,392 @@
+# Technical Proposal: the local pilot end to end
+
+Status: Draft
+Part of [TP.md](../tp/TP.md). Added 2026-11-24 for the local pilot (REQ-15, D31 to D38).
+
+## Summary
+
+How the pilot's pieces work together, drawn from the specs already written: the components, nine sequences, the states of a draft, an owner question and a pending go, and the data. It decides no behavior; every arrow cites the spec that builds it, and the arrows no spec builds are marked GAP and listed under Risks.
+
+## Context
+
+Sources: Intake FRD-05, TP-05 and SPEC-05-x; Setup FRD-05 and SPEC-05-x; Knowledge FRD-04 and SPEC-04-x; ADR-018; Drafts pilot specs SPEC-05 to SPEC-15 and Drafts ADR-013 (PR #202, merged). The send design drawn is the final one: `approveWithoutWords(basis, words)` emits the normal Approved event (the `approvals.basis` column), then `startSending`, `driveSend` and `finishSent` with recovery; `send_answer` uses basis automatic and `send_owner_go` uses basis owner_go.
+
+Spec ids in the drawings use one letter for the slice: I = Intake, D = Drafts, K = Knowledge, S = Setup, N = Notify. `I05-6` is Intake SPEC-05-6; `I03` is Intake SPEC-03 (catch-up); `D07` is Drafts SPEC-07; `N01-3` is Notify SPEC-01-3.
+
+## Decisions
+
+### TD-1: Where is the end-to-end design recorded?
+
+- **Option A** A companion file under `docs/tp-detail/`, linked from the cross-cutting TP. Cost: one more file. Risk: it can drift from the specs (the GAP list is the check).
+- **Option B** Inline in `docs/tp/TP.md`. Cost: none. Risk: the TP is at 247 of its 250 lines.
+
+Chosen: Option A. ADR: none: it records existing specs and decides no behavior.
+
+## Architecture
+
+### Components
+
+What runs where. The owner talks to Claude Code, the session calls Deputy's tools over stdio, and Deputy talks to Kapso. Nothing else leaves the computer.
+
+```mermaid
+flowchart LR
+  Owner["Owner phone: WhatsApp"]
+  Cust["Customer phone: WhatsApp"]
+  Kapso["Kapso API: business number"]
+  Sess["Claude Code session with the deputy skill: S05-7"]
+  MCP["Deputy MCP server over stdio: owner process, lease"]
+  KeyPg["Key page, loopback only: S05-2"]
+  Awake["Keep-awake child process: S05-6"]
+  Sec["OS secret store: provider key"]
+  Cfg["config.json: provider, number id: S05-8"]
+  Know["Knowledge folder: profile, catalog, memory, always-ask: K04-2"]
+  Db[("SQLite deputy.db")]
+  Cust --> Kapso
+  Owner --> Kapso
+  Kapso -->|"catch-up poll: I03"| MCP
+  MCP -->|"SendText: I04, D03"| Kapso
+  Sess -->|"tools, mcp__deputy__* allowed: ADR-018"| MCP
+  MCP -.->|"channel notice: N01-5"| Sess
+  Owner -->|"types /deputy"| Sess
+  MCP --> Db
+  MCP --> Know
+  MCP --> KeyPg
+  KeyPg -->|"key stored: S05-2"| Sec
+  MCP --> Cfg
+  MCP -->|"started on lease: S05-6"| Awake
+```
+
+The slices inside the server, the tables each owns, and how they call each other. A slice imports another only through its `index.ts` (ADR-000).
+
+```mermaid
+flowchart TD
+  Root["src/main: composition root, one file per job: ADR-013"]
+  Intake["Intake: messages, chats, outgoing, owner_numbers, owner_number_log, owner_questions, catchup_status, lease, settings"]
+  Drafts["Drafts: drafts, approvals with basis, drafts_log with automatic, pending_goes, draft_counter"]
+  Know["Knowledge: files in the config folder, change log"]
+  Setup["Setup: key page, number pick, config writer, keep-awake, skill"]
+  Shared["Shared kernel: Clock, OwnerLease, signals, text, containsWords"]
+  Root -->|"I05-15"| Intake
+  Root -->|"GAP: no spec wires Drafts"| Drafts
+  Root -->|"K04-6"| Know
+  Root -->|"S05-12"| Setup
+  Drafts -->|"SendText, ReadChat, CatchUpChat: D03"| Intake
+  Intake -->|"OwnerAnswered signal: I05-12"| Drafts
+  Know -->|"message checks: K04-7"| Intake
+  Intake --> Shared
+  Drafts --> Shared
+  Know --> Shared
+```
+
+### Sequences
+
+Each message names the tool, the spec and the table. "Session" is Claude Code with the skill.
+
+#### (a) Install and setup interview
+
+```mermaid
+sequenceDiagram
+  participant O as Owner
+  participant S as Session
+  participant M as Deputy MCP
+  participant K as Kapso
+  O->>S: asks the agent to install Deputy from a link
+  S->>S: INSTALL.md steps, settings allow mcp__deputy__* and deny Bash (S05-1, ADR-018)
+  S->>M: open_key_page (S05-4)
+  M-->>S: loopback url, never the key (S05-2)
+  O->>M: pastes the key on the page, goes to the OS secret store (S05-2)
+  S->>M: list_numbers (S05-4)
+  M->>K: list the account numbers (S05-3)
+  K-->>M: numbers
+  S->>M: select_number (S05-4)
+  M->>M: writeConfigKey in config.json (S05-8)
+  M->>M: restart so the server reads the new provider (S05-12 writes the settings, S05-5 tells the owner to reopen)
+  M->>M: serve start, adopt the business number under the lease, owner_numbers kind business (I05-9)
+  S->>O: interview, confirm before saving (S05-5)
+  S->>M: save_profile, save_catalog, save_always_ask with owner words (K04-3, K04-5)
+  S->>M: set_owner_numbers describe, then confirm (I05-10, I05-11, table owner_numbers and owner_number_log)
+  S->>O: tells the owner to write the business number once, opens the window (S05-11)
+  S->>O: reopen from the shortcut, the channel consent dialog shows (S05-5, ADR-018)
+```
+
+#### (b) Customer message to a knowledge-backed automatic answer
+
+```mermaid
+sequenceDiagram
+  participant C as Customer
+  participant K as Kapso
+  participant M as Deputy MCP
+  participant S as Session
+  participant O as Owner
+  C->>K: message
+  K->>M: catch-up poll stores it (I02, I03, tables messages and chats)
+  S->>M: check_messages (I03)
+  S->>M: get_chat with windowClosesAt, list_pending (I05-3)
+  S->>M: read_knowledge (K04-5, K04-2)
+  S->>S: classes the question, not in always-ask, knowledge backs it
+  S->>M: send_answer chatId, text, answerClass, knowledge (D13, D14 reads the always-ask list from Knowledge, the dispatcher design of ADR-019 is not merged)
+  M->>M: decideAutoSend, send true (D05)
+  M->>M: checkFirstSend, window open (D06)
+  M->>M: create draft, approveWithoutWords automatic, row in approvals with basis (D09-4, D09-5a, D09-5b)
+  M->>M: driveSend: startSending, lease token re-checked (D03, tables drafts and drafts_log)
+  M->>K: SendText sendId, chat, text (I04, table outgoing)
+  K-->>M: accepted
+  M->>M: finishSent with recovery, log entry automatic (D03, D09-1, D09-2, D09-3a, D09-3b)
+  M-->>S: sent
+  O-->>S: reads the count with pilot_stats (D13, D15 joins D08 with Intake's counts, I05-14)
+```
+
+#### (c) Always-ask or unknown: ask the owner, take the answer as the go
+
+```mermaid
+sequenceDiagram
+  participant C as Customer chat
+  participant S as Session
+  participant M as Deputy MCP
+  participant K as Kapso
+  participant O as Owner phone
+  S->>M: ask_owner number, questions with chatId and text (I05-8, I05-6)
+  M->>M: chat is a stored customer chat, owner window open (I05-6, table messages)
+  M->>K: ONE numbered message listing the open questions (I05-6, I04)
+  M->>M: record each question with chat_id (I05-4, I05-5, table owner_questions)
+  M-->>S: questionIds
+  O->>K: answers freely, in one or more messages
+  K->>M: catch-up stores them in the control chat (I03, table messages)
+  S->>M: get_chat on the control chat (I05-8)
+  M-->>S: owner messages and openQuestions with ids
+  S->>S: decides which answer belongs to which question
+  S->>M: answer_question questionId, text (I05-8, I05-7)
+  M->>M: containsWords in an owner message after askedAt, else not_owner_words (I05-13, I05-7)
+  M->>M: close the question, publish OwnerAnswered (I05-7, I05-12, table owner_questions)
+  M->>M: recordGo into pending_goes (D11, D07, D10-2, table pending_goes)
+  S->>M: send_owner_go chatId, text (D13)
+  M->>M: takeGo once, inside the customer window, used_at and send_id (D07, D12)
+  M->>M: approveWithoutWords owner_go, driveSend (D09-4, D12, D03)
+  M->>K: SendText to the customer (I04)
+  M-->>S: sent
+  S-->>C: the customer reads the reply
+```
+
+#### (d) The owner's window is closed: ask in the Claude app
+
+```mermaid
+sequenceDiagram
+  participant S as Session
+  participant M as Deputy MCP
+  participant O as Owner
+  S->>M: ask_owner number, questions (I05-8, I05-6)
+  M->>M: owner window closed, 24 h after the owner's latest message (I05-6, table messages)
+  M->>M: record each question as not sent (I05-6, table owner_questions)
+  M-->>S: not_sent with window_closed and the question ids (I05-6, I05-8)
+  S->>O: asks in the Claude app, tells the owner to answer on WhatsApp (I05-8 result text, S05-7 rule)
+  O->>M: answers on WhatsApp, the window reopens (I03, table messages)
+  S->>M: answer_question questionId, text, closes the kept question (I05-7, I05-13, I05-12)
+```
+
+#### (e) The customer window is closed: no send, tell the owner
+
+```mermaid
+sequenceDiagram
+  participant S as Session
+  participant M as Deputy MCP
+  participant O as Owner
+  S->>M: send_answer or send_owner_go (D13)
+  M->>M: checkFirstSend, latest customer message over 24 h old (D06, table messages)
+  M-->>S: refused window_closed, tellOwner (D06, D13)
+  S->>O: tells the owner the customer window is closed (D06)
+  Note over M: a pending go stays in pending_goes, unused (D07 test 4)
+  Note over M: the send_owner_go path also tells the owner (D13, D12)
+```
+
+#### (f) Crash in the middle of a send
+
+```mermaid
+sequenceDiagram
+  participant M as Deputy MCP
+  participant K as Kapso
+  participant S as Session
+  M->>M: draft sending, approval and log written in one transaction (D03, tables drafts, approvals, drafts_log)
+  M->>K: SendText sendId (I04, table outgoing)
+  Note over M: process dies before the result is recorded
+  M->>M: restart, lease acquired, first catch-up (I03, ADR-002)
+  M->>M: RecoverInterrupted: sending becomes unknown (D03)
+  M->>M: ResolveUnknownSends asks FindOutgoing by send id, one match is linked (D03, I04)
+  alt match found
+    M->>M: draft sent, log entry (D03, D04)
+  else no match
+    M->>S: draft stays unknown, owner decides (D03)
+  end
+  Note over M: the go and its approval are one unit of work, so a failed write leaves the go unused (D12)
+```
+
+#### (g) Restart with a pending go
+
+```mermaid
+sequenceDiagram
+  participant M as Deputy MCP
+  participant S as Session
+  participant I as Intake
+  Note over M: pending_goes row written, process restarts (D10-1, D10-2)
+  M->>M: new owner process, lease acquired (ADR-002)
+  M->>I: catch-up, then adopt the business number (I03, I05-9)
+  S->>M: send_owner_go chatId, text (D13)
+  M->>M: takeGo reads the stored go, window still open (D07, D10-2)
+  M->>M: approveWithoutWords owner_go and send as in (c) (D12)
+  Note over M: answered questions are read again at start and recorded as goes (D11, I05-17)
+```
+
+#### (h) Remember from the control chat
+
+```mermaid
+sequenceDiagram
+  participant O as Owner phone
+  participant M as Deputy MCP
+  participant S as Session
+  O->>M: control-chat message, for example a rule to keep (I03, I05-1, table messages)
+  S->>M: get_chat on the control chat (I05-8)
+  M-->>S: the stored message with its id
+  S->>M: remember text, source control_chat with message_id (K04-5, K04-4)
+  M->>M: ownerControlMessage reads the stored message from Intake (K04-7)
+  M->>M: text must be contained in that owner message by containsWords (K04-4, I05-13)
+  M->>M: refuse customer text and over-size text (K04-1, K04-4)
+  M->>M: append one dated line to memory.md (K04-2)
+  M-->>S: remembered
+```
+
+#### (i) Wake: channel notice, slow loop and catch-up poll
+
+```mermaid
+sequenceDiagram
+  participant K as Kapso
+  participant M as Deputy MCP
+  participant S as Session
+  loop catch-up scheduler
+    M->>K: poll the provider (I03, ADR-005, table catchup_status)
+    K-->>M: new messages stored (I02, table messages)
+  end
+  M-->>S: batched channel notice, counts only (ADR-018, N01-3, N01-5)
+  Note over S: the session reads it on its next turn, instant wake is unverified (ADR-018)
+  Note over S: the owner accepted the consent dialog at the first launch from the shortcut (S05-5)
+  loop /loop every 30 to 60 minutes
+    S->>M: check_messages (I03)
+    M-->>S: sync status and stored count
+  end
+  Note over S: the loop recipe and the daily steps are in loop.md (S05-9, S05-10)
+  S->>M: list_pending (I05-3)
+```
+
+### States
+
+The draft, with the basis of its approval. `waiting` to `sending` is the one send path; the three bases differ only in how the approval was allowed (D09-4, D09-5a).
+
+```mermaid
+stateDiagram-v2
+  [*] --> waiting: create_draft or send tool
+  waiting --> sending: approved, basis owner_words, automatic or owner_go
+  waiting --> rejected: owner rejects
+  waiting --> replaced: replaced by a new draft
+  held --> waiting: owner picks a choice
+  sending --> held: catch-up shows the owner answered or the customer wrote again
+  sending --> sent: provider accepted
+  sending --> failed: provider refused
+  sending --> unknown: crash or partial failure
+  failed --> sending: retry inside the window
+  unknown --> sent: FindOutgoing finds one match
+  unknown --> failed: no match after the next catch-up
+  sent --> [*]
+  rejected --> [*]
+  replaced --> [*]
+```
+
+The owner question, from Intake FRD-05 and SPEC-05-4 to SPEC-05-7.
+
+```mermaid
+stateDiagram-v2
+  [*] --> open: ask_owner records the question and sends the numbered message
+  open --> answered: answer_question, text contained in a later owner message
+  open --> open: answer_question refused, unknown question or not the owner's words
+  answered --> [*]
+```
+
+The pending go, from Drafts SPEC-07 and SPEC-10-2.
+
+```mermaid
+stateDiagram-v2
+  [*] --> pending: recordGo on OwnerAnswered
+  pending --> pending: takeGo with the customer window closed
+  pending --> used: takeGo inside the window, used_at and send_id set
+  used --> [*]
+```
+
+## Information
+
+The new tables and the columns the pilot adds to existing ones. Existing tables are shown only where the pilot touches them.
+
+```mermaid
+erDiagram
+  chats ||--o{ messages : holds
+  chats ||--o{ owner_questions : "is about"
+  owner_numbers ||--o{ owner_number_log : "changes logged"
+  chats ||--o{ drafts : "has"
+  drafts ||--o{ approvals : "approved by"
+  drafts ||--o{ drafts_log : "logged in"
+  chats ||--o{ pending_goes : "go for"
+  owner_questions ||--o| pending_goes : "answer becomes"
+  owner_questions {
+    integer number PK
+    text owner_chat
+    text chat_id "customer chat, I05-4"
+    text text
+    integer asked_at
+    text send_id
+    text answer
+    integer closed_at
+  }
+  pending_goes {
+    integer id PK
+    text question_id
+    text chat_id
+    text text
+    integer answered_at
+    integer used_at
+    text send_id
+  }
+  approvals {
+    text basis "owner_words, automatic or owner_go, D09-5a"
+  }
+  drafts_log {
+    integer automatic "D09-3a"
+  }
+```
+
+## Interfaces
+
+The tools the drawings use and the spec that builds each.
+
+| Tool | Spec |
+|---|---|
+| `check_messages`, `get_chat`, `list_pending` | I03, I05-3 |
+| `ask_owner`, `answer_question` | I05-8 (use cases I05-6, I05-7) |
+| `set_owner_numbers` | I05-11 (use case I05-10) |
+| `send_answer`, `send_owner_go`, `pilot_stats` | D13 (rules D05, D06, D12, D08) |
+| `read_knowledge`, `save_profile`, `save_catalog`, `save_always_ask`, `remember` | K04-5 |
+| `open_key_page`, `list_numbers`, `select_number` | S05-4 |
+
+## Threat model
+
+Nothing new: the drawings show the existing guards. The go comes from the owner's own words (`containsWords`, I05-13); the session can still pass wrong `answerClass` or `knowledge` to `send_answer`, a limit Drafts ADR-013 states (D11).
+
+## Testing
+
+The rows the drawings serve are the pilot rows of the four slices, for example FR-INTAKE-05-5, FR-DRAFTS-02-13, FR-SETUP-05-22 and FR-NOTIFY-01-1. Each arrow's spec carries its own tests first. This file is checked by `check.ts tp` and the Mermaid validator; the GAP list is the list of arrows with no test to point to.
+
+## Risks
+
+An arrow in a drawing that no merged spec builds. Each is stated as found; none is decided here. The ones that earlier versions of this file listed and that merged specs now close (the channel notice, the skill's daily loop, the first owner message, the consumed go, the lost signal, the closed window on the go path, the provider choice and restart, the always-ask source, Intake's daily counts, channel consent and the closed owner window) are removed.
+
+1. Drafts wiring. Knowledge, Intake, Setup and Notify have wiring specs on main; the Drafts pilot use cases and tools are wired in a spec that is not merged yet (the components drawing).
+2. Dispatcher session. Drawing (b) shows the main session calling `send_answer`. ADR-019 and its Setup, Intake and Drafts specs (the dispatcher, the triage helpers and the per-chat token) are not merged; when they are, the drawing changes to the dispatcher handing each chat to a triage helper.
+
+## Open questions
+
+None. The GAPs that remain are tracked under Risks; each is a question for the owner or a spec to write, and none is decided here.
