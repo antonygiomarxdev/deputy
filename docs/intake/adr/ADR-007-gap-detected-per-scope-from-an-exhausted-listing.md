@@ -1,7 +1,11 @@
 # ADR-007: A possible gap is detected per listing scope, when an exhausted listing lacks a message Deputy already stored
 
 ## Status
-Accepted (2026-11-18)
+Proposed
+
+## Summary
+
+Each message listing in a run (one conversation, or the outbound listing) records whether it was read to its end (no next cursor) and the oldest sent time it returned.
 
 ## Context
 FR-INTAKE-03-15 says: if the oldest message the provider returns is newer than the newest message Deputy stored, and the provider has nothing older, messages may be lost. Read globally, a quiet shop gives a false alarm: its newest stored message is old, and a new conversation's whole listing is newer. From the Intake TP-03, TD-1.
@@ -13,7 +17,7 @@ The status is raised only when the coverage mark of that scope, read before this
 
 Rule A (2026-11-20): the marks count only when the previous run finished all its sweeps, that is, its saved status was `complete` or it failed with `possible_gap`. Otherwise they count as null, the old behavior. "Finished" is recorded in `SyncState.finishedAt` (migration 0007): set when a run's end is saved (complete, or any failure), and cleared when a run begins. A crashed run leaves `finishedAt` null, so its marks do not count, even though its status still reads `complete` from the run before it. Reason: reviewer-1's finding on PR #115. A budget-stopped run advances the single `markConversations` past a conversation it never read, so the next run hid a real gap in that conversation (a stored message from 20 days ago, lost messages from 8 days ago, a listing back to 6 days ago). With rule A the stopped run's marks are not trusted and that gap is reported. Rule A is conservative: it can raise one extra `possible_gap`, but it never hides one.
 
-## Alternatives
+## Options considered
 - Comparing provider message ids (the newest id Deputy stored against the ids the listing returns): rejected. A message the provider deleted would look like a gap, and the id check misses the outage loss: the ids Deputy holds can still appear in the listing around the unread stretch, so no missing id is seen, while the coverage mark shows the stretch Deputy never read.
 - The global comparison of FR-INTAKE-03-15 as written: simple, but false alarms on quiet shops and on the first outbound reply ever sent.
 - A daily probe of the whole outbound listing: many requests on a busy number, covers one kind of message, and runs too rarely to name a recent gap. (No retention field is documented in `docs/research/kapso.md` to use instead.)

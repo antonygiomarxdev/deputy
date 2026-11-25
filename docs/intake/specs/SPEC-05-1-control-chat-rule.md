@@ -13,10 +13,10 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-INTAKE-05-1 | always | The control chat is the chat between the business number and an owner number that is not the business number. The owner numbers decide this and nothing in a message's text does. |
-| FR-INTAKE-05-2 | always | A message in the control chat is an answer or an instruction for the session. It is never a customer message and never makes any chat pending. |
-| FR-INTAKE-05-3 | always | A message in the control chat never holds a send. Only an owner reply to a customer that Deputy cannot tie to a chat holds sends (D30). |
-| FR-INTAKE-05-4 | WHEN | When the owner answers a customer from the WhatsApp Business app, the reply keeps its source "owner from the app", stays in the customer's chat and keeps holding sends as FR-INTAKE-04-11 and D30 say. |
+| FR-INTAKE-05-1 | always | The control chat shall be the chat between the business number and an owner number that is not the business number. The owner numbers shall decide this, and nothing in a message's text shall. |
+| FR-INTAKE-05-2 | always | A message in the control chat shall be an answer or an instruction for the session. It shall never be a customer message and shall never make any chat pending. |
+| FR-INTAKE-05-3 | always | A message in the control chat shall never hold a send. Only an owner reply to a customer that Deputy cannot tie to a chat holds sends (D30). |
+| FR-INTAKE-05-4 | WHEN | When the owner answers a customer from the WhatsApp Business app, the reply shall keep its source "owner from the app", shall stay in the customer's chat, and shall keep holding sends as FR-INTAKE-04-11 and D30 say. |
 
 ## Files
 | Path | Create or change | Holds |

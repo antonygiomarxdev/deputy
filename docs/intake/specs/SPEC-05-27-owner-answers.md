@@ -13,7 +13,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-INTAKE-05-35 | WHEN | When the dispatcher asks for the owner's answers, Intake returns the messages the owner sent in the control chat since the oldest open question was asked, and the open questions with their ids and text, and nothing from any customer chat. With no open question it returns none. (Proposed, lead decision, docs/adr/ADR-019.) |
+| FR-INTAKE-05-35 | WHEN | When the dispatcher asks for the owner's answers, Intake shall return the messages the owner sent in the control chat since the oldest open question was asked, and the open questions with their ids and text, and nothing from any customer chat. With no open question it shall return none. (Proposed, lead decision, docs/adr/ADR-019.) |
 
 ## Files
 | Path | Create or change | Holds |

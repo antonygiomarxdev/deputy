@@ -1,10 +1,12 @@
 # Intake: slice PRD
 
-Status: Approved (2026-11-18) · Part of [Deputy product overview](../PRODUCT.md) · Last updated: 2026-11-17
+Status: Draft · Part of [Deputy product overview](../PRODUCT.md) · Last updated: 2026-11-17
 
-## Purpose
+## Summary
 
 Intake is how customer messages get into Deputy. It receives every inbound message from the owner's WhatsApp Business number, checks that it is genuine, stores it once, and makes sure nothing is missing when an agent session starts after hours or days of silence. It also records what the owner answered from the WhatsApp Business app, so the other slices can tell a chat is already handled.
+
+## Why
 
 Every other slice reads what Intake stores. If Intake loses, duplicates, or accepts a forged message, every later answer is wrong.
 
@@ -70,7 +72,7 @@ Safety requirements from the product overview:
 - **Owner identity from configuration:** R-INTAKE-13.
 - **Customer text is data:** Intake stores customer text as it arrived and never interprets it. Labeling it as customer text for the agent belongs to the slices that hand it on.
 
-## Out of scope
+## Non-goals
 
 - Deciding which chats are pending, and grouping or summarizing them (Inbox).
 - Writing drafts, approval, and sending replies (Drafts). Intake only recognizes a reply Drafts already sent (R-INTAKE-14).
@@ -89,7 +91,7 @@ Safety requirements from the product overview:
 - **Knowledge** may read stored history. How learning works is still open (see the product overview).
 - Product-level facts that apply: the 180-day history sync, the free plan's 2,000 messages per month, and the 250 messages per day limit (see [PRODUCT.md section 9](../PRODUCT.md)).
 
-## Acceptance criteria
+## Success criteria
 
 1. With the dev provider, a customer message created by the tester is stored once with all fields of R-INTAKE-4, and appears to the Inbox slice.
 2. A message that fails the authenticity check is rejected and absent from storage (R-INTAKE-3).

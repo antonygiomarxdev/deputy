@@ -13,9 +13,9 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-INTAKE-05-34 | always | Intake creates the token secret the first time it is needed and keeps it in the secret store, with the owner-only file as the fallback of ADR-008; the secret never appears in a result, a log or a document. (Proposed, lead decision, docs/adr/ADR-019.) |
-| FR-INTAKE-05-35 | WHEN | When the dispatcher asks for the owner's answers, Intake returns the messages the owner sent in the control chat since the oldest open question was asked, and the open questions with their ids and text, and nothing from any customer chat. With no open question it returns none. (Proposed, lead decision, docs/adr/ADR-019.) |
-| FR-INTAKE-05-30 | WHEN | When the session asks for the pending chats, Intake gives each chat a triage token, an HMAC of the chat id with a secret that Deputy keeps. (Proposed, lead decision, docs/adr/ADR-019.) |
+| FR-INTAKE-05-34 | always | Intake shall create the token secret the first time it is needed and keep it in the secret store, with the owner-only file as the fallback of ADR-008; the secret shall never appear in a result, a log or a document. (Proposed, lead decision, docs/adr/ADR-019.) |
+| FR-INTAKE-05-35 | WHEN | When the dispatcher asks for the owner's answers, Intake shall return the messages the owner sent in the control chat since the oldest open question was asked, and the open questions with their ids and text, and nothing from any customer chat. With no open question it shall return none. (Proposed, lead decision, docs/adr/ADR-019.) |
+| FR-INTAKE-05-30 | WHEN | When the session asks for the pending chats, Intake shall give each chat a triage token derived from the chat id with a secret that Deputy keeps. (Proposed, lead decision, docs/adr/ADR-019; the derivation is set in the TP.) |
 
 ## Files
 | Path | Create or change | Holds |

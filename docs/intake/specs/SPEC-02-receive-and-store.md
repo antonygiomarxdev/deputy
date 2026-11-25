@@ -1,6 +1,6 @@
 # Spec: Receive, verify and store
 
-Status: Approved (2026-11-18)
+Status: Draft
 Rests on: ../tp/TP-02-receive-and-store.md
 
 Rests on `../tp/TP-02-receive-and-store.md` (TP-02) and the cross-cutting `docs/tp/TP.md`. FRD: `../frd/FRD-02-receive-and-store.md`. ADRs: Intake `ADR-003` (verify inside the use case), `ADR-004` (chat state in the message transaction), `ADR-005` (rejection notes), `ADR-006` (signals after commit); cross-cutting `ADR-003` (SQLite), `ADR-011` (testing).

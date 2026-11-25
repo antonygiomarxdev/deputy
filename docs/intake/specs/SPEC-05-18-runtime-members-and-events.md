@@ -14,8 +14,8 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 ## Rows
 Quoted from: ../frd/FRD-05-pilot-owner-chat-and-tools.md
 
-| FR-INTAKE-05-27 | WHEN | When Drafts or the session asks for the day's counts, Intake returns for each day the number of customer messages received and the number of owner questions asked, each counted once, and nothing else: no text, name or chat id. The day is the local date of the computer Deputy runs on (the runtime's resolved time zone), with no setting. (lead decision, 2026-11-24) |
-| FR-INTAKE-05-28 | WHEN | When Drafts asks for the answered questions at start, Intake returns each question that has an answer with the question id, the customer chat it names, the answer text and the time of the answer, so that an answer given while Drafts was not running is not lost. |
+| FR-INTAKE-05-27 | WHEN | When Drafts or the session asks for the day's counts, Intake shall return for each day the number of customer messages received and the number of owner questions asked, each counted once, and nothing else: no text, name or chat id. The day shall be the local date of the computer Deputy runs on (the runtime's resolved time zone), with no setting. (lead decision, 2026-11-24) |
+| FR-INTAKE-05-28 | WHEN | When Drafts asks for the answered questions at start, Intake shall return each question that has an answer with the question id, the customer chat it names, the answer text and the time of the answer, so that an answer given while Drafts was not running is not lost. |
 
 ## Files
 | Path | Create or change | Holds |

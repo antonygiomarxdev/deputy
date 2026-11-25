@@ -13,10 +13,10 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-INTAKE-05-5 | WHEN | When the session asks the owner one or more questions with an owner number, Intake sends one message from the business number to that number that lists every question still open for it, numbered, records each new question with an id and the time, and returns the ids. |
-| FR-INTAKE-05-25 | always | Each question the session asks names the customer chat it is about, and Intake records that chat id with the question. |
-| FR-INTAKE-05-6 | IF | If the owner's 24 hour window with the business number is closed, Intake sends nothing, records each question as not sent and returns "window closed" with the question ids, so the session asks in the Claude app and tells the owner to answer on WhatsApp. The owner's later answer closes the question as usual, and the next numbered message lists a question that was not sent. |
-| FR-INTAKE-05-9 | WHEN | When the session records an answer with the id of an open question and the owner's text, Intake closes that question and keeps the text with it. |
+| FR-INTAKE-05-5 | WHEN | When the session asks the owner one or more questions with an owner number, Intake shall send one message from the business number to that number that lists every question still open for it, numbered, shall record each new question with an id and the time, and shall return the ids. |
+| FR-INTAKE-05-25 | always | Each question the session asks shall name the customer chat it is about, and Intake shall record that chat id with the question. |
+| FR-INTAKE-05-6 | IF | If the owner's 24 hour window with the business number is closed, Intake shall send nothing, shall record each question as not sent, and shall return "window closed" with the question ids, so the session asks in the Claude app and tells the owner to answer on WhatsApp. The owner's later answer shall close the question as usual, and the next numbered message shall list a question that was not sent. |
+| FR-INTAKE-05-9 | WHEN | When the session records an answer with the id of an open question and the owner's text, Intake shall close that question and keep the text with it. |
 
 ## Files
 | Path | Create or change | Holds |
