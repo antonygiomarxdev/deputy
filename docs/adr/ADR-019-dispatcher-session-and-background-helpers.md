@@ -29,7 +29,7 @@ flowchart TD
   Line --> Batch["Dispatcher batches the lines into one ask_owner"]
   Batch --> Own["Owner answers on WhatsApp"]
   Own --> Go["Dispatcher: answer_question, then the send with the owner's go"]
-  Main -->|"the owner asks for research"| Web["deputy-web helper: read tools, WebSearch, WebFetch"]
+  Main -->|"the owner asks for research"| Web["deputy-web helper: read-only knowledge, WebSearch, WebFetch, no chat tool"]
   Web -->|"result"| Main
 ```
 
@@ -44,7 +44,7 @@ flowchart TD
 ## Decision
 - (a) The main session runs as the agent `deputy-dispatcher` (the shortcut passes `--agent deputy-dispatcher`). Its `tools` allowlist holds the pending list, `ask_owner`, `answer_question`, `send_owner_go` (it holds the owner's answer, so it sends with the go; nothing else does), the Knowledge tools and the agent tool. It has no web tool, no shell tool and no `send_answer`.
 - (b) Each pending chat goes to a `deputy-triage` helper: model `haiku`, `permissionMode: dontAsk`, `omitClaudeMd: true`, and `tools` limited to `chat_context`, `read_knowledge` (read only) and `send_answer` (their full `mcp__deputy__` names). The helper reads the knowledge itself, because passing the files through the dispatcher's prompt would put them in the main context, which is the token cost the owner wants to avoid. When the knowledge backs an answer and its class is not in the always-ask list, the helper sends it itself; otherwise it returns one line with the question, and the dispatcher batches the lines into one `ask_owner`.
-- (c) A `deputy-web` helper gets the read tools plus WebSearch and WebFetch with `dontAsk`. It runs only when the owner asks. No deny rules are written.
+- (c) A `deputy-web` helper gets the read-only knowledge tool plus WebSearch and WebFetch with `dontAsk`, and no chat tool. It gets only what the dispatcher puts in its prompt, so customer text cannot leave through a fetched address. It runs only when the owner asks. No deny rules are written.
 - (d) Helpers never call `ask_owner`. Proposed (lead's choice): only the dispatcher talks to the owner, so one numbered message carries every question.
 - (e) Proposed (lead's choice): `list_pending` returns `{ chatId, triageToken }`, where the token is an HMAC of the chat id with a secret Deputy holds. `chat_context` and `send_answer` refuse a token that does not match their chat id, so a helper can read and answer only the chat it was given.
 - (f) `chat_context` returns at most the last 20 messages and the stored per-chat summary. A `save_chat_summary` tool, with the same token, replaces the summary. The summary is untrusted text and is labeled so.
@@ -56,5 +56,5 @@ flowchart TD
 ## Consequences
 - Easier: the main session answers the owner while helpers work; the cheap model reads chats; the web is off by construction.
 - Harder: one agent file per helper is installed and kept in step with the tool names; a helper can still pass a wrong answer class to `send_answer` (D11); the token secret is a new thing to protect.
-- Unverified, and the pilot checks it: that a finished helper wakes an idle main session, that `--agent` and the shortcut keep each other across restarts, and the transcript format behind `token_stats`.
+- Unverified, and the pilot checks it: that a finished helper wakes an idle main session, that `--agent` and the shortcut keep each other across restarts, the transcript format behind `token_stats`, and that a helper's transcript carries its agent name (otherwise `token_stats` reports the part as "helper").
 - Answered by the lead on 2026-11-24: the dispatcher holds `send_owner_go`, and the triage helper has `read_knowledge`.
