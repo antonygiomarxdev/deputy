@@ -57,6 +57,7 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-7 | RULE-3 | boundary | The owner says "ok" to a wipe question | Deputy handles it | nothing is deleted and the agent asks again |
 | EX-8 | RULE-4 | positive | A confirmed wipe | it ends | no profile, catalog or lesson remains |
 | EX-9 | RULE-4 | negative | A confirmed wipe ends | the trace is read | the only trace is the entry that a wipe happened, with the time and the owner's words |
+| EX-17 | RULE-4 | positive | The owner exported and then wiped | they compare the two | the export holds everything that was wiped
 | EX-10 | RULE-5 | positive | A spreadsheet catalog and a confirmed wipe | the wipe ends | the spreadsheet is unchanged and Deputy is disconnected from it |
 | EX-11 | RULE-5 | boundary | A wipe is confirmed with a spreadsheet catalog | the wipe runs | the spreadsheet is not deleted |
 | EX-12 | RULE-6 | positive | A recorded order used a catalog item | knowledge is wiped | the order still shows the item name and price |
@@ -138,3 +139,4 @@ Generated from the examples above, one per EX row:
 - AC-14: Given the owner asks for a wipe, When Deputy answers, Then it suggests an export first. (EX-14)
 - AC-15: Given the owner does not export, When the wipe is confirmed, Then the wipe still goes ahead. (EX-15)
 - AC-16: Given the owner wipes a second time, When Deputy answers, Then it says there is nothing to delete. (EX-16)
+- AC-17: Given the owner exported and then wiped, When they compare, Then the export holds everything that was wiped. (EX-17)

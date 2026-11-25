@@ -70,7 +70,7 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-10 | RULE-6 | positive | A new owner with no files | they ask for templates | they get a profile and a catalog with the fields Deputy reads |
 | EX-11 | RULE-6 | boundary | The owner edits the catalog | the owner keeps editing | the edit is allowed at any time |
 | EX-12 | RULE-7 | positive | The owner edits a price and saves | the next draft is written | it uses the new price without any restart |
-| EX-13 | RULE-7 | negative | A draft was written before the save | the save is made | the earlier draft keeps its value and is marked (see EX-24) |
+| EX-13 | RULE-7 | negative | A draft was written before the save | the save is made | the earlier draft keeps its value and is marked (see EX-25) |
 | EX-14 | RULE-8 | positive | The owner says "we ran out of tamales" | the agent proposes the change | Deputy records it with an identifier, the old and new values, and the agent shows them |
 | EX-15 | RULE-8 | negative | The owner says "we ran out of tamales" and does not answer | the time passes | the catalog is unchanged |
 | EX-16 | RULE-9 | positive | A waiting proposal and the owner's words identify it | the agent applies it | the change is stored and the log holds the owner's words and the identifier |
@@ -78,13 +78,14 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-18 | RULE-9 | boundary | The agent applies a proposal with a made-up or old identifier | Deputy handles it | it is refused and nothing changes |
 | EX-19 | RULE-10 | positive | The owner saw "price 12" and the owner's words identify the proposal | the agent applies it | the change is applied with the value shown |
 | EX-20 | RULE-10 | negative | The owner saw "price 12" and the proposal then changed to "price 15" | the agent applies it with the first go | Deputy refuses |
-| EX-21 | RULE-11 | positive | A profile line change in the "must not do" list | the agent applies it without a go | it is refused like a catalog change |
+| EX-21 | RULE-9 | positive | A profile line change in the "must not do" list | the agent applies it without a go | it is refused like a catalog change |
 | EX-22 | RULE-11 | boundary | The agent has other tools such as a shell | it edits the files directly | Deputy does not claim to prevent it |
 | EX-23 | RULE-12 | positive | A spreadsheet catalog | the agent looks up an item | the spreadsheet is read live and the stored value is returned |
 | EX-24 | RULE-12 | negative | A spreadsheet catalog that is unreachable | the agent looks up an item | it is told the catalog could not be read and no value is returned |
 | EX-25 | RULE-13 | positive | A draft waiting for the go and the catalog saved after the draft was written | the draft is listed | it shows "catalog changed since this draft" |
 | EX-26 | RULE-13 | negative | A draft waiting and the catalog not saved since | the draft is listed | it is not marked |
 | EX-27 | RULE-5 | negative | The agent asks Deputy to check the wording of a draft | Deputy answers | it returns the stored values only and makes no claim about the draft text |
+| EX-28 | RULE-11 | positive | The owner's words and a proposal identifier are supplied | the agent applies the change | Deputy's check of the identifier and the words passes, as the known limit states |
 
 ## Decision table
 
@@ -173,3 +174,4 @@ Generated from the examples above, one per EX row:
 - AC-25: Given a draft waiting for the go and the catalog saved after the draft was written, When the draft is listed, Then it shows "catalog changed since this draft". (EX-25)
 - AC-26: Given a draft waiting and the catalog not saved since, When the draft is listed, Then it is not marked. (EX-26)
 - AC-27: Given the agent asks Deputy to check the wording of a draft, When Deputy answers, Then it returns the stored values only and makes no claim about the draft text. (EX-27)
+- AC-28: Given the owner's words and a proposal identifier are supplied, When the agent applies the change, Then Deputy's check of the identifier and the words passes, as the known limit states. (EX-28)

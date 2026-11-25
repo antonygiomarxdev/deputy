@@ -6,11 +6,11 @@ Product overview: [PRODUCT.md](../PRODUCT.md)
 
 ## Summary
 
-Knowledge is what the agent knows about the owner's business, so its drafts sound like the owner and say true things. It has three parts: the **business profile** (who the business is, tone, delivery, payment, rules, when to hand off), the **catalog** (products, prices, availability), and **learned knowledge** (what Deputy keeps from the owner's approvals and corrections, with the owner's ok, so the next proposal is better). The owner can see, edit and delete all of it.
+Knowledge is what the agent knows about the owner's business, so its drafts sound like the owner and say true things.
 
 ## Why
 
-
+Knowledge is what the agent knows about the owner's business, so its drafts sound like the owner and say true things. It has three parts: the **business profile** (who the business is, tone, delivery, payment, rules, when to hand off), the **catalog** (products, prices, availability), and **learned knowledge** (what Deputy keeps from the owner's approvals and corrections, with the owner's ok, so the next proposal is better). The owner can see, edit and delete all of it.
 
 ## Use cases
 

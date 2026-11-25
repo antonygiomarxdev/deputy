@@ -78,13 +78,15 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-18 | RULE-9 | positive | A kept lesson | the owner reads its links | it links to its chat and its draft |
 | EX-19 | RULE-9 | boundary | The draft or chat a lesson came from is gone | the lesson is read | the lesson stays and the link shows it is missing |
 | EX-20 | RULE-10 | positive | A kept lesson is edited and later deleted | the agent drafts in between and after | the edited wording is used until deletion and never after |
-| EX-21 | RULE-10 | negative | A lesson was declined | time passes and no new decision exists | no lesson is kept |
+| EX-21 | RULE-5 | negative | A lesson was declined | time passes and no new decision exists | no lesson is kept |
 | EX-22 | RULE-11 | positive | Three kept lessons | the agent drafts | it has all three, and when asked which it used, the agent names them |
 | EX-23 | RULE-11 | boundary | The owner asks which lessons a draft used | the agent answers | the agent's own account is given, and Deputy records nothing per draft |
 | EX-24 | RULE-12 | positive | A lesson of 10 pesos for tamales and a catalog price of 12 | Deputy returns the lessons | it also returns the catalog price 12 marked "catalog wins; lesson differs" |
 | EX-25 | RULE-12 | negative | A lesson with the same price as the catalog | Deputy returns the lessons | no conflict marker is returned |
 | EX-26 | RULE-13 | positive | The owner confirms, edits or deletes a lesson | the next draft is written | the change applies |
 | EX-27 | RULE-13 | negative | A draft written before the change is saved | the change is saved | the change does not apply to that draft |
+| EX-28 | RULE-10 | negative | A lesson was deleted | the agent drafts | the deleted lesson is not used
+| EX-29 | RULE-6 | positive | A proposed lesson waits and Deputy restarts | the owner confirms later | the proposal is still there
 
 ## Decision table
 
@@ -182,3 +184,5 @@ Generated from the examples above, one per EX row:
 - AC-25: Given a lesson with the same price as the catalog, When Deputy returns the lessons, Then no conflict marker is returned. (EX-25)
 - AC-26: Given the owner confirms, edits or deletes a lesson, When the next draft is written, Then the change applies. (EX-26)
 - AC-27: Given a draft written before the change is saved, When the change is saved, Then the change does not apply to that draft. (EX-27)
+- AC-28: Given a lesson was deleted, When the agent drafts, Then the deleted lesson is not used. (EX-28)
+- AC-29: Given a proposed lesson waits and Deputy restarts, When the owner confirms later, Then the proposal is still there. (EX-29)
