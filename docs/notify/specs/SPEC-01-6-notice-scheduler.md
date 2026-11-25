@@ -13,8 +13,8 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-NOTIFY-01-12 | always | The worst-case delay between a customer writing and the notice that counts the message is one catch-up period plus the batching period (with the defaults, 2 plus 10 minutes), when live delivery is off. Quiet periods can add to it. (R-NOTIFY-2) |
-| FR-NOTIFY-01-14 | always | In the local pilot, notices are always on with the default batching period of 10 minutes. Reminders (FR-NOTIFY-01-10), quiet periods, the owner's controls (FRD-02) and the outage notices of FRD-03 are deferred until after the pilot. (REQ-15, D34) |
+| FR-NOTIFY-01-12 | always | The worst-case delay between a customer writing and the notice that counts the message shall be one catch-up period plus the batching period (with the defaults, 2 plus 10 minutes), when live delivery is off. Quiet periods can add to it. (R-NOTIFY-2) |
+| FR-NOTIFY-01-14 | always | In the local pilot, notices shall always be on with the default batching period of 10 minutes. Reminders (FR-NOTIFY-01-10), quiet periods, the owner's controls (FRD-02) and the outage notices of FRD-03 are deferred until after the pilot. (REQ-15, D34) |
 
 ## Files
 | Path | Create or change | Holds |
