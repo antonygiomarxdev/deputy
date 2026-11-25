@@ -1,8 +1,12 @@
 # Technical Proposal: Costs, warnings and connecting the number (Setup FRD-02)
 
-Status: Approved (2026-11-18)
+Status: Draft
 
 Follows the cross-cutting TP (`docs/tp/TP.md`) and Setup TP-01 (the `SetupProgress` aggregate, the step list, the tables `setup_run`, `setup_progress`, `setup_fact`, the ports `ProviderProbe`, `SyncStatusReader`, `OwnerNumbersReader`, `ConnectionConfigReader`). "Cross-cutting TD-n" means a decision there.
+
+## Summary
+
+Fixed by the cross-cutting TP, so not decided again:
 
 ## Context
 
@@ -29,6 +33,7 @@ FR-SETUP-02-1, FR-SETUP-02-2, FR-SETUP-02-3, FR-SETUP-02-4, FR-SETUP-02-5, FR-SE
 
 ### TD-1: What counts as the owner's confirmation of the sync warning?
 
+ADR: ADR-004
 PRD open question 3 asks for a typed confirmation or a simple yes. Deputy ships no language catalogs (D20) and cannot read the owner's language, so it cannot tell "yes, I understand" from "ok, whatever".
 
 - **Option A** A fixed typed phrase (for example "I understand"). Cost: easy to check. Risk: it is English text the owner must type, which breaks D20 for an owner who speaks another language, and an owner who copies it proves nothing about reading.
@@ -39,6 +44,7 @@ Chosen: Option B. It is the only option that works in every language (D20) and i
 
 ### TD-2: How are the costs and limits shown without keeping figures?
 
+ADR: ADR-005
 FR-SETUP-02-1 says the plan limits are "as the provider shows them at that moment", not figures kept in Setup. R-SETUP-11 names a daily message limit for an unverified display name.
 
 - **Option A** Read plan, limits and the payment state from the provider's API. Cost: live and exact. Risk: no such endpoint is documented (`docs/research/kapso.md` Q1: the pages say "Not documented" for several points, and the "Payment issue" status is not named); building on an assumed endpoint would fail at the owner's first run.
@@ -49,6 +55,7 @@ Chosen: Option B. It meets the requirement and keeps a stale figure impossible; 
 
 ### TD-3: How are owner numbers proposed, confirmed and applied?
 
+ADR: ADR-006
 FR-SETUP-02-8: the list changes only by an explicit owner command, logged with the owner's words, shown back for confirmation, with a second confirmation when the number already has customer messages.
 
 - **Option A** Setup proposes, the terminal applies. The agent calls `setup_owner_number` with the number as the owner typed it and the owner's words. Setup asks Intake to `DescribeNumber` (E.164 form, already an owner number, count of stored customer messages), records a `owner_number_proposed` fact, and returns the parsed form and the exact command `deputy config set owner-numbers "<E.164>"`. If the count is above zero it returns `customer_chats_will_disappear` and needs the owner's words again (`confirm_with_chats`) before it shows the command. The owner runs the command; Setup reads the applied list back. Cost: a use case, two facts, one Intake query. Risk: the owner can type a different number in the terminal than the one confirmed (accepted: the list and its log show it, and the final summary lists every number).
@@ -59,6 +66,7 @@ Chosen: Option A. It gives the show-back and the double confirmation without giv
 
 ### TD-4: How does Setup know live delivery works?
 
+ADR: ADR-007
 FR-SETUP-02-12: the check passes when the provider's test delivery was received and verified. The owner can fail it by a wrong secret or an address the provider cannot reach.
 
 - **Option A** Observe Intake. After the owner says they sent the provider's test delivery, the check passes when Intake's `lastLiveDeliveryVerifiedAt` is later than the time the live step started. If no verified delivery has arrived and Intake lists a `bad_signature` rejection since the start, the reason is `secrets_do_not_match`; otherwise `live_delivery_not_seen`. Cost: the Intake addition 2 above. Risk: the owner's own words are the only start signal, so a delivery that arrives before they say so does not count; they send another.

@@ -1,6 +1,6 @@
 # Setup: slice PRD
 
-Status: Approved (2026-11-18) with amendments from REQ-15 (pending owner approval) · Part of [Deputy product overview](../PRODUCT.md) · Last updated: 2026-11-24 (pilot setup and daily loop added)
+Status: Draft with amendments from REQ-15 (pending owner approval) · Part of [Deputy product overview](../PRODUCT.md) · Last updated: 2026-11-24 (pilot setup and daily loop added)
 
 ## Summary
 

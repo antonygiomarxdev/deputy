@@ -1,7 +1,11 @@
 # ADR-002: Catalog lookup folds case and accents and returns exact and contained matches
 
 ## Status
-Accepted (2026-11-18)
+Proposed
+
+## Summary
+
+Fold both sides: Unicode NFKC, lower case, then remove combining marks that follow a Latin, Greek, Cyrillic, Arabic or Hebrew letter.
 
 ## Context
 FR-KNOWLEDGE-01-3 to FR-KNOWLEDGE-01-5: look up by name, say when nothing matches, return all matches. The FRD asks how loose the matching may be. Owners and customers write in any language and script. The answer is a price, so a wrong match is a wrong promise. From TP-01 TD-2.
@@ -12,7 +16,7 @@ FR-KNOWLEDGE-01-3 to FR-KNOWLEDGE-01-5: look up by name, say when nothing matche
 - Return both tiers, `exact` first, each marked. No match returns an empty list and the note `no_match`.
 - Return at most 20 items (maximum 50 when asked), with `total` and `truncated`. A row is about 40 tokens, so 20 is about 800 tokens; the query `a` on a 300-row catalog would otherwise return about 12,000.
 
-## Alternatives
+## Options considered
 - Fuzzy matching by edit distance (Fuse.js, a Levenshtein package): at distance 1 `pollo` matches `polvo` and `pozo`, so a spelling slip quotes the price of another product; the score threshold also differs by word length and language.
 - Exact match of the whole name: `tamales` does not find `Tamales (dozen)`, `Piña` does not find `pina`; the agent says "no item matches" for a product the owner sells.
 

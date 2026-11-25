@@ -1,7 +1,11 @@
 # ADR-010: A change of wording is a new proposal, and a decided draft stays closed
 
 ## Status
-Accepted (2026-11-18)
+Proposed
+
+## Summary
+
+Changing the wording of a waiting lesson is `propose_lesson` for the same draft: it creates a new proposal with a new number and marks the waiting one `superseded`.
 
 ## Context
 FR-KNOWLEDGE-02-5b: a confirmation binds to the exact wording shown last; if the wording changes, a new confirmation that holds the new wording is needed. Edge case: a declined lesson is not proposed again for the same draft. From TP-02 TD-4 and the proposal rule of ADR-003.
@@ -12,7 +16,7 @@ FR-KNOWLEDGE-02-5b: a confirmation binds to the exact wording shown last; if the
 - A partial unique index on `proposals(draft_number)` for kind `lesson` and status `waiting`, `applying`, `applied` or `declined` allows one live proposal per draft. A declined or kept draft cannot get another (`lesson_already_decided`).
 - A lesson takes the number of the proposal that created it, so one number space covers everything the owner can name.
 
-## Alternatives
+## Options considered
 - One proposal with a version counter and a "shown version" mark (the Drafts way): a write on every display, an extra field the agent must send back, and the old words "yes, 4" still name the proposal after a change, which FR-KNOWLEDGE-02-5b forbids.
 
 ## Consequences

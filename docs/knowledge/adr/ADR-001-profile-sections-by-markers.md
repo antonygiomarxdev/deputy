@@ -1,7 +1,11 @@
 # ADR-001: Profile sections are found by marker comments
 
 ## Status
-Accepted (2026-11-18)
+Proposed
+
+## Summary
+
+Each section starts with a marker line `<!-- deputy:section=<id> -->`.
 
 ## Context
 Deputy must return "to be confirmed" for an empty profile section (FR-KNOWLEDGE-01-1) and replace one section when a change is applied (FR-KNOWLEDGE-01-9). Owners write the profile in any language, so heading text cannot be matched against a fixed word. From TP-01 TD-1.
@@ -13,7 +17,7 @@ Deputy must return "to be confirmed" for an empty profile section (FR-KNOWLEDGE-
 - A missing marker is reported as `section_missing`. A change to that section appends a new marked section at the end.
 - The template carries the seven markers and one hint comment per section. The `may_do` hint says it guides drafts only (FR-KNOWLEDGE-01-2).
 
-## Alternatives
+## Options considered
 - Match the heading text against fixed English names: an owner who writes `## Formas de pago` has a full section read as empty, and D20 forbids a name list per language.
 - Take the position of the Nth level-2 heading: one added heading shifts every later section, so a payment line would be read as delivery and replaced by mistake.
 

@@ -1,7 +1,11 @@
 # ADR-013: A wipe is confirmed with a random six-digit code that expires in ten minutes
 
 ## Status
-Accepted (2026-11-18)
+Proposed
+
+## Summary
+
+`request_wipe` deletes nothing.
 
 ## Context
 FR-KNOWLEDGE-03-4: Deputy states what will be deleted and deletes nothing until the owner confirms in a way that names the action. FR-KNOWLEDGE-03-8: one way to wipe, taking the owner's words, refusing without them. The owner speaks any language (D20), and draft and proposal numbers are small integers the owner says all day. From TP-03 TD-3 and ADR-003.
@@ -12,7 +16,7 @@ FR-KNOWLEDGE-03-4: Deputy states what will be deleted and deletes nothing until 
 - Why six digits: draft and proposal numbers stay far below 100,000, so an ordinary go cannot contain the code. It is not a secret; the agent sees it (D11). Why ten minutes: enough to read the list and export first; short enough that an old request cannot be confirmed by an unrelated message.
 - The code comes from a `CodeSource` port (a secure random source in its adapter, a fixed value in tests).
 
-## Alternatives
+## Options considered
 - Use the proposal number: "go on 7" for draft 7 would confirm a waiting wipe 7, and an old request would accept "7" forever.
 - Require the word for "wipe" in the owner's words: it needs the word in every language, and "do not wipe" contains it.
 
