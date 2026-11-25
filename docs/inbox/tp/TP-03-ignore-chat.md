@@ -1,6 +1,11 @@
 # Technical Proposal: Ignore a chat (Inbox FRD-03)
 
-Status: Approved (2026-11-18)
+Status: Draft
+
+Follows the cross-cutting TP (`docs/tp/TP.md`) and builds on TP-01 (`ChatScanner`, `PendingPolicy`) and TP-02 (the count line). "Cross-cutting TD-n" means a decision there.
+
+
+## Summary
 
 Follows the cross-cutting TP (`docs/tp/TP.md`) and builds on TP-01 (`ChatScanner`, `PendingPolicy`) and TP-02 (the count line). "Cross-cutting TD-n" means a decision there.
 
@@ -25,6 +30,8 @@ FR-INBOX-03-1, FR-INBOX-03-2, FR-INBOX-03-3, FR-INBOX-03-4, FR-INBOX-03-5, FR-IN
 
 ### TD-1: How does the owner's "Juan's chat" become one chat?
 
+ADR: ADR-008
+
 - **Option A** `ignore_chat` takes one exact `ChatId`, the id the `inbox` summary showed. The agent maps the owner's words to that id and asks the owner when more than one chat could be meant. Deputy refuses any value that is not a known chat and ignores nothing. Cost: the agent does the matching. Risk: the agent may pick the wrong chat; the answer line names the chat id, and the owner can undo.
 - **Option B** Deputy matches a typed number or fragment against known chats and returns the candidates. Cost: matching code in Inbox. Risk: a typed number needs country-aware parsing that only Intake owns (Intake's phone-number decision, libphonenumber) and that is not a published port; a digit fragment such as "55501" matches several chats and a wrong guess would hide the wrong customer.
 - **Option C** Deputy matches the profile name that Intake stores as a display hint. Cost: a name index and ambiguity handling. Risk: the profile name is typed by the customer, so a customer can name themself like another customer and make "ignore Juan" hit the wrong chat.
@@ -33,6 +40,8 @@ Chosen: Option A, because the only name Deputy holds is customer-typed, so it is
 
 ### TD-2: What keeps customer text from causing an ignore?
 
+ADR: ADR-009
+
 - **Option A** Require `owner_words` and log them only. Cost: none. Risk: an injected agent can pass the customer's own sentence as the owner's words, and the log then shows a customer's text as the owner's.
 - **Option B** As A, and refuse when the normalized `owner_words` equal a stored customer message (`IsCustomerText`). Cost: one cross-slice read through a `CustomerTextCheck` port, the same one Drafts uses. Risk: an owner whose short phrase equals a customer's message is refused once and must word the command differently; a paraphrase passes.
 - **Option C** A two-step ignore: the first call returns a token, the second call with the token ignores. Cost: state and an extra round trip. Risk: the same agent makes both calls, so the second proves nothing about who spoke.
@@ -40,6 +49,8 @@ Chosen: Option A, because the only name Deputy holds is customer-typed, so it is
 Chosen: Option B, because it closes the cheapest attack (the agent relays the customer's sentence verbatim as the owner's command, FR-INBOX-03-2) at the cost of one read, and it matches how Drafts treats the owner's go. The accepted limit is a paraphrase: Deputy cannot tell who spoke (D11), the summary shows the ignored count every time, and `list_ignored` shows the words. Un-ignore skips this check, because it only makes a chat visible again. Recorded in ADR-009.
 
 ### TD-3: How is the log kept intact?
+
+ADR: ADR-010
 
 - **Option A** `ignore_log` is append-only by SQLite triggers that reject UPDATE and DELETE, the same pattern as `drafts_log` (cross-cutting TD-3). Cost: two triggers, and any migration that rebuilds the table must recreate them. Risk: none beyond the migration rule; the migration test of the cross-cutting TP already checks triggers survive.
 - **Option B** Append-only by convention: the repository has no update or delete method. Cost: nothing in the schema. Risk: a later change, or a hand-run SQL statement, can rewrite the owner's words, and nothing in the database objects.

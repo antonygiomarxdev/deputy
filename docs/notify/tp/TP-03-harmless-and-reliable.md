@@ -1,6 +1,11 @@
 # Technical Proposal: FRD-03 Harmless and reliable
 
-Status: Approved (2026-11-18)
+Status: Draft
+
+Per-FRD TP for [FRD-03](../frd/FRD-03-harmless-and-reliable.md). It builds on [TP-01](TP-01-batched-notice.md) (`Tick`, `NoticeSession`, `Notifier`, `notice_state`) and [TP-02](TP-02-owner-controls.md) (settings, quiet periods). It consumes Intake's `SyncStatusView` and `MessageStored` as published and the cross-cutting [TP.md](../../tp/TP.md) (TD-7, TD-2, TD-0) without change.
+
+
+## Summary
 
 Per-FRD TP for [FRD-03](../frd/FRD-03-harmless-and-reliable.md). It builds on [TP-01](TP-01-batched-notice.md) (`Tick`, `NoticeSession`, `Notifier`, `notice_state`) and [TP-02](TP-02-owner-controls.md) (settings, quiet periods). It consumes Intake's `SyncStatusView` and `MessageStored` as published and the cross-cutting [TP.md](../../tp/TP.md) (TD-7, TD-2, TD-0) without change.
 
@@ -25,6 +30,8 @@ FR-NOTIFY-03-1, FR-NOTIFY-03-2, FR-NOTIFY-03-3, FR-NOTIFY-03-4, FR-NOTIFY-03-5, 
 
 ### TD-1: What happens to a failed notice, and when does Deputy try again?
 
+ADR: ADR-006
+
 - **Option A** Keep the batch: the in-flight counts go back into the pending set, with their original `batchStartedAt`. Record the failure. Do not try again before 60 seconds (`retryNotBefore`). The next notice counts those messages as new (FR-NOTIFY-03-7). Cost: a small merge in the domain. Risk: during a long failure the pending set only grows, but it is a map of chat to count, so its size is bounded by the number of chats.
 - **Option B** Retry on every tick (30 seconds). Cost: no retry state. Risk: with no session, a failure is recorded about 120 times an hour, the Inbox is read each time, and the failure counter shown to the owner means nothing.
 - **Option C** Exponential backoff (1, 2, 4 minutes and so on) up to the batching period. Cost: a counter and a cap. Risk: with a 24 hour batching period the gap between tries can grow to hours, so a session that reopens at once waits for the next try.
@@ -33,12 +40,16 @@ Chosen: Option A. 60 seconds is the smallest batching period the owner can set (
 
 ### TD-2: How does Deputy know the provider is down, and announce it once?
 
+ADR: ADR-007
+
 - **Option A** Read `GetSyncStatus` in `Tick`. An outage is due when `status` is `failed`, the reason is one of `unreachable`, `timeout`, `credentials`, `quota`, `usage_limit` or `bad_response`, `tellOwner` is true, `failedSince` is set, and `now - failedSince > catchUpMinutes`. Store the announced `failedSince` in `notice_state.outage_announced_since`. It is announced when `failedSince` differs from the stored value. It is closed with one "reachable" notice when a stored value exists and the status is no longer a failure of those reasons. Cost: one local read per tick. Risk: the reasons list is Notify's reading of Intake's closed `SyncReason`, so a new Intake reason needs a decision here (a test lists every Intake reason and assigns it).
 - **Option B** Subscribe to `CatchUpFinished` and keep a counter of consecutive failures in Notify. Cost: no read of the status. Risk: it repeats Intake's streak logic (`failedSince`, `tellOwner`, the 10 minute rule for `usage_limit`), a restart loses the counter, and an outage that began before a restart is announced again or never.
 
 Chosen: Option A. Intake already computes the streak and who must be told, so Notify reads it and stores only what it announced. The notice is sent once per outage because `outage_announced_since` equals `failedSince` until recovery. The FRD's example names only "unreachable"; this TP also announces the other provider failures (rejected key, quota, rate limit, bad response), because to the owner each means "no messages are coming in". The notice carries the Intake reason code, so the agent can say which one. `possible_gap`, `catching_up`, `storage` and `not_yet_run` are not outages. Recorded in ADR-007.
 
 ### TD-3: Where does the owner see that a notice failed?
+
+ADR: ADR-008
 
 - **Option A** The `status` tool shows a `notices` block from a new `NotifyStatus` use case: mode, whether notices are on, whether reminders are paused, last delivered time, last failure time and reason, and failed attempts since the last delivery. Cost: one pure read. Risk: the owner sees it only when asking.
 - **Option B** Also a line in the `inbox` header. Cost: a visible failure at the place the owner looks first. Risk: Inbox would call Notify. That makes the pull path depend on the push extra, against principle 4 and R-NOTIFY-10 (the core works without Notify), and it adds a cross-slice edge that D14 forbids unless the consumer defines the port.

@@ -1,6 +1,11 @@
 # Technical Proposal: Pending detection (Inbox FRD-01)
 
-Status: Approved (2026-11-18)
+Status: Draft
+
+Follows the cross-cutting TP (`docs/tp/TP.md`). "Cross-cutting TD-n" means a decision there. This TP holds the Inbox domain core that TP-02 and TP-03 build on: the pending rule, the window, the settings aggregate and the chat scan.
+
+
+## Summary
 
 Follows the cross-cutting TP (`docs/tp/TP.md`). "Cross-cutting TD-n" means a decision there. This TP holds the Inbox domain core that TP-02 and TP-03 build on: the pending rule, the window, the settings aggregate and the chat scan.
 
@@ -27,6 +32,8 @@ Consequences used below without a choice:
 
 ### TD-4: Who decides that "ok" or "thanks" after an answer closes the chat?
 
+ADR: ADR-011
+
 Owner decision D23: a short reply such as "ok" or "thanks" after an answer does not make the chat pending when the agent is sure the chat is closed. When it is not sure, it asks the owner.
 
 - **Option A** The agent judges. Pending detection stays a pure function of times (TD-1). The summary marks each pending chat that follows an answer (`followsAnswer`, TP-02) and the tool description tells the agent the rule: leave such a chat out of what it tells the owner only when the latest customer text plainly closes the chat; otherwise ask. Cost: the outcome depends on the agent. Risk: a wrong judgment hides a real message; the owner can ask for the chat by name and the next summary lists it again.
@@ -43,6 +50,8 @@ FR-INBOX-01-1, FR-INBOX-01-2, FR-INBOX-01-3, FR-INBOX-01-4, FR-INBOX-01-5, FR-IN
 
 ### TD-1: Where does "pending" come from?
 
+ADR: ADR-001
+
 - **Option A** Compute it on demand from Intake's per-chat state: one `ListChats()` call gives each chat's newest customer time and newest answer time and source. Pending is a pure function of those two times, the chat's mark, the ignore list and the window. Cost: the whole chat list is read on each ask (one SQLite query inside Intake; one row per chat). Extra `ReadChat` calls only for equal times and, in TP-02, for the chats that are listed. Risk: the cost grows with the number of chats ever seen; a small business has hundreds to a few thousand, which is one indexed read.
 - **Option B** Keep an Inbox table `pending_chats` fed by Intake's `MessageStored` event. Cost: a table, a handler, and a repair path. Risk: the event is only a hint (cross-cutting Architecture: "`MessageStored` is only a hint"); a crash between commit and publish loses one signal (Intake TP-02, accepted), so a chat could stay out of the table or stay in it after an owner reply made from the phone. That breaks R-INBOX-2 and principle 3. FRD-01 Information also says pending status "is worked out each time, not stored".
 - **Option C** Scan every message with `ReadChat` for every chat. Cost: one read per chat per ask. Risk: with 2,000 chats and 100 messages each that is 200,000 rows read to answer a question that two timestamps answer.
@@ -51,6 +60,8 @@ Chosen: Option A, because the answer is two timestamps per chat that Intake alre
 
 ### TD-2: How is "the last N days" counted?
 
+ADR: ADR-002
+
 - **Option A** N elapsed days of 86,400,000 ms: `windowStart = now - N * 86_400_000`. A message is inside when `sentAt >= windowStart`. Cost: none. Risk: across a clock change the window is 24 hours per day, not "same time N calendar days ago"; the difference is one hour at most on one day of the year.
 - **Option B** N calendar days in the owner's time zone: start of day N days ago. Cost: Inbox would read Notify's `time_zone` setting and handle DST. Risk: a cross-slice read for one boundary; the window length would be 23 to 25 hours short or long on the two DST days; a time zone change moves the window; FR-INBOX-01-6 says "counted back from now", which is Option A.
 - **Option C** The window counted from the start of "today" in UTC. Cost: none. Risk: an owner in Argentina (UTC-3) at 22:00 sees "today" already tomorrow; the boundary moves by up to a day for owners far from UTC, in a country-neutral product (D20 and the many-owners rule).
@@ -58,6 +69,8 @@ Chosen: Option A, because the answer is two timestamps per chat that Intake alre
 Chosen: Option A. It needs no time zone, so it is right in every country (Deputy serves many owners), and it matches the FRD text. The boundary is inclusive: a message sent exactly `N * 86_400_000` ms ago is pending; one millisecond older is not. Recorded in ADR-002.
 
 ### TD-3: What is the maximum for N?
+
+ADR: ADR-003
 
 - **Option A** A per-provider constant held in an adapter behind `ProviderHistoryLimit.maxWindowDays()`. Kapso returns 180, the longest history the WhatsApp Business app Coexistence sync hands to the Cloud API (Meta, Onboard WhatsApp Business app users: history from the last 180 days, https://developers.facebook.com/documentation/business-messaging/whatsapp/embedded-signup/onboarding-business-app-users/). The dev provider returns 180 too. Cost: one small adapter. Risk: Kapso's own retention is "kept indefinitely by default" and paid projects can shorten it (`docs/research/kapso.md`), and no API field reports it. A project with shorter retention can set N above what it holds. That is harmless: no older message exists, so the window finds nothing more.
 - **Option B** Derive the maximum from what Deputy has stored: `now - oldestStoredAt` from `SyncStatusView`. Cost: no constant. Risk: a business connected three days ago would be capped at 3 days and could not set 14 in advance. After a catch-up failure `oldestStoredAt` may be wrong, so the cap would drop.
