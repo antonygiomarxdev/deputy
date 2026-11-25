@@ -80,10 +80,10 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-22 | RULE-11 | negative | The owner asked to delete an order | The owner has not confirmed | The order is still listed |
 | EX-23 | RULE-12 | positive | A confirmed delete | Anyone searches Orders data, the approval entries and the drafts log | No customer address or name of that order is found, the owner's words read "deleted", and one "deleted" mark exists |
 | EX-24 | RULE-12 | boundary | The owner said "delete Juan Perez's order" and confirmed | The delete ends | The text "Juan Perez" appears nowhere in Deputy |
-| EX-26 | RULE-13 | positive | The spreadsheet is unreachable | The owner changes a status | The agent says the change was not made |
-| EX-27 | RULE-13 | negative | The spreadsheet is unreachable | The owner deletes an order | The agent says the delete was not made |
-| EX-28 | RULE-7 | boundary | A delivered or cancelled order | The owner changes it | The change is allowed and kept in the same history |
-| EX-29 | RULE-10 | boundary | A cancelled order | The owner changes it | The change is allowed and the order stays listed with the same history |
+| EX-25 | RULE-13 | positive | The spreadsheet is unreachable | The owner changes a status | The agent says the change was not made |
+| EX-26 | RULE-13 | negative | The spreadsheet is unreachable | The owner deletes an order | The agent says the delete was not made |
+| EX-27 | RULE-7 | boundary | A delivered or cancelled order | The owner changes it | The change is allowed and kept in the same history |
+| EX-28 | RULE-10 | boundary | A cancelled order | The owner edits it | It stays in the list |
 
 ## Decision table
 
@@ -168,7 +168,7 @@ Generated from the examples above, one per EX row:
 - AC-22: Given the owner asked to delete an order, When the owner has not confirmed, Then the order is still listed. (EX-22)
 - AC-23: Given a confirmed delete, When anyone searches Orders data, the approval entries and the drafts log, Then no customer address or name of that order is found, the owner's words read "deleted", and one "deleted" mark exists. (EX-23)
 - AC-24: Given the owner said "delete Juan Perez's order" and confirmed, When the delete ends, Then the text "Juan Perez" appears nowhere in Deputy. (EX-24)
-- AC-25: Given the spreadsheet is unreachable, When the owner changes a status, Then the agent says the change was not made. (EX-26)
-- AC-26: Given the spreadsheet is unreachable, When the owner deletes an order, Then the agent says the delete was not made. (EX-27)
-- AC-27: Given a delivered or cancelled order, When the owner changes it, Then the change is allowed and kept in the same history. (EX-28)
-- AC-28: Given a cancelled order, When the owner changes it, Then the change is allowed and the order stays listed with the same history. (EX-29)
+- AC-25: Given the spreadsheet is unreachable, When the owner changes a status, Then the agent says the change was not made. (EX-25)
+- AC-26: Given the spreadsheet is unreachable, When the owner deletes an order, Then the agent says the delete was not made. (EX-26)
+- AC-27: Given a delivered or cancelled order, When the owner changes it, Then the change is allowed and kept in the same history. (EX-27)
+- AC-28: Given a cancelled order, When the owner edits it, Then it stays in the list. (EX-28)
