@@ -1,6 +1,6 @@
 # Inbox: slice PRD
 
-Status: Approved (2026-11-25)
+Status: Approved (2026-11-24) · Part of [Deputy product overview](../PRODUCT.md)
 Approval: content ERHzPV4_xdXF; rests on ../PRODUCT.md 9kKsOKhERsSe
 
 ## Summary
