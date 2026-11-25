@@ -13,8 +13,8 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-NOTIFY-01-4 | always | Deputy takes the count of waiting chats from Inbox. A chat the owner already answered is not in it. If Intake's catch-up status is "failed", the notice adds that the waiting count may be incomplete. (R-NOTIFY-3, R-NOTIFY-14) |
-| FR-NOTIFY-01-13 | always | In the local pilot (REQ-15), Deputy takes the waiting chats from Intake's pending list (FR-INTAKE-05-13) in place of Inbox, and leaves out the ignored-chat filter because the pilot has no ignore list. (REQ-15, D34) |
+| FR-NOTIFY-01-4 | always | Deputy shall take the count of waiting chats from Inbox. A chat the owner already answered shall not be in it. If Intake's catch-up status is "failed", the notice shall add that the waiting count may be incomplete. (R-NOTIFY-3, R-NOTIFY-14) |
+| FR-NOTIFY-01-13 | always | In the local pilot (REQ-15), Deputy shall take the waiting chats from Intake's pending list (FR-INTAKE-05-13) in place of Inbox, and leaves out the ignored-chat filter because the pilot has no ignore list. (REQ-15, D34) |
 
 ## Files
 | Path | Create or change | Holds |
