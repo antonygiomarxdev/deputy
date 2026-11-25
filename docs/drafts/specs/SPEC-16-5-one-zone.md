@@ -14,7 +14,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. Too b
 ## Rows
 Quoted from: ../frd/FRD-04-drafts-log.md
 
-| FR-DRAFTS-04-13 | WHEN | When the session asks for the pilot counts with a number of days, Deputy shall return the counts for that many local days ending today, from 1 to 30 days with 7 when no number is given, and shall refuse any other number. (R-DRAFTS-24. Proposed, lead decision L16.) |
+| FR-DRAFTS-04-13 | WHEN | When the session asks for the pilot counts with a number of days, Deputy shall return the counts for that many local days ending today, from 1 to 30 days with 7 when no number is given, and shall refuse any other number. (R-DRAFTS-24. Owner decision L16.) |
 
 ## Files
 | Path | Create or change | Holds |
