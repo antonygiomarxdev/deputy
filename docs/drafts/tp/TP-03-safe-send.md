@@ -1,6 +1,10 @@
 # Technical Proposal: Safe send and outcome (Drafts FRD-03)
 
-Status: Approved (2026-11-18). Follows the cross-cutting TP (`docs/tp/TP.md`) and continues TP-02 at step 3 of `ApproveDraft`. "Cross-cutting TD-n" means a decision there.
+Status: Draft. Follows the cross-cutting TP (`docs/tp/TP.md`) and continues TP-02 at step 3 of `ApproveDraft`. "Cross-cutting TD-n" means a decision there.
+
+## Summary
+
+Fixed by the cross-cutting TP (cross-cutting TD-4, TD-5, TD-6), so not decided again:
 
 ## Context
 
@@ -25,6 +29,7 @@ FR-DRAFTS-03-1, FR-DRAFTS-03-2, FR-DRAFTS-03-3, FR-DRAFTS-03-4, FR-DRAFTS-03-5, 
 
 ### TD-1: What counts as new since the draft?
 
+ADR: ADR-006
 FR-DRAFTS-03-3: compare by the sources Intake recorded, never by content.
 
 - **Option A** Sent time only: new means the provider's sent time is after the latest message when the draft was made. Cost: one mark. Risk: an owner reply from the app that catch-up finds late, with an earlier sent time, is missed, and Deputy answers over the owner (principle 2).
@@ -35,6 +40,7 @@ Chosen: Option C, because a late echo must hold and a hold must not repeat for m
 
 ### TD-2: How is the owner's choice after a hold taken?
 
+ADR: ADR-007
 - **Option A** Read it from the next call: `approve_draft` is "send as is", `change_draft` is "edit", `reject_draft` is "drop". One flag on the draft, `pending_choice`, makes the next call log an `owner_choice` entry. Cost: none beyond the flag. Risk: if the owner never answers there is no choice entry (correct).
 - **Option B** A `choose_after_hold` tool that records the choice and moves the draft from "held" back to "waiting" (or closes it), after which a normal go is needed. Cost: a tool and one more state step. Risk: the agent can skip or misorder it, and the choice and the approval can disagree; it also adds a second call to every hold.
 
@@ -42,6 +48,7 @@ Chosen: Option A. Recorded in ADR-007.
 
 ### TD-3: What happens to an approved send that gets a 429?
 
+ADR: ADR-011, ADR-012
 Owner decision D29: an approved send that gets a `429` waits in a queue per customer chat, so a hold in one chat never stops the others. It is retried at the time the provider gives. Before the retry, every pre-send check runs again (new customer message, owner reply from the app, draft changed); if anything changed, Deputy holds and asks the owner again. If the retry time falls outside WhatsApp's 24-hour customer window, the send fails at once and the owner is told. This replaces "429 is failed and needs a new go".
 
 - **Option A** A queue entry per chat, kept on the draft. A `429` leaves the draft in "sending" with `retry_at` set (a "sending" draft cannot be changed, rejected or replaced, so nothing can alter what the owner approved). A scheduler adapter holds one timer per chat and runs `RetrySend` at `retry_at`. Cost: one column, one timer per chat, one use case. Risk: a process stop loses the timers; recovery reloads them from the column (below).

@@ -1,7 +1,11 @@
 # ADR-013: The local pilot sends a knowledge-backed answer without the owner's go
 
 ## Status
-Accepted (2026-11-24)
+Proposed
+
+## Summary
+
+An automatic send is a send with no owner go.
 
 ## Context
 REQ-15 and owner decision D31 (approved in PRODUCT): in the local pilot Deputy answers by itself what the business knowledge backs and asks the owner for the rest. This is an exception to R-DRAFTS-2 (never sent at creation) and R-DRAFTS-19 (a go must identify its drafts). D38 sets the always-ask classes per business.
@@ -35,7 +39,7 @@ flowchart TD
   W -- yes --> S["Send and log as automatic (FR-DRAFTS-04-11)"]
 ```
 
-## Alternatives
+## Options considered
 - Keep the go on every send (principle 1 unchanged): the owner must approve each draft by hand, and a busy owner cannot use the pilot.
 - A daily cap on automatic sends: rejected by the owner; a kill switch and hours come later.
 

@@ -1,7 +1,11 @@
 # ADR-003: Refuse owner words that are copied customer or draft text
 
 ## Status
-Accepted (2026-11-18)
+Proposed
+
+## Summary
+
+`OwnerWordsPolicy` (domain) checks, in order: non-empty and at most 1000 characters (a go is one sentence, under 100 characters even when it names three drafts; 1000 is about 150 words, and it stops an agent from pasting a customer thread as owner words); the draft number appears as a whole number token; the normalized words equal no draft text.
 
 ## Context
 FR-DRAFTS-02-6: Deputy refuses an approval whose owner words equal any stored customer message or draft text. FR-DRAFTS-02-3: the words must contain the draft number. From TP-02 TD-1. The cross-cutting TP (TD-6) fixes the whole-token number check.
@@ -13,7 +17,7 @@ FR-DRAFTS-02-6: Deputy refuses an approval whose owner words equal any stored cu
 - The number-token rule is the shared function `wholeNumberTokens` in `src/shared/`, next to `normalizeText`, because Knowledge's owner-words check needs the same rule and two copies would drift.
 - Number token: a maximal run of digits (after the digit mapping) that is not part of a decimal ("3.5", "3,5", Arabic "٣٫٥"). "3 kilos" still contains token 3 (a typo guard, not authorization; cross-cutting TD-6).
 
-## Alternatives
+## Options considered
 - Check only the messages of the draft's chat through `ReadChat`: no new Intake port, but text copied from another chat passes.
 - Containment instead of equality: far too many false refusals ("1" is inside most messages).
 

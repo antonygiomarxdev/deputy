@@ -1,7 +1,11 @@
 # ADR-006: What counts as new since the draft
 
 ## Status
-Accepted (2026-11-18)
+Proposed
+
+## Summary
+
+A message is new for a draft when its `dev` flag equals the draft's, its source is not `sent_through_deputy`, and either its sent time is after `checked_sent_at`, or its stored time is after `checked_stored_at` and it is not flagged history.
 
 ## Context
 FR-DRAFTS-03-3: Deputy checks whether, since the draft was made, the owner answered from the app or the customer wrote again, using the source Intake recorded. From TP-03 TD-1. Intake stores a provider sent time and a local stored time per message. A late echo can be stored after the draft with a sent time before it. Intake sets the `history` flag from the origin label or an old sent time, and its origin labels are untested. Intake keeps dev and real messages in separate worlds (flag `dev`), and reports the time of an owner echo it cannot tie to a chat as `unattributedStoredAt`.
@@ -15,7 +19,7 @@ FR-DRAFTS-03-3: Deputy checks whether, since the draft was made, the owner answe
 - A hold moves each mark to the newest value among the messages the check saw. The owner's next go then covers only what arrives later.
 - Source `owner_app` among the new messages gives `owner_answered`; source `customer` gives `customer_wrote`. Several reasons can apply. The reason lists all.
 
-## Alternatives
+## Options considered
 - Sent time only: an owner reply that catch-up finds late, with an earlier sent time, would be missed and Deputy would answer over the owner (principle 2).
 - Stored time only: a message the provider delivered late but sent before the draft would hold drafts after a slow sync, and a normal late customer message would hold too.
 - Skip every history message: a mislabeled owner reply would be skipped and Deputy would answer over the owner.

@@ -12,7 +12,7 @@ Last change: 2026-11-24, `localDayRange` added: nothing else turned `days` into 
 One spec is one agent run: at most 80 lines, 3 files and one done command. A spec decides nothing new.
 
 ## Rows
-| FR-DRAFTS-04-12 | always | Deputy shall count per day the automatic answers, the answers sent with an owner's go and the owner's hand approvals, and shall show the counts to the owner. (R-DRAFTS-24) |
+| FR-DRAFTS-04-12 | always | Deputy shall count per day the automatic answers, the answers sent with an owner's go, and the owner's hand approvals, and shall show the counts to the owner. (R-DRAFTS-24) |
 | FR-DRAFTS-04-13 | WHEN | When the session asks for the pilot counts with a number of days, Deputy shall return the counts for that many local days ending today, from 1 to 30 days with 7 when no number is given, and shall refuse any other number. (R-DRAFTS-24. Owner decision L16.) |
 
 ## Files

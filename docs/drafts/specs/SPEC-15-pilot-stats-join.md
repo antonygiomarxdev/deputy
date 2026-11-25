@@ -12,7 +12,7 @@ Last change: 2026-11-24, the registration in src/main/tools.ts moved to SPEC-16-
 One spec is one agent run: at most 80 lines, 3 files and one done command. A spec decides nothing new.
 
 ## Rows
-| FR-DRAFTS-04-12 | always | Deputy shall count per day the automatic answers, the answers sent with an owner's go and the owner's hand approvals, and shall show the counts to the owner. (R-DRAFTS-24) |
+| FR-DRAFTS-04-12 | always | Deputy shall count per day the automatic answers, the answers sent with an owner's go, and the owner's hand approvals, and shall show the counts to the owner. (R-DRAFTS-24) |
 
 ## Files
 | Path | Create or change | Holds |

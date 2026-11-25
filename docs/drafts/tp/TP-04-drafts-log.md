@@ -1,6 +1,10 @@
 # Technical Proposal: The drafts log (Drafts FRD-04)
 
-Status: Approved (2026-11-18). Follows the cross-cutting TP (`docs/tp/TP.md`) and builds on TP-01 to TP-03, whose events become log entries. "Cross-cutting TD-n" means a decision there.
+Status: Draft. Follows the cross-cutting TP (`docs/tp/TP.md`) and builds on TP-01 to TP-03, whose events become log entries. "Cross-cutting TD-n" means a decision there.
+
+## Summary
+
+Fixed by the cross-cutting TP, so not decided again:
 
 ## Context
 
@@ -25,6 +29,7 @@ FR-DRAFTS-04-1, FR-DRAFTS-04-2, FR-DRAFTS-04-3, FR-DRAFTS-04-4, FR-DRAFTS-04-5, 
 
 ### TD-1: How is a sent entry tied to its approval?
 
+ADR: ADR-008
 - **Option A** Each entry after an approval carries `approval_entry_id`, the id of the `approved` entry that started the attempt. `CheckApprovals` reports a sent entry with no pointer, a wrong pointer, a text that differs from the approved text, or an approval shared by two sent entries. Cost: every writer passes the pointer. Risk: a forgotten pointer shows as a defect (a loud error, which is wanted).
 - **Option B** No stored link. At check time, find the latest `approved` entry before each `sent` entry of the same draft. Cost: no extra column. Risk: when a draft is approved twice it cannot show "exactly one", and a missing approval looks like a wrong one.
 
@@ -32,6 +37,7 @@ Chosen: Option A, because FR-DRAFTS-04-4 says "points to exactly one approval en
 
 ### TD-2: How is the log paged?
 
+ADR: ADR-009
 - **Option A** By entry id: `before` for the owner paging back, `after` for the lesson MCP adapter reading forward. Ordering uses the id, never the time. Cost: one cursor value. Risk: none known.
 - **Option B** Offset and limit, ordered by time. Cost: simplest to write. Risk: a new entry shifts the pages while the owner reads back, and two events in the same second can swap.
 
@@ -39,6 +45,7 @@ Chosen: Option A. Recorded in ADR-009.
 
 ### TD-3: How does the trigger limit the scrub?
 
+ADR: ADR-010
 - **Option A** The `BEFORE UPDATE` trigger allows only one change: `scrubbed` 0 to 1 with `owner_words` unchanged or "deleted", every other column equal, on an order row. DELETE always aborts. Cost: a long trigger condition. Risk: a new column must be added to it (the safe error).
 - **Option B** Keep order owner words in a side table, delete the row on scrub, and make the log table fully immutable. Cost: a join on every read and a second place a word can sit. Risk: it departs from the exception that D15 and cross-cutting TD-3 describe.
 

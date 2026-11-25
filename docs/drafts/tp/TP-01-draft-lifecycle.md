@@ -1,6 +1,10 @@
 # Technical Proposal: Draft lifecycle (Drafts FRD-01)
 
-Status: Approved (2026-11-18). Follows the cross-cutting TP (`docs/tp/TP.md`); "cross-cutting TD-n" always means a decision there. This TP also holds the domain model, state machine and the `drafts` table that TP-02, TP-03 and TP-04 build on.
+Status: Draft. Follows the cross-cutting TP (`docs/tp/TP.md`); "cross-cutting TD-n" always means a decision there. This TP also holds the domain model, state machine and the `drafts` table that TP-02, TP-03 and TP-04 build on.
+
+## Summary
+
+The cross-cutting TP fixes: Drafts is a bounded context with `domain`, `application`, `ports`, `adapters` (cross-cutting TD-0); data is SQLite behind a `SqlDatabase` port and a per-slice `UnitOfWork` (cross-cutting TD-3); every write use case asks `OwnerLease.isOwner()` first (cross-cutting TD-2); reply and order drafts share one numbering (L5).
 
 ## Context
 
@@ -25,6 +29,7 @@ FR-DRAFTS-01-1, FR-DRAFTS-01-2, FR-DRAFTS-01-3, FR-DRAFTS-01-4, FR-DRAFTS-01-5, 
 
 ### TD-1: How is a draft number given?
 
+ADR: ADR-001
 - **Option A** A one-row counter table. `DraftRepository.nextNumber()` increments it inside the unit of work. Cost: one extra write per draft. Risk: none known; a rolled-back transaction rolls the counter back.
 - **Option B** `AUTOINCREMENT` on the drafts table. Cost: no counter table. Risk: the number exists only after the insert, so the aggregate and its events are built twice, and the rule depends on one SQL feature.
 - **Option C** A random id as the key and a display number given at listing time (the position in the list). Cost: no counter. Risk: the display number changes when drafts close, so "go on 3" could name a different draft than the owner saw, which FR-DRAFTS-01-1 forbids.
@@ -33,6 +38,7 @@ Chosen: Option A. The domain needs the number when it builds the draft and its e
 
 ### TD-2: How does a draft remember the message it answers?
 
+ADR: ADR-002
 - **Option A** Store the message id and the sent time, and read the text from Intake when listing. Cost: one Intake call per listed draft. Risk: Intake may not return the message; the view says so and still lists the draft.
 - **Option B** Copy the customer text into the draft. Cost: one more column. Risk: a second copy of customer data that goes stale when the customer edits the message (FR-INTAKE-02-12).
 

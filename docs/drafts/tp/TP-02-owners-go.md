@@ -1,6 +1,10 @@
 # Technical Proposal: The owner's go (Drafts FRD-02)
 
-Status: Approved (2026-11-18). Follows the cross-cutting TP (`docs/tp/TP.md`) and builds on TP-01 (the `Draft` aggregate, the `drafts` table, the unit of work). "Cross-cutting TD-n" means a decision there.
+Status: Draft. Follows the cross-cutting TP (`docs/tp/TP.md`) and builds on TP-01 (the `Draft` aggregate, the `drafts` table, the unit of work). "Cross-cutting TD-n" means a decision there.
+
+## Summary
+
+The cross-cutting TP already fixes the shape of the go (cross-cutting TD-6):
 
 ## Context
 
@@ -24,6 +28,7 @@ FR-DRAFTS-02-1, FR-DRAFTS-02-2, FR-DRAFTS-02-3, FR-DRAFTS-02-4, FR-DRAFTS-02-5, 
 
 ### TD-1: How does Deputy refuse owner words that are copied text?
 
+ADR: ADR-003
 FR-DRAFTS-02-6 asks Deputy to refuse words that equal any stored customer message or draft text.
 
 - **Option A** Equality of normalized text against all customer messages of every chat (a new Intake inbound port `IsCustomerText`) and against every draft text in Drafts. Cost: one new Intake port and an indexed normalized-text column in Intake. Risk: a customer who writes exactly "go on 3" blocks the owner's identical words; the refusal asks for other words.
@@ -34,6 +39,7 @@ Chosen: Option A, because FR-DRAFTS-02-6 says "any stored customer message" and 
 
 ### TD-2: How is "one use, once" enforced?
 
+ADR: ADR-004
 - **Option A** A revision number on the draft. `save` fails with `StaleDraft` when the stored revision moved. The approval row is born used. Cost: every use case handles `StaleDraft`. Risk: low; the compare is one SQL statement and also holds if a second writer ever appears.
 - **Option B** An in-process lock per draft number. Cost: a small lock map. Risk: not durable, does not stop a second writer, and hides the rule from the database.
 - **Option C** Rely on the database write lock: read, decide and write inside one immediate transaction, with no revision column. Cost: nothing to store. Risk: the rule exists only in how the SQLite adapter opens a transaction, so the in-memory adapter and any later database adapter must each reproduce it, and a test cannot see it.
@@ -42,6 +48,7 @@ Chosen: Option A, because FR-DRAFTS-02-12 asks for a step that cannot be done tw
 
 ### TD-3: How does an owner's order command get its go and its log entry?
 
+ADR: ADR-005
 FR-DRAFTS-02-9 and FR-DRAFTS-02-10: order approvals and order commands follow the same rule as a reply, and FR-DRAFTS-04-8 puts them in the drafts log.
 
 - **Option A** The change and delete tools map to a Drafts use case, `ApproveOrderCommand`. It runs the owner-words checks, writes the log entry first, then calls Orders through the Drafts-side port `OrderChanger`. Orders never calls Drafts. Cost: Drafts carries the order-change input without reading it. Risk: a log entry can exist for a change that then fails; Drafts appends a `failed` entry and the approval reads as an unused go.
