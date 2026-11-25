@@ -67,4 +67,4 @@ R-INTAKE-12, R-INTAKE-13, R-INTAKE-14, R-INTAKE-18, with amendments from docs/ad
 
 ## Open questions
 
-- Q-1 (Lead): the business number when the provider offers none (FR-INTAKE-05-16). FR-INTAKE-05-21 stops set_owner_numbers from setting it, and the pilot has no command line. Kapso provides it, so the owner has not asked for a way; this stays open until a provider that offers none is used.
+Closed on 2026-11-25 (Proposed, lead): the business number when the provider offers none (FR-INTAKE-05-16) does not arise in the pilot, which uses Kapso only; FR-INTAKE-05-21 stops set_owner_numbers from setting it.
