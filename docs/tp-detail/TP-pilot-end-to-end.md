@@ -67,7 +67,7 @@ flowchart TD
   Setup["Setup: key page, number pick, config writer, keep-awake, skill"]
   Shared["Shared kernel: Clock, OwnerLease, signals, text, containsWords"]
   Root -->|"I05-15"| Intake
-  Root -->|"GAP: no spec wires Drafts"| Drafts
+  Root -->|"D16-1, D16-4"| Drafts
   Root -->|"K04-6"| Know
   Root -->|"S05-12"| Setup
   Drafts -->|"SendText, ReadChat, CatchUpChat: D03"| Intake
@@ -384,8 +384,7 @@ The rows the drawings serve are the pilot rows of the four slices, for example F
 
 An arrow in a drawing that no merged spec builds. Each is stated as found; none is decided here. The ones that earlier versions of this file listed and that merged specs now close (the channel notice, the skill's daily loop, the first owner message, the consumed go, the lost signal, the closed window on the go path, the provider choice and restart, the always-ask source, Intake's daily counts, channel consent and the closed owner window) are removed.
 
-1. Drafts wiring. Knowledge, Intake, Setup and Notify have wiring specs on main; the Drafts pilot use cases and tools are wired in a spec that is not merged yet (the components drawing).
-2. Dispatcher session. Drawing (b) shows the main session calling `send_answer`. ADR-019 and its Setup, Intake and Drafts specs (the dispatcher, the triage helpers and the per-chat token) are not merged; when they are, the drawing changes to the dispatcher handing each chat to a triage helper.
+1. Dispatcher session. Drawing (b) shows the main session calling `send_answer`. ADR-019 and its Setup, Intake and Drafts specs (the dispatcher, the triage helpers and the per-chat token) are not merged; when they are, the drawing changes to the dispatcher handing each chat to a triage helper.
 
 ## Open questions
 

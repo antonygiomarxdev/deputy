@@ -1,6 +1,11 @@
 # Technical Proposal: Where orders live, and export (Orders FRD-03)
 
-Status: Approved (2026-11-18)
+Status: Draft
+
+Builds on TP-01 (the `OrderRepository` port and `StoreResult`) and TP-02 (history, delete, outbox). "Cross-cutting TD-n" means a decision in `docs/tp/TP.md`.
+
+
+## Summary
 
 Builds on TP-01 (the `OrderRepository` port and `StoreResult`) and TP-02 (history, delete, outbox). "Cross-cutting TD-n" means a decision in `docs/tp/TP.md`.
 
@@ -37,6 +42,8 @@ FR-ORDERS-03-1, FR-ORDERS-03-2, FR-ORDERS-03-3, FR-ORDERS-03-4, FR-ORDERS-03-5, 
 
 ### TD-1: How do two stores behave the same?
 
+ADR: ADR-011
+
 - **Option A** One `OrderRepository` port (TP-01) with whole-order operations (`findByDraftRef`, `get`, `readAll`, `insert`, `update`, `remove`, `count`). A `RoutingOrderRepository` adapter reads `orders_store` on each call and forwards to the SQLite or the spreadsheet adapter. Filtering, sorting and paging happen once, in the `ListOrders` use case, on the result of `readAll`. Cost: every list reads all orders. Risk: a very large order book; at 5,000 orders of about 1 KB the read is 5 MB, past the 2 MB advice for a Sheets payload.
 - **Option B** The port has query methods (`listByStatus`, `listByCustomer`, `listByDate`). Each adapter implements them in its own way (SQL `WHERE` against filtering rows in memory). Cost: faster SQL queries. Risk: two implementations of every filter that must agree, so R-ORDERS-10 rests on tests, not on construction.
 - **Option C** SQLite is always the primary and the spreadsheet is a mirror written after each change. Cost: fast local reads. Risk: two copies. A list from the local copy could show orders the owner edited or deleted in the sheet, which breaks "never shows an old copy as current" (FR-ORDERS-03-5) and "the list shows what is there" (FRD-02 edge case).
@@ -44,6 +51,8 @@ FR-ORDERS-03-1, FR-ORDERS-03-2, FR-ORDERS-03-3, FR-ORDERS-03-4, FR-ORDERS-03-5, 
 Chosen: Option A. One filter code means the same behavior in both stores by construction. The size risk is bounded: a small business with a few orders a day stays far below it, and the list pages its output (TP-02). When `readAll` of a spreadsheet exceeds 2 MB, the adapter still works (the API has no hard limit) and the open question below asks if an archive is wanted. Recorded in ADR-011.
 
 ### TD-2: How is an order laid out in the spreadsheet, and how are hand edits handled?
+
+ADR: ADR-012
 
 - **Option A** Two tabs. `Orders`: one row per order, 17 columns with fixed header codes in row 1: `id, draft_ref, created_at, status, customer_name, chat, fulfillment, address, wanted_date, wanted_time, total, currency, total_tbc, notes, items, items_json, source_messages`. `Order history`: one row per change: `order_id, at, field, old_value, new_value, owner_words`. `items` is a readable line (`2 x tamales (pork) @ 120.00; 1 x salsa [not in catalog]`) made on every write; `items_json` is the source of truth. All writes go in one `spreadsheets.batchUpdate`: `AppendCells` for a new order, `UpdateCells` for the row of a change plus `AppendCells` for its history rows, `DeleteDimension` (rows deleted from the bottom up) for a delete. Cost: two columns hold the items. Risk: an owner who edits only `items` by hand; detected (below).
 - **Option B** A third tab `Order items`, one row per item. Cost: owner-friendly items. Risk: the cross-cutting TP names two tabs, and one atomic write would span three tabs with row shifting in each.
@@ -61,6 +70,8 @@ Dates in text cells keep the form `YYYY-MM-DD`. The status codes are English fix
 
 ### TD-3: How does Orders talk to Google Sheets?
 
+ADR: ADR-013
+
 - **Option A** A small client over `fetch` and `jose`: sign a JWT (`SignJWT`, `importPKCS8`, RS256, scope `https://www.googleapis.com/auth/spreadsheets`, audience `https://oauth2.googleapis.com/token`, lifetime 1 hour, the most Google allows), exchange it for an access token, keep the token in memory until 5 minutes before expiry, and call these endpoints, the contract of the shared client: `spreadsheets.get` (tab ids), `values:batchGet` with a render option (`UNFORMATTED_VALUE` for Orders, `FORMATTED_VALUE` for Knowledge's catalog read), `spreadsheets.batchUpdate` (cells; Orders only) and `values:batchUpdate` with an input option (`USER_ENTERED` single-cell update, Knowledge only, so `15,50` becomes a number). Orders never uses `USER_ENTERED`: it would turn a note starting with `=` into a formula. About 150 lines with no new package beyond `jose`. Cost: Deputy owns the request building. Risk: Google changes a shape; the client is one file with a contract test against the fake.
 - **Option B** `@googleapis/sheets` 18.1.3 (published 2026-11-12). Measured: 45 installed packages and 14 MB in `node_modules` (through `googleapis-common`, `google-auth-library` 11 and `gaxios` 8), against 1 package and 1 MB for `jose` alone. `bun build --compile` works: the binary signs the token, calls a local fake Sheets server and reaches Google's token endpoint (answer `invalid_grant`, so the signature path ran); 144 bundled modules and 115.81 MB, +0.53 MB over the `jose`-only binary (115.28 MB). It exposes `spreadsheets.batchUpdate`, so atomic writes are possible. Cost: typed calls and built-in token refresh. Risk: 45 packages of supply chain in the binary that holds the service-account key and every order, and a second token implementation next to `jose` (cross-cutting TD-12).
 - **Option C** `google-spreadsheet` 5.3.0 (published 2026-06-03). Measured: 26 installed packages and 27 MB with its `google-auth-library` peer (needed for service-account sign-in). `bun build --compile` works: it reached Google's token endpoint (`invalid_grant`); 520 bundled modules and 116.39 MB, +1.11 MB. Cost: a row-oriented API. Risk: the same supply-chain and token-path cost as B with a row model that does not match one atomic write of an order row plus its history rows.
@@ -76,6 +87,8 @@ The client keeps no rows and logs no cell values or tokens (logs go to stderr an
 
 ### TD-4: What is the export?
 
+ADR: ADR-014
+
 - **Option A** A folder `<data>/exports/orders-<UTC date and time>/` with `orders.csv`, `order_items.csv`, `order_history.csv`, a lossless `orders.json` (money as minor units and as decimal text, all fields, history, export time) and, when any row is unreadable, `orders_unreadable.csv`. CSV is written by `papaparse` `unparse` in the export adapter with `escapeFormulae` on (a cell that starts with `=`, `+`, `-` or `@` gets a leading `'`, checked in Bun 1.4.4: `=1+1` became `'=1+1`), a UTF-8 byte-order mark, and a delimiter and decimal mark taken from the system: `;` and `,` when `Intl.NumberFormat().formatToParts(1.1)` shows a comma decimal, else `,` and `.`. Cost: five files. Risk: the system locale guess is wrong for one owner; `export_orders` takes an optional `delimiter` (`,`, `;`, `tab`).
 - **Option B** One JSON file. Cost: simplest. Risk: a small-business owner cannot open it in a spreadsheet, which is the point of an export they can "read and keep" (FR-ORDERS-03-6).
 - **Option C** An `.xlsx` workbook through a library. Cost: one file the owner opens directly. Risk: a heavy dependency for a one-off file; the maintained options carry their own zip and XML stack, and a binary file is harder to test than CSV.
@@ -83,6 +96,8 @@ The client keeps no rows and logs no cell values or tokens (logs go to stderr an
 Chosen: Option A. The delimiter rule is the real failure it removes: Excel in a locale with a decimal comma reads a comma-separated file as one column. Owner decision D26: the export leaves cancelled orders out by default and reports how many (`cancelledLeftOut`); the rows stay in the store, and including them becomes an owner setting later (not in v1). `ExportData` holds only orders whose status is not `cancelled`; an order's history is exported with it. The export is complete or failed: files are written into a temporary folder and renamed as one step, so a failure leaves nothing that looks like an export (FR-ORDERS-03-7). If rows were unreadable, the result is `complete: false` with the count and `orders_unreadable.csv` holds their raw values, so the owner has them. The result gives the location and counts, never the content, so no order data reaches the agent through an export (principle 8). The export holds the owner's words from the history; it is the owner's file on the owner's machine. Recorded in ADR-014.
 
 ### TD-5: How does the owner choose the store, and what happens to old orders?
+
+ADR: ADR-015
 
 - **Option A** The owner enters the spreadsheet in the terminal: `deputy config set orders-spreadsheet <id or URL>` (an id is 20 or more of `A-Z a-z 0-9 _ -`; a URL is reduced to its id). Switching between `machine` and `spreadsheet` is then done by talking: the `orders_store` setting, through `set_setting`. A switch to `spreadsheet` first runs a probe (token, access, layout, tab creation if empty) and is refused with a code if it fails. On any switch Deputy counts the orders in the place being left and stores it. Cost: one terminal step for the sheet. Risk: a non-technical owner types a command; Setup shows the exact command (as for other sensitive settings, cross-cutting TD-8).
 - **Option B** Everything by talking, including the spreadsheet id. Cost: no terminal. Risk: a note or message that talks the agent into `set_setting orders_store spreadsheet:<attacker's sheet>` would send every new order to a sheet the attacker shares with the service account. The id is a destination for personal data and must be an owner decision (D7).

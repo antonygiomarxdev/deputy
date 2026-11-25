@@ -1,7 +1,11 @@
 # ADR-011: One repository port, and filtering in the use case
 
 ## Status
-Accepted (2026-11-18)
+Accepted (2026-11-24)
+
+## Summary
+
+`OrderRepository` has whole-order operations only: `findByDraftRef`, `get`, `readAll`, `insert`, `update`, `remove`, `count`.
 
 ## Context
 R-ORDERS-10: every behavior is the same with either store. Cross-cutting TD-3 puts orders behind one repository with a SQLite and a spreadsheet adapter. From Orders TP-03 TD-1.
@@ -12,7 +16,7 @@ R-ORDERS-10: every behavior is the same with either store. Cross-cutting TD-3 pu
 - `ListOrders` filters, sorts and pages once, on the result of `readAll`.
 - Both adapters pass one contract test suite.
 
-## Alternatives
+## Options considered
 - Query methods per adapter: two implementations of each filter that must agree, so the requirement rests on tests, not on construction.
 - SQLite primary with a spreadsheet mirror: two copies; a list could show orders the owner changed or deleted in the sheet, which breaks FR-ORDERS-03-5.
 

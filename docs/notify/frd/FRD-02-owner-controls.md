@@ -128,8 +128,8 @@ n/a: docs/CROSS-CUTTING.md has no filled row; the cross-cutting rules live in do
 
 ## Open questions
 
-- Q-1 (Owner: only the owner decides whether an ignore may be limited in time or have exceptions, outside v1): should the owner be able to ignore a chat for a limited time?
-- Q-2 (Lead: a fact about the provider to verify): does the range of batching periods depend on the provider? (PRD open question 5.)
+Closed on 2026-11-25 (owner): an ignore limited in time is later work, as D24 says; there is none now.
+Closed on 2026-11-25 (Proposed, lead): one range of batching periods for all providers (PRD open question 5).
 
 ## Acceptance criteria
 

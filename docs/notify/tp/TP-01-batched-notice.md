@@ -202,5 +202,5 @@ Contract test for every outbound port that has more than one adapter: `Notifier`
 
 ## Open questions
 
-1. Should a message that looks like an order break the batching period? Unchanged from the FRD: no, and nothing here prepares for it.
+1. Should a message that looks like an order break the batching period? Closed on 2026-11-25 (owner), as FRD-01 says: no, and nothing here prepares for it.
 2. None beyond the cross-cutting TP. Inbox's `CountWaiting` returns `{chats, count, windowDays, asOf}` (confirmed by tp-inbox); the adapter keeps `chats`.
