@@ -1,6 +1,7 @@
 # Spec: The owner's go (Drafts FRD-02)
 
 Status: Approved (2026-11-18)
+Rests on: ../tp/TP-02-owners-go.md
 
 One per FRD, resting on [TP-02](../tp/TP-02-owners-go.md). It decides nothing new. It builds on SPEC-01 (the `Draft` aggregate, the `drafts` table, `UnitOfWork`) and on SPEC-04 Tasks 1 and 2 (the log).
 

@@ -1,6 +1,7 @@
 # Spec: Catch-up and history
 
 Status: Approved (2026-11-24)
+Rests on: ../tp/TP-03-catch-up-and-history.md
 
 Rests on `../tp/TP-03-catch-up-and-history.md` (TP-03) and the cross-cutting `docs/tp/TP.md` (TD-5). FRD: `../frd/FRD-03-catch-up-and-history.md`. ADRs: Intake `ADR-007` (gap per scope), `ADR-008` (rate limit ends the run), `ADR-009` (history flag), `ADR-010` (`CatchUpChat`); cross-cutting `ADR-005` (catch-up loop).
 

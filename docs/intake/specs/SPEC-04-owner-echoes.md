@@ -1,6 +1,7 @@
 # Spec: Owner replies and source
 
 Status: Approved (2026-11-18)
+Rests on: ../tp/TP-04-owner-echoes.md
 
 Rests on `../tp/TP-04-owner-echoes.md` (TP-04) and the cross-cutting `docs/tp/TP.md` (TD-4, TD-6, TD-8). FRD: `../frd/FRD-04-owner-echoes.md`. ADRs: Intake `ADR-011` (Deputy sends linked by provider message id), `ADR-012` (phone numbers), `ADR-013` (owner-number log); cross-cutting `ADR-004`, `ADR-008`. Decisions L2 and L4 apply.
 
