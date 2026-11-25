@@ -155,7 +155,7 @@ n/a: the project has no CROSS-CUTTING.md yet; the cross-cutting rules live in th
 
 ## Open questions
 Closed on 2026-11-24 (the owner approved the proposals): the key page closes after one submit and a second page invalidates the earlier token; owner numbers are recorded after the owner confirms; keep-awake is a child process without administrator rights; the skill's daily reminder is in addition to the guide; prompts are acceptable during attended setup and the no-prompt rule applies to the daily loop; Spanish and English are the pilot's languages.
-Q-1 (Owner: the rows FR-SETUP-05-22 to FR-SETUP-05-47 are lead decisions built on the approved pilot decisions, not decided by the owner): approve them or change them.
+Closed on 2026-11-25 (owner): the rows FR-SETUP-05-22 to FR-SETUP-05-47 are approved, and rows FR-SETUP-05-37 to FR-SETUP-05-47 are revisited if the live test contradicts them.
 None of the research questions is open. The provider call that lists an account's numbers is recorded as L11 and the Windows keep-awake call as L12 (DECISIONS), both from the research of 2026-11-24.
 Answered by the lead on 2026-11-24 (technical): the chosen provider id is kept in the config file under the config folder, read by the existing config reader, and SPEC-05-8 adds the writer next to it; the tools are read_knowledge, save_profile, save_catalog, save_always_ask and remember (Knowledge pilot specs) and set_owner_numbers, ask_owner and answer_question (Intake pilot specs).
 Unverified, checked by the pilot (ADR-018): that a channel event wakes an idle session, that the shortcut keeps the wake option, and that the slow loop keeps firing after compaction.
