@@ -96,6 +96,7 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-33 | RULE-4 | positive | The owner approves draft 2 with "go on 2" | the approval is recorded | draft 2 has one approval, for this one send only |
 | EX-34 | RULE-13 | negative | The answer is not backed by the business knowledge | Deputy considers sending it | the owner's go is needed |
 | EX-35 | RULE-14 | boundary | An owner answer to a question about a customer chat arrived, and the customer's window is now closed | the next send to that chat is attempted | the go stays, and nothing is sent |
+| EX-36 | RULE-7 | negative | A send is attempted through any path other than the approved one | the send is attempted | it is refused |
 
 ## Decision table
 
@@ -196,3 +197,4 @@ Generated from the examples above, one per EX row:
 - AC-33: Given the owner approves draft 2 with "go on 2", When the approval is recorded, Then draft 2 has one approval, for this one send only. (EX-33)
 - AC-34: Given the answer is not backed by the business knowledge, When Deputy considers sending it, Then the owner's go is needed. (EX-34)
 - AC-35: Given an owner answer to a question about a customer chat arrived, and the customer's window is now closed, When the next send to that chat is attempted, Then the go stays, and nothing is sent. (EX-35)
+- AC-36: Given a send is attempted through any path other than the approved one, When the send is attempted, Then it is refused. (EX-36)

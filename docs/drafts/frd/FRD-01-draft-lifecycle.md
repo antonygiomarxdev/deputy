@@ -50,7 +50,7 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-1 | RULE-1 | positive | A reply draft and an order draft are created | the drafts are listed | they have different identifiers from one shared numbering |
 | EX-2 | RULE-1 | negative | A draft was closed | a new draft is created | the new identifier differs from every earlier one |
 | EX-3 | RULE-2 | positive | A chat has a customer question | the agent creates a draft | it shows as waiting, nothing is delivered to the provider, and the owner can see it with the question it answers |
-| EX-4 | RULE-2 | negative | The chat does not exist or has no customer message | the agent creates a draft | Deputy refuses to create it and says why |
+| EX-4 | RULE-2 | negative | The agent calls create on a valid chat | the draft is created | nothing reaches the customer until the owner's go |
 | EX-5 | RULE-3 | positive | The owner asks what drafts are waiting | the agent answers | each waiting draft shows its identifier, its chat, its proposed text exactly as it would be sent, and the customer message it answers |
 | EX-6 | RULE-3 | negative | No drafts are waiting | the owner asks what drafts are waiting | the list says so plainly |
 | EX-7 | RULE-4 | positive | Drafts waiting, held, failed and unknown exist | Inbox asks | each comes with its chat, the time written and its state, and no text |
@@ -127,7 +127,7 @@ Generated from the examples above, one per EX row:
 - AC-1: Given a reply draft and an order draft are created, When the drafts are listed, Then they have different identifiers from one shared numbering. (EX-1)
 - AC-2: Given a draft was closed, When a new draft is created, Then the new identifier differs from every earlier one. (EX-2)
 - AC-3: Given a chat has a customer question, When the agent creates a draft, Then it shows as waiting, nothing is delivered to the provider, and the owner can see it with the question it answers. (EX-3)
-- AC-4: Given the chat does not exist or has no customer message, When the agent creates a draft, Then Deputy refuses to create it and says why. (EX-4)
+- AC-4: Given the agent calls create on a valid chat, When the draft is created, Then nothing reaches the customer until the owner's go. (EX-4)
 - AC-5: Given the owner asks what drafts are waiting, When the agent answers, Then each waiting draft shows its identifier, its chat, its proposed text exactly as it would be sent, and the customer message it answers. (EX-5)
 - AC-6: Given no drafts are waiting, When the owner asks what drafts are waiting, Then the list says so plainly. (EX-6)
 - AC-7: Given Drafts waiting, held, failed and unknown exist, When Inbox asks, Then each comes with its chat, the time written and its state, and no text. (EX-7)

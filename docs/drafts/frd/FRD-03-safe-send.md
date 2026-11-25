@@ -59,7 +59,7 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | ID | Rule | Kind | Given | When | Then |
 |---|---|---|---|---|---|
 | EX-1 | RULE-1 | positive | An approved draft is about to be sent | the agent sends it | Deputy has first brought the chat up to date |
-| EX-2 | RULE-1 | boundary | The chat is already up to date | the send is checked | the check passes without waiting for the update |
+| EX-30 | RULE-1 | negative | The chat update fails | the send is checked | the check does not pass |
 | EX-3 | RULE-2 | positive | An approved draft and a provider that cannot be reached for the update | the agent sends | the send is held and the owner is told |
 | EX-4 | RULE-2 | negative | The chat update completes | the agent sends | the send is not held for a failed update |
 | EX-5 | RULE-3 | positive | The owner answered the chat from the app after the draft, and the agent sends | Deputy checks | it uses the source Intake recorded |
@@ -79,7 +79,7 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-19 | RULE-9 | negative | The retry time falls after the 24-hour window closes | the retry is due | the send fails at once and the owner is told |
 | EX-20 | RULE-9 | negative | A provider fails a send | the owner is told | the log shows failed, no duplicate arrives later, and a retry is refused until a new approval |
 | EX-21 | RULE-10 | positive | A send whose outcome is unknown | the owner is told | Deputy does not retry by itself |
-| EX-22 | RULE-10 | negative | A send whose outcome is unknown | the owner decides | the owner decides after checking the chat |
+| EX-22 | RULE-10 | negative | A send whose outcome is unknown | Deputy handles it | Deputy does not retry it |
 | EX-23 | RULE-11 | positive | An accepted send, and the provider reports the message back later | the chat is read | the chat holds the message once, as sent by Deputy |
 | EX-24 | RULE-11 | boundary | The provider reports Deputy's message before Intake has the send identifier | both have arrived | the chat holds one message, as sent through Deputy, and the next draft is not held for it |
 | EX-25 | RULE-12 | positive | A send with outcome unknown and one chat message with the same text inside the window | Deputy resolves it | the message is linked, and the draft shows as sent |
@@ -150,7 +150,7 @@ n/a: docs/CROSS-CUTTING.md has no filled row for Drafts; the cross-cutting rules
 Generated from the examples above, one per EX row:
 
 - AC-1: Given an approved draft is about to be sent, When the agent sends it, Then Deputy has first brought the chat up to date. (EX-1)
-- AC-2: Given the chat is already up to date, When the send is checked, Then the check passes without waiting for the update. (EX-2)
+- AC-30: Given the chat update fails, When the send is checked, Then the check does not pass. (EX-30)
 - AC-3: Given an approved draft and a provider that cannot be reached for the update, When the agent sends, Then the send is held and the owner is told. (EX-3)
 - AC-4: Given the chat update completes, When the agent sends, Then the send is not held for a failed update. (EX-4)
 - AC-5: Given the owner answered the chat from the app after the draft, and the agent sends, When Deputy checks, Then it uses the source Intake recorded. (EX-5)
@@ -170,7 +170,7 @@ Generated from the examples above, one per EX row:
 - AC-19: Given the retry time falls after the 24-hour window closes, When the retry is due, Then the send fails at once and the owner is told. (EX-19)
 - AC-20: Given a provider fails a send, When the owner is told, Then the log shows failed, no duplicate arrives later, and a retry is refused until a new approval. (EX-20)
 - AC-21: Given a send whose outcome is unknown, When the owner is told, Then Deputy does not retry by itself. (EX-21)
-- AC-22: Given a send whose outcome is unknown, When the owner decides, Then the owner decides after checking the chat. (EX-22)
+- AC-22: Given a send whose outcome is unknown, When Deputy handles it, Then Deputy does not retry it. (EX-22)
 - AC-23: Given an accepted send, and the provider reports the message back later, When the chat is read, Then the chat holds the message once, as sent by Deputy. (EX-23)
 - AC-24: Given the provider reports Deputy's message before Intake has the send identifier, When both have arrived, Then the chat holds one message, as sent through Deputy, and the next draft is not held for it. (EX-24)
 - AC-25: Given a send with outcome unknown and one chat message with the same text inside the window, When Deputy resolves it, Then the message is linked, and the draft shows as sent. (EX-25)
