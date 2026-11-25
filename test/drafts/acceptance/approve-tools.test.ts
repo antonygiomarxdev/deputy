@@ -1,14 +1,3 @@
-// covers: drafts/FRD-02/EX-5
-// covers: drafts/FRD-02/EX-6
-// covers: drafts/FRD-02/EX-7
-// covers: drafts/FRD-02/EX-8
-// covers: drafts/FRD-02/EX-9
-// covers: drafts/FRD-02/EX-10
-// covers: drafts/FRD-02/EX-11
-// covers: drafts/FRD-02/EX-15
-// covers: drafts/FRD-02/EX-16
-// covers: drafts/FRD-02/EX-33
-// covers: drafts/FRD-02/EX-36
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import { approvalTools } from "../../../src/drafts/adapters/mcp/approval-tools";
@@ -32,6 +21,7 @@ const byName = (name: string) => {
 };
 
 describe("the tool list", () => {
+  // covers: drafts/FRD-02/EX-15
   test("FR-DRAFTS-02-7: exactly one tool says it sends, and it is approve_draft", () => {
     const sending = tools().filter((t) => /\bsend/i.test(t.description));
     expect(sending.map((t) => t.name)).toEqual(["approve_draft"]);

@@ -1,6 +1,3 @@
-// covers: drafts/FRD-04/EX-9
-// covers: drafts/FRD-04/EX-10
-// covers: drafts/FRD-04/EX-29
 import { describe, expect, test } from "bun:test";
 import { ApprovalAudit } from "../../../src/drafts/domain/approval-audit";
 import type { LogEntry } from "../../../src/drafts/domain/log-entry";
@@ -29,6 +26,7 @@ describe("FR-DRAFTS-04-5 and -4: ApprovalAudit", () => {
     expect(audit([{ sent: sent({ approvalEntryId: 77 }), approval: null }]).defects.map((d) => d.problem)).toEqual(["no_approval"]);
   });
 
+  // covers: drafts/FRD-04/EX-8
   test("a final text that differs from the approved text is text_differs", () => {
     expect(audit([{ sent: sent({ finalText: "eleven" }), approval: approved() }]).defects.map((d) => d.problem)).toEqual(["text_differs"]);
   });

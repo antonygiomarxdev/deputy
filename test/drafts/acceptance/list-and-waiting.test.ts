@@ -1,8 +1,3 @@
-// covers: drafts/FRD-01/EX-5
-// covers: drafts/FRD-01/EX-6
-// covers: drafts/FRD-01/EX-7
-// covers: drafts/FRD-01/EX-8
-// covers: drafts/FRD-01/EX-19
 import { describe, expect, test } from "bun:test";
 import { Draft, type DraftState } from "../../../src/drafts/domain/draft";
 import { LogUnavailable } from "../../../src/drafts/domain/errors";
@@ -32,6 +27,7 @@ async function seed(h: ReturnType<typeof makeDrafts>, number: number, chat: stri
 }
 
 describe("ListDrafts", () => {
+  // covers: drafts/FRD-01/EX-5
   test("FR-DRAFTS-01-3: a draft is listed with number, chat, exact text and the answered message; none gives an empty array", async () => {
     const h = makeDrafts({ chats });
     expect(await list(h)).toEqual([]);
@@ -104,6 +100,8 @@ test("FR-DRAFTS-01-4: a draft made exactly at the session start is not from an e
 });
 
 describe("WaitingChats", () => {
+  // covers: drafts/FRD-01/EX-7
+  // covers: drafts/FRD-01/EX-8
   test("FR-DRAFTS-01-4: open states with chat, written time and state, no text; sending and recording read as waiting; closed are absent", async () => {
     const h = makeDrafts({ chats });
     const states: DraftState[] = ["waiting", "held", "failed", "unknown", "sending", "recording", "sent", "rejected"];
@@ -114,6 +112,7 @@ describe("WaitingChats", () => {
     for (const w of out) expect(Object.keys(w)).not.toContain("text");
   });
 
+  // covers: drafts/FRD-01/EX-19
   test("FR-DRAFTS-01-4: two chats with waiting drafts give exactly those two", async () => {
     const h = makeDrafts({ chats });
     await h.createDraft.run({ kind: "reply", chat: "chat-a", text: "a" });

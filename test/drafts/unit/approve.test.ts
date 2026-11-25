@@ -1,11 +1,3 @@
-// covers: drafts/FRD-02/EX-5
-// covers: drafts/FRD-02/EX-6
-// covers: drafts/FRD-02/EX-7
-// covers: drafts/FRD-02/EX-8
-// covers: drafts/FRD-02/EX-19
-// covers: drafts/FRD-02/EX-20
-// covers: drafts/FRD-02/EX-21
-// covers: drafts/FRD-02/EX-22
 import { describe, expect, test } from "bun:test";
 import { Draft, type DraftKind, type DraftState } from "../../../src/drafts/domain/draft";
 import type { ChatId } from "../../../src/shared/chat-id";
@@ -29,6 +21,7 @@ const go = (over: Partial<Parameters<Draft["approve"]>[0]> = {}) => ({
 });
 
 describe("approve", () => {
+  // covers: drafts/FRD-02/EX-5
   test("FR-DRAFTS-02-3: a shown draft with the exact text gives a used Approval and the Approved event", () => {
     const d = draft();
     const r = d.approve(go());

@@ -1,14 +1,3 @@
-// covers: drafts/FRD-01/EX-1
-// covers: drafts/FRD-01/EX-2
-// covers: drafts/FRD-01/EX-9
-// covers: drafts/FRD-01/EX-10
-// covers: drafts/FRD-01/EX-11
-// covers: drafts/FRD-01/EX-12
-// covers: drafts/FRD-01/EX-13
-// covers: drafts/FRD-01/EX-14
-// covers: drafts/FRD-01/EX-15
-// covers: drafts/FRD-01/EX-16
-// covers: drafts/FRD-01/EX-20
 import { describe, expect, test } from "bun:test";
 import { Draft, type DraftSnapshot, type DraftState } from "../../../src/drafts/domain/draft";
 import type { Approval } from "../../../src/drafts/domain/approval";

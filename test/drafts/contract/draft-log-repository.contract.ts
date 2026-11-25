@@ -1,11 +1,3 @@
-// covers: drafts/FRD-04/EX-1
-// covers: drafts/FRD-04/EX-2
-// covers: drafts/FRD-04/EX-5
-// covers: drafts/FRD-04/EX-6
-// covers: drafts/FRD-04/EX-11
-// covers: drafts/FRD-04/EX-12
-// covers: drafts/FRD-04/EX-17
-// covers: drafts/FRD-04/EX-18
 import { describe, expect, test } from "bun:test";
 import type { NewLogEntry } from "../../../src/drafts/domain/log-entry";
 import type { DraftLogRepository } from "../../../src/drafts/ports/log";

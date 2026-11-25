@@ -1,7 +1,3 @@
-// covers: drafts/FRD-02/EX-3
-// covers: drafts/FRD-02/EX-4
-// covers: drafts/FRD-02/EX-25
-// covers: drafts/FRD-02/EX-26
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -10,6 +6,8 @@ import { INSTRUCTIONS } from "../../../src/composition/mcp/instructions";
 const root = join(import.meta.dir, "..", "..", "..");
 const read = (f: string) => readFileSync(join(root, f), "utf8");
 
+// covers: drafts/FRD-02/EX-25
+// covers: drafts/FRD-02/EX-26
 test("FR-DRAFTS-02-11: the known limit is written in both READMEs and in INSTRUCTIONS", () => {
   const en = read("README.md");
   expect(en).toContain("controls only its own send path");

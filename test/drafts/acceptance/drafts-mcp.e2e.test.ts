@@ -1,11 +1,3 @@
-// covers: drafts/FRD-01/EX-1
-// covers: drafts/FRD-01/EX-2
-// covers: drafts/FRD-01/EX-5
-// covers: drafts/FRD-01/EX-6
-// covers: drafts/FRD-01/EX-17
-// covers: drafts/FRD-01/EX-18
-// covers: knowledge/FRD-01/EX-25
-// covers: knowledge/FRD-01/EX-26
 import { afterEach, expect, test, setDefaultTimeout } from "bun:test";
 import { startFakeKapso } from "../../support/fake-kapso-server";
 import { call, removeHarnessDirs, startServer, waitForOwner, type Harness } from "../../support/harness";
@@ -51,6 +43,9 @@ async function run(h: Harness, name: string, args: Record<string, unknown> = {})
   return { isError: r.isError === true, text: first !== undefined && first.type === "text" ? first.text : "", structured };
 }
 
+// covers: drafts/FRD-01/EX-3
+// covers: drafts/FRD-01/EX-4
+// covers: drafts/FRD-01/EX-6
 test("FR-DRAFTS-01-1, 01-2 and 01-5: create, list, change and reject a draft in plain text; nothing is sent", async () => {
   const h = await boot();
   expect((await postDelivery(h, delivery("How much is the cake?", 1_000))).status).toBe(200);

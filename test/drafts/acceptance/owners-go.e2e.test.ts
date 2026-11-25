@@ -1,12 +1,3 @@
-// covers: drafts/FRD-02/EX-1
-// covers: drafts/FRD-02/EX-2
-// covers: drafts/FRD-02/EX-9
-// covers: drafts/FRD-02/EX-10
-// covers: drafts/FRD-02/EX-11
-// covers: drafts/FRD-02/EX-12
-// covers: drafts/FRD-02/EX-13
-// covers: drafts/FRD-02/EX-14
-// covers: drafts/FRD-02/EX-33
 import { afterEach, expect, test, setDefaultTimeout } from "bun:test";
 import { E2E_TIMEOUT_MS, call, removeHarnessDirs, startServer, waitForOwner, type Harness } from "../../support/harness";
 import { postDelivery } from "../../support/live";
@@ -48,6 +39,7 @@ async function listedDraft(h: Harness, customer = "How much is the cake?", draft
   await run(h, "list_drafts");
 }
 
+// covers: drafts/FRD-02/EX-12
 test("FR-DRAFTS-02-1 and 02-5: a go that names the draft sends it, and the chat shows it as sent through Deputy", async () => {
   const h = await boot();
   await listedDraft(h);
@@ -58,6 +50,7 @@ test("FR-DRAFTS-02-1 and 02-5: a go that names the draft sends it, and the chat 
   expect(chat.text).toContain("sent through Deputy");
 });
 
+// covers: drafts/FRD-02/EX-8
 test("FR-DRAFTS-02-5: words that do not name the draft, and a draft never listed, are refused with a code and send nothing", async () => {
   const h = await boot();
   await postDelivery(h, delivery("How much?", 1_000));

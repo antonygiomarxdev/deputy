@@ -1,14 +1,3 @@
-// covers: drafts/FRD-02/EX-5
-// covers: drafts/FRD-02/EX-6
-// covers: drafts/FRD-02/EX-7
-// covers: drafts/FRD-02/EX-8
-// covers: drafts/FRD-02/EX-12
-// covers: drafts/FRD-02/EX-13
-// covers: drafts/FRD-02/EX-14
-// covers: drafts/FRD-02/EX-17
-// covers: drafts/FRD-02/EX-18
-// covers: drafts/FRD-02/EX-19
-// covers: drafts/FRD-02/EX-20
 import { describe, expect, test } from "bun:test";
 import type { Approval } from "../../../src/drafts/domain/approval";
 import { StaleDraft } from "../../../src/drafts/domain/errors";

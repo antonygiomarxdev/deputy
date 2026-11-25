@@ -1,12 +1,3 @@
-// covers: drafts/FRD-02/EX-1
-// covers: drafts/FRD-02/EX-2
-// covers: drafts/FRD-02/EX-5
-// covers: drafts/FRD-02/EX-6
-// covers: drafts/FRD-02/EX-7
-// covers: drafts/FRD-02/EX-8
-// covers: drafts/FRD-02/EX-12
-// covers: drafts/FRD-02/EX-13
-// covers: drafts/FRD-02/EX-14
 import { describe, expect, test } from "bun:test";
 import { OWNER_WORDS_MAX } from "../../../src/shared/owner-words";
 import { ownerWordsShape } from "../../../src/drafts/domain/owner-words";
@@ -24,6 +15,7 @@ describe("ownerWordsShape", () => {
     expect(ownerWordsShape(words, 3)).toEqual({ ok: false, code: "words_missing_number" });
   });
 
+  // covers: drafts/FRD-02/EX-4
   test("FR-DRAFTS-02-3: whole-token cases", () => {
     expect(wholeNumberTokens("go on 13")).toEqual([13]);
     expect(ownerWordsShape("go on 13", 1)).toEqual({ ok: false, code: "words_missing_number" });

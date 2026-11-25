@@ -1,10 +1,3 @@
-// covers: drafts/FRD-01/EX-5
-// covers: drafts/FRD-01/EX-6
-// covers: drafts/FRD-01/EX-9
-// covers: drafts/FRD-01/EX-10
-// covers: drafts/FRD-01/EX-11
-// covers: drafts/FRD-01/EX-12
-// covers: drafts/FRD-01/EX-20
 import { describe, expect, test } from "bun:test";
 import { ChangeDraftUseCase } from "../../../src/drafts/application/change-draft";
 import { RejectDraftUseCase } from "../../../src/drafts/application/reject-draft";
@@ -84,6 +77,7 @@ describe("ChangeDraft", () => {
     expect(entry).toMatchObject({ kind: "text_changed", proposedText: "old", finalText: "new text", ownerWords: "make it shorter" });
   });
 
+  // covers: drafts/FRD-01/EX-9
   test("FR-DRAFTS-01-5: a live approval is voided, logged, and the entry points to the approved entry", async () => {
     const { h, change } = setup();
     await seed(h, "waiting");
@@ -198,12 +192,15 @@ describe("both use cases", () => {
     () => s.reject.run({ number, ownerWords: "w" }),
   ];
 
+  // covers: drafts/FRD-01/EX-12
   test("FR-DRAFTS-01-6: an unknown draft is draft_not_found and changes nothing", async () => {
     const s = setup();
     for (const run of both(s, 4)) expect(refusal(await run())).toEqual({ code: "draft_not_found", number: 4 });
     expect(await logKinds(s.h)).toEqual([]);
   });
 
+  // covers: drafts/FRD-01/EX-10
+  // covers: drafts/FRD-01/EX-20
   test.each(["sent", "rejected", "replaced"] as const)("FR-DRAFTS-01-6: a %s draft is draft_closed with its state", async (state) => {
     const s = setup();
     await seed(s.h, state);

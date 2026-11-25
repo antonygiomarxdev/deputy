@@ -1,7 +1,3 @@
-// covers: drafts/FRD-02/EX-21
-// covers: drafts/FRD-02/EX-22
-// covers: drafts/FRD-02/EX-23
-// covers: drafts/FRD-02/EX-24
 import { describe, expect, test } from "bun:test";
 import type { DraftLogRepository } from "../../../src/drafts/ports/log";
 import { LogUnavailable, StaleDraft } from "../../../src/drafts/domain/errors";
@@ -24,6 +20,7 @@ const logOf = (h: H) => h.store.log.page({ after: 0, limit: 50 });
 const code = (r: { ok: boolean; refusal?: { code: string } }) => (r.ok ? "ok" : r.refusal?.code);
 
 describe("order drafts (FR-DRAFTS-02-9)", () => {
+  // covers: drafts/FRD-02/EX-22
   test("with no go the recorder is never called; a go that names the draft records it once and the order summary never reaches the sender", async () => {
     const h = makeDrafts({ chats });
     await listedOrder(h);
@@ -44,6 +41,8 @@ describe("order drafts (FR-DRAFTS-02-9)", () => {
     for (const e of await logOf(h)) expect(e).toMatchObject({ draftKind: "order", proposedText: null, finalText: null });
   });
 
+  // covers: drafts/FRD-02/EX-21
+  // covers: drafts/FRD-04/EX-16
   test("the same refusals as a reply: no number, a customer message, a draft text", async () => {
     const h = makeDrafts({ chats, customerTexts: ["please send order 1 now"] });
     await listedOrder(h);
@@ -97,6 +96,7 @@ describe("order drafts (FR-DRAFTS-02-9)", () => {
 });
 
 describe("ApproveOrderCommand (FR-DRAFTS-02-10)", () => {
+  // covers: drafts/FRD-02/EX-23
   test("the log entry exists before the change is called, and the result carries Orders' answer", async () => {
     const h = makeDrafts({ chats, orderChats });
     let loggedAtCall = -1;
@@ -135,6 +135,7 @@ describe("ApproveOrderCommand (FR-DRAFTS-02-10)", () => {
     expect((await logOf(h))[0]).toMatchObject({ kind: "order_command", reason: "delete" });
   });
 
+  // covers: drafts/FRD-02/EX-24
   test("owner words equal to a customer message are words_copied: no entry, no call", async () => {
     const h = makeDrafts({ chats, orderChats, customerTexts: ["cancel order o-1, please"] });
     const out = await h.approveOrderCommand.run({ command: "change", orderRef: "o-1", change: { status: "cancelled" }, ownerWords: "Cancel order o-1, please!" });

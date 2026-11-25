@@ -1,6 +1,3 @@
-// covers: drafts/FRD-04/EX-9
-// covers: drafts/FRD-04/EX-10
-// covers: drafts/FRD-04/EX-29
 import { describe, expect, test } from "bun:test";
 import { Draft } from "../../../src/drafts/domain/draft";
 import { LogUnavailable } from "../../../src/drafts/domain/errors";
@@ -65,6 +62,7 @@ async function approve(h: ReturnType<typeof setup>["h"], clock: FakeClock) {
 const draftOf = async (h: ReturnType<typeof setup>["h"]) => (await h.store.unitOfWork.run((tx) => tx.drafts.get(1), { requireLease: false }))?.snapshot();
 
 describe("FR-DRAFTS-04-5: a sent entry that cannot be written", () => {
+  // covers: drafts/FRD-04/EX-10
   test("three failures: the owner is told it went out and the record is missing; one send; the draft is a gap", async () => {
     const { h, clock } = setup(3);
     const out = await approve(h, clock);

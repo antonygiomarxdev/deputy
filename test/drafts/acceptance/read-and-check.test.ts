@@ -1,8 +1,3 @@
-// covers: drafts/FRD-04/EX-5
-// covers: drafts/FRD-04/EX-6
-// covers: drafts/FRD-04/EX-9
-// covers: drafts/FRD-04/EX-10
-// covers: drafts/FRD-04/EX-29
 import { describe, expect, test } from "bun:test";
 import { Draft } from "../../../src/drafts/domain/draft";
 import type { NewLogEntry } from "../../../src/drafts/domain/log-entry";
@@ -142,6 +137,7 @@ describe("CheckApprovals (FR-DRAFTS-04-5)", () => {
     expect(await h.checkApprovals.run()).toEqual({ defects: [], gaps: [] });
   });
 
+  // covers: drafts/FRD-04/EX-9
   test("a sent entry with no approval entry is a no_approval defect with its id, draft and chat", async () => {
     const h = makeDrafts({ chats });
     const [id] = await h.store.log.append([raw({ kind: "sent", sendId: "deputy:x" })]);
