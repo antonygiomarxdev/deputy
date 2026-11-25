@@ -1,7 +1,7 @@
 # Deputy: product overview
 
 Status: Approved (2026-11-24)
-Approval: content EVnyDrK2H9_N
+Approval: content 9kKsOKhERsSe
 
 This file holds what every slice shares: the problem, users, principles, scope and the slice map. Each slice (one feature) lives in `src/<slice>/` with its own document chain in `docs/<slice>/`: **PRD** → **FRDs** (`frd/`, with acceptance criteria). Then, after the FRDs: the cross-cutting **TP** (Technical Proposal, `docs/tp/TP.md`), one or more **TPs per FRD** (`tp/`), an **ADR** for each choice (`docs/adr/` or `adr/`), one **spec** per FRD (`specs/`), and the implementation with ATDD (the FRD's acceptance criteria become tests first). The chain is the one in [Scriptorium](https://github.com/antonygiomarxdev/scriptorium). Decisions that span slices: [DECISIONS.md](DECISIONS.md) for product, `docs/adr/` for technical. Shared terms: [GLOSSARY.md](GLOSSARY.md). A slice's PRD cites the principles below; it does not restate them.
 
@@ -50,7 +50,7 @@ These hold for every feature. A requirement that breaks one needs an explicit ow
 | ID | Name | Description |
 |---|---|---|
 | UC-1 | Check the inbox | The owner asks "what's pending?". The agent summarizes unanswered chats grouped by what they need: needs the owner, orders, easy questions (draft ready), already answered by the owner. |
-| UC-2 | Answer with help | The owner says "tell María yes, build Juan's order, research delivery to Masaya and answer". The agent drafts each reply, shows them, and sends each one after the owner's go. |
+| UC-2 | Answer with help | The owner says "tell María yes, build Juan's order, research delivery to Riverside and answer". The agent drafts each reply, shows them, and sends each one after the owner's go. |
 | UC-3 | Be told while working | With an agent that supports push, the session gets a short, batched notice ("3 new, 1 order"), not one per message. |
 | UC-4 | Answer away from the computer | The owner continues the same conversation from the phone (e.g. Claude Remote Control). |
 | UC-5 | Learn from the owner | When the owner approves or corrects a reply, Deputy keeps it as knowledge and uses it to propose better next time. The owner can see and edit what was learned. |

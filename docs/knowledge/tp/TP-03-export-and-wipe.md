@@ -116,7 +116,7 @@ Export document (one JSON file):
   "format": "deputy-knowledge-export", "version": 1, "exportedAt": "2026-11-17T15:30:45.123Z", "complete": true,
   "profile":   { "status": "ok", "text": "<file text exactly>" },
   "catalog":   { "status": "ok", "source": "file", "delimiter": ";", "rows": [["name","price"],["Tamales","12,50"]],
-                 "mapping": { }, "currency": "NIO" },
+                 "mapping": { }, "currency": "USD" },
   "lessons":   { "status": "ok", "items": [ { "number": 7, "wording": "", "situation": "", "wanted": "", "learnedAt": "", "chat": "", "draft": 12, "claims": [] } ] },
   "proposals": { "status": "ok", "items": [ ] },
   "log":       { "status": "ok", "items": [ ] }

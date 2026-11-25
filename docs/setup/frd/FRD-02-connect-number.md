@@ -58,7 +58,7 @@ R-SETUP-6, R-SETUP-7, R-SETUP-8, R-SETUP-9, R-SETUP-10, R-SETUP-11, R-SETUP-12, 
 - Given the owner says the number is a regular personal WhatsApp number, When Setup evaluates it, Then Setup explains how to move to the Business app and does not continue. (FR-SETUP-02-5)
 - Given the owner asks the agent to create the provider account for them, When Setup responds, Then it says this is the owner's step and gives the owner's instructions. (FR-SETUP-02-6)
 - Given the owner confirmed before the warning was shown, When Setup checks the record, Then the confirmation does not count. (FR-SETUP-02-2)
-- Given the owner says "add 5551234 as mine", When Setup applies it, Then the list changes only after confirmation, the owner's words are logged, and the owner can list the numbers at any time. (FR-SETUP-02-8)
+- Given the owner says "add 212 555 0123 as mine", When Setup applies it, Then the list changes only after confirmation, the owner's words are logged, and the owner can list the numbers at any time. (FR-SETUP-02-8)
 - Given a number that already has customer messages, When the owner asks to add it as an owner number, Then Setup warns first and needs a second confirmation. (FR-SETUP-02-8)
 - Given the number was just connected, When Setup continues, Then it asks which receiving mode the owner wants, with the trade-off in plain words, and records the answer. (FR-SETUP-02-11)
 - Given the owner does not answer or picks the default, When Setup completes, Then periodic checking is recorded and no public address was asked for. (FR-SETUP-02-11, FR-SETUP-02-12)

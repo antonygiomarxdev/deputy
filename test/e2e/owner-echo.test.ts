@@ -62,15 +62,15 @@ test("FR-INTAKE-04-4: with live delivery on, a reply that only the provider hold
 test("FR-INTAKE-04-1 and FR-INTAKE-04-9: a pending change written while the server runs is applied within one supervisor tick and listed with its typed command", async () => {
   const h = await boot();
   expect(textOf(await call(h.client, "list_owner_numbers"))).toContain("no owner numbers");
-  insertPendingChange(h, "owner_numbers", "+505 8888 2222", 'deputy config set owner-numbers "+505 8888 2222"');
+  insertPendingChange(h, "owner_numbers", "+1 212 555 0103", 'deputy config set owner-numbers "+1 212 555 0103"');
 
   const until = Date.now() + 15_000;
   let listed = "";
   while (Date.now() < until) {
     listed = textOf(await call(h.client, "list_owner_numbers"));
-    if (listed.includes("extra: +50588882222")) break;
+    if (listed.includes("extra: +12125550103")) break;
     await new Promise((r) => setTimeout(r, 250));
   }
-  expect(listed).toContain("extra: +50588882222");
-  expect(listed).toContain('add +50588882222 (extra): deputy config set owner-numbers "+505 8888 2222"');
+  expect(listed).toContain("extra: +12125550103");
+  expect(listed).toContain('add +12125550103 (extra): deputy config set owner-numbers "+1 212 555 0103"');
 }, 20_000);

@@ -13,9 +13,9 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-NOTIFY-01-5 | always | A notice contains counts only: no customer text, no excerpt, no customer name, and no wording that could be read as an instruction. The words of the notice are fixed by Deputy and only the numbers vary. This holds for the whole notice, text and every attribute it carries: no chat identifier, phone number, name, tag or sender. (R-NOTIFY-4) |
-| FR-NOTIFY-01-15 | WHEN | When a notice cannot be delivered, because no session is open or writing returns an error, Deputy keeps the batch and tries again after 60 seconds, and the next notice counts those messages as new. With no open session nothing is sent and the inbox keeps listing the messages. (FR-NOTIFY-03-4, FR-NOTIFY-03-6, FR-NOTIFY-03-7, ADR-006) |
-| FR-NOTIFY-01-16 | always | A notice sends nothing to a customer and approves nothing: receiving it cannot cause a send or an approval. (FR-NOTIFY-03-3) |
+| FR-NOTIFY-01-5 | always | A notice shall contain counts only: no customer text, no excerpt, no customer name, and no wording that could be read as an instruction. The words of the notice are fixed by Deputy and only the numbers shall vary. This holds for the whole notice, text and every attribute it carries: no chat identifier, phone number, name, tag or sender. (R-NOTIFY-4) |
+| FR-NOTIFY-01-15 | WHEN | When a notice cannot be delivered, because no session is open or writing returns an error, Deputy shall keep the batch and shall try again after 60 seconds, and the next notice shall count those messages as new. With no open session nothing shall be sent and the inbox shall keep listing the messages. (FR-NOTIFY-03-4, FR-NOTIFY-03-6, FR-NOTIFY-03-7, ADR-006) |
+| FR-NOTIFY-01-16 | always | A notice shall send nothing to a customer and shall approve nothing: receiving it shall not cause a send or an approval. (FR-NOTIFY-03-3) |
 
 ## Files
 | Path | Create or change | Holds |

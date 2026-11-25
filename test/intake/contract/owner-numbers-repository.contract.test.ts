@@ -21,13 +21,13 @@ function phone(raw: string): PhoneNumber {
 
 const set = () => {
   const o = OwnerNumbers.empty();
-  o.add({ number: phone("+50588880000"), kind: "business", label: "shop", addedAt: 10 });
-  o.add({ number: phone("+50599990000"), kind: "extra", label: "", addedAt: 20 });
+  o.add({ number: phone("+12125550100"), kind: "business", label: "shop", addedAt: 10 });
+  o.add({ number: phone("+12125550102"), kind: "extra", label: "", addedAt: 20 });
   return o;
 };
 const entries = (at: number): OwnerNumberLogEntry[] => [
-  { at, action: "add", number: "+50588880000", kind: "business", label: "shop", command: "deputy config set business-number +50588880000" },
-  { at: at + 1, action: "add", number: "+50599990000", kind: "extra", label: "", command: "deputy config set owner-numbers +50599990000" },
+  { at, action: "add", number: "+12125550100", kind: "business", label: "shop", command: "deputy config set business-number +12125550100" },
+  { at: at + 1, action: "add", number: "+12125550102", kind: "extra", label: "", command: "deputy config set owner-numbers +12125550102" },
 ];
 
 const cleanups: (() => void)[] = [];
@@ -59,8 +59,8 @@ function contract(name: string, make: () => Promise<OwnerNumbersRepository>) {
       await repo.save(set(), entries(100));
       const loaded = await repo.load();
       expect(loaded.entries().map((e) => [e.number.e164, e.kind, e.label, e.addedAt])).toEqual([
-        ["+50588880000", "business", "shop", 10],
-        ["+50599990000", "extra", "", 20],
+        ["+12125550100", "business", "shop", 10],
+        ["+12125550102", "extra", "", 20],
       ]);
       expect((await repo.log()).map((l) => l.at)).toEqual([100, 101]);
     });
