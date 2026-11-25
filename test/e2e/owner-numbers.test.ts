@@ -35,7 +35,7 @@ test("FR-INTAKE-04-9: a business number the owner's terminal left pending is app
   // what `deputy config set business-number` writes; no owner_numbers row exists yet
   const db = new Database(join(first.dataDir, "deputy.db"));
   db.run(
-    "INSERT INTO pending_changes (key, value, command, at) VALUES ('business_number', '+505 8888 0000', 'deputy config set business-number \"+505 8888 0000\"', 1)",
+    "INSERT INTO pending_changes (key, value, command, at) VALUES ('business_number', '+1 212 555 0100', 'deputy config set business-number \"+1 212 555 0100\"', 1)",
   );
   db.close();
   writeConfig(first.configDir, { provider: "kapso", kapso_phone_number_id: "pn-1" });
@@ -51,8 +51,8 @@ test("FR-INTAKE-04-9: a business number the owner's terminal left pending is app
   await waitForOwner(h); // without the business number, Kapso would have been refused and the server would have exited
 
   const listed = textOf(await call(h.client, "list_owner_numbers"));
-  expect(listed).toContain("business: +50588880000");
-  expect(listed).toContain('add +50588880000 (business): deputy config set business-number "+505 8888 0000"');
+  expect(listed).toContain("business: +12125550100");
+  expect(listed).toContain('add +12125550100 (business): deputy config set business-number "+1 212 555 0100"');
   await h.close();
   const check = new Database(join(h.dataDir, "deputy.db"), { readonly: true });
   expect(check.query("SELECT applied_at IS NOT NULL AS applied FROM pending_changes").get()).toEqual({ applied: 1 });

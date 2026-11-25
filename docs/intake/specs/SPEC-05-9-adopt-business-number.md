@@ -31,7 +31,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 - `src/main/serve.ts` `serve`: the start order, where the call goes
 
 ## Tests first
-FR-INTAKE-05-15, FR-INTAKE-05-16, FR-INTAKE-05-29, written before the code, without it in view, with a fake provider. FR-INTAKE-05-15: with no business number recorded and the provider offering `+50588881111`, the number is recorded with kind `business` and one log entry whose command is "provider"; with one already recorded nothing changes and the provider is not asked; run twice, it records once. FR-INTAKE-05-16: with the provider offering none, nothing is written and the result is `missing`, which the session reads from the status. A provider error leaves everything unchanged and the result names the error kind. FR-INTAKE-05-29: with a lease that is not held, `execute` returns `not_owner`, asks the provider nothing and writes nothing.
+FR-INTAKE-05-15, FR-INTAKE-05-16, FR-INTAKE-05-29, written before the code, without it in view, with a fake provider. FR-INTAKE-05-15: with no business number recorded and the provider offering `+12125550104`, the number is recorded with kind `business` and one log entry whose command is "provider"; with one already recorded nothing changes and the provider is not asked; run twice, it records once. FR-INTAKE-05-16: with the provider offering none, nothing is written and the result is `missing`, which the session reads from the status. A provider error leaves everything unchanged and the result names the error kind. FR-INTAKE-05-29: with a lease that is not held, `execute` returns `not_owner`, asks the provider nothing and writes nothing.
 
 ## Build
 ```ts
