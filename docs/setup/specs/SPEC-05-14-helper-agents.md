@@ -20,7 +20,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 | EX-18 | RULE-8 | boundary | The owner asks in a message to look something up online | The dispatcher runs | The web helper runs for that request only and its result is shown to the owner |
 | EX-19 | RULE-9 | positive | Three chats are pending | A round runs | Three triage helpers each hold one chat's token and the one with an answer sends it |
 | EX-20 | RULE-9 | negative | A triage helper needs the owner's decision | It cannot ask the owner | It returns one line to the dispatcher |
-| EX-21 | RULE-9 | boundary | A triage helper holds the token of chat A | It tries to read chat B | The tool refuses it |
+| EX-21 | RULE-9 | boundary | The tool refused a triage helper's token | The helper reads the refusal | The helper stops, reports it and does not try another chat |
 
 ## Files
 | Path | Create or change | Holds |
@@ -34,12 +34,12 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 - Precedent: docs/adr/ADR-019-dispatcher-session-and-background-helpers.md, the decision this file carries out
 
 ## Tests first
-FR-SETUP-05-39, FR-SETUP-05-41, FR-SETUP-05-42, FR-SETUP-05-47, EX-18, EX-19, EX-20, EX-21, written before the code, without it in view, by reading both files. FR-SETUP-05-39: the triage file has `model: haiku`, `omitClaudeMd: true`, and a `tools` list of exactly `mcp__deputy__chat_context`, `mcp__deputy__read_knowledge` and `mcp__deputy__send_answer`; its text says the dispatcher passes the chat id and the token, that the helper reads the knowledge itself with `read_knowledge`, and that it sends only when the knowledge backs the answer and the class is not always-ask, otherwise it returns one line with the question. FR-SETUP-05-42: both files have `permissionMode: dontAsk`; neither has a `mcpServers` key; neither has an empty `tools` list. EX-19: the triage text says it works on the one chat it was given. EX-20 and FR-SETUP-05-47: neither text lets the helper ask the owner; the triage text says to return one line. EX-21: the triage text says a refused token means stop and report. FR-SETUP-05-41 and EX-18: the web file lists `WebSearch` and `WebFetch` and no `send_answer` or `ask_owner`, and its text says it runs for one request and returns the result.
+FR-SETUP-05-39, FR-SETUP-05-41, FR-SETUP-05-42, FR-SETUP-05-47, EX-18, EX-19, EX-20, EX-21, written before the code, without it in view, by reading both files. FR-SETUP-05-39: the triage file has `model: haiku`, `omitClaudeMd: true`, and a `tools` list of exactly `mcp__deputy__chat_context`, `mcp__deputy__read_knowledge` and `mcp__deputy__send_answer`; its text says the dispatcher passes the chat id and the token, that the helper reads the knowledge itself with `read_knowledge`, and that it sends only when the knowledge backs the answer and the class is not always-ask, otherwise it returns one line with the question. FR-SETUP-05-42: both files have `permissionMode: dontAsk`; neither has a `mcpServers` key; neither has an empty `tools` list. EX-19: the triage text says it works on the one chat it was given. EX-20 and FR-SETUP-05-47: neither text lets the helper ask the owner; the triage text says to return one line. EX-21: the triage text says a refused token means stop and report. FR-SETUP-05-41 and EX-18: the web file lists `WebSearch` and `WebFetch` and no `send_answer`, no `ask_owner` and no chat tool (`get_chat`, `chat_context`), and its text says it gets only what the dispatcher puts in its prompt, runs for one request and returns the result.
 
 ## Build
 ```ts
 export const TRIAGE_TOOLS = ["mcp__deputy__chat_context", "mcp__deputy__read_knowledge", "mcp__deputy__send_answer"];
-export const WEB_TOOLS = ["mcp__deputy__read_knowledge", "mcp__deputy__get_chat", "WebSearch", "WebFetch"];
+export const WEB_TOOLS = ["mcp__deputy__read_knowledge", "WebSearch", "WebFetch"];
 ```
 Both files start with a frontmatter block (`name`, `description`, `model`, `permissionMode`, `tools`); `omitClaudeMd` only in the triage file.
 
@@ -47,7 +47,7 @@ Both files start with a frontmatter block (`name`, `description`, `model`, `perm
 `bun test test/skill/helper-agents.test.ts`
 
 ## Out of scope
-The tools `chat_context` and `send_answer` themselves and their token check (Intake and Drafts specs); the install step (SPEC-05-15).
+The tools themselves and their token check: Intake SPEC-05-23 for `chat_context`, Intake SPEC-05-24 for `save_chat_summary`, Drafts SPEC-18 for `send_answer`; the install step (SPEC-05-15).
 
 ## Open questions
-None. The web helper's read tools (`read_knowledge` and `get_chat`) and its default model are Proposed, lead decision.
+None. The web helper's tools (`read_knowledge` and the two web tools, no chat tool) and its default model are Proposed, lead decision.

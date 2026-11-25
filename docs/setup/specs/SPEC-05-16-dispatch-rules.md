@@ -13,7 +13,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-SETUP-05-37 | always | The main session shall never block: it checks messages, answers quick questions and asks the owner, and it hands long work to a background helper that reports back. (Owner decision of 2026-11-24, ADR-019.) |
+| FR-SETUP-05-37 | always | The main session shall never block: it checks messages, answers quick questions and asks the owner, and it hands long work to a background helper that reports back. (Owner decision of 2026-11-24, docs/adr/ADR-019.) |
 | FR-SETUP-05-38 | always | Work shall count as long when it reads a spreadsheet or documents, builds or changes the catalog, searches the web or summarizes many chats; one read of one chat and one question to the owner are not long. (Proposed, lead decision.) |
 | FR-SETUP-05-41 | WHEN | WHEN the owner asks for a web lookup or research, the dispatcher shall run the web helper for that request only and show its result to the owner, with no terminal prompt. (Proposed, lead decision.) |
 | FR-SETUP-05-46 | WHEN | WHEN a round of the daily loop runs, the dispatcher shall also collect the results of the helpers that finished. (Proposed, lead decision.) |
@@ -45,7 +45,7 @@ The test asserts that the names appear in loop.md and that `collect the results`
 `bun test test/skill/dispatch.test.ts`
 
 ## Out of scope
-The agent files (SPEC-05-13, SPEC-05-14); whether a finished helper wakes an idle session (unverified, ADR-018 and ADR-019).
+The agent files (SPEC-05-13, SPEC-05-14); whether a finished helper wakes an idle session (unverified, ADR-018 and docs/adr/ADR-019).
 
 ## Open questions
 None.

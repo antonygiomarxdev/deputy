@@ -58,15 +58,15 @@ R-SETUP-22, R-SETUP-23, R-SETUP-24, R-SETUP-25, R-SETUP-26, R-SETUP-27, R-SETUP-
 | FR-SETUP-05-34 | WHEN | WHEN the connection settings are written, the skill shall tell the owner to close the session and reopen it from the shortcut, so that the consent dialog of the wake option is answered on that first launch while the owner is present, and after the reopening the skill shall continue setup where it stopped. (Proposed, lead decision.) |
 | FR-SETUP-05-35 | IF | IF a Deputy tool reports an error, such as a refused key, a failing check for messages or a failed send, THEN the skill shall tell the owner in plain words, by message first and in the session when the owner's window is closed. (Proposed, lead decision.) |
 | FR-SETUP-05-36 | WHEN | WHEN the owner asks the agent to install Deputy from a link, the install guide shall first check that the runtime Deputy needs, git and the agent are present, and say what to install when one is missing. (Proposed, lead decision.) |
-| FR-SETUP-05-37 | always | The main session shall never block: it checks messages, answers quick questions and asks the owner, and it hands long work to a background helper that reports back. (Owner decision of 2026-11-24, ADR-019.) |
+| FR-SETUP-05-37 | always | The main session shall never block: it checks messages, answers quick questions and asks the owner, and it hands long work to a background helper that reports back. (Owner decision of 2026-11-24, docs/adr/ADR-019.) |
 | FR-SETUP-05-38 | always | Work shall count as long when it reads a spreadsheet or documents, builds or changes the catalog, searches the web or summarizes many chats; one read of one chat and one question to the owner are not long. (Proposed, lead decision.) |
 | FR-SETUP-05-39 | WHEN | WHEN a round lists pending chats, the dispatcher shall hand each chat, with its token, to a triage helper that runs in the background and reads the knowledge itself. (Proposed, lead decision.) |
-| FR-SETUP-05-40 | always | The Deputy session shall have no internet access unless the owner asks. (Owner decision of 2026-11-24, ADR-019.) |
+| FR-SETUP-05-40 | always | The Deputy session shall have no internet access unless the owner asks. (Owner decision of 2026-11-24, docs/adr/ADR-019.) |
 | FR-SETUP-05-41 | WHEN | WHEN the owner asks for a web lookup or research, the dispatcher shall run the web helper for that request only and show its result to the owner, with no terminal prompt. (Proposed, lead decision.) |
 | FR-SETUP-05-42 | always | No helper shall raise a permission prompt in the daily loop; a call that is not allowed is refused, not asked (FR-SETUP-05-20). (Proposed, lead decision.) |
 | FR-SETUP-05-43 | WHEN | WHEN the install guide finishes, the agent definitions of the dispatcher, the triage helper and the web helper shall be installed as plain files in the project's agents folder. (Proposed, lead decision.) |
-| FR-SETUP-05-44 | WHEN | WHEN the owner uses the shortcut, the session shall start as the dispatcher with the wake option (ADR-018, ADR-019). (Proposed, lead decision.) |
-| FR-SETUP-05-45 | WHEN | WHEN the install guide writes the permission rules, it shall also allow the send-answer tool for helpers, and it shall do so only after the project folder is trusted, so the install steps are ordered that way. (Proposed, lead decision.) |
+| FR-SETUP-05-44 | WHEN | WHEN the owner uses the shortcut, the session shall start as the dispatcher with the wake option (ADR-018, docs/adr/ADR-019). (Proposed, lead decision.) |
+| FR-SETUP-05-45 | WHEN | WHEN the install guide writes the permission rules, it shall do so only after the project folder is trusted, so the install steps are ordered that way. (Proposed, lead decision.) |
 | FR-SETUP-05-46 | WHEN | WHEN a round of the daily loop runs, the dispatcher shall also collect the results of the helpers that finished. (Proposed, lead decision.) |
 | FR-SETUP-05-47 | always | Helpers shall not ask the owner anything; only the dispatcher asks. (Proposed, lead decision.) |
 
@@ -106,7 +106,7 @@ R-SETUP-22, R-SETUP-23, R-SETUP-24, R-SETUP-25, R-SETUP-26, R-SETUP-27, R-SETUP-
 | EX-18 | RULE-8 | boundary | The owner asks in a message to look something up online | The dispatcher runs | The web helper runs for that request only and its result is shown to the owner |
 | EX-19 | RULE-9 | positive | Three chats are pending | A round runs | Three triage helpers each hold one chat's token and the one with an answer sends it |
 | EX-20 | RULE-9 | negative | A triage helper needs the owner's decision | It cannot ask the owner | It returns one line to the dispatcher |
-| EX-21 | RULE-9 | boundary | A triage helper holds the token of chat A | It tries to read chat B | The tool refuses it |
+| EX-21 | RULE-9 | boundary | The tool refused a triage helper's token | The helper reads the refusal | The helper stops, reports it and does not try another chat |
 
 ## Decision table
 n/a: no behavior here depends on more than three conditions.
@@ -155,6 +155,7 @@ n/a: the project has no CROSS-CUTTING.md yet; the cross-cutting rules live in th
 
 ## Open questions
 Closed on 2026-11-24 (the owner approved the proposals): the key page closes after one submit and a second page invalidates the earlier token; owner numbers are recorded after the owner confirms; keep-awake is a child process without administrator rights; the skill's daily reminder is in addition to the guide; prompts are acceptable during attended setup and the no-prompt rule applies to the daily loop; Spanish and English are the pilot's languages.
+Q-2 (Lead): the dispatcher has no `get_chat` (the owner decided that it sees only the pending list), but FR-SETUP-05-25 has it match the owner's answers in the control chat. Which tool reads the control chat for it is not decided; Intake FR-INTAKE-05-11 says the session reads the control chat together with the open questions.
 Q-1 (Owner: the rows FR-SETUP-05-22 to FR-SETUP-05-47 are lead decisions built on the approved pilot decisions, not decided by the owner): approve them or change them.
 None of the research questions is open. The provider call that lists an account's numbers is recorded as L11 and the Windows keep-awake call as L12 (DECISIONS), both from the research of 2026-11-24.
 Answered by the lead on 2026-11-24 (technical): the chosen provider id is kept in the config file under the config folder, read by the existing config reader, and SPEC-05-8 adds the writer next to it; the tools are read_knowledge, save_profile, save_catalog, save_always_ask and remember (Knowledge pilot specs) and set_owner_numbers, ask_owner and answer_question (Intake pilot specs).
@@ -181,4 +182,4 @@ Unverified, checked by the pilot (ADR-018): that a channel event wakes an idle s
 - AC-18 (EX-18): Given the owner asks in a message to look something up online, When the dispatcher runs, Then the web helper runs for that request only and its result is shown to the owner.
 - AC-19 (EX-19): Given three chats are pending, When a round runs, Then three triage helpers each hold one chat's token and the one with an answer sends it.
 - AC-20 (EX-20): Given a triage helper needs the owner's decision, When it cannot ask the owner, Then it returns one line to the dispatcher.
-- AC-21 (EX-21): Given a triage helper holds the token of chat A, When it tries to read chat B, Then the tool refuses it.
+- AC-21 (EX-21): Given the tool refused a triage helper's token, When the helper reads the refusal, Then the helper stops, reports it and does not try another chat.
