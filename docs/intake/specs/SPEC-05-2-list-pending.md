@@ -13,9 +13,9 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-INTAKE-05-12 | always | Each customer chat shows when its customer 24 hour window closes: 24 hours after the customer's latest message. |
-| FR-INTAKE-05-13 | WHEN | When the session asks for the pending chats, Intake lists each chat whose latest customer message is newer than its latest answer, inside the pending window of FR-INBOX-01-6, newest first, each with the time its customer window closes. The control chat is never listed. |
-| FR-INTAKE-05-14 | always | The pending list holds no summary groups, no ignore list and no message text. |
+| FR-INTAKE-05-12 | always | Each customer chat shall show when its customer 24 hour window closes: 24 hours after the customer's latest message. |
+| FR-INTAKE-05-13 | WHEN | When the session asks for the pending chats, Intake shall list each chat whose latest customer message is newer than its latest answer, inside the pending window of FR-INBOX-01-6, newest first, each with the time its customer window closes. The control chat shall never be listed. |
+| FR-INTAKE-05-14 | always | The pending list shall hold no summary groups, no ignore list and no message text. |
 
 ## Files
 | Path | Create or change | Holds |

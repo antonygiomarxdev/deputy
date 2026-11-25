@@ -1,6 +1,10 @@
 # Technical Proposal: Intake FRD-03, Catch-up and history
 
-Status: Approved (2026-11-24). Written 2026-11-17. Cross-cutting TP: `docs/tp/TP.md`, in particular TD-5 (two sweeps on the provider's clock). FRD: `../frd/FRD-03-catch-up-and-history.md`. The `Provider` port and the store path are in `TP-01-providers.md` and `TP-02-receive-and-store.md`.
+Status: Draft
+
+## Summary
+
+Fixed by the cross-cutting TP and kept as is (cross-cutting TD-5, TD-2, D12, D16):
 
 ## Context
 
@@ -43,6 +47,7 @@ FR-INTAKE-03-1, FR-INTAKE-03-2, FR-INTAKE-03-3, FR-INTAKE-03-4, FR-INTAKE-03-5, 
 
 ### TD-1: How is a possible gap detected?
 
+ADR: ADR-007
 FR-INTAKE-03-15 says: when a listing is read to its end and its oldest returned message is O, a gap is possible only if Deputy holds a stored message of that scope older than O, and Deputy's coverage mark for that scope, read before this run's sweeps, is null or older than O. A mark at or after O means Deputy already read up to O. The mark counts only when the previous run finished all its sweeps (ADR-007, rule A); after a stopped run it counts as null.
 
 - **Option A** The comparison as the FRD words it, once per run, over all returned messages. Cost: one number to compare. Risk: false alarms. A quiet shop's newest stored message is old; a brand-new conversation's whole listing is newer and exhausted; the first reply the owner ever sends has the same shape.
@@ -55,6 +60,7 @@ Refined by the coverage mark (2026-11-19, ADR-007). Option B alone reads only th
 
 ### TD-2: How does a run wait for the rate limit?
 
+ADR: ADR-008
 FR-INTAKE-03-19 and 03-20: slow down when few requests remain; on refusal wait as long as the provider says, keep what is stored, retry, tell the owner only after 10 minutes.
 
 - **Option A** The run ends on `429`, saves its marks, writes `failed` with reason `usage_limit` and `retry_at`, and the scheduler starts the next run at `retry_at`. The Kapso adapter paces reads below a reserve of 10 remaining requests; sends skip the reserve. Cost: a second timer in the scheduler. Risk: none beyond the extra state.
@@ -65,6 +71,7 @@ Chosen: Option A. A run also has a budget of 60 seconds: one that ends on budget
 
 ### TD-3: What makes a message "history"?
 
+ADR: ADR-009
 FR-INTAKE-03-11 and 03-12: history is flagged and raises no signal. FR-INTAKE-04-11 names the origin `history_sync`, which was documented but not seen live.
 
 - **Option A** Connect time, plus origin for customer messages: history when `sent_at < connected_at`, or `origin = history_sync` on a customer message, where `connected_at` is the provider's clock at the first response of the provider's first run. Cost: one saved timestamp. Risk: needs the provider's `Date` header.
@@ -75,6 +82,7 @@ Chosen: Option A. Dev uses the origin only, so a tester controls it with `histor
 
 ### TD-4: What does `CatchUpChat` do before a send?
 
+ADR: ADR-010
 FR-DRAFTS-03-1 needs the chat fresh. Cross-cutting TD-5 has the timer, `check_messages` and `CatchUpChat` share one lock.
 
 - **Option A** Join the running run and return its result. Cost: no extra requests. Risk: the run may have read the listing before the owner answered from the app, so Deputy could answer after the owner.

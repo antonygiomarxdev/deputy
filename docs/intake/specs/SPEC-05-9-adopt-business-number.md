@@ -13,9 +13,9 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-INTAKE-05-15 | WHEN | When Deputy starts with the Kapso provider and no business number is recorded, Intake asks the provider for the connected number and records it as the business number, logged like an owner-number change with the command "provider". |
-| FR-INTAKE-05-16 | IF | If the provider offers no business number, Intake tells the session that the business number is missing, so the session asks the owner. |
-| FR-INTAKE-05-29 | IF | If this process does not hold the lease, Intake records no business number at start. |
+| FR-INTAKE-05-15 | WHEN | When Deputy starts with the Kapso provider and no business number is recorded, Intake shall ask the provider for the connected number and record it as the business number, logged like an owner-number change with the command "provider". |
+| FR-INTAKE-05-16 | IF | If the provider offers no business number, Intake shall tell the session that the business number is missing, so the session asks the owner. |
+| FR-INTAKE-05-29 | IF | If this process does not hold the lease, Intake shall record no business number at start. |
 
 ## Files
 | Path | Create or change | Holds |

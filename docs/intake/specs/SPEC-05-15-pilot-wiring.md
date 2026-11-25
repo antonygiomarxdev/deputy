@@ -13,11 +13,11 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-INTAKE-05-5 | WHEN | When the session asks the owner one or more questions with an owner number, Intake sends one message from the business number to that number that lists every question still open for it, numbered, records each new question with an id and the time, and returns the ids. |
-| FR-INTAKE-05-9 | WHEN | When the session records an answer with the id of an open question and the owner's text, Intake closes that question and keeps the text with it. |
-| FR-INTAKE-05-13 | WHEN | When the session asks for the pending chats, Intake lists each chat whose latest customer message is newer than its latest answer, inside the pending window of FR-INBOX-01-6, newest first, each with the time its customer window closes. The control chat is never listed. |
-| FR-INTAKE-05-15 | WHEN | When Deputy starts with the Kapso provider and no business number is recorded, Intake asks the provider for the connected number and records it as the business number, logged like an owner-number change with the command "provider". |
-| FR-INTAKE-05-17 | WHEN | When the session calls set_owner_numbers with a number and the owner's words, Intake parses the number with the owner's country as the default region (ADR-012), writes nothing, and returns the E.164 form, whether it is already an owner number and how many customer messages came from it. |
+| FR-INTAKE-05-5 | WHEN | When the session asks the owner one or more questions with an owner number, Intake shall send one message from the business number to that number that lists every question still open for it, numbered, shall record each new question with an id and the time, and shall return the ids. |
+| FR-INTAKE-05-9 | WHEN | When the session records an answer with the id of an open question and the owner's text, Intake shall close that question and keep the text with it. |
+| FR-INTAKE-05-13 | WHEN | When the session asks for the pending chats, Intake shall list each chat whose latest customer message is newer than its latest answer, inside the pending window of FR-INBOX-01-6, newest first, each with the time its customer window closes. The control chat shall never be listed. |
+| FR-INTAKE-05-15 | WHEN | When Deputy starts with the Kapso provider and no business number is recorded, Intake shall ask the provider for the connected number and record it as the business number, logged like an owner-number change with the command "provider". |
+| FR-INTAKE-05-17 | WHEN | When the session calls set_owner_numbers with a number and the owner's words, Intake shall parse the number with the owner's country as the default region (ADR-012), write nothing, and return the E.164 form, whether it is already an owner number, and how many customer messages came from it. |
 
 ## Files
 | Path | Create or change | Holds |

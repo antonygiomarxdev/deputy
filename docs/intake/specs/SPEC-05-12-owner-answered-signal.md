@@ -13,7 +13,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-INTAKE-05-22 | WHEN | When Intake closes a question with an answer, it hands Drafts the question id, the customer chat the question names and the text. |
+| FR-INTAKE-05-22 | WHEN | When Intake closes a question with an answer, it shall hand Drafts the question id, the customer chat the question names, and the text. |
 
 ## Files
 | Path | Create or change | Holds |

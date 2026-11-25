@@ -1,6 +1,10 @@
 # Technical Proposal: Intake FRD-04, Owner replies and source
 
-Status: Approved (2026-11-18). Written 2026-11-17. Cross-cutting TP: `docs/tp/TP.md`, in particular TD-4 (`SendText`, `FindOutgoing`) and TD-8 (owner numbers change only from the terminal). FRD: `../frd/FRD-04-owner-echoes.md`. Decisions L2 and L4 apply. The `Provider` port and `StoreMessages` are in TP-01 and TP-02.
+Status: Draft
+
+## Summary
+
+Fixed by the cross-cutting TP:
 
 ## Context
 
@@ -35,6 +39,7 @@ FR-INTAKE-04-1, FR-INTAKE-04-2, FR-INTAKE-04-3, FR-INTAKE-04-4, FR-INTAKE-04-5, 
 
 ### TD-1: How is a provider report linked to a Deputy send?
 
+ADR: ADR-011
 - **Option A** By the provider's message id. `SendText` stores each part's id in `outgoing_parts`; the unique `(provider, provider_message_id)` finds the report whichever comes first; the upsert reclassifies an echo that came first. A text-and-time match is used only in `FindOutgoing`, when the outcome is unknown. Cost: one table and a reclassification path. Risk: a send whose id never comes back stays `owner_app`.
 - **Option B** By chat, text and time window for every echo. Cost: no id needed. Risk: a staff member who types the same words is labelled Deputy, which is the wrong direction for L2.
 - **Option C** A client reference sent with the message that the provider returns on the report. Cost: nothing to match afterwards. Risk: Kapso documents no such field on echoes (FRD-04 open question 2), so it cannot be built.
@@ -43,6 +48,7 @@ Chosen: Option A. Its failure keeps the safe label (`owner_app`, an extra hold).
 
 ### TD-2: How are numbers compared?
 
+ADR: ADR-012
 Deputy serves owners in many countries, and an owner types numbers the way they say them locally ("212 555 0100", "0991 234 567", "+1 212 555 0100"). Senders arrive from the provider already in international form.
 
 - **Option A** Hand-written digits-only rule: strip non-digits, drop a leading `00`, accept 9 to 15 digits, compare the strings. Cost: a small value object, no dependency. Risk: it cannot add a missing country code, so a local number is refused or, at 9 digits, stored wrong and never matches. It also knows nothing of national prefixes such as a trunk `0`. It re-implements, badly, what a maintained library already does.
@@ -55,6 +61,7 @@ Same line, not same string. WhatsApp ids differ from dialled numbers in some cou
 
 ### TD-3: How are owner-number changes logged?
 
+ADR: ADR-013
 - **Option A** A separate append-only `owner_number_log` beside the current set `owner_numbers`. Cost: two tables in one transaction. Risk: none beyond the trigger.
 - **Option B** Soft delete columns on `owner_numbers`. Cost: one table. Risk: a number added again overwrites its history, and the log cannot be append-only.
 - **Option C** Rely on the `pending_changes` rows. Cost: no new table. Risk: that table is a work queue and may be cleaned.

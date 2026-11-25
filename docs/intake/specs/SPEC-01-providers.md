@@ -1,6 +1,6 @@
 # Spec: Providers (and the foundation every slice stands on)
 
-Status: Approved (2026-11-18)
+Status: Draft
 Rests on: ../tp/TP-01-providers.md
 
 Rests on `../tp/TP-01-providers.md` (TP-01) and the cross-cutting `docs/tp/TP.md` (cited as "cross-cutting TD-n"). FRD: `../frd/FRD-01-providers.md`. ADRs: `docs/adr/ADR-000` (architecture), `ADR-002` (lease), `ADR-003` (SQLite), `ADR-004` (provider), `ADR-008` (secrets and config), `ADR-009` (removals), `ADR-010` (runtime), `ADR-011` (testing); Intake `ADR-001`, `ADR-002`, `ADR-012`.

@@ -1,6 +1,10 @@
 # Technical Proposal: Intake FRD-02, Receive, verify and store
 
-Status: Approved (2026-11-18). Written 2026-11-17. Cross-cutting TP: `docs/tp/TP.md`. FRD: `../frd/FRD-02-receive-and-store.md`. Shared types and the `Provider` port are in `TP-01-providers.md`.
+Status: Draft
+
+## Summary
+
+What the cross-cutting TP already fixes.
 
 ## Context
 
@@ -30,6 +34,7 @@ FR-INTAKE-02-1, FR-INTAKE-02-2, FR-INTAKE-02-3, FR-INTAKE-02-4, FR-INTAKE-02-5, 
 
 ### TD-1: Where is a live delivery verified?
 
+ADR: ADR-003
 - **Option A** Inside the `ReceiveLiveDelivery` use case, through `Provider.verifyAndParse`. The use case writes the rejection note and decides the result; the listener maps it to 200, 401 or 500. Cost: the Provider port has a verify method. Risk: none beyond a slightly larger port.
 - **Option B** In the HTTP listener, before the use case. The use case receives parsed messages only. Cost: a thinner use case. Risk: the no-secret and rejection-note rules live in an adapter and need a real server to test.
 - **Option C** In a middleware shared with the dev routes. Cost: one check for both. Risk: dev and Kapso drift apart on what "valid" means, and the forged-delivery cases of FR-INTAKE-01-5 stop testing the real path.
@@ -38,6 +43,7 @@ Chosen: Option A. Every case of FR-INTAKE-02-1 to 02-3 then runs in memory with 
 
 ### TD-2: How does the chat state stay correct?
 
+ADR: ADR-004
 - **Option A** Recompute the touched chats' rows from `messages` inside the store transaction. Cost: two small indexed queries per touched chat. Risk: a first import touches every chat; one transaction per page keeps commits small.
 - **Option B** Update the projection from the `MessageStored` event, as the cross-cutting TP words it. Cost: no extra work in the transaction. Risk: a crash between commit and publish leaves the state stale; an out-of-order message needs special cases.
 - **Option C** No projection; readers compute the last customer and last answer times from `messages` with an index. Cost: no second table to keep right. Risk: each inbox read scans per chat, and the cross-cutting Information section already lists the `chats` table.
@@ -46,6 +52,7 @@ Chosen: Option A. It cannot disagree with the messages and out-of-order arrival 
 
 ### TD-3: How long are rejection notes kept?
 
+ADR: ADR-005
 FRD-02 open question 1.
 
 - **Option A** At most 500 rows and 30 days, with a counter of pruned notes. Cost: a prune step on write. Risk: the owner loses notes older than 30 days.
@@ -56,6 +63,7 @@ Chosen: Option A. It bounds storage and still shows that a flood happened. Recor
 
 ### TD-4: How is "message stored" signalled?
 
+ADR: ADR-006
 - **Option A** Fold the newly stored messages of one unit (a live delivery or a catch-up run) into one `MessageStored` and publish it in process after the commit. Cost: no table. Risk: a crash after commit loses one signal.
 - **Option B** A transactional outbox with a relay. Cost: a table, a relay and replay rules. Risk: more moving parts for a signal that only hints; Notify recounts from stored data.
 

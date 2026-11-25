@@ -13,9 +13,9 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-INTAKE-05-17 | WHEN | When the session calls set_owner_numbers with a number and the owner's words, Intake parses the number with the owner's country as the default region (ADR-012), writes nothing, and returns the E.164 form, whether it is already an owner number and how many customer messages came from it. |
-| FR-INTAKE-05-18 | WHEN | When the session repeats the call with the confirmation after the owner agreed to the E.164 form, Intake adds the number as an owner number and logs the change with the owner's words. |
-| FR-INTAKE-05-20 | IF | If this process does not hold the lease, Intake refuses and writes nothing. |
+| FR-INTAKE-05-17 | WHEN | When the session calls set_owner_numbers with a number and the owner's words, Intake shall parse the number with the owner's country as the default region (ADR-012), write nothing, and return the E.164 form, whether it is already an owner number, and how many customer messages came from it. |
+| FR-INTAKE-05-18 | WHEN | When the session repeats the call with the confirmation after the owner agreed to the E.164 form, Intake shall add the number as an owner number and log the change with the owner's words. |
+| FR-INTAKE-05-20 | IF | If this process does not hold the lease, Intake shall refuse and write nothing. |
 
 ## Files
 | Path | Create or change | Holds |

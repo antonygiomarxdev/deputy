@@ -1,7 +1,11 @@
 # ADR-002: Dev and real messages are kept apart by a dev flag on the message and on the chat key
 
 ## Status
-Accepted (2026-11-18)
+Proposed
+
+## Summary
+
+Every message stores `provider` and `dev` (1 when the provider is dev).
 
 ## Context
 FR-INTAKE-01-7 keeps stored messages across a provider switch. FR-INTAKE-01-10 and L3 say dev messages are never pending, notified or drafted once the provider is not dev. Inbox, Notify and Drafts must not need to know which provider produced a message. From the Intake TP-01, TD-2.
@@ -12,7 +16,7 @@ FR-INTAKE-01-7 keeps stored messages across a provider switch. FR-INTAKE-01-10 a
 - `ReadChat` and `ChatExists` see both worlds and mark each message `dev`. A dev message stays readable.
 - Intake emits `MessageStored` only for messages stored by the active provider's path.
 
-## Alternatives
+## Options considered
 - Filter by provider name in every consumer: three slices would each repeat the rule, and the next one would forget it.
 - One database file per provider: a switch would hide the other file's messages, against FR-INTAKE-01-7.
 
