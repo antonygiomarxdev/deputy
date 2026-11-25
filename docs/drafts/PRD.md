@@ -1,12 +1,14 @@
 # Drafts: slice PRD
 
-Status: Approved (2026-11-24)
+Status: Draft
 Approval: content hiGOde2AZpUm; rests on ../PRODUCT.md 9kKsOKhERsSe
 
 
-## Purpose
+## Summary
 
 Drafts is the only way a reply leaves Deputy, and it never leaves without the owner's "go". The agent prepares a reply, shows it to the owner in the conversation, waits for the owner's explicit approval there, and only then sends it. Every step is recorded in a log the owner can read and later slices can learn from.
+
+## Why
 
 This slice carries the product's central promise (principle 1). A sent message cannot be unsent, so the guarantee is structural: there is no route to send that skips the owner's go.
 
@@ -72,7 +74,7 @@ Safety requirements from the product overview:
 - **Deputy sends only approved drafts:** R-DRAFTS-6 and 9, with the known limit in R-DRAFTS-20.
 - **Owner identity from configuration:** the owner's approval is attributed to the owner by configuration, not by what a message says (R-DRAFTS-7).
 
-## Out of scope
+## Non-goals
 
 - Autopilot: answering some questions without the owner's go. Planned for a later version, and not to be built into this slice's approval rules.
 - Receiving, storing, and recognizing owner replies from the app (Intake). Drafts uses what Intake supplies.
@@ -91,7 +93,7 @@ Safety requirements from the product overview:
 - **Inbox** reads which chats have a waiting draft.
 - **Setup** supplies the owner's identity and numbers.
 
-## Acceptance criteria
+## Success criteria
 
 1. A draft created for a chat is not sent and shows as waiting (R-DRAFTS-2, R-DRAFTS-3).
 2. An attempt to send a draft that was never approved is refused, and nothing is delivered to the provider (R-DRAFTS-6).

@@ -1,7 +1,11 @@
 # ADR-001: Draft numbers come from a counter row
 
 ## Status
-Accepted (2026-11-18)
+Proposed
+
+## Summary
+
+A one-row table `draft_counter(id, last)`.
 
 ## Context
 FR-DRAFTS-01-1 asks for identifiers that are unique, never reused, shared by reply and order drafts (L5), and short enough for "go on 3". The domain must know the number when it builds the draft and its log entries, and must do no I/O. From TP-01 TD-1. The cross-cutting TP (TD-3) asks for plain SQL that another database adapter can run.
@@ -11,7 +15,7 @@ FR-DRAFTS-01-1 asks for identifiers that are unique, never reused, shared by rep
 - Numbers start at 1, are plain integers, and are never deleted or reused. Closed drafts keep their row.
 - The `Draft` aggregate receives its number at creation, so every domain event carries it.
 
-## Alternatives
+## Options considered
 - `INTEGER PRIMARY KEY AUTOINCREMENT` on `drafts`: the number exists only after the insert, so the aggregate and its events would be built twice. It also ties numbering to one SQL dialect feature.
 - `MAX(number) + 1`: safe only while no row is ever removed. One future cleanup would reuse a number.
 - Random short names ("blue-fox"): harder for the owner to type and say than "3".

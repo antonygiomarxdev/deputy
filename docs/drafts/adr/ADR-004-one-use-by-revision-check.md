@@ -1,7 +1,11 @@
 # ADR-004: One use per approval, enforced by a revision check
 
 ## Status
-Accepted (2026-11-18)
+Proposed
+
+## Summary
+
+`Draft` carries a `revision` that rises on every save.
 
 ## Context
 FR-DRAFTS-02-12: marking the approval used and the draft "sending" is one step that cannot be done twice; two simultaneous sends let one through. FR-DRAFTS-02-8: a second send of the same approval is refused. From TP-02 TD-2. Only the owner process writes (cross-cutting TD-2), but two tool calls can interleave inside it.
@@ -12,7 +16,7 @@ FR-DRAFTS-02-12: marking the approval used and the draft "sending" is one step t
 - An approval row is born used (`used_at` is set at insert). Only the states waiting, held, failed and unknown accept an approval. A draft in "sending", "recording", "sent", "recorded", "rejected" or "replaced" refuses.
 - The transaction also checks the lease token (cross-cutting TD-2).
 
-## Alternatives
+## Options considered
 - An in-process mutex per draft number: stops two calls in one process, but not a second writer that slipped past the lease, and it is lost on a crash. The database row is the truth.
 - Rely on the database write lock (one immediate transaction, no revision): the rule then lives only in how one adapter opens a transaction, and other adapters must each reproduce it.
 - A unique constraint on approvals alone: stops a double insert but not a send after a state change made by another call.

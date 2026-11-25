@@ -1,6 +1,6 @@
 # Spec: The drafts log (Drafts FRD-04)
 
-Status: Approved (2026-11-18)
+Status: Draft
 Rests on: ../tp/TP-04-drafts-log.md
 
 One per FRD, resting on [TP-04](../tp/TP-04-drafts-log.md). It decides nothing new. Task 1 is built early (after SPEC-01 Task 1) and Task 2 right after SPEC-01 Task 2, because every other Drafts use case appends log entries; Tasks 3 to 7 come after SPEC-03.
