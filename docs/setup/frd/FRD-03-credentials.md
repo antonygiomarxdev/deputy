@@ -53,18 +53,19 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 |---|---|---|---|---|---|
 | EX-1 | RULE-1 | positive | Step 4 is in progress | the full setup conversation and the files are reviewed | they hold no owner password, verification code or payment detail |
 | EX-2 | RULE-1 | negative | The owner pastes a verification code into the chat | the agent handles it | the agent does not use it, tells the owner to ignore the code and that it may need to be requested again, and Setup records no copy of it |
-| EX-3 | RULE-2 | positive | The owner enters the access key in the local place | the agent asks for the setup status | the status says the key is present and shows at most its last four characters |
-| EX-4 | RULE-2 | negative | The locked-down agent profile | its deny list is read | it covers the path of the secrets |
+| EX-3 | RULE-4 | positive | The owner enters the access key in the local place | the agent asks for the setup status | the status says the key is present and shows at most its last four characters |
+| EX-4 | RULE-2 | positive | The locked-down agent profile | its deny list is read | it covers the path of the secrets |
 | EX-5 | RULE-3 | positive | The setup guide text is reviewed | it is checked | it tells the agent to refuse pasted secrets and to tell the owner to replace them |
 | EX-6 | RULE-3 | negative | The owner pastes a secret into the chat | Setup runs its checks | Setup does not read the value from the conversation |
-| EX-7 | RULE-4 | positive | Setup is complete | logs and status output are searched for the secrets | neither appears in the clear |
+| EX-7 | RULE-5 | positive | Setup is complete | logs and status output are searched for the secrets | neither appears in the clear |
 | EX-8 | RULE-4 | boundary | The owner shares a screenshot of their setup | the status is shown | only the partial form appears, so nothing in it can be used |
-| EX-9 | RULE-5 | positive | The access key was revoked | the check runs | it fails and says the key is not accepted, without showing the key |
-| EX-10 | RULE-5 | negative | The owner cannot find the local place | Setup explains how to find it | it explains how to open it and never offers to take the secret through the conversation |
+| EX-9 | RULE-6 | positive | The access key was revoked | the check runs | it fails and says the key is not accepted, without showing the key |
+| EX-10 | RULE-2 | negative | The owner cannot find the local place | Setup explains how to find it | it explains how to open it and never offers to take the secret through the conversation |
 | EX-11 | RULE-6 | positive | The access key is wrong or revoked | the check runs | it fails with "the provider does not accept the key" |
 | EX-12 | RULE-6 | boundary | The owner rotates a secret later | Setup re-runs the check | it says whether the new one works |
 | EX-13 | RULE-7 | positive | The owner asks to let the agent send without asking | Setup responds | it refuses and changes nothing |
 | EX-14 | RULE-7 | negative | A step would need a setting that lets the agent send without an approved draft | Setup reaches that step | it does not run the step and tells the owner why |
+| EX-15 | RULE-5 | negative | Setup is complete | the status output is read | the secrets do not appear in the clear
 
 ## Decision table
 
@@ -133,3 +134,4 @@ Generated from the examples above, one per EX row:
 - AC-12: Given the owner rotates a secret later, When Setup re-runs the check, Then it says whether the new one works. (EX-12)
 - AC-13: Given the owner asks to let the agent send without asking, When Setup responds, Then it refuses and changes nothing. (EX-13)
 - AC-14: Given a step would need a setting that lets the agent send without an approved draft, When Setup reaches that step, Then it does not run the step and tells the owner why. (EX-14)
+- AC-15: Given Setup is complete, When the status output is read, Then the secrets do not appear in the clear. (EX-15)

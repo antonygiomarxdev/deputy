@@ -60,7 +60,7 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-2 | RULE-1 | negative | The owner has no catalog yet | Setup accepts the profile | it accepts a profile with an empty or one-item catalog and says so |
 | EX-3 | RULE-2 | positive | Step 6 is reached | the agent asks for the test | it asks the owner to send "Hi, do you have empanadas?" to the business number from another phone |
 | EX-4 | RULE-2 | boundary | An owner has no second phone | Setup asks for the test | the owner is offered test mode, or to ask someone else to send it |
-| EX-5 | RULE-3 | positive | The test message arrived and the draft exists, and the owner has not approved it | Setup is checked | Setup is not complete |
+| EX-5 | RULE-3 | negative | The test message arrived and the draft exists, and the owner has not approved it | Setup is checked | Setup is not complete |
 | EX-6 | RULE-3 | negative | The provider accepted the send, and the owner says it did not arrive | Setup is checked | Setup is not complete |
 | EX-7 | RULE-4 | positive | The test reply is drafted and the owner has not approved it | Setup handles the reply | Setup does not send it and is not complete |
 | EX-8 | RULE-4 | boundary | The owner answers the test chat from the app before approving | Setup handles the answer | it shows that answer and asks for a new approval |
@@ -74,6 +74,7 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-16 | RULE-8 | boundary | The round trip has not passed | the owner asks for the final summary | no final summary is shown, because the summary is shown on completion |
 | EX-17 | RULE-9 | positive | Notify is available for the agent | Setup offers push notices | they are labeled optional |
 | EX-18 | RULE-9 | negative | The agent does not support push notices | Setup completes | it completes without them |
+| EX-19 | RULE-3 | positive | The owner approved the draft | the reply arrives on the other phone | Setup is marked complete and shows the final summary
 
 ## Decision table
 
@@ -152,3 +153,4 @@ Generated from the examples above, one per EX row:
 - AC-16: Given the round trip has not passed, When the owner asks for the final summary, Then no final summary is shown, because the summary is shown on completion. (EX-16)
 - AC-17: Given Notify is available for the agent, When Setup offers push notices, Then they are labeled optional. (EX-17)
 - AC-18: Given the agent does not support push notices, When Setup completes, Then it completes without them. (EX-18)
+- AC-19: Given the owner approved the draft, When the reply arrives on the other phone, Then Setup is marked complete and shows the final summary. (EX-19)

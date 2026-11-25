@@ -72,7 +72,7 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-9 | RULE-5 | positive | Deputy is not in the agent's tool list | the step 1 check runs | it fails and says Deputy is not installed in the agent |
 | EX-10 | RULE-5 | negative | The agent says Deputy is connected, but Deputy is not in its tool list | the step 1 check runs | the claim does not count and the check fails |
 | EX-11 | RULE-6 | positive | The agent restarts mid-step | the agent asks for the setup status | it shows the state Setup kept, not the conversation |
-| EX-12 | RULE-6 | boundary | The owner asks to skip a step | Setup answers | it refuses and explains what that step protects |
+| EX-12 | RULE-3 | boundary | The owner asks to skip a step | Setup answers | it refuses and explains what that step protects |
 | EX-13 | RULE-7 | positive | The owner stopped after step 3 | the owner resumes | steps 1-3 are re-checked first, and Setup continues at step 4 if they still pass |
 | EX-14 | RULE-7 | negative | The provider disconnected the number since step 3 passed | the owner resumes | Setup returns to step 3 and says why |
 | EX-15 | RULE-7 | boundary | Steps 1-5 passed and the number was disconnected | the owner resumes | step 1 is a live listing, step 2 uses its stored result, step 3 is probed live, and step 6 is not re-run |
@@ -84,6 +84,7 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-21 | RULE-10 | negative | The optional live-delivery step is timed | the round-trip total is shown | the live-delivery time is not part of the total |
 | EX-22 | RULE-11 | positive | A new run and step 1 passes | the provider setting Intake reads is checked | it is the development provider |
 | EX-23 | RULE-11 | negative | Step 3 has not passed | the provider setting Intake reads is checked | it is still the development provider |
+| EX-24 | RULE-6 | negative | The agent says a step is done but its check fails | Deputy keeps which steps passed | the check wins, and the step is not kept as passed
 
 ## Decision table
 
@@ -164,3 +165,4 @@ Generated from the examples above, one per EX row:
 - AC-21: Given the optional live-delivery step is timed, When the round-trip total is shown, Then the live-delivery time is not part of the total. (EX-21)
 - AC-22: Given a new run and step 1 passes, When the provider setting Intake reads is checked, Then it is the development provider. (EX-22)
 - AC-23: Given step 3 has not passed, When the provider setting Intake reads is checked, Then it is still the development provider. (EX-23)
+- AC-24: Given the agent says a step is done but its check fails, When Deputy keeps which steps passed, Then the check wins, and the step is not kept as passed. (EX-24)
