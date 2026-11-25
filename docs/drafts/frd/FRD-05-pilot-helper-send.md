@@ -64,7 +64,7 @@ n/a: the project has no CROSS-CUTTING.md yet; the cross-cutting rules live in th
 - A triage token is a string Intake issues for one chat id (Intake FRD-05, FR-INTAKE-05-30). Drafts keeps no copy of it.
 
 ## Open questions
-- Q-1 (Lead): Proposed, not decided: the token is tied to its chat id only and never expires, so a helper that keeps it can send to that chat later. The window check and the knowledge check still apply to every send.
+Closed on 2026-11-25 (Proposed, lead): for the pilot the token stays tied to its chat id and does not expire; the window check and the knowledge check still apply to every send and bound what a kept token can do.
 
 ## Acceptance criteria
 - AC-1 (EX-1): Given a helper holds the token of chat A and the knowledge backs the answer, When it calls `send_answer` for chat A, Then the send goes on as FR-DRAFTS-02-13 says.
