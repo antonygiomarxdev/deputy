@@ -65,7 +65,7 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-12 | RULE-6 | boundary | The owner rotates a secret later | Setup re-runs the check | it says whether the new one works |
 | EX-13 | RULE-7 | positive | The owner asks to let the agent send without asking | Setup responds | it refuses and changes nothing |
 | EX-14 | RULE-7 | negative | A step would need a setting that lets the agent send without an approved draft | Setup reaches that step | it does not run the step and tells the owner why |
-| EX-15 | RULE-5 | negative | Setup is complete | the status output is read | the secrets do not appear in the clear
+| EX-15 | RULE-5 | negative | Setup is complete | the status output is read | the secrets do not appear in the clear |
 
 ## Decision table
 
