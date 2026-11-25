@@ -24,7 +24,7 @@ test.each([
 });
 
 test("no plus and no country asks for a country code", () => {
-  expect(parser.parse("8888 0000", null)).toEqual({ ok: false, invalid: "needs_country_code" });
+  expect(parser.parse("212 555 0100", null)).toEqual({ ok: false, invalid: "needs_country_code" });
 });
 
 test("a number of impossible length is unparseable (isPossible), as is a stub like +54 1", () => {
@@ -37,6 +37,6 @@ test("text without a number is unparseable", () => {
 });
 
 test("isCountry knows ISO codes", () => {
-  expect(parser.isCountry("NI")).toBe(true);
+  expect(parser.isCountry("US")).toBe(true);
   expect(parser.isCountry("XX")).toBe(false);
 });

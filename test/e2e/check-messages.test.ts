@@ -56,7 +56,7 @@ test("FR-INTAKE-03-6: after a failed run with reason credentials, status holds t
   await first.close();
   started.pop();
   const db = new Database(join(first.dataDir, "deputy.db"));
-  db.run("INSERT INTO owner_numbers (number, kind, label, added_at) VALUES ('+50588880000', 'business', '', 1)");
+  db.run("INSERT INTO owner_numbers (number, kind, label, added_at) VALUES ('+12125550100', 'business', '', 1)");
   db.close();
   writeConfig(first.configDir, { provider: "kapso", kapso_phone_number_id: "pn-1" });
   writeFileSync(join(first.configDir, "secrets.env"), "kapso-api-key=key-1\n");
@@ -126,7 +126,7 @@ test("FR-INTAKE-03-16: with live delivery on, the scheduler still runs its catch
   await first.close();
   started.pop();
   const db = new Database(join(first.dataDir, "deputy.db"));
-  db.run("INSERT INTO owner_numbers (number, kind, label, added_at) VALUES ('+50588880000', 'business', '', 1)");
+  db.run("INSERT INTO owner_numbers (number, kind, label, added_at) VALUES ('+12125550100', 'business', '', 1)");
   db.close();
   writeConfig(first.configDir, { provider: "kapso", kapso_phone_number_id: "pn-1", receiving_mode: "live" });
   writeFileSync(join(first.configDir, "secrets.env"), "kapso-api-key=key-1\nkapso-webhook-secret=hook-secret\n");

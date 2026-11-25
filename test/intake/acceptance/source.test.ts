@@ -15,10 +15,10 @@ import { FakeClock } from "../../support/fake-clock";
 import { FakeProvider } from "../../support/fake-provider";
 import { providerMessage } from "../../support/intake-fixtures";
 
-const BUSINESS = "+50588880000";
-const STAFF = "+50599990000";
-const THIRD = "50577770000";
-const CUSTOMER = "50588881111";
+const BUSINESS = "+12125550100";
+const STAFF = "+12125550102";
+const THIRD = "12125550108";
+const CUSTOMER = "12125550104";
 const phone = (raw: string): PhoneNumber => {
   const n = PhoneNumber.fromInternational(raw);
   if (n === null) throw new Error(raw);
@@ -142,9 +142,9 @@ describe("source, at use-case level", () => {
   });
 
   describe("FR-INTAKE-04-14: the same line, however it is written", () => {
-    test("+505 8888 0000 matches 50588880000 and 505-88880000", async () => {
-      await store.repos.owners.save(owners(["+505 8888 0000", "business"]), []);
-      await put("kapso", inbound("a", "50588880000"), inbound("b", "505-88880000"));
+    test("+1 212 555 0100 matches 12125550100 and 1-212-555-0100", async () => {
+      await store.repos.owners.save(owners(["+1 212 555 0100", "business"]), []);
+      await put("kapso", inbound("a", "12125550100"), inbound("b", "1-212-555-0100"));
       expect(await sourceOf("a")).toBe("owner_app");
       expect(await sourceOf("b")).toBe("owner_app");
     });
