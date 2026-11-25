@@ -1,8 +1,12 @@
 # Technical Proposal: Credentials and safety (Setup FRD-03)
 
-Status: Approved (2026-11-18)
+Status: Draft
 
 Follows the cross-cutting TP (`docs/tp/TP.md`) and Setup TP-01 and TP-02. "Cross-cutting TD-n" means a decision there.
+
+## Summary
+
+Fixed by the cross-cutting TP, so not decided again:
 
 ## Context
 
@@ -29,6 +33,7 @@ FR-SETUP-03-1, FR-SETUP-03-2, FR-SETUP-03-3, FR-SETUP-03-4, FR-SETUP-03-5, FR-SE
 
 ### TD-1: How much of a secret may be shown?
 
+ADR: ADR-008
 FR-SETUP-03-4: "the last four characters for long secrets, nothing but present or absent for short ones". The FRD does not say where "long" starts. A leaked fragment of a short secret helps a guess.
 
 - **Option A** Show the last four characters only when the secret has at least 20 characters; below that, only present or absent. Four of 20 hide 16 characters, so a fragment does not shrink the search in a useful way; any real API key or HMAC secret is longer. Cost: one constant. Risk: a provider key shorter than 20 characters is never shown, which is safe.
@@ -39,6 +44,7 @@ Chosen: Option A, with the threshold 20 and the reason above. The display functi
 
 ### TD-2: How does Setup keep the agent away from Deputy's files?
 
+ADR: ADR-009
 FR-SETUP-03-2: the agent must not read the secrets, and with any agent other than the locked-down profile the owner must restrict the path. The `operator/` profile is removed (cross-cutting TD-9).
 
 - **Option A** Setup shows a deny rule the owner can paste into the agent's own settings, and says what it does not cover. For Claude Code it is `Read(~/.deputy/**)` in `permissions.deny` (path syntax with `~/` is documented at https://code.claude.com/docs/en/permissions; Read and Edit deny rules apply to the built-in file tools and to file commands Claude Code recognizes in Bash such as `cat` and `sed`, not to an arbitrary script that opens the file; the documented OS-level option is the sandbox). For Codex, Cursor and Gemini CLI no verified rule syntax exists in this research, so Setup says in plain words to restrict the folder `~/.deputy` in the agent's own permission settings and that Deputy cannot check it. Cost: text per agent. Risk: the owner may skip it; the status says it is not verified.
@@ -49,6 +55,7 @@ Chosen: Option A. It adds protection without Setup changing the agent's settings
 
 ### TD-3: What does Setup do when a secret is pasted into the conversation?
 
+ADR: ADR-010
 FR-SETUP-03-3: the agent should refuse and tell the owner to replace the secret; the FRD says Deputy cannot detect it.
 
 - **Option A** Guide text only. Cost: none. Risk: relies on the agent noticing.

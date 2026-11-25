@@ -1,8 +1,12 @@
 # Technical Proposal: Guided flow (Setup FRD-01)
 
-Status: Approved (2026-11-18)
+Status: Draft
 
 Follows the cross-cutting TP (`docs/tp/TP.md`). "Cross-cutting TD-n" means a decision there. This TP also fixes the Setup domain that TP-02, TP-03 and TP-04 build on.
+
+## Summary
+
+Fixed by the cross-cutting TP, so not decided again:
 
 ## Context
 
@@ -30,6 +34,7 @@ FR-SETUP-01-1, FR-SETUP-01-2, FR-SETUP-01-3, FR-SETUP-01-4, FR-SETUP-01-5, FR-SE
 
 ### TD-1: Where does the current step come from?
 
+ADR: ADR-001
 - **Option A** Derived. `SetupProgress` stores per step only facts: when it started, when it passed, the last check result. The current step is the first step that is not passed and not skipped. A resume re-runs the checks of the passed steps in order and flips a failed one back to "to do" (FR-SETUP-01-7). Cost: a check per step, and a re-check on every resume. Risk: a live check needs the provider; if it is down the step cannot be judged (handled: the step stays "not passed, retry later", FRD edge case).
 - **Option B** A stored pointer `current_step` that advances when a step passes. Cost: one column, no re-check logic. Risk: the pointer is wrong the moment the provider disconnects the number or the key is revoked, and it says "step 5" while step 3 is broken. FR-SETUP-01-7 and the edge case "a step passed earlier fails on resume" cannot be met without re-checking anyway, so Option B needs Option A's checks plus a pointer to keep in step.
 - **Option C** Keep the state only in the agent conversation. Cost: none. Risk: the agent restarts mid-step (FRD edge case) and the state is lost; two agents show two states.
@@ -38,6 +43,7 @@ Chosen: Option A. It is the only option where the owner's real state (the provid
 
 ### TD-2: How is time recorded and shown?
 
+ADR: ADR-002
 The owner can stop for days (FRD edge case), the provider has its own waits, and the optional live-delivery step must be timed apart (FR-SETUP-01-9, FR-SETUP-01-10).
 
 - **Option A** Event rows. Every Setup tool call writes one `setup_activity` row (time). Provider waits are intervals in `setup_provider_wait`. Working time is computed on read: the sum of gaps between consecutive activity rows, each gap capped at 10 minutes, minus the provider wait inside it. Calendar time is last minus first. Cost: a small table and one pure function. Risk: the cap is a rule of thumb (stated below).
@@ -56,6 +62,7 @@ Recorded in ADR-002.
 
 ### TD-3: How does Deputy get into the owner's agent (step 1)?
 
+ADR: ADR-003
 Agent-agnostic (cross-cutting TD-1: Claude Code, Codex, Cursor, Gemini CLI). How the binary gets onto the machine is outside Setup (PRD open question 6). Step 1 starts after it is there.
 
 - **Option A** `deputy install --agent <name>` edits each agent's configuration file itself (JSON for Claude Code, Cursor and Gemini CLI; TOML for Codex). Cost: a TOML library behind an adapter and four file formats to keep current. Risk: a bad merge corrupts the owner's agent configuration, and every agent release can move the file.

@@ -1,8 +1,12 @@
 # Technical Proposal: Profile, catalog, test and finish (Setup FRD-04)
 
-Status: Approved (2026-11-18)
+Status: Draft
 
 Follows the cross-cutting TP (`docs/tp/TP.md`) and Setup TP-01 to TP-03. "Cross-cutting TD-n" means a decision there.
+
+## Summary
+
+Fixed by the cross-cutting TP, so not decided again:
 
 ## Context
 
@@ -42,6 +46,7 @@ FR-SETUP-04-1, FR-SETUP-04-2, FR-SETUP-04-3, FR-SETUP-04-4, FR-SETUP-04-5, FR-SE
 
 ### TD-1: Where do the profile and catalog answers wait until the owner confirms?
 
+ADR: ADR-011
 FR-SETUP-04-2: Setup hands the profile and catalog to Knowledge only after the owner confirms. The owner may change their mind and confirm again.
 
 - **Option A** Setup keeps the answers in its own tables as a revisioned draft, shows the whole draft, and on the owner's confirmation sets the currency and makes a `SeedProfileAndCatalog` call for that revision. A change makes revision + 1, which is shown, confirmed and seeded again while Knowledge's files still equal the seed; after that (or after Setup completes) a change goes through Knowledge's own propose-and-apply flow. Cost: two small tables and a revision number. Risk: a second copy of the data exists until it is seeded (only the owner's own business answers, no customer data); a seed of a changed revision is refused when the files were edited since (`seed_modified`, handled below).
@@ -52,6 +57,7 @@ Chosen: Option A. It is the only option that meets "hand over only after the own
 
 ### TD-2: How does Setup know the round trip happened?
 
+ADR: ADR-012
 FR-SETUP-04-4: complete only when the message is in the inbox, a draft exists, the owner approved it, the provider accepted the send, and the owner states the reply arrived. FR-SETUP-04-6: a failure names the part.
 
 - **Option A** Derive each part from evidence in the owning slice, read on every check: the message from Intake's chat state, the draft and the approval and the send from Drafts' log, and only the arrival from the owner's own words. Cost: three read adapters and a pure function. Risk: the evidence reads depend on Intake's and Drafts' published shapes.
@@ -62,6 +68,7 @@ Chosen: Option A. Only the arrival on the other phone is the owner's word, becau
 
 ### TD-3: What does the switch from test mode to the real provider do to the run?
 
+ADR: ADR-013
 FR-SETUP-04-8: the profile and catalog stay; steps 2, 3 and 4 run again with a new round trip; the 30-minute clock (FR-SETUP-01-9, FR-SETUP-01-10) is for the real setup.
 
 - **Option A** The same run changes mode and resets steps 2, 3, 4 and 6. Cost: one update. Risk: the first-instruction time and the activity rows of the test run are mixed with the real run, so the total shows days and the timing is wrong.
@@ -72,6 +79,7 @@ Chosen: Option B. Timing stays honest, and the old run stays as history. Recorde
 
 ### TD-4: How is the currency suggested from the country?
 
+ADR: ADR-014
 D21: Setup suggests the currency from the owner's country, the owner confirms. Deputy serves many countries.
 
 - **Option A** The maintained package `country-to-currency` 3.0.2 (MIT, last published 2026-11-10, no dependencies, 251 country codes), behind a `CurrencySuggester` port. Checked in Bun 1.4.4 on Windows, from source and from a `bun build --compile` binary: `US` gave `USD`, `MX` gave `MXN`, `AR` gave `ARS`, `US` gave `USD`, `DE` gave `EUR`, and an unknown code gave `undefined`. Cost: one dependency inside one adapter. Risk: a country with more than one used currency (for example some that also use the US dollar) gets one suggestion; the owner confirms, so a wrong suggestion costs a correction.
