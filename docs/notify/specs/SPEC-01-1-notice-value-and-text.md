@@ -13,9 +13,9 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 
 ## Rows
 
-| FR-NOTIFY-01-3 | always | A notice states three counts: new messages, the chats they come from, and other chats still waiting for an answer. It does not count orders. It is a short line or two. (R-NOTIFY-3) |
-| FR-NOTIFY-01-5 | always | A notice contains counts only: no customer text, no excerpt, no customer name, and no wording that could be read as an instruction. The words of the notice are fixed by Deputy and only the numbers vary. This holds for the whole notice, text and every attribute it carries: no chat identifier, phone number, name, tag or sender. (R-NOTIFY-4) |
-| FR-NOTIFY-01-6 | always | A notice points the owner to the inbox, for example "Ask what is pending." It is not the record of what is pending. (R-NOTIFY-5) |
+| FR-NOTIFY-01-3 | always | A notice shall state three counts: new messages, the chats they come from, and other chats still waiting for an answer. It shall not count orders. It shall be a short line or two. (R-NOTIFY-3) |
+| FR-NOTIFY-01-5 | always | A notice shall contain counts only: no customer text, no excerpt, no customer name, and no wording that could be read as an instruction. The words of the notice are fixed by Deputy and only the numbers shall vary. This holds for the whole notice, text and every attribute it carries: no chat identifier, phone number, name, tag or sender. (R-NOTIFY-4) |
+| FR-NOTIFY-01-6 | always | A notice shall point the owner to the inbox, for example "Ask what is pending." It shall not be the record of what is pending. (R-NOTIFY-5) |
 
 ## Files
 | Path | Create or change | Holds |

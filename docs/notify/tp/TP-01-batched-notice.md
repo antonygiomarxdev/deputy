@@ -1,6 +1,11 @@
 # Technical Proposal: FRD-01 The batched notice
 
-Status: Approved (2026-11-18)
+Status: Draft
+
+Per-FRD TP for [FRD-01](../frd/FRD-01-batched-notice.md). It consumes the cross-cutting TP ([TP.md](../../tp/TP.md): TD-0, TD-2, TD-7) and does not change it. This TP defines the Notify domain core that TP-02 and TP-03 build on.
+
+
+## Summary
 
 Per-FRD TP for [FRD-01](../frd/FRD-01-batched-notice.md). It consumes the cross-cutting TP ([TP.md](../../tp/TP.md): TD-0, TD-2, TD-7) and does not change it. This TP defines the Notify domain core that TP-02 and TP-03 build on.
 
@@ -37,12 +42,16 @@ FR-NOTIFY-01-1, FR-NOTIFY-01-2, FR-NOTIFY-01-3, FR-NOTIFY-01-4, FR-NOTIFY-01-5, 
 
 ### TD-1: Where do the pending counts live?
 
+ADR: ADR-001
+
 - **Option A** In the memory of the owner process, as part of a `NoticeSession` object created at each lease acquisition. Cost: nothing to store or migrate. Risk: a crash or a lease handover loses the counts of a batch in progress. The effect is small: the chats are still unanswered, so the next notice counts them as waiting, and the inbox lists every message.
 - **Option B** A table `notice_pending(chat, messages, first_stored_at)` written by `OnMessagesStored`. Cost: a write per catch-up that stores messages, a migration, and a clean-up rule. Risk: after a crash or handover the rows describe a session that no longer exists. The next process would announce old messages as "new" in a session that never saw them, and it would need a rule to discard them. That rule is the same as Option A with extra storage.
 
 Chosen: Option A. Persisting buys nothing, because the one session that could use the rows is gone. The durable part (last delivered time, failures, the announced outage) is small and goes in `notice_state` (TP-03). Recorded in ADR-001.
 
 ### TD-2: How is "new" decided when the notice is sent?
+
+ADR: ADR-002
 
 - **Option A** Keep the hint's counts per chat. When a notice is due, read Inbox's snapshot of waiting chats (it already leaves out ignored chats, answered chats and dev messages under a real provider) and keep only the hint chats that are in it. New messages are the sum of the kept chats' counts. Other waiting is the snapshot minus the kept chats. Cost: one Inbox read per notice. Risk: a count from the hint can be slightly stale (a message the owner answered one second ago). It is corrected at send time by the same read.
 - **Option B** Trust the hint. Count what Intake says and skip the Inbox filter for new messages, using Inbox only for the waiting count. Cost: no per-chat intersection. Risk: it breaks FR-NOTIFY-01-11 and FR-NOTIFY-02-7: an owner answer from the app, an ignored chat or a stored dev message would still be reported as new, and a notice could say "new messages from 0 chats".
@@ -51,6 +60,8 @@ Chosen: Option A. Persisting buys nothing, because the one session that could us
 Chosen: Option A. It is the only one that meets FR-NOTIFY-01-11 and gives a message count. It uses Inbox's own definition of waiting, so Notify never decides what pending means (Inbox PRD). Recorded in ADR-002.
 
 ### TD-3: How does time drive the notices?
+
+ADR: ADR-003
 
 - **Option A** A scheduler adapter calls `Tick` every 30 seconds. `Tick` computes what is due from the clock and its state, and does nothing when nothing is due. The 30 seconds is half of the smallest batching period the owner may set (1 minute, FR-NOTIFY-02-4), so a notice is late by at most half of the smallest period. It costs one local read of the sync status per tick and no Inbox read unless a notice is due. Risk: a due notice can wait up to 30 seconds.
 - **Option B** One timer per due time (`setTimeout` to the exact end of the batching period, the reminder period or the quiet period). Cost: exact timing. Risk: every settings change, event and quiet-period edge must re-arm the timer; with the `Clock` port offering only `now()` and `sleep(ms)` (TD-5 of the cross-cutting TP), tests need a fake timer API, and a missed re-arm is a lost notice.

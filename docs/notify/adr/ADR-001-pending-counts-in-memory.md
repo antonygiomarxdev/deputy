@@ -1,7 +1,11 @@
 # ADR-001: Pending counts live in the memory of the owner process
 
 ## Status
-Accepted (2026-11-18)
+Accepted (2026-11-24)
+
+## Summary
+
+The counts are held in a `NoticeSession` object created by `StartNoticeSession` at each lease acquisition. They are not written to SQLite. Only `notice_state` (last delivered time, failures, announced outage) is stored. A restart or a lease handover starts with no pending counts.
 
 ## Context
 Notify counts new messages per chat from Intake's `MessageStored` hint until a notice is sent (FR-NOTIFY-01-2, FR-NOTIFY-01-7). The question is whether those counts are stored. From TP-01 TD-1; cross-cutting TD-2 (one owner process).
@@ -9,7 +13,7 @@ Notify counts new messages per chat from Intake's `MessageStored` hint until a n
 ## Decision
 The counts are held in a `NoticeSession` object created by `StartNoticeSession` at each lease acquisition. They are not written to SQLite. Only `notice_state` (last delivered time, failures, announced outage) is stored. A restart or a lease handover starts with no pending counts.
 
-## Alternatives
+## Options considered
 - A table `notice_pending(chat, messages, first_stored_at)`. Rejected: after a crash or a handover the rows belong to a session that no longer exists, so the new process would announce old messages as "new" and need a rule to discard them. That is the in-memory behavior plus a table, a migration and a write per catch-up.
 
 ## Consequences
