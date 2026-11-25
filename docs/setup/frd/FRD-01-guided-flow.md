@@ -84,7 +84,7 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-21 | RULE-10 | negative | The optional live-delivery step is timed | the round-trip total is shown | the live-delivery time is not part of the total |
 | EX-22 | RULE-11 | positive | A new run and step 1 passes | the provider setting Intake reads is checked | it is the development provider |
 | EX-23 | RULE-11 | negative | Step 3 has not passed | the provider setting Intake reads is checked | it is still the development provider |
-| EX-24 | RULE-6 | negative | The agent says a step is done but its check fails | Deputy keeps which steps passed | the check wins, and the step is not kept as passed
+| EX-24 | RULE-6 | negative | The agent says a step is done but its check fails | Deputy keeps which steps passed | the check wins, and the step is not kept as passed |
 
 ## Decision table
 
