@@ -25,7 +25,7 @@ One spec is one agent run: at most 80 lines, 3 files and one done command. A spe
 | test/setup/unit/token-usage.test.ts | Create | the tests below |
 
 ## Reuses
-- Nothing to reuse: the transcript format is undocumented, so the shape below follows what a transcript line holds today (ADR-019).
+- Nothing to reuse: the transcript format is undocumented, so the shape below follows what a transcript line holds today (docs/adr/ADR-019).
 
 ## Tests first
 FR-SETUP-05-48, FR-SETUP-05-49, EX-22, EX-23, written before the code, without it in view, with lines made for the test. FR-SETUP-05-48: two entries of one model on one day add their four counts; two models on one day give two rows; two days give two rows, oldest first; the day is the local date of the entry's time. EX-22: entries of the session file count as part `dispatcher` and entries of a triage helper file as part `triage`. FR-SETUP-05-49 and EX-23: an entry that also holds message text, an id and a path gives a result with none of them (a search of the JSON of the result for each finds nothing); an entry with no usage adds nothing; a line that is not valid JSON makes the file unrecognized.
