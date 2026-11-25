@@ -20,7 +20,7 @@ R-INTAKE-12, R-INTAKE-13, R-INTAKE-14
 | FR-INTAKE-04-4 | WHEN | When the owner answers a customer from the WhatsApp Business app, the reply is stored in that customer's chat, with source "owner from the app", by the next periodic catch-up (default within 2 minutes) while the session is open, or live when live delivery is on, and otherwise at the next catch-up. |
 | FR-INTAKE-04-5 | always | Source is decided once, when the message is stored, from configuration and Deputy's own send identifiers. Other slices read it and never work it out again from content. The only exception is FR-INTAKE-04-13. |
 | FR-INTAKE-04-13 | IF | If a message was stored as "owner from the app" and a send identifier from Drafts later matches its provider identifier, Intake changes its source to "sent through Deputy". The change is logged with the time. Drafts then no longer sees a false owner reply. |
-| FR-INTAKE-04-14 | always | Numbers are compared in one normalized form (digits only, with the country code), so "+505 8888 0000", "505-88880000" and "50588880000" are the same number. This applies to owner numbers and to senders. |
+| FR-INTAKE-04-14 | always | Numbers are compared in one normalized form (digits only, with the country code), so "+1 212 555 0100", "1-212-555-0100" and "12125550100" are the same number. This applies to owner numbers and to senders. |
 | FR-INTAKE-04-6 | WHEN | When a message is sent through Deputy, the Drafts slice passes Intake the send identifier. Intake records the message once with source "sent through Deputy", linked to that identifier. |
 | FR-INTAKE-04-7 | WHEN | When the provider later reports that same message back (live or in catch-up), Deputy recognizes it by the provider's identifier and the send identifier. It does not store it a second time as "owner from the app". |
 | FR-INTAKE-04-8 | always | Intake records only the message. The drafts log (proposed, approved, sent) belongs to Drafts. |
@@ -71,7 +71,7 @@ R-INTAKE-12, R-INTAKE-13, R-INTAKE-14
 - Given the owner adds a staff number after messages from it were stored as customer, When the old messages are read, Then they keep source "customer". Tests FR-INTAKE-04-9.
 - Given the provider reports a message from the owner's number with origin "cloud_api" that matches no known send identifier, When it is stored, Then its source is "owner from the app". Tests FR-INTAKE-04-11.
 - Given a message was stored as "owner from the app" because its report came first, When Drafts later passes the matching send identifier, Then exactly one message exists, its source is "sent through Deputy", and the change is logged. Tests FR-INTAKE-04-13.
-- Given the owner's number is configured as "+505 8888 0000", When a message arrives from "50588880000", Then it is stored as "owner from the app". Tests FR-INTAKE-04-14.
+- Given the owner's number is configured as "+1 212 555 0100", When a message arrives from "12125550100", Then it is stored as "owner from the app". Tests FR-INTAKE-04-14.
 - Given the provider reports a message with origin "business_app" from the owner's number, When it is stored, Then its source is "owner from the app". Tests FR-INTAKE-04-12 and FR-INTAKE-04-2.
 - Given a history import from the owner's number with origin "history_sync", When it is stored, Then its source is "owner from the app" and the history flag is set. Tests FR-INTAKE-04-11.
 - Given an owner reply from the app is stored, When the signal is emitted, Then it names the source "owner from the app". Tests FR-INTAKE-04-10.

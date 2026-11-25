@@ -343,7 +343,7 @@ describe("KapsoProvider", () => {
 
   test("businessNumber parses the display number; no number is null", async () => {
     const withNumber = kapso({ phoneNumberRecord: fixture("phone-number") });
-    expect((await withNumber.provider.businessNumber(signal))?.e164).toBe("+50588881111");
+    expect((await withNumber.provider.businessNumber(signal))?.e164).toBe("+12125550104");
     const without = kapso({ phoneNumberRecord: { data: {} } });
     expect(await without.provider.businessNumber(signal)).toBeNull();
   });

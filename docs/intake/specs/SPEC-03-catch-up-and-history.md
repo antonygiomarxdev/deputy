@@ -396,7 +396,7 @@ Added: `0007-catchup-finished-at.sql`, `ALTER TABLE catchup_status ADD COLUMN fi
   - FR-INTAKE-03-6: Given the last success was 6 hours ago, When `GetSyncStatus` runs, Then `lastSuccessAt` is that time and `newestStoredAt` is set. Before any run, the view is `failed`, reason `not_yet_run`. Given a first import of zero messages and nothing stored, Then `historyMaybeSyncing` is true.
   - FR-INTAKE-02-1 (view of the live check): Given a signed delivery was stored at time T, Then `lastLiveDeliveryVerifiedAt` is T and a catch-up does not change it.
   - FR-INTAKE-03-21: Given the owner sets 30 seconds (0.5 minute), When `SetIntakeSettings` runs, Then it refuses, `kept` is the previous value and the period is unchanged; given 1, Then it is accepted; given 0 or -3, Then `below_minimum`; given the owner is not the lease holder, Then `not_owner`.
-  - FR-INTAKE-03-21: Given `SetIntakeSettings` with `country` "NI", When it runs, Then the value is stored and `GetIntakeSettings` shows it; Given "XX", Then it refuses with `unknown_country` and keeps the old value (`PhoneNumberParser.isCountry`).
+  - FR-INTAKE-03-21: Given `SetIntakeSettings` with `country` "US", When it runs, Then the value is stored and `GetIntakeSettings` shows it; Given "XX", Then it refuses with `unknown_country` and keeps the old value (`PhoneNumberParser.isCountry`).
 - **Build:** `get-sync-status.ts` (complete), `get-intake-settings.ts`, `set-intake-settings.ts`.
 - **Done when:** `bun test test/intake/acceptance/sync-status-and-settings.test.ts` and `bun run typecheck` pass.
 
