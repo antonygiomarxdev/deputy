@@ -15,7 +15,7 @@ REQ-15, D31, D33, D37.
 
 ## Requirements covered
 
-R-INTAKE-12, R-INTAKE-13, R-INTAKE-14, R-INTAKE-18, with amendments from docs/adr/ADR-019 (pending owner approval): rows FR-INTAKE-05-30 to FR-INTAKE-05-34
+R-INTAKE-12, R-INTAKE-13, R-INTAKE-14, R-INTAKE-18, with amendments from docs/adr/ADR-019 (pending owner approval): rows FR-INTAKE-05-30 to FR-INTAKE-05-35
 
 ## Behavior
 
@@ -55,6 +55,7 @@ R-INTAKE-12, R-INTAKE-13, R-INTAKE-14, R-INTAKE-18, with amendments from docs/ad
 | FR-INTAKE-05-32 | WHEN | When a helper saves a chat summary with the chat id and its token, Intake replaces the stored summary of that chat with it. A token that does not match the chat id is refused and nothing is stored. (Proposed, lead decision, docs/adr/ADR-019.) |
 | FR-INTAKE-05-33 | always | The summary is untrusted text: Intake labels it as the model's earlier notes, never as the owner's words and never as a go. (Proposed, lead decision, docs/adr/ADR-019.) |
 | FR-INTAKE-05-34 | always | Intake creates the token secret the first time it is needed and keeps it in the secret store, with the owner-only file as the fallback of ADR-008; the secret never appears in a result, a log or a document. (Proposed, lead decision, docs/adr/ADR-019.) |
+| FR-INTAKE-05-35 | WHEN | When the dispatcher asks for the owner's answers, Intake returns the messages the owner sent in the control chat since the oldest open question was asked, and the open questions with their ids and text, and nothing from any customer chat. With no open question it returns none. (Proposed, lead decision, docs/adr/ADR-019.) |
 
 ## Edge cases
 
