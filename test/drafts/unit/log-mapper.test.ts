@@ -1,3 +1,9 @@
+// covers: drafts/FRD-04/EX-1
+// covers: drafts/FRD-04/EX-2
+// covers: drafts/FRD-04/EX-3
+// covers: drafts/FRD-04/EX-4
+// covers: drafts/FRD-04/EX-17
+// covers: drafts/FRD-04/EX-18
 import { expect, test } from "bun:test";
 import type { DraftEvent } from "../../../src/drafts/domain/events";
 import { toLogEntries } from "../../../src/drafts/domain/log-mapper";

@@ -1,3 +1,6 @@
+// covers: drafts/FRD-02/EX-12
+// covers: drafts/FRD-02/EX-13
+// covers: drafts/FRD-02/EX-14
 import { expect, test } from "bun:test";
 import { IntakeCustomerTextCheck } from "../../../src/drafts/adapters/intake/intake-customer-text-check";
 import type { IsCustomerText } from "../../../src/intake/index";

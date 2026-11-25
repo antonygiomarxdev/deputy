@@ -1,3 +1,9 @@
+// covers: intake/FRD-01/EX-1
+// covers: intake/FRD-01/EX-2
+// covers: intake/FRD-01/EX-11
+// covers: intake/FRD-01/EX-12
+// covers: intake/FRD-01/EX-17
+// covers: intake/FRD-01/EX-18
 import { describe, expect, test } from "bun:test";
 import { Secret } from "../../../src/intake/domain/secret";
 import { OwnerNumbers } from "../../../src/intake/domain/owner-numbers";

@@ -1,3 +1,12 @@
+// covers: drafts/FRD-02/EX-1
+// covers: drafts/FRD-02/EX-2
+// covers: drafts/FRD-02/EX-9
+// covers: drafts/FRD-02/EX-10
+// covers: drafts/FRD-02/EX-11
+// covers: drafts/FRD-02/EX-12
+// covers: drafts/FRD-02/EX-13
+// covers: drafts/FRD-02/EX-14
+// covers: drafts/FRD-02/EX-33
 import { afterEach, expect, test, setDefaultTimeout } from "bun:test";
 import { E2E_TIMEOUT_MS, call, removeHarnessDirs, startServer, waitForOwner, type Harness } from "../../support/harness";
 import { postDelivery } from "../../support/live";

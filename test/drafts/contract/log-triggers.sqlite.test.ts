@@ -1,3 +1,7 @@
+// covers: drafts/FRD-04/EX-13
+// covers: drafts/FRD-04/EX-14
+// covers: drafts/FRD-04/EX-17
+// covers: drafts/FRD-04/EX-18
 import { afterEach, describe, expect, test } from "bun:test";
 import { str } from "../../../src/adapters/sqlite/row";
 import { closeLogDatabases, openLogDatabase } from "./log-database";

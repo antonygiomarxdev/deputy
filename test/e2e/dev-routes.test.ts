@@ -1,3 +1,9 @@
+// covers: intake/FRD-01/EX-3
+// covers: intake/FRD-01/EX-4
+// covers: intake/FRD-01/EX-7
+// covers: intake/FRD-01/EX-8
+// covers: intake/FRD-01/EX-13
+// covers: intake/FRD-01/EX-14
 import { Database } from "bun:sqlite";
 import { afterEach, expect, test, setDefaultTimeout } from "bun:test";
 import { writeFileSync } from "node:fs";

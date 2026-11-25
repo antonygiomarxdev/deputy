@@ -1,3 +1,19 @@
+// covers: intake/FRD-01/EX-15
+// covers: intake/FRD-01/EX-16
+// covers: intake/FRD-02/EX-5
+// covers: intake/FRD-02/EX-6
+// covers: intake/FRD-02/EX-7
+// covers: intake/FRD-02/EX-8
+// covers: intake/FRD-02/EX-11
+// covers: intake/FRD-02/EX-12
+// covers: intake/FRD-02/EX-15
+// covers: intake/FRD-02/EX-16
+// covers: intake/FRD-02/EX-19
+// covers: intake/FRD-02/EX-20
+// covers: intake/FRD-02/EX-21
+// covers: intake/FRD-02/EX-22
+// covers: intake/FRD-02/EX-23
+// covers: intake/FRD-02/EX-28
 import { beforeEach, describe, expect, test } from "bun:test";
 import { InMemoryIntakeStore } from "../../../src/intake/adapters/memory/in-memory-intake-store";
 import { ChatExistsUseCase } from "../../../src/intake/application/chat-exists";

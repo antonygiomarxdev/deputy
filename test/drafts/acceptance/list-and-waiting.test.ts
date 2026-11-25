@@ -1,3 +1,8 @@
+// covers: drafts/FRD-01/EX-5
+// covers: drafts/FRD-01/EX-6
+// covers: drafts/FRD-01/EX-7
+// covers: drafts/FRD-01/EX-8
+// covers: drafts/FRD-01/EX-19
 import { describe, expect, test } from "bun:test";
 import { Draft, type DraftState } from "../../../src/drafts/domain/draft";
 import { LogUnavailable } from "../../../src/drafts/domain/errors";

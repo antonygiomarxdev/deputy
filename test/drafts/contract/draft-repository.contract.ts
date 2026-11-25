@@ -1,3 +1,14 @@
+// covers: drafts/FRD-01/EX-1
+// covers: drafts/FRD-01/EX-2
+// covers: drafts/FRD-01/EX-7
+// covers: drafts/FRD-01/EX-8
+// covers: drafts/FRD-01/EX-13
+// covers: drafts/FRD-01/EX-14
+// covers: drafts/FRD-01/EX-15
+// covers: drafts/FRD-01/EX-16
+// covers: drafts/FRD-01/EX-19
+// covers: drafts/FRD-04/EX-13
+// covers: drafts/FRD-04/EX-14
 import { describe, expect, test } from "bun:test";
 import { Draft, type DraftKind, type DraftNumber } from "../../../src/drafts/domain/draft";
 import { LeaseLost, LogUnavailable, StaleDraft } from "../../../src/drafts/domain/errors";

@@ -1,3 +1,9 @@
+// covers: intake/FRD-04/EX-1
+// covers: intake/FRD-04/EX-2
+// covers: intake/FRD-04/EX-7
+// covers: intake/FRD-04/EX-8
+// covers: intake/FRD-04/EX-21
+// covers: intake/FRD-04/EX-22
 import { afterEach, expect, test, setDefaultTimeout } from "bun:test";
 import { call, holdOwnerReply, insertPendingChange, removeHarnessDirs, startServer, waitForOwner, type Harness, E2E_TIMEOUT_MS } from "../support/harness";
 import { postDelivery } from "../support/live";

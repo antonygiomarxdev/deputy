@@ -1,3 +1,5 @@
+// covers: intake/FRD-04/EX-21
+// covers: intake/FRD-04/EX-22
 import { Database } from "bun:sqlite";
 import { afterEach, expect, test, setDefaultTimeout } from "bun:test";
 import { writeFileSync } from "node:fs";

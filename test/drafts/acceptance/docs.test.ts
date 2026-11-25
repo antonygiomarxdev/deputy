@@ -1,3 +1,7 @@
+// covers: drafts/FRD-02/EX-3
+// covers: drafts/FRD-02/EX-4
+// covers: drafts/FRD-02/EX-25
+// covers: drafts/FRD-02/EX-26
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";

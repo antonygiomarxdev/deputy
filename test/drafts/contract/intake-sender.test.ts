@@ -1,3 +1,5 @@
+// covers: drafts/FRD-02/EX-10
+// covers: drafts/FRD-02/EX-11
 import { describe, expect, test } from "bun:test";
 import { IntakeSender } from "../../../src/drafts/adapters/intake/intake-sender";
 import type { SendText, SendTextResult } from "../../../src/intake/index";

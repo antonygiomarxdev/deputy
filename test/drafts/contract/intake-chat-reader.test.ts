@@ -1,3 +1,9 @@
+// covers: drafts/FRD-01/EX-1
+// covers: drafts/FRD-01/EX-2
+// covers: drafts/FRD-01/EX-5
+// covers: drafts/FRD-01/EX-6
+// covers: drafts/FRD-01/EX-17
+// covers: drafts/FRD-01/EX-18
 import { describe, expect, test } from "bun:test";
 import { IntakeChatReader } from "../../../src/drafts/adapters/intake/intake-chat-reader";
 import type { ChatExists, ReadChat } from "../../../src/intake/index";

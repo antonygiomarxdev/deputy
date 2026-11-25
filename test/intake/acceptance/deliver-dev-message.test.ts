@@ -1,3 +1,11 @@
+// covers: intake/FRD-01/EX-3
+// covers: intake/FRD-01/EX-4
+// covers: intake/FRD-01/EX-5
+// covers: intake/FRD-01/EX-6
+// covers: intake/FRD-01/EX-9
+// covers: intake/FRD-01/EX-10
+// covers: intake/FRD-01/EX-13
+// covers: intake/FRD-01/EX-14
 import { afterEach, describe, expect, test } from "bun:test";
 import { DevDeliveries } from "../../../src/intake/adapters/dev/dev-deliveries";
 import { DevProvider } from "../../../src/intake/adapters/dev/dev-provider";

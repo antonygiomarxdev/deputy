@@ -1,3 +1,10 @@
+// covers: drafts/FRD-01/EX-5
+// covers: drafts/FRD-01/EX-6
+// covers: drafts/FRD-01/EX-9
+// covers: drafts/FRD-01/EX-10
+// covers: drafts/FRD-01/EX-11
+// covers: drafts/FRD-01/EX-12
+// covers: drafts/FRD-01/EX-20
 import { describe, expect, test } from "bun:test";
 import { ChangeDraftUseCase } from "../../../src/drafts/application/change-draft";
 import { RejectDraftUseCase } from "../../../src/drafts/application/reject-draft";

@@ -1,3 +1,11 @@
+// covers: drafts/FRD-01/EX-1
+// covers: drafts/FRD-01/EX-2
+// covers: drafts/FRD-01/EX-5
+// covers: drafts/FRD-01/EX-6
+// covers: drafts/FRD-01/EX-17
+// covers: drafts/FRD-01/EX-18
+// covers: knowledge/FRD-01/EX-25
+// covers: knowledge/FRD-01/EX-26
 import { afterEach, expect, test, setDefaultTimeout } from "bun:test";
 import { startFakeKapso } from "../../support/fake-kapso-server";
 import { call, removeHarnessDirs, startServer, waitForOwner, type Harness } from "../../support/harness";

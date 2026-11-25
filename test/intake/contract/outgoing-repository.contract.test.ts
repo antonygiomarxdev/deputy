@@ -1,3 +1,5 @@
+// covers: intake/FRD-04/EX-11
+// covers: intake/FRD-04/EX-12
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { MAX_PART } from "../../../src/intake/domain/constants";
 import { OutgoingSend } from "../../../src/intake/domain/outgoing-send";

@@ -1,3 +1,5 @@
+// covers: drafts/FRD-02/EX-17
+// covers: drafts/FRD-02/EX-18
 import { describe, expect, test } from "bun:test";
 import { makeDrafts, message } from "./harness";
 

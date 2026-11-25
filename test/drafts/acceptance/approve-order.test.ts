@@ -1,3 +1,7 @@
+// covers: drafts/FRD-02/EX-21
+// covers: drafts/FRD-02/EX-22
+// covers: drafts/FRD-02/EX-23
+// covers: drafts/FRD-02/EX-24
 import { describe, expect, test } from "bun:test";
 import type { DraftLogRepository } from "../../../src/drafts/ports/log";
 import { LogUnavailable, StaleDraft } from "../../../src/drafts/domain/errors";

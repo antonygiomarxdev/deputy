@@ -1,3 +1,17 @@
+// covers: intake/FRD-01/EX-15
+// covers: intake/FRD-01/EX-16
+// covers: intake/FRD-02/EX-7
+// covers: intake/FRD-02/EX-8
+// covers: intake/FRD-02/EX-13
+// covers: intake/FRD-02/EX-14
+// covers: intake/FRD-02/EX-15
+// covers: intake/FRD-02/EX-16
+// covers: intake/FRD-02/EX-23
+// covers: intake/FRD-02/EX-28
+// covers: intake/FRD-03/EX-43
+// covers: intake/FRD-03/EX-44
+// covers: intake/FRD-04/EX-11
+// covers: intake/FRD-04/EX-12
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { parseChatId, type ChatId } from "../../../src/shared/chat-id";
 import { parseSendId } from "../../../src/shared/send-id";

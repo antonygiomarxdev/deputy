@@ -1,3 +1,14 @@
+// covers: drafts/FRD-02/EX-5
+// covers: drafts/FRD-02/EX-6
+// covers: drafts/FRD-02/EX-7
+// covers: drafts/FRD-02/EX-8
+// covers: drafts/FRD-02/EX-9
+// covers: drafts/FRD-02/EX-10
+// covers: drafts/FRD-02/EX-11
+// covers: drafts/FRD-02/EX-15
+// covers: drafts/FRD-02/EX-16
+// covers: drafts/FRD-02/EX-33
+// covers: drafts/FRD-02/EX-36
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import { approvalTools } from "../../../src/drafts/adapters/mcp/approval-tools";

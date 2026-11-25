@@ -1,3 +1,5 @@
+// covers: intake/FRD-01/EX-7
+// covers: intake/FRD-01/EX-8
 import { afterEach, describe, expect, test } from "bun:test";
 import { DEV_SIGNATURE_HEADER, signDevBody } from "../../../src/intake/adapters/dev/dev-delivery";
 import { DevProvider } from "../../../src/intake/adapters/dev/dev-provider";

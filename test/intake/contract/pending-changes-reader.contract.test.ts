@@ -1,3 +1,5 @@
+// covers: intake/FRD-04/EX-21
+// covers: intake/FRD-04/EX-22
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { openSqliteSubject } from "../../support/intake-subjects";
 

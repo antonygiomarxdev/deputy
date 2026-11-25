@@ -1,3 +1,25 @@
+// covers: intake/FRD-01/EX-7
+// covers: intake/FRD-01/EX-8
+// covers: intake/FRD-03/EX-1
+// covers: intake/FRD-03/EX-2
+// covers: intake/FRD-03/EX-3
+// covers: intake/FRD-03/EX-4
+// covers: intake/FRD-03/EX-7
+// covers: intake/FRD-03/EX-8
+// covers: intake/FRD-03/EX-9
+// covers: intake/FRD-03/EX-10
+// covers: intake/FRD-03/EX-23
+// covers: intake/FRD-03/EX-24
+// covers: intake/FRD-03/EX-27
+// covers: intake/FRD-03/EX-28
+// covers: intake/FRD-03/EX-29
+// covers: intake/FRD-03/EX-30
+// covers: intake/FRD-03/EX-35
+// covers: intake/FRD-03/EX-36
+// covers: intake/FRD-03/EX-39
+// covers: intake/FRD-03/EX-40
+// covers: intake/FRD-04/EX-7
+// covers: intake/FRD-04/EX-8
 import { beforeEach, describe, expect, test } from "bun:test";
 import { DevProvider } from "../../../src/intake/adapters/dev/dev-provider";
 import { InMemoryIntakeSettingsRepository } from "../../../src/intake/adapters/memory/in-memory-intake-settings-repository";

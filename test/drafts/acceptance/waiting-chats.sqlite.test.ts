@@ -1,3 +1,6 @@
+// covers: drafts/FRD-01/EX-7
+// covers: drafts/FRD-01/EX-8
+// covers: drafts/FRD-01/EX-19
 import { afterEach, expect, test } from "bun:test";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";

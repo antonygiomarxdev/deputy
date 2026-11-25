@@ -1,3 +1,12 @@
+// covers: drafts/FRD-02/EX-1
+// covers: drafts/FRD-02/EX-2
+// covers: drafts/FRD-02/EX-5
+// covers: drafts/FRD-02/EX-6
+// covers: drafts/FRD-02/EX-7
+// covers: drafts/FRD-02/EX-8
+// covers: drafts/FRD-02/EX-12
+// covers: drafts/FRD-02/EX-13
+// covers: drafts/FRD-02/EX-14
 import { describe, expect, test } from "bun:test";
 import { OWNER_WORDS_MAX } from "../../../src/shared/owner-words";
 import { ownerWordsShape } from "../../../src/drafts/domain/owner-words";

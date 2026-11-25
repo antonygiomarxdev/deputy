@@ -1,3 +1,5 @@
+// covers: intake/FRD-03/EX-37
+// covers: intake/FRD-03/EX-38
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { subjects, type IntakeSubject } from "../../support/intake-subjects";
 

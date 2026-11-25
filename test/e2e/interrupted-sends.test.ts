@@ -1,3 +1,5 @@
+// covers: intake/FRD-04/EX-15
+// covers: intake/FRD-04/EX-16
 import { Database } from "bun:sqlite";
 import { afterEach, expect, test, setDefaultTimeout } from "bun:test";
 import { join } from "node:path";

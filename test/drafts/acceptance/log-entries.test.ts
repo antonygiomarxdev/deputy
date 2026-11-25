@@ -1,3 +1,11 @@
+// covers: drafts/FRD-04/EX-1
+// covers: drafts/FRD-04/EX-2
+// covers: drafts/FRD-04/EX-3
+// covers: drafts/FRD-04/EX-4
+// covers: drafts/FRD-04/EX-13
+// covers: drafts/FRD-04/EX-14
+// covers: drafts/FRD-04/EX-15
+// covers: drafts/FRD-04/EX-16
 import { describe, expect, test } from "bun:test";
 import type { DraftEvent } from "../../../src/drafts/domain/events";
 import type { LogEntry } from "../../../src/drafts/domain/log-entry";

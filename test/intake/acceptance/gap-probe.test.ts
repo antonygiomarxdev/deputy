@@ -1,3 +1,9 @@
+// covers: intake/FRD-03/EX-15
+// covers: intake/FRD-03/EX-16
+// covers: intake/FRD-03/EX-17
+// covers: intake/FRD-03/EX-18
+// covers: intake/FRD-03/EX-43
+// covers: intake/FRD-03/EX-44
 import { beforeEach, describe, expect, test } from "bun:test";
 import { RUN_BUDGET_MS } from "../../../src/intake/domain/constants";
 import { InMemoryIntakeSettingsRepository } from "../../../src/intake/adapters/memory/in-memory-intake-settings-repository";

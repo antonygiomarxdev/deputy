@@ -1,3 +1,5 @@
+// covers: intake/FRD-02/EX-15
+// covers: intake/FRD-02/EX-16
 import { afterEach, expect, test, setDefaultTimeout } from "bun:test";
 import { call, removeHarnessDirs, startServer, waitForOwner, type Harness, E2E_TIMEOUT_MS } from "../support/harness";
 import { postDelivery } from "../support/live";

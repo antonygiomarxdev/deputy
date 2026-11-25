@@ -1,3 +1,6 @@
+// covers: drafts/FRD-04/EX-9
+// covers: drafts/FRD-04/EX-10
+// covers: drafts/FRD-04/EX-29
 import { describe, expect, test } from "bun:test";
 import { ApprovalAudit } from "../../../src/drafts/domain/approval-audit";
 import type { LogEntry } from "../../../src/drafts/domain/log-entry";

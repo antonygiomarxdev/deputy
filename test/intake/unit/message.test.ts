@@ -1,3 +1,20 @@
+// covers: intake/FRD-02/EX-7
+// covers: intake/FRD-02/EX-8
+// covers: intake/FRD-02/EX-9
+// covers: intake/FRD-02/EX-10
+// covers: intake/FRD-02/EX-11
+// covers: intake/FRD-02/EX-12
+// covers: intake/FRD-02/EX-19
+// covers: intake/FRD-02/EX-20
+// covers: intake/FRD-02/EX-21
+// covers: intake/FRD-02/EX-22
+// covers: intake/FRD-02/EX-23
+// covers: intake/FRD-02/EX-28
+// covers: intake/FRD-03/EX-39
+// covers: intake/FRD-03/EX-40
+// covers: intake/FRD-04/EX-25
+// covers: intake/FRD-04/EX-26
+// covers: intake/FRD-04/EX-27
 import { expect, test } from "bun:test";
 import { PhoneNumber } from "../../../src/shared/phone-number";
 import { classifySource } from "../../../src/intake/domain/source-classifier";

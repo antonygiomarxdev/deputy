@@ -1,3 +1,5 @@
+// covers: drafts/FRD-04/EX-17
+// covers: drafts/FRD-04/EX-18
 import { describe, expect, test } from "bun:test";
 import { logTools } from "../../../src/drafts/adapters/mcp/log-tools";
 import type { CheckApprovals, LogEntryView, ReadDraftLog } from "../../../src/drafts/ports/inbound";

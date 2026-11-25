@@ -1,3 +1,20 @@
+// covers: intake/FRD-04/EX-1
+// covers: intake/FRD-04/EX-2
+// covers: intake/FRD-04/EX-3
+// covers: intake/FRD-04/EX-4
+// covers: intake/FRD-04/EX-5
+// covers: intake/FRD-04/EX-6
+// covers: intake/FRD-04/EX-9
+// covers: intake/FRD-04/EX-10
+// covers: intake/FRD-04/EX-13
+// covers: intake/FRD-04/EX-14
+// covers: intake/FRD-04/EX-23
+// covers: intake/FRD-04/EX-24
+// covers: intake/FRD-04/EX-25
+// covers: intake/FRD-04/EX-26
+// covers: intake/FRD-04/EX-27
+// covers: intake/FRD-04/EX-28
+// covers: intake/FRD-04/EX-29
 import { Secret } from "../../../src/intake/domain/secret";
 import { beforeEach, describe, expect, test } from "bun:test";
 import { InMemoryIntakeStore } from "../../../src/intake/adapters/memory/in-memory-intake-store";

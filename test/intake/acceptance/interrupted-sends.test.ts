@@ -1,3 +1,7 @@
+// covers: intake/FRD-04/EX-15
+// covers: intake/FRD-04/EX-16
+// covers: intake/FRD-04/EX-17
+// covers: intake/FRD-04/EX-18
 import { beforeEach, describe, expect, test } from "bun:test";
 import { InMemoryIntakeStore } from "../../../src/intake/adapters/memory/in-memory-intake-store";
 import { FindOutgoingUseCase } from "../../../src/intake/application/find-outgoing";
