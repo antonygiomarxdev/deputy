@@ -23,7 +23,7 @@ The approved product needs the owner's go on every send (D1) and a terminal for 
 - Unknown: plan usage of an idle loop; whether Claude Code shows a form answer to the model; Windows, macOS and Linux behavior of keep-awake.
 
 ## Decision
-Open until the owner accepts the request; one question stays open (Q-1). Decided by the owner on 2026-11-24, recorded in `docs/DECISIONS.md` (D31 is archived in `docs/decisions/2026-11.md` and approved in `docs/PRODUCT.md`; the owner approved D32 to D36 on the same day, and their target documents will state them):
+Open until the owner accepts the request; no question stays open (Q-1 closed on 2026-11-25). Decided by the owner on 2026-11-24, recorded in `docs/DECISIONS.md` (D31 is archived in `docs/decisions/2026-11.md` and approved in `docs/PRODUCT.md`; the owner approved D32 to D36 on the same day, and their target documents will state them):
 - Local only: Claude Code with the owner's own subscription, on Windows, macOS and Linux. The pilot is the owner and one friend. Cloud, a separate server, a hosted database and OAuth are deferred. There is no tunnel: the owner chose polling over a tunnel.
 - Install: the owner asks Claude Code to install Deputy from a link. Receiving: the MCP polls Kapso every 1 to 2 minutes and catches up on start. The current code is reused and trimmed.
 - The owner opens the session by hand. Nothing starts Claude automatically (no `claude -p`, no cron job, no server). The guide tells the owner to message the business number at least once a day. Keep-awake asks for the lid open and the computer plugged in, and Deputy keeps the computer awake while the session is open.
@@ -37,4 +37,4 @@ Open until the owner accepts the request; one question stays open (Q-1). Decided
 Later, in the backlog: a kill switch, and hours and schedules. The daily cap is dropped, not postponed. The pilot has none of them.
 
 Open questions:
-- Q-1 (Owner): Anthropic Consumer Terms 3.7 for a session that answers while the owner is away (#144). The owner chose not to ask Anthropic now.
+Closed on 2026-11-25 (owner): Q-1, Anthropic Consumer Terms 3.7 for a session that answers while the owner is away (#144). There is no change for the pilot; Anthropic is asked in writing before any public launch. The Watch line of ADR-018 stays.
