@@ -1,6 +1,7 @@
 # Inbox: slice PRD
 
-Status: Draft · Part of [Deputy product overview](../PRODUCT.md)
+Status: Approved (2026-11-24) · Part of [Deputy product overview](../PRODUCT.md)
+Approval: content ERHzPV4_xdXF; rests on ../PRODUCT.md EVnyDrK2H9_N
 
 ## Summary
 

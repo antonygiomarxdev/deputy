@@ -81,7 +81,7 @@ The rules are the behavior rows above, one rule per row. The examples are writte
 | EX-21 | RULE-11 | positive | The owner told Deputy to ignore a chat | The pending chats are worked out | The chat is not pending |
 | EX-22 | RULE-11 | negative | The owner undid the ignore, and a customer message waits inside the window | The pending chats are worked out | The chat is pending again |
 | EX-23 | RULE-12 | positive | A dev message that nobody answered, and the provider is now Kapso | The owner reads the history | The message is still readable |
-| EX-24 | RULE-12 | negative | A dev message that nobody answered, and the provider is now Kapso | The pending chats are worked out | The chat is not pending |
+| EX-24 | RULE-12 | positive | A dev message that nobody answered, and the provider is now Kapso | The pending chats are worked out | The chat is not pending |
 | EX-25 | RULE-13 | positive | A message from a group chat | The pending chats are worked out | It is not pending and the summary counts it in the not-handled line |
 | EX-26 | RULE-13 | negative | A message from an unknown sender | The pending chats are worked out | It is not pending |
 | EX-27 | RULE-14 | positive | Three chats with an unanswered customer message 10 days old and the default window | The owner asks | None is listed and the summary says "3 older chats outside the 7-day window have no answer" |

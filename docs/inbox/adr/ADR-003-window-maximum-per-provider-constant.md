@@ -1,7 +1,7 @@
 # ADR-003: The maximum window is a per-provider constant behind a port
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

@@ -1,7 +1,7 @@
 # ADR-002: The pending window is N elapsed days of 24 hours
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

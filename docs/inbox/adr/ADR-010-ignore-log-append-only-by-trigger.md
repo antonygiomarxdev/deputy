@@ -1,7 +1,7 @@
 # ADR-010: The ignore log is append-only by trigger
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

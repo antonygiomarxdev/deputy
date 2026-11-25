@@ -1,7 +1,7 @@
 # ADR-005: The summary reuses a catch-up that is fresher than one period
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

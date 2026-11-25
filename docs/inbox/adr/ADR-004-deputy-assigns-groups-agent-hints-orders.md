@@ -1,7 +1,7 @@
 # ADR-004: Deputy assigns the groups; the agent only hints which chats are orders
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

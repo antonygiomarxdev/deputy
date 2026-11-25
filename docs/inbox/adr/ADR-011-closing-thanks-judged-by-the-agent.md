@@ -1,7 +1,7 @@
 # ADR-011: The agent judges a closing "ok" or "thanks"
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

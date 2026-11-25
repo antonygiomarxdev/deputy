@@ -1,7 +1,7 @@
 # ADR-001: Pending is computed on demand from Intake's chat state
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

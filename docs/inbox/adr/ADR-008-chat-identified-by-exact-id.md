@@ -1,7 +1,7 @@
 # ADR-008: A chat is ignored by its exact identifier
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

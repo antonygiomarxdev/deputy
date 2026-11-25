@@ -1,7 +1,7 @@
 # ADR-007: The reason a draft is held is derived from Intake's times
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

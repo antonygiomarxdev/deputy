@@ -1,7 +1,7 @@
 # ADR-006: Customer text is escaped inside its label
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 

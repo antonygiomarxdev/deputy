@@ -1,7 +1,7 @@
 # ADR-009: Owner words that equal a customer message are refused
 
 ## Status
-Proposed
+Accepted (2026-11-24)
 
 ## Summary
 
