@@ -1,6 +1,11 @@
 # Technical Proposal: List, change and delete orders (Orders FRD-02)
 
-Status: Approved (2026-11-18)
+Status: Draft
+
+Builds on TP-01 (the `Order` aggregate, `OrderRepository`, `WriteSerializer`, ids and the payload). "Cross-cutting TD-n" means a decision in `docs/tp/TP.md`.
+
+
+## Summary
 
 Builds on TP-01 (the `Order` aggregate, `OrderRepository`, `WriteSerializer`, ids and the payload). "Cross-cutting TD-n" means a decision in `docs/tp/TP.md`.
 
@@ -37,6 +42,8 @@ FR-ORDERS-02-1, FR-ORDERS-02-2, FR-ORDERS-02-3, FR-ORDERS-02-4, FR-ORDERS-02-4a,
 
 ### TD-1: Who checks that the owner's words identify one order?
 
+ADR: ADR-007
+
 FR-ORDERS-02-4a and FR-ORDERS-02-5 say a change or delete is refused when the words do not identify one order. Drafts checks only that the words are non-empty and not copied.
 
 - **Option A** Trust Drafts: any non-empty words let the agent change any order it names. Cost: nothing. Risk: an agent that mixes up two customers changes Ana's order while the owner said "Juan's order", and nothing in Deputy notices.
@@ -55,6 +62,8 @@ Confirmation of a delete (TD-3) skips step 1 to 4: its words are a reply ("yes")
 
 ### TD-2: How does a correction change an order?
 
+ADR: ADR-008
+
 - **Option A** A partial patch. `change` is an object with any of: `status`, `customer_name`, `fulfillment`, `address`, `wanted_date`, `wanted_time`, `notes`, `items`. Orders applies it to the loaded order, validates the result with the same invariants as a record, and writes the new state plus one `ChangeEntry` per changed field in one `update`. For `items`, each element is `{keep: <position>, quantity?}` (the item and its snapshot stay) or a new item as in `PrepareOrder` (resolved and snapshotted now). The list is the new full list; an omitted position is removed. The total is recomputed and recorded as its own `total` entry when it changes. Cost: more input shapes. Risk: `keep` with a wrong position; refused with `change_invalid:items`.
 - **Option B** Replace the whole order: the agent sends a full new order, Orders diffs it. Cost: one input shape. Risk: re-resolving every item takes today's catalog prices, so a correction of one quantity silently re-prices the other items and breaks the snapshot rule (FR-ORDERS-01-14).
 - **Option C** One tool per field. Cost: many tools, and Drafts' `change_order` takes a single `change` object (Drafts TP-02).
@@ -63,6 +72,8 @@ Chosen: Option A. `keep` is the part that protects the snapshots. If the result 
 
 ### TD-3: What makes a delete need the owner's confirmation?
 
+ADR: ADR-009
+
 - **Option A** A stored pending request. The first call (`confirm: false`) passes the identification guard and stores `order_pending_deletes(order_id, requested_at)`; it returns `pending` with a statement of the order. The second call (`confirm: true`) needs a pending request for that order made at most 10 minutes earlier (an owner who walks away should not have a stale "yes" count; 10 minutes covers a normal reply), consumes it, and deletes. Cost: one small local table. Risk: none beyond the table; it holds only an order id and a time.
 - **Option B** Trust the `confirm` flag from the agent. Cost: none. Risk: an agent can pass `confirm: true` on the first call, and nothing was asked of the owner (FR-ORDERS-02-10).
 - **Option C** A signed token returned at step one and passed at step two. Cost: a key and a signature routine. Risk: more security code than a table needs, and the table already limits the token's life.
@@ -70,6 +81,8 @@ Chosen: Option A. `keep` is the part that protects the snapshots. If the result 
 Chosen: Option A. A `confirm: true` without a pending request is refused with `delete_not_requested`. The `pending` string is built by Orders from fixed words: `order <id>, customer <customer_text>name</customer_text>, <n> items, status <status> will be removed`, with `<` and `&` escaped, so the agent can show it as customer text. Flag to the lead: Drafts relays this string to the agent as it is. Recorded in ADR-009.
 
 ### TD-4: How does a delete leave nothing behind, even after a crash?
+
+ADR: ADR-010
 
 FR-ORDERS-02-10a: after a confirmed delete no name, address or phone of that order remains in Deputy, the owner's words in change and approval entries read "deleted", and one deleted mark stays. Orders can erase its own data. The Drafts data is erased by Drafts when it handles `OrderDeleted`.
 
