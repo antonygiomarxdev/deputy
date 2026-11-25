@@ -1,6 +1,11 @@
 # Technical Proposal: Record an order from a chat (Orders FRD-01)
 
-Status: Approved (2026-11-18)
+Status: Draft
+
+Follows the cross-cutting TP (`docs/tp/TP.md`, "cross-cutting TD-n" below) and the settled Drafts TPs. This TP owns the `Order` aggregate, the prepare and record use cases, and the `OrderRepository` port. TP-02 adds change and delete. TP-03 adds the two storage adapters and export.
+
+
+## Summary
 
 Follows the cross-cutting TP (`docs/tp/TP.md`, "cross-cutting TD-n" below) and the settled Drafts TPs. This TP owns the `Order` aggregate, the prepare and record use cases, and the `OrderRepository` port. TP-02 adds change and delete. TP-03 adds the two storage adapters and export.
 
@@ -52,6 +57,8 @@ Part of these are rules that live in Drafts (the go, the approval entry, the log
 
 ### TD-1: How does a prepared order travel from "shown" to "recorded"?
 
+ADR: ADR-001
+
 - **Option A** Stateless payload. `PrepareOrder` validates, resolves catalog items, snapshots names, units and prices, computes the total, and returns a self-contained JSON `PreparedOrder` (version 1) as the payload string. Drafts stores it. `RecordOrder` parses it, re-validates it with the same domain rules and inserts. Cost: the payload is personal data in Drafts' table (Drafts already scrubs it on delete, Drafts TP-04). Risk: the payload format is a contract between two slices; mitigated by a version field and a parse that refuses unknown versions.
 - **Option B** Orders keeps a `prepared_orders` table keyed by a token. The payload is the token. Cost: a table and a cleanup rule. Risk: personal data sits in Orders before any go, abandoned drafts leave rows nobody owns, and the delete scrub would have to find them too.
 - **Option C** Drafts passes the raw `OrderInput` at record time and Orders prepares again. Cost: none in storage. Risk: the catalog may have changed since the owner saw the order, so the record would differ from what the owner approved. That breaks FR-ORDERS-01-12.
@@ -60,6 +67,8 @@ Chosen: Option A. It is stateless, so there is nothing in Orders to clean up, an
 
 ### TD-2: What is the idempotency key of a record?
 
+ADR: ADR-002
+
 - **Option A** The raw draft number. Cost: simplest. Risk, with a failure case: the owner wipes the data folder, draft numbers restart at 1, and the spreadsheet still holds an order from the old draft 1. The check "an order with draft 1 exists" then returns the old order as if it were new, and the new order is silently not recorded. That is a lost order (principle 3).
 - **Option B** A draft reference `<installId>:<draftNumber>`. `installId` is a random id created once per data folder and kept in Orders' own table. Cost: one small table and a prefix. Risk: a restored backup of the folder reuses its `installId`; the same-numbered drafts then also come from the restored Drafts table, so they are the same drafts and the key is correct.
 - **Option C** Derive the order id from the draft number (`O-12`). Cost: no separate key. Risk: same collision as Option A, and an id that exposes the numbering.
@@ -67,6 +76,8 @@ Chosen: Option A. It is stateless, so there is nothing in Orders to clean up, an
 Chosen: Option B. The key is stored in a unique column `draft_ref`. The order id is separate and random: 8 characters of Crockford base32 (40 bits; with 10,000 orders the chance of any collision is about 5 in 100,000, and insert checks uniqueness and retries up to 3 times). The event `OrderDeleted.draftNumber` is the number only when the `installId` matches this folder, and null otherwise, so a scrub never hits another numbering. Recorded in ADR-002.
 
 ### TD-3: How is money computed?
+
+ADR: ADR-003
 
 - **Option A** Integer minor units per currency. `Money {minor: bigint, currency}`, quantity as integer thousandths. The exponent of each currency comes from an outbound port `CurrencyExponent.of(code): number | null` (adapter: `Intl`). A line is `round half up (price_minor x quantity_thousandths / 1000)` and the total is the sum of the lines. Cost: a small port and a stated rounding rule. Risk: a price with more decimals than the currency allows (12.505 USD) cannot be stored; the total is then "to be confirmed" with `price_precision`, never rounded silently.
 - **Option B** Exact decimals with a scale and no currency knowledge. Cost: no port. Risk: no rounding rule, so a total can carry 7 decimals that no currency can pay (1.5 x 3.33 USD = 4.995).
@@ -77,12 +88,16 @@ Chosen: Option A (the lead's call). Each line rounds to what a receipt shows, an
 
 ### TD-4: How is "the date and time wanted" stored?
 
+ADR: ADR-004
+
 - **Option A** Civil date and time as the business sees them: `wantedDate` (`YYYY-MM-DD`) and optional `wantedTime` (`HH:MM`), no zone. Cost: Deputy cannot say "in 3 hours". It does not need to. Risk: an owner who moves country changes the meaning of old values; nothing is lost.
 - **Option B** An instant (UTC) plus the owner's zone. Cost: every filter needs the zone from Notify's setting, across slices. Risk: a DST change moves a stored "10:00" pickup by an hour, and the list filter "orders for Saturday" depends on zone arithmetic.
 
 Chosen: Option A. A pickup at 10:00 is 10:00 where the business is, in every country and time zone. The date filter in TP-02 is a text comparison. The agent resolves "Saturday" into a date; Deputy validates only that it is a real calendar date (month lengths, leap years) in code, with no library. Creation time is different: it is an instant (epoch milliseconds) because it is a fact about when Deputy recorded. Recorded in ADR-004.
 
 ### TD-5: Who resolves an item to the catalog?
+
+ADR: ADR-005
 
 - **Option A** The agent resolves it with `find_catalog_items` and passes `catalog_ref` or `not_in_catalog: true` on each item. `PrepareOrder` checks every `catalog_ref` with `CatalogLookup.resolve` and snapshots it. An item with neither is refused with `item_unresolved:<position>`. Cost: the agent does two steps. Risk: the agent can set `not_in_catalog` without the owner deciding (D11, accepted); the mark is visible in the summary.
 - **Option B** Orders resolves by name: one match is taken, none means not in catalog. Cost: one step for the agent. Risk, with a failure case: "pork tamales" matches "pork tamales (spicy)" as the only item with those words, and the owner approves a wrong item without noticing. FR-ORDERS-01-3 wants the owner to decide.
@@ -91,6 +106,8 @@ Chosen: Option A. A pickup at 10:00 is 10:00 where the business is, in every cou
 Chosen: Option A. It keeps Orders to a lookup by reference, and the explicit mark is the only way an item enters without a catalog entry (FR-ORDERS-01-2, FR-ORDERS-01-3). A not-in-catalog item has no price, so the total is "to be confirmed". Recorded in ADR-005.
 
 ### TD-6: What happens when the outcome of a write is unknown?
+
+ADR: ADR-006
 
 - **Option A** Check after. If a write fails or times out, `RecordOrder` reads the store once by `draft_ref`. Found: return the order (it was stored). Not found, read succeeded: report `store_unavailable` (nothing stored). The read also failed: report `outcome_unknown`. A retry always starts with the same lookup, so it never creates a second order (FR-ORDERS-01-16). Cost: one extra read on a failure. Risk: none that a lookup does not cover.
 - **Option B** Write-ahead intent in a local table (`draft_ref`, pre-made order id), then the external write, then a "done" mark. Cost: a table and a cleanup path. Risk: after a crash the sheet still has to be searched, which is the lookup Option A does; the table adds no information.

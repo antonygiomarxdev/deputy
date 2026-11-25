@@ -1,8 +1,13 @@
 # Orders: slice PRD
 
-Status: Approved (2026-11-18) · Part of [Deputy product overview](../PRODUCT.md)
+Status: Approved (2026-11-24) · Part of [Deputy product overview](../PRODUCT.md)
+Approval: content ocA-729zpAGS; rests on ../PRODUCT.md 9kKsOKhERsSe
 
-## Purpose
+## Summary
+
+Orders lets the owner turn a chat into a recorded order, and look the orders up later.
+
+## Why
 
 Orders lets the owner turn a chat into a recorded order, and look the orders up later. The agent prepares the order from the conversation and the catalog. Nothing is recorded until the owner says go. The owner chooses where orders live: on their own machine, or in their own spreadsheet.
 
@@ -39,7 +44,7 @@ Orders is a record for the owner. It does not take payment, track stock, or mess
 - **Principle 8 (the owner's data stays the owner's).** R-ORDERS-10 and R-ORDERS-11 keep orders on the owner's machine or in the owner's own spreadsheet.
 - **Principle 3 (no message is lost).** R-ORDERS-12 prevents an order from being lost silently when recording fails.
 
-## Out of scope
+## Non-goals
 
 - Payments, invoices, delivery routing, stock levels, and prices beyond the total on the order.
 - Editing the catalog (Knowledge).
@@ -57,7 +62,7 @@ Orders is a record for the owner. It does not take payment, track stock, or mess
 - **Intake** provides the chat and customer the order belongs to.
 - **Setup** helps the owner choose where orders live (R-ORDERS-10).
 
-## Acceptance criteria
+## Success criteria
 
 1. The agent shows a complete order; the owner says go; the order appears in the list with an identifier and a creation time (R-ORDERS-1, R-ORDERS-5).
 2. The agent does not record an order the owner has not approved, even when the customer has confirmed it in the chat (R-ORDERS-1).
